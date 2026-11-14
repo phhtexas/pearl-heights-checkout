@@ -49,9 +49,13 @@ export class MockHospitable implements HospitableAdapter {
     return { reservationId: id };
   }
 
+  /** When true, a cancelled reservation's dates stay BLOCKED (seen briefly in the live test). */
+  cancelSlow = false;
+
   async cancelReservation(id: string) {
     const code = this.byId.get(id);
     if (!code) throw new AdapterError("Reservation not found", "not_found");
+    if (this.cancelSlow) return;
     const r = this.codes.get(code)!;
     const set = this.blocked.get(r.uuid);
     r.nights.forEach((n) => set?.delete(n));

@@ -3,6 +3,7 @@ import { BookingState, BookingEvent, transition } from "../domain/bookingState";
 import { Property } from "../domain/properties";
 import { buildQuote, Quote } from "../domain/quote";
 import { verificationDeadline, VerificationDeadline } from "../domain/verification";
+import { BookingStore } from "./bookingStore";
 
 export interface CheckoutRequest {
   property: Property;
@@ -26,6 +27,11 @@ const HOLD_NOTE = " No charge was completed. Your bank may show a temporary hold
  * -> confirm the dates are blocked -> capture. Failures roll back so a guest is never charged without a booking
  * and a booking never exists without a payment.
  */
+/** Same booking ref = same outcome: a double click or retried request never charges or books twice. */
+export function runCheckoutOnce(req: CheckoutRequest, hosp: HospitableAdapter, pay: PaymentsAdapter, store: BookingStore): Promise<CheckoutOutcome> {
+  return store.once(req.bookingRef, () => runCheckout(req, hosp, pay));
+}
+
 export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter, pay: PaymentsAdapter): Promise<CheckoutOutcome> {
   const log: string[] = [];
   let state: BookingState = "checkout_started";

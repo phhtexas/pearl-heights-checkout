@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getProperty } from "@/domain/properties";
 import { getAdapters } from "@/server/adapters";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   try {

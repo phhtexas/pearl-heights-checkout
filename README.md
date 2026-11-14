@@ -5,7 +5,9 @@ Guests book on `book.pearlheightshomes.com`; reservations are created in Hospita
 
 Status: **working test checkout in mock mode** (`CHECKOUT_MODE=mock`). Fake Hospitable and Stripe adapters; nothing can charge a card or create a real reservation.
 
-Run locally: `npm install`, `npm run dev`, open http://localhost:3000. Tests: `npm test` (25 tests).
+Run locally: `npm install`, `npm run dev`, open http://localhost:3000. Tests: `npm test` (39 tests).
+
+Guards: a production build refuses mock adapters unless `ALLOW_MOCK=true` (private demo only). `CHECKOUT_MODE=live` refuses to start until `TAX_RATES_CONFIRMED`, `STRIPE_CHECKLIST_PASSED` and `ATTORNEY_APPROVED` are all `true`. The 5%-below-Airbnb claim is not implemented.
 
 ## What's in place
 
