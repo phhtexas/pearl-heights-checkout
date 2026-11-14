@@ -3,7 +3,9 @@
 Custom direct-booking checkout for Pearl Heights Homes (PR Portfolio Properties LLC, dba Pearl Heights Homes).
 Guests book on `book.pearlheightshomes.com`; reservations are created in Hospitable and paid through Stripe.
 
-Status: **core logic only** (no live integrations yet). Nothing here can charge a card or create a reservation.
+Status: **working test checkout in mock mode** (`CHECKOUT_MODE=mock`). Fake Hospitable and Stripe adapters; nothing can charge a card or create a real reservation.
+
+Run locally: `npm install`, `npm run dev`, open http://localhost:3000. Tests: `npm test` (25 tests).
 
 ## What's in place
 
@@ -15,7 +17,11 @@ Status: **core logic only** (no live integrations yet). Nothing here can charge 
 | Verification deadlines (24 h / 2 h / before access) | `src/domain/verification.ts` | Oscar, Nov 14, 2026 |
 | Booking state machine | `src/domain/bookingState.ts` | Checkout build spec, section 3 |
 | Database | `db/schema.sql` | Checkout build spec, section 4 |
-| Tests | `test/domain.test.ts` | `npm test` |
+| Payment-to-booking flow with rollback | `src/services/checkout.ts` | Build spec section 3 |
+| Mock Hospitable + Stripe | `src/adapters/mock.ts` | Behaves like the live test of Nov 14 (duplicate codes rejected, instant block) |
+| API routes | `app/api/*` | calendar, quote, checkout |
+| Guest screens | `app/page.tsx` | Approved mockup |
+| Tests | `test/*.test.ts` | `npm test` |
 
 ## Still provisional
 
@@ -25,8 +31,7 @@ Status: **core logic only** (no live integrations yet). Nothing here can charge 
 
 ## Next
 
-1. Next.js app (mobile checkout screens from the approved mockup).
-2. Adapters with a mock mode: Hospitable (calendar, reservation, cancel), Stripe (PaymentIntent manual capture, SetupIntent, Identity), email.
+1. Real adapters for test mode: Hospitable (calendar, reservation, cancel), Stripe (PaymentIntent manual capture, SetupIntent, Identity), email.
 3. Durable jobs: reminders, deadline, second payment, access release, ID redaction (120 days), reconciliation.
 4. GA4 + Meta events with booking-ref deduplication.
 
