@@ -3,6 +3,16 @@ import type { Quote } from "../domain/quote";
 import { PROCESSING_MESSAGE, type CheckoutOutcome, type CheckoutRequest, type Reconcile } from "../services/checkout";
 
 export class ManualReviewError extends Error { name = "ManualReviewError"; }
+
+export type ReconcileResult =
+  | { result: "resolved"; guest: GuestView } | { result: "deferred" } | { result: "skipped" }
+  | { result: "failed"; error: Error } | { result: "manual_review"; error: Error };
+/** Absence evidence policy (ChatGPT note 89). */
+export const ABSENCE_MIN_AGE_S = 120;
+export const ABSENCE_CHECKS = 3;
+const ABSENCE_SCHEDULE_S = [120, 300, 900]; // ~2, 5, 15 minutes after the attempt
+export const RECONCILE_MAX_ATTEMPTS = 12;
+export const RECONCILE_MAX_AGE_S = 48 * 3600;
 export class ConfirmConflictError extends Error { name = "ConfirmConflictError"; }
 import type { HospitableAdapter, PaymentsAdapter } from "../adapters/types";
 import type { VerificationDeadline } from "../domain/verification";
@@ -243,22 +253,58 @@ export class DbLedger implements Ledger {
    *    queue with last_error; external steps are idempotent, so a retry is safe.
    */
   async reconcile(attemptKey: string, deps: ReconcileDeps, claimSeconds = 120): Promise<GuestView | null> {
+    const res = await this.reconcileDetailed(attemptKey, deps, claimSeconds);
+    if (res.result === "failed" || res.result === "manual_review") throw res.error;
+    return res.result === "resolved" ? res.guest : null;
+  }
+
+  /**
+   * Eventual consistency (ChatGPT note 89): Stripe search and Hospitable lookups can lag, so an empty lookup is not
+   * proof of absence. Absence becomes reliable only when the attempt is at least 2 minutes old AND three separate
+   * negative checks agree (scheduled about 2, 5 and 15 minutes after the attempt, with jitter). Until then the item
+   * is re-queued with next_reconcile_at and no external action is taken. A lookup error is "ambiguous": it never
+   * counts as absence and is retried with exponential backoff. Beyond MAX_ATTEMPTS or MAX_AGE the item moves to
+   * 'manual_review' with an alert, never a hot loop.
+   */
+  async reconcileDetailed(attemptKey: string, deps: ReconcileDeps, claimSeconds = 120): Promise<ReconcileResult> {
     const token = crypto.randomUUID();
     const [a] = await this.db.query<any>(
       `UPDATE checkout_attempts SET status = 'reconciling', claim_token = $2, claimed_at = now(),
          claim_expires_at = now() + make_interval(secs => $3), reconcile_attempts = reconcile_attempts + 1
-       WHERE attempt_key = $1 AND (status = 'needs_reconciliation' OR (status = 'reconciling' AND claim_expires_at < now()))
-       RETURNING quote_id, booking_ref, reconcile, booking_id`, [attemptKey, token, claimSeconds]);
-    if (!a) return null; // not queued, or another worker holds a live claim
+       WHERE attempt_key = $1 AND (next_reconcile_at IS NULL OR next_reconcile_at <= now())
+         AND (status = 'needs_reconciliation' OR (status = 'reconciling' AND claim_expires_at < now()))
+       RETURNING quote_id, booking_ref, reconcile, booking_id, negative_checks, reconcile_attempts,
+                 EXTRACT(EPOCH FROM (now() - created_at))::float AS age_s`, [attemptKey, token, claimSeconds]);
+    if (!a) return { result: "skipped" }; // not queued, not due yet, or another worker holds a live claim
     const r: Reconcile = typeof a.reconcile === "string" ? JSON.parse(a.reconcile) : a.reconcile;
+    const ageS: number = Number(a.age_s);
     try {
+      if (a.reconcile_attempts > RECONCILE_MAX_ATTEMPTS || ageS > RECONCILE_MAX_AGE_S) throw new ManualReviewError("reconciliation attempt/age limit reached");
       const q = (await this.getQuote(a.quote_id))!;
       const bookingId: string | null = r.bookingId ?? a.booking_id ?? (await this.db.query<any>(`SELECT id FROM bookings WHERE booking_ref = $1`, [r.bookingRef]))[0]?.id ?? null;
+
+      // Facts. Known IDs are used directly; missing ones are looked up (lookup errors propagate as ambiguous).
       const pis = r.paymentIntentId ? [r.paymentIntentId] : await deps.pay.findByRef(r.bookingRef);
+      const paymentLookupEmpty = !r.paymentIntentId && pis.length === 0;
+      // Stage tells us when a reservation was never created (authorization never succeeded) or was definitely
+      // rejected/cancelled: no lookup needed. Otherwise look it up by code (= booking ref).
+      const noReservationByStage = r.stage === "authorize_unknown" || r.stage === "void_failed";
+      const reservationId = r.reservationId ?? (noReservationByStage ? null : await deps.hosp.findReservationByCode(r.bookingRef));
+      const reservationLookupEmpty = !r.reservationId && !noReservationByStage && reservationId === null;
+
+      if (paymentLookupEmpty || reservationLookupEmpty) {
+        const negatives = ageS < ABSENCE_MIN_AGE_S ? a.negative_checks : a.negative_checks + 1;
+        if (ageS < ABSENCE_MIN_AGE_S || negatives < ABSENCE_CHECKS) {
+          const nextOffsetS = ABSENCE_SCHEDULE_S[Math.min(negatives, ABSENCE_SCHEDULE_S.length - 1)]!;
+          await this.requeue(attemptKey, token, { negativeChecks: negatives, nextAtOffsetFromCreatedS: nextOffsetS,
+            note: `absence not yet reliable (payment empty=${paymentLookupEmpty}, reservation empty=${reservationLookupEmpty}, negatives=${negatives})` });
+          return { result: "deferred" };
+        }
+      }
+
       const statuses = await Promise.all(pis.map(async (id) => ({ id, status: await deps.pay.status(id) })));
       const captured = statuses.find((x) => x.status === "captured");
       const authorized = statuses.filter((x) => x.status === "authorized");
-      const reservationId = r.reservationId ?? (await deps.hosp.findReservationByCode(r.bookingRef));
 
       // Stages where checkout had already decided to unwind (a definite failure, then the undo step failed) are
       // always finished as an unwind: never captured later.
@@ -276,6 +322,8 @@ export class DbLedger implements Ledger {
         guest = { ok: true, bookingRef: r.bookingRef, verification: { deadlineText: v.deadlineText, mustCompleteBeforeAccess: v.mustCompleteBeforeAccess } };
         outcome = "confirmed";
       } else {
+        // Reached only with reliable evidence: a reservation is cancelled only when the payment side is known or
+        // reliably absent, and an authorization is voided only when the reservation side is known or reliably absent.
         if (reservationId) await deps.hosp.cancelReservation(reservationId);
         for (const x of authorized) await deps.pay.voidAuthorization(x.id);
         if (bookingId) await this.closeBooking(bookingId, "closed");
@@ -284,21 +332,40 @@ export class DbLedger implements Ledger {
       }
       // Finish only if we still hold the claim (a stale worker that lost it must not overwrite).
       const done = await this.db.query(
-        `UPDATE checkout_attempts SET status = 'done', outcome = $3, finished_at = now(), claim_token = NULL, last_error = NULL
+        `UPDATE checkout_attempts SET status = 'done', outcome = $3, finished_at = now(), claim_token = NULL, last_error = NULL, next_reconcile_at = NULL
          WHERE attempt_key = $1 AND claim_token = $2 RETURNING attempt_key`, [attemptKey, token, JSON.stringify({ guest, internal: { reconciled: r.stage, outcome } })]);
-      if (!done.length) return null;
+      if (!done.length) return { result: "skipped" };
       if (bookingId) await this.db.query(
         `INSERT INTO audit_log (booking_id, actor, action, after) VALUES ($1, 'system', 'reconciled', $2)
          ON CONFLICT (booking_id, action) WHERE action IN ('booking_confirmed', 'reconciled') DO NOTHING`, [bookingId, JSON.stringify({ stage: r.stage, outcome })]);
       await this.releaseLease(q, attemptKey);
-      return guest;
+      return { result: "resolved", guest };
     } catch (e) {
+      const err = e as Error;
+      if (e instanceof ManualReviewError) {
+        await this.db.query(
+          `UPDATE checkout_attempts SET status = 'manual_review', claim_token = NULL, claim_expires_at = NULL, next_reconcile_at = NULL, last_error = $3
+           WHERE attempt_key = $1 AND claim_token = $2`, [attemptKey, token, `${err.name}: ${err.message}`.slice(0, 300)]);
+        console.error("ALERT reconciliation needs manual review", r.bookingRef, err.message);
+        return { result: "manual_review", error: err };
+      }
+      // Ambiguous or transient: exponential backoff with jitter (30 s, 1, 2, 4 ... capped at 60 min).
+      const backoffS = Math.min(30 * 2 ** Math.max(0, a.reconcile_attempts - 1), 3600) * (0.8 + Math.random() * 0.4);
       await this.db.query(
-        `UPDATE checkout_attempts SET status = 'needs_reconciliation', claim_token = NULL, claim_expires_at = NULL, last_error = $3
-         WHERE attempt_key = $1 AND claim_token = $2`, [attemptKey, token, `${(e as Error).name}: ${(e as Error).message}`.slice(0, 300)]);
-      if (e instanceof ManualReviewError) console.error("ALERT reconciliation needs manual review", r.bookingRef, e.message);
-      throw e;
+        `UPDATE checkout_attempts SET status = 'needs_reconciliation', claim_token = NULL, claim_expires_at = NULL,
+           next_reconcile_at = now() + make_interval(secs => $4), last_error = $3
+         WHERE attempt_key = $1 AND claim_token = $2`, [attemptKey, token, `${err.name}: ${err.message}`.slice(0, 300), backoffS]);
+      return { result: "failed", error: err };
     }
+  }
+
+  /** Puts a claimed item back in the queue for a scheduled re-check (no external action was taken). */
+  private async requeue(attemptKey: string, token: string, o: { negativeChecks: number; nextAtOffsetFromCreatedS: number; note: string }) {
+    const jitterS = Math.round(o.nextAtOffsetFromCreatedS * (Math.random() * 0.2)); // up to +20%
+    await this.db.query(
+      `UPDATE checkout_attempts SET status = 'needs_reconciliation', claim_token = NULL, claim_expires_at = NULL, negative_checks = $3,
+         next_reconcile_at = GREATEST(now() + interval '30 seconds', created_at + make_interval(secs => $4)), last_error = $5
+       WHERE attempt_key = $1 AND claim_token = $2`, [attemptKey, token, o.negativeChecks, o.nextAtOffsetFromCreatedS + jitterS, o.note]);
   }
 
   private async datesBlocked(q: SavedQuote, deps: ReconcileDeps): Promise<boolean> {
@@ -310,7 +377,8 @@ export class DbLedger implements Ledger {
   async pendingReconciliation(limit = 20): Promise<string[]> {
     return (await this.db.query<{ attempt_key: string }>(
       `SELECT attempt_key FROM checkout_attempts
-       WHERE status = 'needs_reconciliation' OR (status = 'reconciling' AND claim_expires_at < now())
+       WHERE (status = 'needs_reconciliation' AND (next_reconcile_at IS NULL OR next_reconcile_at <= now()))
+          OR (status = 'reconciling' AND claim_expires_at < now())
        ORDER BY created_at LIMIT $1`, [limit])).map((r) => r.attempt_key);
   }
 

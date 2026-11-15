@@ -155,7 +155,7 @@ describe("atomic worker claim", () => {
     h.hideNewBlocksForReads = 0;
     expect(await ledger.reconcile(r.k, deps(h, p))).toMatchObject({ ok: true });
   });
-  it("a failing reconciliation returns the item to the queue with last_error and attempts counted", async () => {
+  it("a failing reconciliation returns the item to the queue with last_error, attempts counted and a backoff", async () => {
     const h = new MockHospitable(), p = new MockPayments();
     h.hideNewBlocksForReads = Infinity;
     const r = await attempt(h, p, "PH-WRK003");
@@ -165,6 +165,8 @@ describe("atomic worker claim", () => {
     const row = await one(`SELECT status, last_error, reconcile_attempts FROM checkout_attempts WHERE attempt_key = $1`, [r.k]);
     expect(row).toMatchObject({ status: "needs_reconciliation", reconcile_attempts: 1 });
     expect(row.last_error).toMatch(/503/);
+    expect(await ledger.pendingReconciliation()).toEqual([]); // not due until the backoff passes
+    expect(await ledger.reconcile(r.k, deps(h, p))).toBeNull(); // not claimable before next_reconcile_at
   });
   it("captured without any reservation is never auto-resolved: stays queued for a human", async () => {
     const h = new MockHospitable(), p = new MockPayments();
@@ -172,8 +174,15 @@ describe("atomic worker claim", () => {
     const r = await attempt(h, p, "PH-MAN001");
     h.findReservationByCode = async () => null;
     await db.query(`UPDATE checkout_attempts SET reconcile = reconcile - 'reservationId' WHERE attempt_key = $1`, [r.k]);
+    // One empty reservation lookup is not proof (note 89): deferred, no action, until 3 checks >= 2 minutes old agree.
+    expect(await ledger.reconcile(r.k, deps(h, p))).toBeNull();
+    for (let i = 0; i < 3; i++) {
+      await db.query(`UPDATE checkout_attempts SET created_at = created_at - interval '20 minutes', next_reconcile_at = now() - interval '1 second' WHERE attempt_key = $1`, [r.k]);
+      if (i < 2) expect(await ledger.reconcile(r.k, deps(h, p))).toBeNull();
+    }
     await expect(ledger.reconcile(r.k, deps(h, p))).rejects.toThrow(/refund decision/);
-    expect((await one(`SELECT status FROM checkout_attempts WHERE attempt_key = $1`, [r.k])).status).toBe("needs_reconciliation");
+    expect((await one(`SELECT status FROM checkout_attempts WHERE attempt_key = $1`, [r.k])).status).toBe("manual_review");
+    expect([...p.intents.values()][0]!.status).toBe("captured"); // never auto-refunded
   });
 });
 
