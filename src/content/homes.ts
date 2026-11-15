@@ -148,7 +148,7 @@ export const HOMES: Record<string, HomeContent> = {
     location: {
       text: "Tobin Hill, near the Pearl and the Museum Reach of the River Walk.",
       facts: ["About a 3-minute walk to the Pearl, the River Walk and restaurants", "About a 5-minute drive to the San Antonio Zoo, the DoSeum and the Witte Museum"],
-      mapBbox: "-98.4960,29.4360,-98.4730,29.4520",
+      mapBbox: "-98.4935,29.4350,-98.4705,29.4510", // centered between the home and the Pearl so the circle never pinpoints the house
       note: "The exact address is shared after your booking is confirmed and your rental agreement and ID check are complete.",
     },
     reviews: [
