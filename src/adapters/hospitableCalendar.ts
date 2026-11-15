@@ -20,10 +20,11 @@ export function hospitableCalendarSource(token: string, fetchImpl: typeof fetch 
       const url = `${BASE}/properties/${encodeURIComponent(uuid)}/calendar?start_date=${start}&end_date=${end}`;
       const res = await fetchImpl(url, { headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }, cache: "no-store" });
       if (!res.ok) throw new AdapterError(`Hospitable calendar ${res.status}`, res.status === 401 ? "auth_failed" : "upstream_error");
-      const body = (await res.json()) as { data?: { days?: Array<{ date: string; min_stay?: number; status?: { available?: boolean }; price?: { amount?: number; currency?: string } }> } };
+      const body = (await res.json()) as { data?: { days?: Array<{ date: string; min_stay?: number; closed_for_checkin?: boolean; closed_for_checkout?: boolean; status?: { available?: boolean }; price?: { amount?: number; currency?: string } }> } };
       return (body.data?.days ?? []).map((d) => {
         if (d.price?.currency && d.price.currency !== "USD") throw new AdapterError(`Unexpected currency ${d.price.currency}`, "upstream_error");
-        return { date: d.date, available: d.status?.available === true && typeof d.price?.amount === "number", price: d.price?.amount ?? 0, minStay: d.min_stay ?? 1 };
+        return { date: d.date, available: d.status?.available === true && typeof d.price?.amount === "number", price: d.price?.amount ?? 0, minStay: d.min_stay ?? 1,
+          closedForCheckin: d.closed_for_checkin === true, closedForCheckout: d.closed_for_checkout === true };
       });
     })();
     cache.set(key, { at: Date.now(), days });

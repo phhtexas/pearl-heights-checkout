@@ -5,7 +5,7 @@ import { PROPERTIES } from "@/domain/properties";
 import type { Quote } from "@/domain/quote";
 import { formatChicagoDate } from "@/domain/time";
 
-type Day = { date: string; available: boolean; price: number; minStay: number };
+type Day = { date: string; available: boolean; price: number; minStay: number; closedForCheckin?: boolean; closedForCheckout?: boolean };
 const money = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 const fmt = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 const SIMS = [["none", "Everything works"], ["dates_taken", "Dates booked on Airbnb during checkout"], ["card_declined", "Card declined"], ["reservation_fails", "Hospitable reservation fails"], ["capture_fails", "Payment capture fails"]] as const;
@@ -128,7 +128,7 @@ export default function Checkout() {
               {monthDays.list.map((iso) => {
                 const d = byDate[iso];
                 const asCheckout = ci && !co && iso > ci && d;
-                const ok = !!d && (d.available || !!asCheckout);
+                const ok = !!d && (asCheckout ? !d.closedForCheckout : d.available && !d.closedForCheckin);
                 const cls = "day" + (iso === ci || iso === co ? " sel" : ci && co && iso > ci && iso < co ? " in" : "");
                 return <button key={iso} className={cls} disabled={!ok} onClick={() => pick(iso)} aria-label={iso}>{Number(iso.slice(8))}<small>{d?.available ? "$" + d.price / 100 : ""}</small></button>;
               })}

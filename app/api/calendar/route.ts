@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getProperty } from "@/domain/properties";
 import { getAdapters } from "@/server/adapters";
 import { readSession, withSession } from "@/server/session";
-import { addDaysISO } from "@/domain/time";
+import { addDaysISO, earliestCheckIn } from "@/domain/time";
 
 export const dynamic = "force-dynamic";
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -20,7 +20,9 @@ export async function GET(req: Request) {
   const end = ISO.test(url.searchParams.get("end") ?? "") ? url.searchParams.get("end")! : addDaysISO(start, 240);
   try {
     const { hosp } = getAdapters("none", process.env, session.id);
-    const days = await hosp.getCalendar(p.hospitableUuid, start, end);
+    const earliest = earliestCheckIn(new Date());
+    // Days before the earliest bookable check-in are shown as unavailable (same-day cut-off, 12 PM CT).
+    const days = (await hosp.getCalendar(p.hospitableUuid, start, end)).map((d) => (d.date < earliest ? { ...d, available: false } : d));
     return withSession(NextResponse.json({ property: p.key, days }, { headers: { "Cache-Control": "no-store" } }), session);
   } catch (e) {
     console.error("calendar error", (e as Error).message);

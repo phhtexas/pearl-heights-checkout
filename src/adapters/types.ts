@@ -5,6 +5,8 @@ export interface CalendarDay {
   available: boolean;
   price: Cents;
   minStay: number;
+  closedForCheckin?: boolean;
+  closedForCheckout?: boolean;
 }
 
 export interface HospitableAdapter {

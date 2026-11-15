@@ -58,4 +58,16 @@ export function formatChicagoDate(at: Date): string {
   return new Intl.DateTimeFormat("en-US", { timeZone: TIMEZONE, month: "short", day: "numeric", year: "numeric" }).format(at);
 }
 
+/** Today's date in Central time (YYYY-MM-DD). */
+export const todayChicago = (now: Date): string => new Intl.DateTimeFormat("en-CA", { timeZone: TIMEZONE }).format(now);
+
+/** Same-day bookings close at 12:00 PM Central (Oscar, Nov 14, 2026). */
+export const SAME_DAY_CUTOFF_HOUR = 12;
+
+/** Earliest check-in date a guest may book right now. */
+export function earliestCheckIn(now: Date): string {
+  const today = todayChicago(now);
+  return now.getTime() < chicagoInstant(today, SAME_DAY_CUTOFF_HOUR).getTime() ? today : addDaysISO(today, 1);
+}
+
 export { HOUR, DAY };

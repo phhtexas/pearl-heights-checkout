@@ -22,9 +22,9 @@ describe("Hospitable calendar (read-only)", () => {
     const src = hospitableCalendarSource("tok_test", f);
     const days = await src(UUID, "2027-03-08", "2027-03-10");
     expect(days).toEqual([
-      { date: "2027-03-08", available: true, price: 60700, minStay: 2 },
-      { date: "2027-03-09", available: false, price: 43700, minStay: 2 },
-      { date: "2027-03-10", available: true, price: 58900, minStay: 3 },
+      { date: "2027-03-08", available: true, price: 60700, minStay: 2, closedForCheckin: false, closedForCheckout: false },
+      { date: "2027-03-09", available: false, price: 43700, minStay: 2, closedForCheckin: false, closedForCheckout: false },
+      { date: "2027-03-10", available: true, price: 58900, minStay: 3, closedForCheckin: false, closedForCheckout: false },
     ]);
     expect(calls[0].url).toBe(`https://public.api.hospitable.com/v2/properties/${UUID}/calendar?start_date=2027-03-08&end_date=2027-03-10`);
     expect(calls[0].init.headers.Authorization).toBe("Bearer tok_test");
@@ -45,5 +45,21 @@ describe("Hospitable calendar (read-only)", () => {
     expect((await h.getCalendar(UUID, "2027-03-08", "2027-03-10")).map((d) => d.available)).toEqual([false, false, true]);
     h.failure = "dates_taken";
     expect((await h.getCalendar(UUID, "2027-03-08", "2027-03-10")).every((d) => !d.available)).toBe(true);
+  });
+});
+
+describe("same-day cut-off (12 PM CT, Oscar Nov 14)", async () => {
+  const { earliestCheckIn } = await import("../src/domain/time");
+  it("before noon CT today is bookable", () => expect(earliestCheckIn(new Date("2026-11-14T17:59:00Z"))).toBe("2026-11-14")); // 11:59 AM CST
+  it("at/after noon CT the earliest is tomorrow", () => expect(earliestCheckIn(new Date("2026-11-14T18:00:00Z"))).toBe("2026-11-15"));
+  it("late evening CT is still 'today' in Chicago even when UTC has rolled over", () => expect(earliestCheckIn(new Date("2026-11-15T03:30:00Z"))).toBe("2026-11-15")); // 9:30 PM Nov 14 CT
+  it("summer (CDT) noon", () => expect(earliestCheckIn(new Date("2027-07-01T16:59:00Z"))).toBe("2027-07-01"));
+});
+
+describe("closed for check-in / check-out", () => {
+  it("are read from Hospitable", async () => {
+    const f = (async () => ({ ok: true, status: 200, json: async () => ({ data: { days: [{ date: "2027-03-08", min_stay: 2, closed_for_checkin: true, closed_for_checkout: false, status: { available: true }, price: { amount: 100, currency: "USD" } }] } }) })) as any;
+    const [d] = await hospitableCalendarSource("t", f)(UUID, "2027-03-08", "2027-03-08");
+    expect(d).toMatchObject({ closedForCheckin: true, closedForCheckout: false });
   });
 });
