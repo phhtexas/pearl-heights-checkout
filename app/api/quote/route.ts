@@ -7,6 +7,7 @@ import { getAdapters, getLedger } from "@/server/adapters";
 import { parseStay, ValidationError } from "@/server/validate";
 import { readSession, withSession } from "@/server/session";
 import { earliestCheckIn } from "@/domain/time";
+import { stayPolicy } from "@/domain/policy";
 
 export const dynamic = "force-dynamic";
 const noStore = { "Cache-Control": "no-store" };
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     const quote = buildQuote({ ...s, property, nightlyRates: Object.fromEntries(nights.map((d) => [d.date, d.price])), now });
     // The quote the guest sees is saved; checkout must name it (persisted quote acceptance).
     const saved = await getLedger(process.env, session.id).ledger.saveQuote({ ...s, property: property.key }, quote, session.id, now);
-    return withSession(NextResponse.json({ quote, quoteId: saved.id, expiresAt: saved.expiresAt.getTime() }, { headers: noStore }), session);
+    return withSession(NextResponse.json({ quote, quoteId: saved.id, expiresAt: saved.expiresAt.getTime(), policy: stayPolicy(s.checkIn, now) }, { headers: noStore }), session);
   } catch (e) {
     const status = e instanceof QuoteError || e instanceof ValidationError ? 400 : 500;
     if (status === 500) console.error("quote error", (e as Error).message);

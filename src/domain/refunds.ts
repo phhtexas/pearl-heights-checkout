@@ -34,6 +34,12 @@ export interface RefundResult {
 }
 
 export const PROCESSING_FEE_RATE = 0.05;
+/** Full refund window after booking (refundable bookings only). */
+export const GRACE_HOURS = 24;
+/** Below this many days before check-in, nothing is refunded except the damage waiver. */
+export const HALF_REFUND_DAYS = 14;
+/** From this instant the 50% tier ends and only the damage waiver is refunded. */
+export const halfRefundCutoff = (checkIn: string): Date => checkInInstant(addDaysISO(checkIn, -HALF_REFUND_DAYS));
 
 export function computeRefund(i: RefundInput): RefundResult {
   const { quote, paidSoFar } = i;
@@ -59,12 +65,12 @@ export function computeRefund(i: RefundInput): RefundResult {
 
   // First 24 hours (bookings made 8+ days out): everything back, no fee, waiver included (Oscar, Nov 15).
   const hoursSinceBooking = hoursBetween(i.bookedAt, i.cancelledAt);
-  if (hoursSinceBooking <= 24) return result("grace_24h", 0);
+  if (hoursSinceBooking <= GRACE_HOURS) return result("grace_24h", 0);
 
   // Damage protection is refunded in full on any cancellation before check-in.
   const totalExProtection = quote.total - quote.protection;
   // 30+ tier ends at the exact instant the second payment is charged (4:00 PM CT, 30 days out).
   if (i.cancelledAt.getTime() < flexibleCutoff(i.checkIn).getTime()) return result("30_plus", fee);
-  if (i.cancelledAt.getTime() < checkInInstant(addDaysISO(i.checkIn, -14)).getTime()) return result("14_to_29", Math.round(totalExProtection / 2));
+  if (i.cancelledAt.getTime() < halfRefundCutoff(i.checkIn).getTime()) return result("14_to_29", Math.round(totalExProtection / 2));
   return result("under_14", totalExProtection);
 }
