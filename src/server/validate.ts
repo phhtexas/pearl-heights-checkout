@@ -37,7 +37,7 @@ export function parseCheckout(b: any) {
   if (b?.agreed !== true) throw new ValidationError("Please accept the house rules, cancellation policy and payment authorization.");
   const acceptedTotal = int(b?.acceptedTotal, "Accepted total", 1, 100_000_000);
   if (b?.bookingRef != null && !REF.test(String(b.bookingRef))) throw new ValidationError("Invalid booking reference.");
-  if (b?.paymentMethodId != null && !/^pm_[A-Za-z0-9]{6,64}$/.test(String(b.paymentMethodId))) throw new ValidationError("Invalid payment details. Please re-enter your card.");
+  if (b?.paymentMethodId != null && !/^pm_[A-Za-z0-9_]{6,64}$/.test(String(b.paymentMethodId))) throw new ValidationError("Invalid payment details. Please re-enter your card.");
   return { ...stay, guest, acceptedTotal, bookingRef: b?.bookingRef as string | undefined, paymentMethodId: b?.paymentMethodId as string | undefined };
 }
 
