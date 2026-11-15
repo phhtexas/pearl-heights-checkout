@@ -15,7 +15,7 @@ async function request(h: MockHospitable, ref: string) {
   const stay = { property: indianola, checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, children: 0, infants: 0, now: NOW };
   const clean = new MockHospitable(); // quote is taken before the Airbnb booking lands
   const cal = await clean.getCalendar(indianola.hospitableUuid, stay.checkIn, stay.checkOut);
-  const q = buildQuote({ ...stay, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
+  const q = buildQuote({ payPlan: "split",  ...stay, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
   return { ...stay, guest: { firstName: "T", lastName: "G", email: "t@example.com", phone: "2105550100" }, bookingRef: ref, acceptedTotal: q.total };
 }
 
@@ -73,8 +73,8 @@ describe("item 3: verification deadline in Central time with date and zone", () 
 });
 
 describe("item 4: consent names the actual second-charge date", () => {
-  it("10 AM CT, 30 days before check-in, as a Central calendar date", () => {
-    const q = buildQuote({ property: indianola, checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, children: 0, infants: 0, now: NOW, nightlyRates: { "2027-04-05": 30000, "2027-04-06": 30000 } });
+  it("4 PM CT, 30 days before check-in, as a Central calendar date", () => {
+    const q = buildQuote({ payPlan: "split",  property: indianola, checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, children: 0, infants: 0, now: NOW, nightlyRates: { "2027-04-05": 30000, "2027-04-06": 30000 } });
     expect(formatChicagoDate(q.plan.scheduled!.chargeAt)).toBe("Mar 6, 2027");
   });
 });

@@ -19,7 +19,7 @@ const rates = (from: string, to: string, c: number) => {
 async function req(h: MockHospitable, ref: string): Promise<CheckoutRequest> {
   const base = { property: edgewood, checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, children: 0, infants: 0, now: NOW };
   const cal = await h.getCalendar(edgewood.hospitableUuid, base.checkIn, base.checkOut);
-  const q = buildQuote({ ...base, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < base.checkOut).map((d) => [d.date, d.price])) });
+  const q = buildQuote({ payPlan: "split",  ...base, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < base.checkOut).map((d) => [d.date, d.price])) });
   return { ...base, guest: { firstName: "T", lastName: "G", email: "t@example.com", phone: "2105550100" }, bookingRef: ref, acceptedTotal: q.total };
 }
 
@@ -57,20 +57,20 @@ describe("capture failure where the cancellation stays BLOCKED", () => {
   });
 });
 
-describe("scheduled second payment: DST and month boundaries (10 AM Central, 30 days before check-in)", () => {
+describe("scheduled second payment: DST and month boundaries (4 PM Central, 30 days before check-in)", () => {
   const charge = (checkIn: string) =>
-    buildQuote({ property: edgewood, checkIn, checkOut: checkInPlus(checkIn, 2), adults: 2, children: 0, infants: 0, now: NOW, nightlyRates: rates(checkIn, checkInPlus(checkIn, 2), 30000) }).plan.scheduled!.chargeAt.toISOString();
-  it("crosses into a month with 31 days", () => expect(charge("2027-03-31")).toBe("2027-03-01T16:00:00.000Z")); // CST
-  it("day before spring-forward is still CST (DST starts Mar 14, 2027)", () => expect(charge("2027-04-12")).toBe("2027-03-13T16:00:00.000Z"));
-  it("lands after spring-forward (CDT)", () => expect(charge("2027-04-20")).toBe("2027-03-21T15:00:00.000Z"));
-  it("lands in February from March", () => expect(charge("2027-03-02")).toBe("2027-01-31T16:00:00.000Z"));
-  it("straddles the November fall-back", () => expect(charge("2027-12-05")).toBe("2027-11-05T15:00:00.000Z")); // still CDT on Nov 5
+    buildQuote({ payPlan: "split",  property: edgewood, checkIn, checkOut: checkInPlus(checkIn, 2), adults: 2, children: 0, infants: 0, now: NOW, nightlyRates: rates(checkIn, checkInPlus(checkIn, 2), 30000) }).plan.scheduled!.chargeAt.toISOString();
+  it("crosses into a month with 31 days", () => expect(charge("2027-03-31")).toBe("2027-03-01T22:00:00.000Z")); // CST
+  it("day before spring-forward is still CST (DST starts Mar 14, 2027)", () => expect(charge("2027-04-12")).toBe("2027-03-13T22:00:00.000Z"));
+  it("lands after spring-forward (CDT)", () => expect(charge("2027-04-20")).toBe("2027-03-21T21:00:00.000Z"));
+  it("lands in February from March", () => expect(charge("2027-03-02")).toBe("2027-01-31T22:00:00.000Z"));
+  it("straddles the November fall-back", () => expect(charge("2027-12-05")).toBe("2027-11-05T21:00:00.000Z")); // still CDT on Nov 5
 });
 
 describe("Indianola refunds with and without extra guests (fee base includes extra-guest charges)", () => {
   const indianola = getProperty("indianola");
   const make = (adults: number) =>
-    buildQuote({ property: indianola, checkIn: "2027-03-01", checkOut: "2027-03-04", adults, children: 0, infants: 0, now: NOW, nightlyRates: rates("2027-03-01", "2027-03-04", 50000) });
+    buildQuote({ payPlan: "split",  property: indianola, checkIn: "2027-03-01", checkOut: "2027-03-04", adults, children: 0, infants: 0, now: NOW, nightlyRates: rates("2027-03-01", "2027-03-04", 50000) });
   for (const adults of [4, 6]) {
     it(`${adults} guests: 5% fee = 5% of nights + extra guests + cleaning`, () => {
       const q = make(adults);

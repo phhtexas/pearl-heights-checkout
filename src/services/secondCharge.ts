@@ -2,7 +2,7 @@ import type { Db } from "../db/client";
 import { AdapterError, PaymentsAdapter } from "../adapters/types";
 
 /**
- * Off-session second charge (split plans): 50% charged at 10:00 AM CT, 30 days before check-in.
+ * Off-session second charge (split plans): 50% charged at 4:00 PM CT, 30 days before check-in (when flexible cancellation ends; Oscar, Nov 15).
  *
  *  - Each due job is claimed atomically (UPDATE ... FOR UPDATE SKIP LOCKED ... RETURNING) before any Stripe call;
  *    overlapping runners never charge twice. A worker that dies leaves an expiring claim.

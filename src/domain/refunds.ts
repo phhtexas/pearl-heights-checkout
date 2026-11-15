@@ -1,5 +1,6 @@
 import { Cents, roundCents } from "./money";
-import { Quote } from "./quote";
+import { flexibleCutoff, isNonRefundableBooking, Quote } from "./quote";
+import { addDaysISO } from "./time";
 import { checkInInstant, hoursBetween } from "./time";
 
 /**
@@ -23,7 +24,7 @@ export interface RefundInput {
 }
 
 export interface RefundResult {
-  tier: "full_no_fee" | "grace_24h" | "30_plus" | "14_to_29" | "under_14" | "after_check_in" | "nonpayment";
+  tier: "full_no_fee" | "grace_24h" | "non_refundable" | "30_plus" | "14_to_29" | "under_14" | "after_check_in" | "nonpayment";
   retained: Cents;
   refund: Cents;
   processingFee: Cents;
@@ -40,7 +41,7 @@ export function computeRefund(i: RefundInput): RefundResult {
   const result = (tier: RefundResult["tier"], retainedWanted: Cents): RefundResult => {
     const retained = Math.min(retainedWanted, paidSoFar);
     return {
-      tier, retained, refund: paidSoFar - retained, processingFee: tier === "full_no_fee" ? 0 : Math.min(fee, retained),
+      tier, retained, refund: paidSoFar - retained, processingFee: tier === "full_no_fee" || tier === "grace_24h" || tier === "non_refundable" ? 0 : Math.min(fee, retained),
       cancelScheduledPayment: true,
       ...(retainedWanted > paidSoFar ? { shortfall: retainedWanted - paidSoFar } : {}),
     };
@@ -53,13 +54,17 @@ export function computeRefund(i: RefundInput): RefundResult {
   const hoursToCheckIn = hoursBetween(i.cancelledAt, checkIn);
   if (hoursToCheckIn <= 0) return result("after_check_in", paidSoFar);
 
-  const hoursSinceBooking = hoursBetween(i.bookedAt, i.cancelledAt);
-  if (hoursSinceBooking <= 24) return result("grace_24h", fee);
+  // Booked 7 days or less before check-in: non-refundable, damage waiver included (Oscar, Nov 15).
+  if (isNonRefundableBooking(i.checkIn, i.bookedAt)) return result("non_refundable", paidSoFar);
 
-  const daysToCheckIn = hoursToCheckIn / 24;
+  // First 24 hours (bookings made 8+ days out): everything back, no fee, waiver included (Oscar, Nov 15).
+  const hoursSinceBooking = hoursBetween(i.bookedAt, i.cancelledAt);
+  if (hoursSinceBooking <= 24) return result("grace_24h", 0);
+
   // Damage protection is refunded in full on any cancellation before check-in.
   const totalExProtection = quote.total - quote.protection;
-  if (daysToCheckIn >= 30) return result("30_plus", fee);
-  if (daysToCheckIn >= 14) return result("14_to_29", Math.round(totalExProtection / 2));
+  // 30+ tier ends at the exact instant the second payment is charged (4:00 PM CT, 30 days out).
+  if (i.cancelledAt.getTime() < flexibleCutoff(i.checkIn).getTime()) return result("30_plus", fee);
+  if (i.cancelledAt.getTime() < checkInInstant(addDaysISO(i.checkIn, -14)).getTime()) return result("14_to_29", Math.round(totalExProtection / 2));
   return result("under_14", totalExProtection);
 }

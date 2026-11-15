@@ -1,6 +1,6 @@
 import { Cents, roundCents } from "./money";
 import { DAMAGE_PROTECTION, Property } from "./properties";
-import { addDaysISO, chicagoInstant, checkInInstant, hoursBetween, nightsBetween } from "./time";
+import { addDaysISO, checkInInstant, hoursBetween, nightsBetween } from "./time";
 
 export interface QuoteInput {
   property: Property;
@@ -14,6 +14,8 @@ export interface QuoteInput {
   now: Date;
   /** Validated $50 code etc. Applies to the nightly rate before taxes and fees. */
   nightlyDiscount?: Cents;
+  /** Guest's choice (Oscar, Nov 15): pay in full is the default; split only when offered. */
+  payPlan?: "full" | "split";
 }
 
 export interface PaymentPlan {
@@ -32,7 +34,13 @@ export interface Quote {
   tax: Cents;
   taxRate: number;
   total: Cents;
+  /** The plan the guest chose (falls back to full when split is not offered). */
   plan: PaymentPlan;
+  fullPlan: PaymentPlan;
+  /** Present only when check-in is more than 30 days away and the booking is refundable. */
+  splitPlan?: PaymentPlan;
+  /** Booked 7 days or less before the 4:00 PM check-in: pay in full, non-refundable (Oscar, Nov 15). */
+  nonRefundable: boolean;
   /** Base for the 5% cancellation processing fee: nights + extra guests + cleaning, before taxes. */
   processingFeeBase: Cents;
 }
@@ -40,6 +48,16 @@ export interface Quote {
 export class QuoteError extends Error {}
 
 const FULL_PAYMENT_WINDOW_DAYS = 30;
+export const NON_REFUNDABLE_WINDOW_DAYS = 7;
+
+/** When flexible cancellation ends and the second payment is charged: 30 days before the 4:00 PM CT check-in (Oscar, Nov 15). */
+export const flexibleCutoff = (checkIn: string): Date => checkInInstant(addDaysISO(checkIn, -FULL_PAYMENT_WINDOW_DAYS));
+
+/** Booked at or after this instant = 7 days or less before check-in = non-refundable, pay in full. */
+export const nonRefundableFrom = (checkIn: string): Date => checkInInstant(addDaysISO(checkIn, -NON_REFUNDABLE_WINDOW_DAYS));
+
+export const isNonRefundableBooking = (checkIn: string, bookedAt: Date): boolean =>
+  bookedAt.getTime() >= nonRefundableFrom(checkIn).getTime();
 
 export function buildQuote(q: QuoteInput): Quote {
   const p = q.property;
@@ -64,22 +82,21 @@ export function buildQuote(q: QuoteInput): Quote {
   const tax = roundCents(taxableBase * p.provisionalTaxRate);
   const total = taxableBase + protection + tax;
 
-  const daysOut = hoursBetween(q.now, checkInInstant(q.checkIn)) / 24;
-  let plan: PaymentPlan;
-  if (daysOut > FULL_PAYMENT_WINDOW_DAYS) {
+  if (hoursBetween(q.now, checkInInstant(q.checkIn)) <= 0) throw new QuoteError("Check-in time has passed for that date.");
+  const nonRefundable = isNonRefundableBooking(q.checkIn, q.now);
+  const fullPlan: PaymentPlan = { split: false, dueNow: total };
+  let splitPlan: PaymentPlan | undefined;
+  const cutoff = flexibleCutoff(q.checkIn);
+  // Split only when the cutoff is still ahead (strictly): the second charge runs at the cutoff instant.
+  if (!nonRefundable && q.now.getTime() < cutoff.getTime()) {
     const dueNow = Math.round(total / 2);
-    plan = {
-      split: true,
-      dueNow,
-      scheduled: { amount: total - dueNow, chargeAt: chicagoInstant(addDaysISO(q.checkIn, -FULL_PAYMENT_WINDOW_DAYS), 10) },
-    };
-  } else {
-    plan = { split: false, dueNow: total };
+    splitPlan = { split: true, dueNow, scheduled: { amount: total - dueNow, chargeAt: cutoff } };
   }
+  const plan = q.payPlan === "split" && splitPlan ? splitPlan : fullPlan;
 
   return {
     nights: nights.length, lodging, extraGuestFee, cleaning, protection,
-    taxableBase, tax, taxRate: p.provisionalTaxRate, total, plan,
+    taxableBase, tax, taxRate: p.provisionalTaxRate, total, plan, fullPlan, ...(splitPlan ? { splitPlan } : {}), nonRefundable,
     processingFeeBase: lodging + extraGuestFee + cleaning,
   };
 }

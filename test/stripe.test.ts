@@ -101,7 +101,7 @@ describe("3-D Secure through the full checkout", () => {
     const { stripe, calls } = fakeStripe({ status: "requires_action" });
     const h = new MockHospitable();
     const property = getProperty("edgewood");
-    const stay = { property, checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, children: 0, infants: 0, now: new Date("2026-11-14T20:00:00Z") };
+    const stay = { property, checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, children: 0, infants: 0, payPlan: "split" as const, now: new Date("2026-11-14T20:00:00Z") };
     const cal = await h.getCalendar(property.hospitableUuid, stay.checkIn, stay.checkOut);
     const q = buildQuote({ ...stay, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
     const r = await runCheckout({ ...stay, guest: { firstName: "T", lastName: "G", email: "t@example.com", phone: "2105550100" }, bookingRef: "PH-3DS001", acceptedTotal: q.total, paymentMethodId: "pm_card_threeDSecure2Required" }, h, new StripePayments(stripe));

@@ -33,7 +33,7 @@ describe("runner", () => {
     const prop = getProperty("edgewood");
     const stay = { property: "edgewood", checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, children: 0, infants: 0 };
     const cal = await h.getCalendar(prop.hospitableUuid, stay.checkIn, stay.checkOut);
-    const quote = buildQuote({ ...stay, property: prop, now: new Date(), nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
+    const quote = buildQuote({ payPlan: "split",  ...stay, property: prop, now: new Date(), nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
     const saved = await ledger.saveQuote(stay, quote, "s", new Date());
     h.hideNewBlocksForReads = Infinity;
     await ledger.runAttempt("00000000-0000-4000-8000-000000000001", saved, "PH-CRN001", () => bookingAttempt(ledger, saved,

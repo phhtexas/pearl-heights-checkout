@@ -129,7 +129,7 @@ describe("pre-payment recheck is fresh (note 82)", async () => {
       const { src, change } = changingSource(kind);
       const h = new MockHospitable("none", src), p = new MockPayments();
       const cal = await h.getCalendar(indianola.hospitableUuid, stay.checkIn, stay.checkOut); // browse: fills the cache
-      const q = buildQuote({ ...stay, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
+      const q = buildQuote({ payPlan: "split",  ...stay, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
       change(); // Airbnb booking / PriceLabs update lands; the cached browse copy is now stale
       expect((await h.getCalendar(indianola.hospitableUuid, stay.checkIn, stay.checkOut))[0]!.price).toBe(60700); // cache still stale
       const r = await runCheckout({ ...stay, guest, bookingRef: "PH-FRESH1", acceptedTotal: q.total }, h, p);

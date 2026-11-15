@@ -9,6 +9,7 @@ export interface CheckoutRequest {
   property: Property;
   checkIn: string; checkOut: string;
   adults: number; children: number; infants: number;
+  payPlan?: "full" | "split";
   guest: { firstName: string; lastName: string; email: string; phone: string };
   bookingRef: string;
   acceptedTotal: number; // the total the guest saw and accepted (cents)

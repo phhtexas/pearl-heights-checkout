@@ -31,7 +31,7 @@ const fast = { blockCheckDelaysMs: [0, 1, 1], sleep: async () => {} };
 async function setup(ledger: DbLedger, h: MockHospitable, checkIn = "2027-04-12", checkOut = "2027-04-14") {
   const stay = { property: "752", checkIn, checkOut, adults: 2, children: 0, infants: 0 };
   const cal = await h.getCalendar(p752.hospitableUuid, checkIn, checkOut);
-  const quote = buildQuote({ ...stay, property: p752, now: NOW, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < checkOut).map((d) => [d.date, d.price])) });
+  const quote = buildQuote({ payPlan: "split",  ...stay, property: p752, now: NOW, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < checkOut).map((d) => [d.date, d.price])) });
   const saved = await ledger.saveQuote(stay, quote, "sess", NOW);
   const req = (ref: string): CheckoutRequest => ({ ...stay, property: p752, now: NOW, bookingRef: ref, acceptedTotal: quote.total,
     guest: { firstName: "Test", lastName: "Guest", email: "t@example.com", phone: "2105550100" } });

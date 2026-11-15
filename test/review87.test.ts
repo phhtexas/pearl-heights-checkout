@@ -26,7 +26,7 @@ beforeEach(async () => { db = wrap(new PGlite()); await runMigrations(db, undefi
 async function setup(h: MockHospitable) {
   const stay = { property: "edgewood", checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, children: 0, infants: 0 };
   const cal = await h.getCalendar(prop.hospitableUuid, stay.checkIn, stay.checkOut);
-  const quote = buildQuote({ ...stay, property: prop, now: NOW, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
+  const quote = buildQuote({ payPlan: "split",  ...stay, property: prop, now: NOW, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
   const saved = await ledger.saveQuote(stay, quote, "s", NOW);
   const req = (ref: string): CheckoutRequest => ({ ...stay, property: prop, now: NOW, bookingRef: ref, acceptedTotal: quote.total,
     guest: { firstName: "T", lastName: "G", email: "t@example.com", phone: "2105550100" } });

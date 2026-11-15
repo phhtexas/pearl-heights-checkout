@@ -24,7 +24,7 @@ describe("time", () => {
 
 describe("quote", () => {
   it("matches the mockup's Edgewood example (3 nights, 2 guests, split plan)", () => {
-    const q = buildQuote({
+    const q = buildQuote({ payPlan: "split", 
       property: getProperty("edgewood"), checkIn: "2026-12-31", checkOut: "2027-01-03",
       adults: 2, children: 0, infants: 0, now: NOW,
       nightlyRates: { "2026-12-31": 45500, "2027-01-01": 46400, "2027-01-02": 45400 },
@@ -34,11 +34,11 @@ describe("quote", () => {
     expect(q.total).toBe(172518);
     expect(q.plan.split).toBe(true);
     expect(q.plan.dueNow + q.plan.scheduled!.amount).toBe(q.total);
-    expect(q.plan.scheduled!.chargeAt.toISOString()).toBe("2026-12-01T16:00:00.000Z"); // Dec 1, 10 AM CST
+    expect(q.plan.scheduled!.chargeAt.toISOString()).toBe("2026-12-01T22:00:00.000Z"); // Dec 1, 4 PM CST (Oscar, Nov 15)
   });
 
   it("adds Indianola's $30/night fee from the 5th guest", () => {
-    const q = buildQuote({
+    const q = buildQuote({ payPlan: "split", 
       property: getProperty("indianola"), checkIn: "2027-02-14", checkOut: "2027-02-16",
       adults: 6, children: 0, infants: 2, now: NOW, nightlyRates: rates("2027-02-14", "2027-02-16", 50000),
     });
@@ -46,7 +46,7 @@ describe("quote", () => {
   });
 
   it("charges in full when check-in is within 30 days", () => {
-    const q = buildQuote({
+    const q = buildQuote({ payPlan: "split", 
       property: getProperty("752"), checkIn: "2026-12-01", checkOut: "2026-12-03",
       adults: 2, children: 0, infants: 0, now: NOW, nightlyRates: rates("2026-12-01", "2026-12-03", 40000),
     });
@@ -56,13 +56,13 @@ describe("quote", () => {
 
   it("rejects too many guests and missing nights", () => {
     const base = { property: getProperty("edgewood"), checkIn: "2027-01-10", checkOut: "2027-01-12", children: 0, infants: 0, now: NOW };
-    expect(() => buildQuote({ ...base, adults: 9, nightlyRates: rates("2027-01-10", "2027-01-12", 30000) })).toThrow(QuoteError);
-    expect(() => buildQuote({ ...base, adults: 2, nightlyRates: { "2027-01-10": 30000 } })).toThrow(QuoteError);
+    expect(() => buildQuote({ payPlan: "split",  ...base, adults: 9, nightlyRates: rates("2027-01-10", "2027-01-12", 30000) })).toThrow(QuoteError);
+    expect(() => buildQuote({ payPlan: "split",  ...base, adults: 2, nightlyRates: { "2027-01-10": 30000 } })).toThrow(QuoteError);
   });
 });
 
 describe("refunds (Terms revision 3)", () => {
-  const q = buildQuote({
+  const q = buildQuote({ payPlan: "split", 
     property: getProperty("claywell"), checkIn: "2027-03-01", checkOut: "2027-03-04",
     adults: 4, children: 0, infants: 0, now: NOW, nightlyRates: rates("2027-03-01", "2027-03-04", 50000),
   });
@@ -70,10 +70,10 @@ describe("refunds (Terms revision 3)", () => {
   const bookedAt = NOW;
   const at = (iso: string) => new Date(iso);
 
-  it("24-hour grace: everything back minus 5% of nights + cleaning", () => {
+  it("24-hour grace (8+ days out): everything back, no fee (Oscar, Nov 15)", () => {
     const r = computeRefund({ quote: q, checkIn: "2027-03-01", bookedAt, cancelledAt: at("2026-11-15T10:00:00Z"), paidSoFar: q.plan.dueNow, reason: "guest" });
     expect(r.tier).toBe("grace_24h");
-    expect(r.refund).toBe(q.plan.dueNow - fee);
+    expect(r.refund).toBe(q.plan.dueNow); expect(r.processingFee).toBe(0);
   });
   it("30+ days: same fee, scheduled payment cancelled", () => {
     const r = computeRefund({ quote: q, checkIn: "2027-03-01", bookedAt, cancelledAt: at("2027-01-10T18:00:00Z"), paidSoFar: q.plan.dueNow, reason: "guest" });

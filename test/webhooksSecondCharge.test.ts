@@ -25,7 +25,7 @@ async function splitBooking(p: MockPayments, ref = "PH-SPL001") {
   const h = new MockHospitable(), prop = getProperty("752");
   const stay = { property: "752", checkIn: "2027-04-12", checkOut: "2027-04-14", adults: 2, children: 0, infants: 0 };
   const cal = await h.getCalendar(prop.hospitableUuid, stay.checkIn, stay.checkOut);
-  const quote = buildQuote({ ...stay, property: prop, now: NOW, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
+  const quote = buildQuote({ payPlan: "split",  ...stay, property: prop, now: NOW, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
   const saved = await ledger.saveQuote(stay, quote, "s", NOW);
   const o = await bookingAttempt(ledger, saved, { ...stay, property: prop, now: NOW, bookingRef: ref, acceptedTotal: quote.total,
     guest: { firstName: "T", lastName: "G", email: "t@example.com", phone: "2105550100" } }, h, p, { blockCheckDelaysMs: [0], sleep: async () => {} });
@@ -150,7 +150,7 @@ describe("Stripe webhooks", () => {
     const p = new MockPayments(), h = new MockHospitable(), prop = getProperty("edgewood");
     const stay = { property: "edgewood", checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, children: 0, infants: 0 };
     const cal = await h.getCalendar(prop.hospitableUuid, stay.checkIn, stay.checkOut);
-    const quote = buildQuote({ ...stay, property: prop, now: NOW, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
+    const quote = buildQuote({ payPlan: "split",  ...stay, property: prop, now: NOW, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
     const saved = await ledger.saveQuote(stay, quote, "s", NOW);
     h.hideNewBlocksForReads = Infinity;
     const k = "00000000-0000-4000-8000-0000000000aa";

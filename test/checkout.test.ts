@@ -8,7 +8,7 @@ const NOW = new Date("2026-11-14T20:00:00Z");
 const edgewood = getProperty("edgewood");
 
 async function request(hosp: MockHospitable, ref: string, overrides: Partial<CheckoutRequest> = {}): Promise<CheckoutRequest> {
-  const base = { property: edgewood, checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, children: 0, infants: 0, now: NOW };
+  const base = { property: edgewood, checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, children: 0, infants: 0, now: NOW, payPlan: "split" as const };
   const cal = await hosp.getCalendar(edgewood.hospitableUuid, base.checkIn, base.checkOut);
   const q = buildQuote({ ...base, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < base.checkOut).map((d) => [d.date, d.price])) });
   return { ...base, guest: { firstName: "Test", lastName: "Guest", email: "t@example.com", phone: "2105550100" }, bookingRef: ref, acceptedTotal: q.total, ...overrides };

@@ -14,6 +14,12 @@ const date = (v: unknown, name: string): string => {
   return v;
 };
 
+const payPlan = (v: unknown): "full" | "split" => {
+  if (v == null || v === "full") return "full";
+  if (v === "split") return "split";
+  throw new ValidationError("Choose how you want to pay.");
+};
+
 export function parseStay(b: any) {
   const checkIn = date(b?.checkIn, "Check-in"), checkOut = date(b?.checkOut, "Check-out");
   if (checkOut <= checkIn) throw new ValidationError("Check-out must be after check-in.");
@@ -23,6 +29,7 @@ export function parseStay(b: any) {
     adults: int(b?.adults, "Adults", 1, 20),
     children: int(b?.children ?? 0, "Children", 0, 20),
     infants: int(b?.infants ?? 0, "Infants", 0, 6),
+    payPlan: payPlan(b?.payPlan),
   };
 }
 
