@@ -41,6 +41,7 @@ export class MockHospitable implements HospitableAdapter {
     // "Dates booked on Airbnb during checkout": every requested night is now taken.
     if (this.failure === "dates_taken") return base.map((d) => ({ ...d, available: false }));
     const blocked = this.blocked.get(uuid) ?? new Set();
+    if (this.codes.size && this.hiddenReads < this.hideNewBlocksForReads) { this.hiddenReads++; return base; }
     return base.map((d) => ({ ...d, available: d.available && !blocked.has(d.date) }));
   }
 
@@ -58,6 +59,10 @@ export class MockHospitable implements HospitableAdapter {
     this.byId.set(id, i.code);
     return { reservationId: id };
   }
+
+  /** Test: after a reservation, this many fresh reads still show the nights as open (slow block). Infinity = never. */
+  hideNewBlocksForReads = 0;
+  private hiddenReads = 0;
 
   /** When true, a cancelled reservation's dates stay BLOCKED (seen briefly in the live test). */
   cancelSlow = false;

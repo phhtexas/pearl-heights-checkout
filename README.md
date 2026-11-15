@@ -12,8 +12,17 @@ E2E (Playwright, local): `CHECKOUT_MODE=mock ALLOW_MOCK=true npx next start -p 3
 ## Database migrations
 
 `db/migrations/NNNN_name.sql` are applied in order by `scripts/migrate.mjs` before every Vercel build. Each runs in one
-transaction that first takes `pg_advisory_xact_lock`, and is recorded with a SHA-256 checksum in `schema_migrations`.
-Editing an applied file fails the build: add a new migration instead. Migrations are written to be re-runnable.
+transaction: `pg_advisory_xact_lock`, then a DO block that re-checks `schema_migrations` while holding the lock and only
+then runs the statements and records version + SHA-256 checksum. Concurrent deploys apply each migration once; migrations
+do not need to be idempotent. Editing an applied file fails the build: add a new migration instead.
+
+## Data retention
+
+See `docs/RETENTION.md` (proposed schedule; purge job not built yet).
+
+## Reconciliation
+
+A checkout that stops after a payment or reservation exists (booking not recorded after capture, or reservation block never visible) is stored as `checkout_attempts.status = 'needs_reconciliation'` with the Stripe/Hospitable IDs (no guest PII); the quote stays locked and the guest sees "processing, don't pay again". `DbLedger.reconcile()` resolves it by ID (confirm, or capture, or cancel + void). The scheduled runner is part of the jobs gate.
 
 ## Hospitable client controls
 

@@ -18,7 +18,22 @@ export interface CheckoutRequest {
 
 export type CheckoutOutcome =
   | { ok: true; state: BookingState; quote: Quote; reservationId: string; paymentIntentId: string; verification: VerificationDeadline; log: string[] }
-  | { ok: false; state: BookingState; reason: "price_changed" | "dates_taken" | "card_declined" | "authentication_required" | "unsupported_method" | "reservation_failed" | "capture_failed"; guestMessage: string; newTotal?: number; log: string[] };
+  | { ok: false; state: BookingState; reason: "price_changed" | "dates_taken" | "card_declined" | "authentication_required" | "unsupported_method" | "reservation_failed" | "capture_failed" | "processing";
+      guestMessage: string; newTotal?: number; log: string[]; reconcile?: Reconcile };
+
+/** IDs needed to finish or unwind a checkout that stopped after a side effect. No guest PII. */
+export interface Reconcile {
+  stage: "block_unconfirmed" | "record_booking";
+  bookingRef: string; paymentIntentId: string; reservationId: string; bookingId?: string;
+  /** Present when payment was captured: what the confirmed booking needs (for record_booking recovery). */
+  confirmed?: { state: BookingState; verification: { deadline: string; deadlineText: string; rule: string; mustCompleteBeforeAccess: boolean } };
+}
+
+export const PROCESSING_MESSAGE = "We're still confirming your booking. Please don't pay again: we'll email you as soon as it's confirmed, usually within minutes.";
+
+/** Bounded fresh polling for the reservation block before capture (ChatGPT note 85). ~10.5 s total by default. */
+export interface CheckoutOptions { blockCheckDelaysMs?: number[]; sleep?: (ms: number) => Promise<void> }
+const DEFAULT_BLOCK_DELAYS = [0, 500, 1000, 1500, 2000, 2500, 3000];
 
 const HOLD_NOTE = " No charge was completed. Your bank may show a temporary hold for a few days until it is released.";
 
@@ -33,7 +48,7 @@ export function runCheckoutOnce(req: CheckoutRequest, hosp: HospitableAdapter, p
   return store.once(req.bookingRef, () => runCheckout(req, hosp, pay));
 }
 
-export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter, pay: PaymentsAdapter): Promise<CheckoutOutcome> {
+export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter, pay: PaymentsAdapter, opts: CheckoutOptions = {}): Promise<CheckoutOutcome> {
   const log: string[] = [];
   let state: BookingState = "checkout_started";
   const step = (e: BookingEvent, msg: string) => { state = transition(state, e); log.push(`${state}: ${msg}`); };
@@ -89,9 +104,20 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
   }
   step("RESERVATION_OK", `reservation ${reservationId}`);
 
-  // 4. Confirm the block is visible before charging (live test: under 1 second).
-  const after = await hosp.getCalendar(req.property.hospitableUuid, req.checkIn, req.checkOut, { fresh: true });
-  if (after.filter((d) => d.date < req.checkOut).some((d) => d.available)) log.push("warning: block not yet visible; reconciliation job will re-check");
+  // 4. Confirm the block is visible before charging (live test: under 1 second). Bounded fresh polling; if it never
+  //    shows, do NOT capture: hand the IDs to reconciliation, which captures or voids/cancels safely by ID.
+  const sleep = opts.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
+  let blocked = false;
+  for (const delay of opts.blockCheckDelaysMs ?? DEFAULT_BLOCK_DELAYS) {
+    if (delay) await sleep(delay);
+    const after = await hosp.getCalendar(req.property.hospitableUuid, req.checkIn, req.checkOut, { fresh: true });
+    if (after.filter((d) => d.date < req.checkOut).every((d) => !d.available)) { blocked = true; break; }
+  }
+  if (!blocked) {
+    step("BLOCK_UNCONFIRMED", "reservation created but block not visible; not capturing; reconciliation by ID");
+    return { ok: false, state, reason: "processing", guestMessage: PROCESSING_MESSAGE, log,
+      reconcile: { stage: "block_unconfirmed", bookingRef: req.bookingRef, paymentIntentId: pi, reservationId } };
+  }
 
   // 5. Capture.
   step("CAPTURE_REQUESTED", "capture");

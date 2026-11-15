@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getProperty } from "@/domain/properties";
-import { runCheckout } from "@/services/checkout";
+import { bookingAttempt } from "@/services/bookingFlow";
 import { getAdapters, getLedger } from "@/server/adapters";
 import { parseCheckout, ValidationError, redact } from "@/server/validate";
 import { readSession, withSession } from "@/server/session";
@@ -36,12 +36,8 @@ export async function POST(req: Request) {
     const bookingRef = newRef();
     const request = { ...input, property: getProperty(input.property), bookingRef, now: new Date() };
     const view = await ledger.runAttempt(input.attemptKey, q, bookingRef, async () => {
-      const outcome = await runCheckout(request, hosp, pay);
+      const outcome = await bookingAttempt(ledger instanceof DbLedger ? ledger : null, q, request, hosp, pay);
       console.info("checkout", bookingRef, outcome.state, outcome.log.join(" | "));
-      if (outcome.ok && ledger instanceof DbLedger) {
-        try { await ledger.recordBooking(request, q, outcome); }
-        catch (e) { console.error("ALERT booking captured but not recorded", bookingRef, redact(String((e as Error).message))); }
-      }
       return outcome;
     });
     getAdapters("none", process.env, session.id); // reset simulated failure

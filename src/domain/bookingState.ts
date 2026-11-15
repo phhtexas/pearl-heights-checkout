@@ -6,13 +6,15 @@ export type BookingState =
   | "quote_created" | "quote_expired" | "checkout_started" | "payment_authorizing"
   | "failed_authorization" | "reservation_creating" | "failed_reservation" | "reservation_created"
   | "capturing" | "cancelling_after_capture_fail" | "confirmed" | "verified" | "access_released"
-  | "cancelled_unverified" | "cancelled" | "completed" | "closed";
+  | "cancelled_unverified" | "cancelled" | "completed" | "closed"
+  /** A payment or reservation may exist but couldn't be confirmed/recorded: resolved by reconciliation by ID. */
+  | "needs_reconciliation";
 
 export type BookingEvent =
   | "QUOTE_EXPIRED" | "REQUOTED" | "DETAILS_SUBMITTED" | "PAY_PRESSED" | "AUTH_FAILED" | "AUTH_OK"
   | "RESERVATION_FAILED" | "RESERVATION_OK" | "CAPTURE_REQUESTED" | "CAPTURE_FAILED" | "CAPTURE_OK"
   | "DATES_REOPENED" | "VERIFIED" | "DEADLINE_MISSED" | "ACCESS_SENT" | "CANCELLED" | "CHECKED_OUT"
-  | "RETRY" | "CLOSE";
+  | "RETRY" | "CLOSE" | "BLOCK_UNCONFIRMED" | "RECORD_FAILED" | "RECONCILED_CONFIRMED" | "RECONCILED_CANCELLED";
 
 const T: Record<BookingState, Partial<Record<BookingEvent, BookingState>>> = {
   quote_created: { QUOTE_EXPIRED: "quote_expired", DETAILS_SUBMITTED: "checkout_started" },
@@ -22,16 +24,17 @@ const T: Record<BookingState, Partial<Record<BookingEvent, BookingState>>> = {
   failed_authorization: { RETRY: "checkout_started" },
   reservation_creating: { RESERVATION_OK: "reservation_created", RESERVATION_FAILED: "failed_reservation" },
   failed_reservation: { CLOSE: "closed" },
-  reservation_created: { CAPTURE_REQUESTED: "capturing" },
+  reservation_created: { CAPTURE_REQUESTED: "capturing", BLOCK_UNCONFIRMED: "needs_reconciliation" },
   capturing: { CAPTURE_OK: "confirmed", CAPTURE_FAILED: "cancelling_after_capture_fail" },
   cancelling_after_capture_fail: { DATES_REOPENED: "closed" },
-  confirmed: { VERIFIED: "verified", DEADLINE_MISSED: "cancelled_unverified", CANCELLED: "cancelled" },
+  confirmed: { RECORD_FAILED: "needs_reconciliation", VERIFIED: "verified", DEADLINE_MISSED: "cancelled_unverified", CANCELLED: "cancelled" },
   verified: { ACCESS_SENT: "access_released", CANCELLED: "cancelled" },
   access_released: { CHECKED_OUT: "completed", CANCELLED: "cancelled" },
   cancelled_unverified: { CLOSE: "closed" },
   cancelled: { CLOSE: "closed" },
   completed: {},
   closed: {},
+  needs_reconciliation: { RECONCILED_CONFIRMED: "confirmed", RECONCILED_CANCELLED: "closed" },
 };
 
 export class InvalidTransition extends Error {}
