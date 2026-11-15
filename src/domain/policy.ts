@@ -53,3 +53,13 @@ export function stayPolicy(checkIn: string, bookedAt: Date, opts: { exactGrace?:
   rows.push(row("check_in_day", ci, "On check-in day", "No refund."));
   return { nonRefundable: false, rows, footer };
 }
+
+/** Date-free summary for listing pages, from the same constants as computeRefund(). */
+export function policyOverview(): string[] {
+  return [
+    `Booked more than ${NON_REFUNDABLE_WINDOW_DAYS} days before check-in: cancel within ${GRACE_HOURS} hours after booking for everything back, no fee.`,
+    `After that: 30 days or more before check-in, everything back minus a ${pct}% processing fee; ${HALF_REFUND_DAYS} to 29 days before, 50% of the stay plus the damage waiver; less than ${HALF_REFUND_DAYS} days before, the damage waiver only (until the day before check-in).`,
+    `Booked ${NON_REFUNDABLE_WINDOW_DAYS} days or less before check-in: paid in full and non-refundable.`,
+    "Your exact dates and amounts are shown before you pay.",
+  ];
+}

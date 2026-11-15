@@ -1,0 +1,108 @@
+/* Listing page (736 template). Mobile first; >= 960px two columns with a sticky booking card. */
+.L-test { background: #3a3f44; color: #fff; font-size: 12px; text-align: center; padding: 5px 12px; }
+.L-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--soft); }
+.L-top .brand { text-decoration: none; color: var(--ink); }
+.L-ask { font-size: 15px; font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; }
+
+.L-gallery { position: relative; }
+.L-carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.L-carousel::-webkit-scrollbar { display: none; }
+.L-slide { position: relative; flex: 0 0 100%; aspect-ratio: 3 / 2; scroll-snap-align: start; background: #ecebe7; }
+.L-grid { display: none; }
+.L-count { position: absolute; right: 12px; bottom: 12px; background: rgba(17, 19, 21, .7); color: #fff; font-size: 13px; padding: 3px 10px; border-radius: 999px; }
+.L-all { position: absolute; left: 12px; bottom: 10px; min-height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--ink); background: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+.L-layout { padding: 20px 19px 120px; }
+.L-main { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.L-side { display: none; }
+.L-intro h1 { font-size: 27px; line-height: 1.15; margin: 0 0 6px; }
+.L-sub { font-size: 17px; font-weight: 500; }
+.L-cap { color: var(--muted); font-size: 15px; margin-top: 2px; }
+.L-rating { display: inline-block; margin-top: 8px; font-weight: 600; color: var(--ink); min-height: 32px; }
+.L-mobileBook { margin-top: 18px; }
+.L-mobileBook .btn, .L-mobileBook .L-trust { display: none; }
+
+.L-anchors { display: flex; gap: 6px; overflow-x: auto; margin: 18px -19px 0; padding: 8px 19px; border-top: 1px solid var(--soft); border-bottom: 1px solid var(--soft); position: sticky; top: 0; background: #fff; z-index: 3; scrollbar-width: none; }
+.L-anchors a { flex: none; font-size: 14px; font-weight: 600; color: var(--ink2); text-decoration: none; padding: 8px 12px; border-radius: 999px; background: #f4f4f2; }
+.L-sec { padding: 24px 0; border-bottom: 1px solid var(--soft); scroll-margin-top: 64px; }
+.L-sec h2 { margin-bottom: 14px; }
+.L-sec h3 { font-size: 17px; margin: 0 0 8px; }
+.L-p { margin: 0 0 10px; font-size: 16px; line-height: 1.55; }
+.L-high { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.L-high li { display: flex; flex-direction: column; gap: 2px; }
+.L-high span { color: var(--muted); font-size: 15px; }
+.L-hostline { display: flex; gap: 14px; align-items: center; }
+.L-avatar { flex: none; width: 48px; height: 48px; border-radius: 24px; background: #111315; color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 600; }
+.L-avatar.big { width: 72px; height: 72px; border-radius: 36px; font-size: 18px; }
+.L-rooms { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.L-room { border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; }
+.L-room span { color: var(--muted); }
+.L-amen { list-style: none; margin: 0 0 16px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; font-size: 16px; }
+.L-amen li::before { content: "✓ "; color: var(--green); }
+.L-inline { width: auto !important; min-height: 48px !important; font-size: 16px !important; display: inline-flex; align-items: center; text-decoration: none; }
+.L-fit { display: grid; gap: 16px; }
+.L-fit ul, .L-know ul, .L-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 16px; }
+.L-cats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 6px 0 18px; }
+.L-cats div { display: flex; flex-direction: column; font-size: 14px; border-left: 1px solid var(--soft); padding-left: 10px; }
+.L-cats b { font-size: 18px; }
+.L-reviews { display: grid; gap: 18px; margin-bottom: 16px; }
+.L-review { margin: 0 0 14px; }
+.L-review blockquote { margin: 0 0 6px; font-size: 16px; line-height: 1.5; }
+.L-review figcaption { font-size: 14px; color: var(--muted); }
+.L-hostcard { display: flex; gap: 16px; align-items: center; margin-bottom: 12px; }
+.L-hostcard ul { margin: 4px 0 0; padding-left: 18px; font-size: 15px; color: var(--ink2); }
+.L-know { display: grid; gap: 18px; }
+.L-faq { border-bottom: 1px solid var(--soft); padding: 12px 0; }
+.L-faq summary { cursor: pointer; font-weight: 600; min-height: 32px; display: flex; align-items: center; }
+.L-faq p { margin: 8px 0 0; font-size: 16px; }
+
+.L-book { border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 6px 20px rgba(0, 0, 0, .08); background: #fff; }
+.L-bookHead { font-size: 18px; } .L-bookHead span { color: var(--muted); font-size: 15px; }
+.L-fields { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #b8b8b2; border-radius: 12px; overflow: hidden; }
+.L-field { text-align: left; background: #fff; border: 0; border-right: 1px solid #b8b8b2; padding: 10px 12px; font: inherit; font-size: 15px; cursor: pointer; min-height: 56px; display: flex; flex-direction: column; color: var(--ink); }
+.L-field:nth-child(2) { border-right: 0; }
+.L-field.wide { grid-column: 1 / -1; border-top: 1px solid #b8b8b2; border-right: 0; }
+.L-field span { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.L-price { display: flex; flex-direction: column; gap: 9px; }
+.L-status { font-size: 15px; } .L-status.bad { color: var(--bad); }
+.L-note { font-size: 14px; color: var(--muted); text-align: center; }
+.L-trust { list-style: none; margin: 0; padding: 12px 0 0; border-top: 1px solid var(--soft); display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--ink2); }
+.L-trust li::before { content: "✓ "; color: var(--green); }
+
+.L-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: #fff; border-top: 1px solid var(--soft); display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); }
+.L-bar div { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); }
+.L-bar b { font-size: 17px; color: var(--ink); }
+.L-bar .btn { width: auto; min-height: 50px; padding: 0 22px; font-size: 17px; }
+html { scroll-padding-bottom: 96px; }
+
+.L-full { max-width: 980px; max-height: 100vh; height: 100vh; border-radius: 0 !important; }
+.L-photos { display: grid; gap: 12px; }
+.L-photos figure { margin: 0; }
+.L-ph { position: relative; aspect-ratio: 3 / 2; background: #ecebe7; }
+.L-photos figcaption { font-size: 13px; color: var(--muted); padding-top: 4px; }
+.L-months { display: grid; gap: 16px; }
+.L-second { display: none; }
+.L-monthName { font-weight: 600; text-align: center; margin-bottom: 6px; }
+.L-save { width: auto !important; }
+
+@media (min-width: 960px) {
+  .L-top { padding: 16px 64px; }
+  .L-carousel, .L-count { display: none; }
+  .L-gallery { max-width: 1120px; margin: 24px auto 0; padding: 0 64px; }
+  .L-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: 200px 200px; gap: 8px; border-radius: 16px; overflow: hidden; }
+  .L-cell { position: relative; border: 0; padding: 0; cursor: pointer; background: #ecebe7; }
+  .L-cell.big { grid-row: 1 / 3; }
+  .L-all { left: auto; right: 80px; bottom: 16px; }
+  .L-layout { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 72px; align-items: start; padding: 28px 64px 64px; }
+  .L-side { display: block; position: sticky; top: 24px; }
+  .L-mobileBook, .L-bar { display: none; }
+  .L-anchors { margin: 18px 0 0; padding: 8px 0; }
+  .L-intro h1 { font-size: 32px; }
+  .L-fit, .L-know { grid-template-columns: 1fr 1fr; }
+  .L-reviews { grid-template-columns: 1fr 1fr; }
+  .L-amen { grid-template-columns: 1fr 1fr 1fr; }
+  .L-months { grid-template-columns: 1fr 1fr; }
+  .L-second { display: block; }
+  html { scroll-padding-bottom: 24px; }
+}
+@media (prefers-reduced-motion: reduce) { .L-carousel { scroll-behavior: auto; } }
