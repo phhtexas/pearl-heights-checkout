@@ -74,6 +74,21 @@ export class StripePayments implements PaymentsAdapter {
     }
   }
 
+  async status(id: string) {
+    const pi = await this.stripe.paymentIntents.retrieve(id);
+    if (pi.status === "succeeded") return "captured" as const;
+    if (pi.status === "requires_capture") return "authorized" as const;
+    if (pi.status === "canceled") return "voided" as const;
+    return "failed" as const;
+  }
+
+  /** Stripe search on metadata.booking_ref (eventually consistent, ~1 min); fine for reconciliation. */
+  async findByRef(ref: string) {
+    if (!/^PH-[A-Z0-9]{6}$/.test(ref)) throw new AdapterError("bad ref", "bad_request");
+    const r = await this.stripe.paymentIntents.search({ query: `metadata['booking_ref']:'${ref}'` });
+    return r.data.map((p) => p.id);
+  }
+
   async voidAuthorization(id: string) {
     const pi = await this.stripe.paymentIntents.retrieve(id);
     if (pi.status === "requires_capture" || pi.status === "requires_payment_method" || pi.status === "requires_confirmation") {

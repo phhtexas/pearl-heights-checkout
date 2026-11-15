@@ -89,11 +89,12 @@ describe("attempt idempotency and the quote lease", () => {
     expect(await ledger.runAttempt("55555555-5555-4555-8555-555555555555", saved, "PH-DEC002", run(h, p, saved, req, "PH-DEC002"))).toMatchObject({ ok: true });
     expect(await count(db, "bookings WHERE state = 'failed_authorization'")).toBe(1); // first booking row closed, not confirmed
   });
-  it("an unexpected crash keeps the quote locked; the next attempt does not run", async () => {
+  it("an unclassified crash is queued for reconciliation (not 'done'), keeps the quote locked, and the next attempt does not run", async () => {
     const h = new MockHospitable(), p = new MockPayments();
     const { saved, req } = await setup(ledger, h);
     const crashed = await ledger.runAttempt("88888888-8888-4888-8888-888888888881", saved, "PH-CRASH1", async () => { throw new Error("died"); });
-    expect(crashed).toMatchObject({ ok: false, reason: "error" });
+    expect(crashed).toMatchObject({ ok: false, reason: "processing" });
+    expect(await ledger.pendingReconciliation()).toEqual(["88888888-8888-4888-8888-888888888881"]);
     let ran = false;
     const next = await ledger.runAttempt("88888888-8888-4888-8888-888888888882", saved, "PH-CRASH2", async () => { ran = true; return run(h, p, saved, req, "PH-CRASH2")(); });
     expect(ran).toBe(false);

@@ -19,7 +19,11 @@ export interface HospitableAdapter {
     code: string; accommodationCents: Cents; cleaningCents: Cents; note: string;
   }): Promise<{ reservationId: string }>;
   cancelReservation(reservationId: string): Promise<void>;
+  /** Reconciliation: find a reservation by our booking ref (the reservation code). null = none exists. */
+  findReservationByCode(code: string): Promise<string | null>;
 }
+
+export type PaymentStatus = "authorized" | "captured" | "voided" | "failed";
 
 export interface PaymentsAdapter {
   /** Authorize only (manual capture). Idempotent on `idempotencyKey`. */
@@ -32,6 +36,10 @@ export interface PaymentsAdapter {
   }): Promise<{ paymentIntentId: string }>;
   capture(paymentIntentId: string): Promise<void>;
   voidAuthorization(paymentIntentId: string): Promise<void>;
+  /** Reconciliation: current status of a PaymentIntent. */
+  status(paymentIntentId: string): Promise<PaymentStatus>;
+  /** Reconciliation: PaymentIntents created for a booking ref (metadata.booking_ref). */
+  findByRef(bookingRef: string): Promise<string[]>;
 }
 
 export class AdapterError extends Error {

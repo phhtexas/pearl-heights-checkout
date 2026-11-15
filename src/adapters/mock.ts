@@ -46,7 +46,7 @@ export class MockHospitable implements HospitableAdapter {
   }
 
   async createReservation(i: Parameters<HospitableAdapter["createReservation"]>[0]) {
-    if (this.failure === "reservation_fails") throw new AdapterError("Hospitable unavailable", "upstream_error");
+    if (this.failure === "reservation_fails") throw new AdapterError("Hospitable rejected the reservation", "rejected");
     if (this.codes.has(i.code)) throw new AdapterError("You have already used that reservation code", "duplicate_code");
     const nights: string[] = [];
     const cal = await this.getCalendar(i.propertyUuid, i.checkIn, i.checkOut, { fresh: true });
@@ -57,6 +57,7 @@ export class MockHospitable implements HospitableAdapter {
     const id = `mock-res-${i.code}`;
     this.codes.set(i.code, { uuid: i.propertyUuid, nights });
     this.byId.set(id, i.code);
+    if (this.createThenTimeout) throw new AdapterError("Hospitable timeout", "upstream_error");
     return { reservationId: id };
   }
 
@@ -76,6 +77,12 @@ export class MockHospitable implements HospitableAdapter {
     r.nights.forEach((n) => set?.delete(n));
   }
 
+  async findReservationByCode(code: string): Promise<string | null> {
+    return this.codes.has(code) ? `mock-res-${code}` : null;
+  }
+  /** Test: the reservation is created, then the call fails as if it timed out. */
+  createThenTimeout = false;
+
   /** Number of reservations created (for tests). */
   get reservationCount() { return this.codes.size; }
 
@@ -94,6 +101,7 @@ export class MockPayments implements PaymentsAdapter {
     if (this.failure === "card_declined") throw new AdapterError("Your card was declined.", "card_declined");
     const id = `pi_mock_${i.idempotencyKey}`;
     if (!this.intents.has(id)) this.intents.set(id, { amount: i.amount, status: "authorized" });
+    if (this.authorizeThenTimeout) throw new AdapterError("Stripe timeout", "upstream_error");
     return { paymentIntentId: id };
   }
   async capture(id: string) {
@@ -101,10 +109,23 @@ export class MockPayments implements PaymentsAdapter {
     const pi = this.intents.get(id);
     if (!pi || pi.status !== "authorized") throw new AdapterError("Nothing to capture", "invalid_state");
     pi.status = "captured";
+    if (this.captureThenTimeout) throw new AdapterError("Stripe timeout", "upstream_error");
   }
   async voidAuthorization(id: string) {
+    if (this.voidFails) throw new AdapterError("Stripe unavailable", "upstream_error");
     const pi = this.intents.get(id);
     if (pi && pi.status === "authorized") pi.status = "voided";
+  }
+  /** Test switches for failure boundaries. */
+  voidFails = false;
+  authorizeThenTimeout = false;
+  captureThenTimeout = false;
+  async status(id: string) {
+    const pi = this.intents.get(id);
+    return pi ? pi.status : "failed";
+  }
+  async findByRef(ref: string) {
+    return [...this.intents.keys()].filter((k) => k.startsWith(`pi_mock_${ref}:`));
   }
 }
 

@@ -1,6 +1,9 @@
 import type { Db } from "./client";
 import type { Quote } from "../domain/quote";
-import type { CheckoutOutcome, CheckoutRequest, Reconcile } from "../services/checkout";
+import { PROCESSING_MESSAGE, type CheckoutOutcome, type CheckoutRequest, type Reconcile } from "../services/checkout";
+
+export class ManualReviewError extends Error { name = "ManualReviewError"; }
+export class ConfirmConflictError extends Error { name = "ConfirmConflictError"; }
 import type { HospitableAdapter, PaymentsAdapter } from "../adapters/types";
 import type { VerificationDeadline } from "../domain/verification";
 
@@ -113,13 +116,11 @@ export class DbLedger implements Ledger {
     try {
       outcome = await work();
     } catch (e) {
-      // Unknown failure mid-checkout: a payment may or may not exist. Record it for reconciliation; the attempt is
-      // marked done but the quote lease is NOT released here, so nobody retries this quote blindly.
-      console.error("ALERT checkout attempt failed mid-flight; reconciliation needed", attemptKey, (e as Error).name);
-      const guest: GuestView = { ok: false, reason: "error", guestMessage: "Something went wrong while completing your booking. Please don't pay again; we're checking whether a payment went through and will email you." };
-      await this.finish(attemptKey, { guest, internal: { error: String((e as Error).message), needsReconciliation: true } });
-      await this.db.query(`UPDATE quotes SET lease_until = 'infinity' WHERE id = $1 AND version = $2 AND active_attempt = $3`, [q.id, q.version, attemptKey]);
-      return guest;
+      // An unexpected error the work did not classify: a payment or reservation may exist. Queue it for
+      // reconciliation (which finds IDs by booking ref) instead of storing a generic 'done' (ChatGPT note 87).
+      console.error("ALERT unclassified checkout error; queued for reconciliation", bookingRef, (e as Error).name);
+      outcome = { ok: false, state: "needs_reconciliation", reason: "processing", guestMessage: PROCESSING_MESSAGE, log: [`unclassified error: ${(e as Error).name}`],
+        reconcile: { stage: "unknown", bookingRef } };
     }
     if (!outcome.ok && outcome.reconcile) {
       // A payment and/or reservation exists but the booking could not be confirmed or recorded (note 85):
@@ -197,6 +198,15 @@ export class DbLedger implements Ledger {
   async confirmBooking(bookingId: string, q: SavedQuote, c: { bookingRef: string; state: string; reservationId: string; paymentIntentId: string;
     verification: { deadline: string; rule: string } }): Promise<void> {
     const plan = q.quote.plan;
+    // Already confirmed? It must be the same payment, reservation and amount; never silently accept different data.
+    const [existing] = await this.db.query<any>(
+      `SELECT b.confirmed_at, b.reservation_ref, p.stripe_payment_intent_id AS pi, p.amount_cents FROM bookings b
+       LEFT JOIN payments p ON p.booking_id = b.id AND p.kind = 'initial' WHERE b.id = $1`, [bookingId]);
+    if (existing?.confirmed_at) {
+      if (existing.reservation_ref !== c.reservationId || existing.pi !== c.paymentIntentId || existing.amount_cents !== plan.dueNow)
+        throw new ConfirmConflictError(`booking ${c.bookingRef} already confirmed with different payment/reservation/amount`);
+      return;
+    }
     const st: Array<[string, unknown[]]> = [
       [`UPDATE bookings SET state = $2, hospitable_reservation_id = $3, reservation_ref = $4, verification_deadline_at = $5, verification_rule = $6,
           confirmed_at = now(), updated_at = now() WHERE id = $1 AND confirmed_at IS NULL`,
@@ -205,7 +215,8 @@ export class DbLedger implements Ledger {
         ON CONFLICT (idempotency_key) DO NOTHING`, [bookingId, `${c.bookingRef}:initial`, c.paymentIntentId, plan.dueNow]],
       [`INSERT INTO verifications (booking_id) VALUES ($1) ON CONFLICT (booking_id) DO NOTHING`, [bookingId]],
       [`INSERT INTO jobs (type, booking_id, run_at) VALUES ('deadline', $1, $2) ON CONFLICT DO NOTHING`, [bookingId, c.verification.deadline]],
-      [`INSERT INTO audit_log (booking_id, actor, action, after) VALUES ($1, 'system', 'booking_confirmed', $2)`,
+      [`INSERT INTO audit_log (booking_id, actor, action, after) VALUES ($1, 'system', 'booking_confirmed', $2)
+        ON CONFLICT (booking_id, action) WHERE action IN ('booking_confirmed', 'reconciled') DO NOTHING`,
         [bookingId, JSON.stringify({ booking_ref: c.bookingRef, reservation: c.reservationId, payment_intent: c.paymentIntentId, total: q.total, due_now: plan.dueNow })]],
     ];
     if (plan.split && plan.scheduled) {
@@ -222,50 +233,85 @@ export class DbLedger implements Ledger {
   }
 
   /**
-   * Resolves one attempt queued as 'needs_reconciliation'. Only this changes the guest-visible result.
-   *  - record_booking: payment captured, booking not recorded -> confirm the booking (idempotent), then success.
-   *  - block_unconfirmed: authorized + reservation, block never seen -> fresh check; if blocked now, capture and
-   *    confirm; otherwise cancel the reservation and void the authorization (no charge).
+   * Resolves one attempt queued as 'needs_reconciliation' (or a 'reconciling' claim whose worker died).
+   * 1. Atomic claim (one UPDATE ... RETURNING with a random token) BEFORE any external call; a second worker gets null.
+   * 2. Work out what really exists, by ID or by booking ref: the PaymentIntent status and the reservation.
+   * 3. Decide: captured + reservation -> confirm booking. Authorized + reservation + dates blocked -> capture, confirm.
+   *    Otherwise unwind: cancel any reservation, void any authorization, close the booking (no charge).
+   *    Captured without a reservation -> stays queued for a human (refund decision), never auto-refunded.
+   * 4. Only then: guest-visible result, audit (once), lease release. On an error the claim is returned to the
+   *    queue with last_error; external steps are idempotent, so a retry is safe.
    */
-  async reconcile(attemptKey: string, deps: ReconcileDeps): Promise<GuestView | null> {
+  async reconcile(attemptKey: string, deps: ReconcileDeps, claimSeconds = 120): Promise<GuestView | null> {
+    const token = crypto.randomUUID();
     const [a] = await this.db.query<any>(
-      `SELECT attempt_key, quote_id, booking_ref, reconcile, booking_id FROM checkout_attempts WHERE attempt_key = $1 AND status = 'needs_reconciliation'`, [attemptKey]);
-    if (!a) return null;
+      `UPDATE checkout_attempts SET status = 'reconciling', claim_token = $2, claimed_at = now(),
+         claim_expires_at = now() + make_interval(secs => $3), reconcile_attempts = reconcile_attempts + 1
+       WHERE attempt_key = $1 AND (status = 'needs_reconciliation' OR (status = 'reconciling' AND claim_expires_at < now()))
+       RETURNING quote_id, booking_ref, reconcile, booking_id`, [attemptKey, token, claimSeconds]);
+    if (!a) return null; // not queued, or another worker holds a live claim
     const r: Reconcile = typeof a.reconcile === "string" ? JSON.parse(a.reconcile) : a.reconcile;
-    const q = (await this.getQuote(a.quote_id))!;
-    const bookingId: string = r.bookingId ?? a.booking_id;
-    let guest: GuestView;
-    if (r.stage === "record_booking" && r.confirmed) {
-      await this.confirmBooking(bookingId, q, { bookingRef: r.bookingRef, state: r.confirmed.state, reservationId: r.reservationId, paymentIntentId: r.paymentIntentId,
-        verification: { deadline: r.confirmed.verification.deadline, rule: r.confirmed.verification.rule } });
-      guest = { ok: true, bookingRef: r.bookingRef, verification: { deadlineText: r.confirmed.verification.deadlineText, mustCompleteBeforeAccess: r.confirmed.verification.mustCompleteBeforeAccess } };
-    } else {
-      const cal = await deps.hosp.getCalendar(deps.propertyUuid(q.propertyKey), q.checkIn, q.checkOut, { fresh: true });
-      const nowBlocked = cal.filter((d) => d.date < q.checkOut).every((d) => !d.available);
-      if (nowBlocked) {
-        await deps.pay.capture(r.paymentIntentId);
-        const v = deps.verification(q.checkIn);
-        await this.confirmBooking(bookingId, q, { bookingRef: r.bookingRef, state: "confirmed", reservationId: r.reservationId, paymentIntentId: r.paymentIntentId,
-          verification: { deadline: v.deadline.toISOString(), rule: v.rule } });
+    try {
+      const q = (await this.getQuote(a.quote_id))!;
+      const bookingId: string | null = r.bookingId ?? a.booking_id ?? (await this.db.query<any>(`SELECT id FROM bookings WHERE booking_ref = $1`, [r.bookingRef]))[0]?.id ?? null;
+      const pis = r.paymentIntentId ? [r.paymentIntentId] : await deps.pay.findByRef(r.bookingRef);
+      const statuses = await Promise.all(pis.map(async (id) => ({ id, status: await deps.pay.status(id) })));
+      const captured = statuses.find((x) => x.status === "captured");
+      const authorized = statuses.filter((x) => x.status === "authorized");
+      const reservationId = r.reservationId ?? (await deps.hosp.findReservationByCode(r.bookingRef));
+
+      // Stages where checkout had already decided to unwind (a definite failure, then the undo step failed) are
+      // always finished as an unwind: never captured later.
+      const mustUnwind = r.stage === "void_failed" || r.stage === "cancel_failed";
+      let guest: GuestView, outcome: string;
+      if (captured && (!reservationId || mustUnwind)) {
+        throw new ManualReviewError("payment captured but the booking can't stand: refund decision needed");
+      } else if (!mustUnwind && (captured || (authorized.length === 1 && reservationId && (await this.datesBlocked(q, deps))))) {
+        const pi = captured?.id ?? authorized[0]!.id;
+        if (!captured) await deps.pay.capture(pi);
+        for (const extra of authorized.filter((x) => x.id !== pi)) await deps.pay.voidAuthorization(extra.id);
+        const v = r.confirmed?.verification ?? (() => { const d = deps.verification(q.checkIn); return { deadline: d.deadline.toISOString(), deadlineText: d.deadlineText, rule: d.rule, mustCompleteBeforeAccess: d.mustCompleteBeforeAccess }; })();
+        if (!bookingId) throw new ManualReviewError("no booking row for a captured payment");
+        await this.confirmBooking(bookingId, q, { bookingRef: r.bookingRef, state: "confirmed", reservationId: reservationId!, paymentIntentId: pi, verification: v });
         guest = { ok: true, bookingRef: r.bookingRef, verification: { deadlineText: v.deadlineText, mustCompleteBeforeAccess: v.mustCompleteBeforeAccess } };
+        outcome = "confirmed";
       } else {
-        await deps.hosp.cancelReservation(r.reservationId);
-        await deps.pay.voidAuthorization(r.paymentIntentId);
-        await this.closeBooking(bookingId, "closed");
+        if (reservationId) await deps.hosp.cancelReservation(reservationId);
+        for (const x of authorized) await deps.pay.voidAuthorization(x.id);
+        if (bookingId) await this.closeBooking(bookingId, "closed");
         guest = { ok: false, reason: "reservation_failed", guestMessage: "We couldn't confirm this booking, so it was cancelled. No charge was completed; any temporary hold will be released by your bank." };
+        outcome = "unwound";
       }
+      // Finish only if we still hold the claim (a stale worker that lost it must not overwrite).
+      const done = await this.db.query(
+        `UPDATE checkout_attempts SET status = 'done', outcome = $3, finished_at = now(), claim_token = NULL, last_error = NULL
+         WHERE attempt_key = $1 AND claim_token = $2 RETURNING attempt_key`, [attemptKey, token, JSON.stringify({ guest, internal: { reconciled: r.stage, outcome } })]);
+      if (!done.length) return null;
+      if (bookingId) await this.db.query(
+        `INSERT INTO audit_log (booking_id, actor, action, after) VALUES ($1, 'system', 'reconciled', $2)
+         ON CONFLICT (booking_id, action) WHERE action IN ('booking_confirmed', 'reconciled') DO NOTHING`, [bookingId, JSON.stringify({ stage: r.stage, outcome })]);
+      await this.releaseLease(q, attemptKey);
+      return guest;
+    } catch (e) {
+      await this.db.query(
+        `UPDATE checkout_attempts SET status = 'needs_reconciliation', claim_token = NULL, claim_expires_at = NULL, last_error = $3
+         WHERE attempt_key = $1 AND claim_token = $2`, [attemptKey, token, `${(e as Error).name}: ${(e as Error).message}`.slice(0, 300)]);
+      if (e instanceof ManualReviewError) console.error("ALERT reconciliation needs manual review", r.bookingRef, e.message);
+      throw e;
     }
-    await this.db.query(`UPDATE checkout_attempts SET status = 'done', outcome = $2, finished_at = now() WHERE attempt_key = $1`,
-      [attemptKey, JSON.stringify({ guest, internal: { reconciled: r.stage } })]);
-    await this.db.query(`INSERT INTO audit_log (booking_id, actor, action, after) VALUES ($1, 'system', 'reconciled', $2)`, [bookingId, JSON.stringify({ stage: r.stage, ok: guest.ok })]);
-    await this.releaseLease(q, attemptKey);
-    return guest;
   }
 
-  /** Attempt keys waiting for reconciliation, oldest first. */
+  private async datesBlocked(q: SavedQuote, deps: ReconcileDeps): Promise<boolean> {
+    const cal = await deps.hosp.getCalendar(deps.propertyUuid(q.propertyKey), q.checkIn, q.checkOut, { fresh: true });
+    return cal.filter((d) => d.date < q.checkOut).every((d) => !d.available);
+  }
+
+  /** Attempts waiting for reconciliation (including claims whose worker died), oldest first. */
   async pendingReconciliation(limit = 20): Promise<string[]> {
     return (await this.db.query<{ attempt_key: string }>(
-      `SELECT attempt_key FROM checkout_attempts WHERE status = 'needs_reconciliation' ORDER BY created_at LIMIT $1`, [limit])).map((r) => r.attempt_key);
+      `SELECT attempt_key FROM checkout_attempts
+       WHERE status = 'needs_reconciliation' OR (status = 'reconciling' AND claim_expires_at < now())
+       ORDER BY created_at LIMIT $1`, [limit])).map((r) => r.attempt_key);
   }
 
   private async finish(attemptKey: string, stored: StoredOutcome): Promise<void> {
