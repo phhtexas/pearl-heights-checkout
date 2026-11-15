@@ -75,7 +75,8 @@ export default function Checkout() {
 
   return (
     <>
-      <div className="banner">Test checkout · fake payments and bookings only</div>
+      <div className="banner">Test checkout · fake payments and bookings only ·{" "}
+        <button className="linkish" onClick={async () => { await fetch("/api/mock/reset", { method: "POST" }); setDays([]); setStep("stay"); setCi(null); setCo(null); setQuote(null); setResult(null); setErr(""); fetch(`/api/calendar?property=${home}`).then((r) => r.json()).then((j) => setDays(j.days ?? [])); }}>Reset my test bookings</button></div>
       <main className="phone">
         <div className="head">
           <div className="brand">Pearl Heights Homes</div>
