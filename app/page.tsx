@@ -14,7 +14,10 @@ const CARD_SIMS = ["card_declined", "capture_fails"]; // in Stripe test mode, us
 export default function Checkout() {
   const [step, setStep] = useState<"stay" | "total" | "pay" | "done">("stay");
   const [home, setHome] = useState("edgewood");
-  const [days, setDays] = useState<Day[]>([]);
+  // Calendar is tagged with the property it belongs to, so another home's prices can never render (ChatGPT note 76).
+  const [cal, setCal] = useState<{ property: string; days: Day[] }>({ property: "", days: [] });
+  const [calVersion, setCalVersion] = useState(0);
+  const reloadCalendar = () => setCalVersion((v) => v + 1);
   const [month, setMonth] = useState("2026-12");
   const [ci, setCi] = useState<string | null>(null);
   const [co, setCo] = useState<string | null>(null);
@@ -36,7 +39,16 @@ export default function Checkout() {
   useEffect(() => { fetch("/api/config").then((r) => r.json()).then(setCfg).catch(() => undefined); }, []);
   const prop = PROPERTIES.find((p) => p.key === home)!;
 
-  useEffect(() => { fetch(`/api/calendar?property=${home}`).then((r) => r.json()).then((j) => setDays(j.days ?? [])); }, [home, result]);
+  useEffect(() => {
+    const ctrl = new AbortController();
+    setCal({ property: home, days: [] });
+    fetch(`/api/calendar?property=${home}`, { signal: ctrl.signal, cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => { if (!ctrl.signal.aborted && j.property === home) setCal({ property: home, days: j.days ?? [] }); })
+      .catch(() => undefined);
+    return () => ctrl.abort();
+  }, [home, calVersion, result]);
+  const days = cal.property === home ? cal.days : [];
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
   const byDate = useMemo(() => Object.fromEntries(days.map((d) => [d.date, d])), [days]);
@@ -77,7 +89,7 @@ export default function Checkout() {
     if (j.reason === "dates_taken") {
       // Back to date selection with fresh availability; nothing was charged or booked.
       setResult(null); setQuote(null); setCi(null); setCo(null); setStep("stay");
-      setDays([]); fetch(`/api/calendar?property=${home}`).then((r) => r.json()).then((d) => setDays(d.days ?? []));
+      reloadCalendar();
       setErr(j.guestMessage + " Please choose new dates.");
       return;
     }
@@ -89,8 +101,8 @@ export default function Checkout() {
 
   return (
     <>
-      <div className="banner">Test checkout · fake payments and bookings only ·{" "}
-        <button className="linkish" onClick={async () => { await fetch("/api/mock/reset", { method: "POST" }); setDays([]); setStep("stay"); setCi(null); setCo(null); setQuote(null); setResult(null); setErr(""); fetch(`/api/calendar?property=${home}`).then((r) => r.json()).then((j) => setDays(j.days ?? [])); }}>Reset my test bookings</button></div>
+      <div className="banner">{stripeMode ? "Test checkout · Stripe test payments · fake bookings · no real charges" : "Test checkout · fake payments and bookings · no real charges"} ·{" "}
+        <button className="linkish" onClick={async () => { await fetch("/api/mock/reset", { method: "POST" }); setStep("stay"); setCi(null); setCo(null); setQuote(null); setResult(null); setErr(""); reloadCalendar(); }}>Reset my test bookings</button></div>
       <main className="phone">
         <div className="head">
           <div className="brand">Pearl Heights Homes</div>
@@ -119,6 +131,7 @@ export default function Checkout() {
                 return <button key={iso} className={cls} disabled={!ok} onClick={() => pick(iso)} aria-label={iso}>{Number(iso.slice(8))}<small>{d?.available ? "$" + d.price / 100 : ""}</small></button>;
               })}
             </div>
+            {days.length === 0 && <div className="muted" role="status">Loading availability and prices…</div>}
             <div className="muted">{ci && co ? `${fmt(ci)} → ${fmt(co)}` : ci ? "Now choose your check-out date." : "Choose your check-in date."}</div>
             <div className="lbl">Guests</div>
             {([["Adults", adults, setAdults, 1], ["Children (2-12)", children, setChildren, 0], ["Infants (free)", infants, setInfants, 0]] as const).map(([l, v, set, min]) => (

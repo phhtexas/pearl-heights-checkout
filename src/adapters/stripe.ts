@@ -16,7 +16,7 @@ export function assertTestKeys(env: NodeJS.ProcessEnv): { secret: string; publis
   return { secret, publishable };
 }
 
-type StripeLike = Pick<Stripe, "paymentIntents" | "customers">;
+type StripeLike = Pick<Stripe, "paymentIntents" | "customers" | "paymentMethods">;
 
 export class StripePayments implements PaymentsAdapter {
   constructor(private stripe: StripeLike) {}
@@ -29,6 +29,9 @@ export class StripePayments implements PaymentsAdapter {
   async authorize(i: Parameters<PaymentsAdapter["authorize"]>[0]) {
     if (!i.paymentMethodId) throw new AdapterError("No card details were provided.", "card_declined");
     try {
+      // Cards only for this milestone (ChatGPT note 76): reject any other payment-method type before charging.
+      const pm = await this.stripe.paymentMethods.retrieve(i.paymentMethodId);
+      if (pm.type !== "card") throw new AdapterError(`Payment method type ${pm.type} is not accepted`, "unsupported_method");
       let customer: string | undefined;
       if (i.savePaymentMethod && i.customer) {
         const c = await this.stripe.customers.create(
@@ -39,19 +42,23 @@ export class StripePayments implements PaymentsAdapter {
       }
       const pi = await this.stripe.paymentIntents.create({
         amount: i.amount, currency: "usd", capture_method: "manual", confirm: true,
-        payment_method: i.paymentMethodId, automatic_payment_methods: { enabled: true, allow_redirects: "never" },
+        payment_method: i.paymentMethodId, allowed_payment_method_types: ["card"],
         description: i.description, metadata: i.metadata,
         ...(customer ? { customer, setup_future_usage: "off_session" as const } : {}),
       }, { idempotencyKey: i.idempotencyKey });
       if (pi.status === "requires_action") {
         await this.stripe.paymentIntents.cancel(pi.id).catch(() => undefined);
-        throw new AdapterError("Your bank asked for extra verification, which isn't supported yet.", "requires_action");
+        throw new AdapterError("Card requires authentication (3-D Secure), not supported yet", "authentication_required");
       }
       if (pi.status !== "requires_capture") throw new AdapterError(`Unexpected payment status ${pi.status}`, "card_declined");
       return { paymentIntentId: pi.id };
     } catch (e) {
       if (e instanceof AdapterError) throw e;
-      const err = e as { type?: string; message?: string };
+      const err = e as { type?: string; message?: string; code?: string; payment_intent?: { id?: string; status?: string } };
+      if (err.code === "authentication_required" || err.code === "payment_intent_authentication_failure") {
+        if (err.payment_intent?.id) await this.stripe.paymentIntents.cancel(err.payment_intent.id).catch(() => undefined);
+        throw new AdapterError("Card requires authentication (3-D Secure), not supported yet", "authentication_required");
+      }
       if (err.type === "StripeCardError") throw new AdapterError(err.message ?? "Card declined", "card_declined");
       throw new AdapterError("Payment service error", "upstream_error");
     }

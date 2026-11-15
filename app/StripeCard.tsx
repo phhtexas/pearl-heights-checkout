@@ -12,7 +12,7 @@ export type CreatePm = (billing: { name: string; email: string; phone: string })
 export function StripeCard({ publishableKey, amount, saveForLater, onReady }: { publishableKey: string; amount: number; saveForLater: boolean; onReady: (fn: CreatePm | null) => void }) {
   return (
     <Elements stripe={getStripe(publishableKey)} options={{
-      mode: "payment", amount, currency: "usd", captureMethod: "manual", paymentMethodCreation: "manual",
+      mode: "payment", amount, currency: "usd", captureMethod: "manual", paymentMethodCreation: "manual", allowedPaymentMethodTypes: ["card"],
       ...(saveForLater ? { setupFutureUsage: "off_session" as const } : {}),
       appearance: { theme: "night", variables: { colorPrimary: "#7fbfaa", borderRadius: "10px" } },
     }}>
@@ -34,5 +34,5 @@ function Inner({ onReady }: { onReady: (fn: CreatePm | null) => void }) {
     });
     return () => onReady(null);
   }, [stripe, elements, onReady]);
-  return <PaymentElement options={{ layout: "tabs", fields: { billingDetails: { name: "never", email: "never", phone: "never" } } }} />;
+  return <PaymentElement options={{ layout: "tabs", wallets: { applePay: "never", googlePay: "never", link: "never" }, fields: { billingDetails: { name: "never", email: "never", phone: "never" } } }} />;
 }

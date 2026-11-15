@@ -18,7 +18,7 @@ export interface CheckoutRequest {
 
 export type CheckoutOutcome =
   | { ok: true; state: BookingState; quote: Quote; reservationId: string; paymentIntentId: string; verification: VerificationDeadline; log: string[] }
-  | { ok: false; state: BookingState; reason: "price_changed" | "dates_taken" | "card_declined" | "reservation_failed" | "capture_failed"; guestMessage: string; newTotal?: number; log: string[] };
+  | { ok: false; state: BookingState; reason: "price_changed" | "dates_taken" | "card_declined" | "authentication_required" | "unsupported_method" | "reservation_failed" | "capture_failed"; guestMessage: string; newTotal?: number; log: string[] };
 
 const HOLD_NOTE = " No charge was completed. Your bank may show a temporary hold for a few days until it is released.";
 
@@ -63,8 +63,13 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
       metadata: { booking_ref: req.bookingRef, property: req.property.key, check_in: req.checkIn, check_out: req.checkOut },
     }));
   } catch (e) {
-    step("AUTH_FAILED", `authorization failed: ${(e as Error).message}`);
-    return { ok: false, state, reason: "card_declined", guestMessage: "Your bank declined the card, so no charge was made. Try another card or Apple Pay / Google Pay.", log };
+    const code = (e as AdapterError).code;
+    step("AUTH_FAILED", `authorization failed (${code ?? "error"}): ${(e as Error).message}`);
+    if (code === "authentication_required")
+      return { ok: false, state, reason: "authentication_required", guestMessage: "This card needs an extra security check from your bank, which our test checkout doesn't support yet. No charge was made. Please try a different card.", log };
+    if (code === "unsupported_method")
+      return { ok: false, state, reason: "unsupported_method", guestMessage: "Please pay with a credit or debit card. No charge was made.", log };
+    return { ok: false, state, reason: "card_declined", guestMessage: "Your bank declined the card, so no charge was made. Please try another card.", log };
   }
   step("AUTH_OK", `card authorized ${quote.plan.dueNow}`);
 
