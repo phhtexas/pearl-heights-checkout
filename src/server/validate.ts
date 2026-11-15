@@ -38,7 +38,11 @@ export function parseCheckout(b: any) {
   const acceptedTotal = int(b?.acceptedTotal, "Accepted total", 1, 100_000_000);
   if (b?.bookingRef != null && !REF.test(String(b.bookingRef))) throw new ValidationError("Invalid booking reference.");
   if (b?.paymentMethodId != null && !/^pm_[A-Za-z0-9_]{6,64}$/.test(String(b.paymentMethodId))) throw new ValidationError("Invalid payment details. Please re-enter your card.");
-  return { ...stay, guest, acceptedTotal, bookingRef: b?.bookingRef as string | undefined, paymentMethodId: b?.paymentMethodId as string | undefined };
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID.test(String(b?.quoteId ?? ""))) throw new ValidationError("Your price check is missing. Please go back and see your total again.");
+  if (!UUID.test(String(b?.attemptKey ?? ""))) throw new ValidationError("Invalid request. Please refresh and try again.");
+  return { ...stay, guest, acceptedTotal, bookingRef: b?.bookingRef as string | undefined, paymentMethodId: b?.paymentMethodId as string | undefined,
+    quoteId: String(b.quoteId), attemptKey: String(b.attemptKey) };
 }
 
 /** Logs must never carry guest PII. */

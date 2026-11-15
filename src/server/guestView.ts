@@ -6,7 +6,7 @@ import type { CheckoutOutcome } from "../services/checkout";
  */
 export type GuestView =
   | { ok: true; bookingRef: string; verification: { deadlineText: string; mustCompleteBeforeAccess: boolean } }
-  | { ok: false; reason: Extract<CheckoutOutcome, { ok: false }>["reason"]; guestMessage: string; newTotal?: number };
+  | { ok: false; reason: Extract<CheckoutOutcome, { ok: false }>["reason"] | "in_progress" | "error"; guestMessage: string; newTotal?: number };
 
 export function guestView(o: CheckoutOutcome, bookingRef: string): GuestView {
   if (o.ok) return { ok: true, bookingRef, verification: { deadlineText: o.verification.deadlineText, mustCompleteBeforeAccess: o.verification.mustCompleteBeforeAccess } };

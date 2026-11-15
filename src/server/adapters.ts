@@ -2,6 +2,8 @@ import { MockHospitable, MockPayments, MockFailure } from "../adapters/mock";
 import { HospitableAdapter, PaymentsAdapter } from "../adapters/types";
 import { BookingStore, MemoryBookingStore } from "../services/bookingStore";
 import { StripePayments, assertTestKeys } from "../adapters/stripe";
+import { getDb } from "../db/client";
+import { DbLedger, Ledger, MemoryLedger } from "../db/ledger";
 
 /**
  * Picks adapters by CHECKOUT_MODE. Only "mock" exists today; "test" (Stripe test mode + Hospitable)
@@ -13,9 +15,9 @@ import { StripePayments, assertTestKeys } from "../adapters/stripe";
  *  - Live mode refuses to start until the launch gates are confirmed: confirmed tax rates and
  *    the Stripe checklist. The 5%-below-Airbnb claim is not implemented at all.
  */
-type MockSet = { hosp: MockHospitable; pay: MockPayments; store: BookingStore; used: number };
+type MockSet = { hosp: MockHospitable; pay: MockPayments; store: BookingStore; ledger: MemoryLedger; used: number };
 /** One isolated mock calendar + payments per tester session (ChatGPT note 73), capped in memory. */
-const g = globalThis as unknown as { __phh?: Map<string, MockSet>; __stripe?: StripePayments };
+const g = globalThis as unknown as { __phh?: Map<string, MockSet>; __stripe?: StripePayments; __ledger?: DbLedger };
 const MAX_SESSIONS = 200;
 
 function mockSet(session: string): MockSet {
@@ -26,7 +28,7 @@ function mockSet(session: string): MockSet {
       const oldest = [...g.__phh.entries()].sort((a, b) => a[1].used - b[1].used)[0];
       if (oldest) g.__phh.delete(oldest[0]);
     }
-    set = { hosp: new MockHospitable(), pay: new MockPayments(), store: new MemoryBookingStore(), used: 0 };
+    set = { hosp: new MockHospitable(), pay: new MockPayments(), store: new MemoryBookingStore(), ledger: new MemoryLedger(), used: 0 };
     g.__phh.set(session, set);
   }
   set.used = Date.now();
@@ -71,4 +73,15 @@ export function publicConfig(env: NodeJS.ProcessEnv = process.env): { mode: stri
   const mode = env.CHECKOUT_MODE ?? "mock";
   if (mode === "test") return { mode, publishableKey: assertTestKeys(env).publishable };
   return { mode };
+}
+
+/**
+ * Durable records when DATABASE_URL is set; otherwise an in-memory ledger per tester session.
+ * Stripe test mode on a deployed site requires the database (no idempotency without it).
+ */
+export function getLedger(env: NodeJS.ProcessEnv = process.env, session = "default"): { ledger: Ledger; durable: boolean } {
+  const db = getDb(env);
+  if (db) return { ledger: (g.__ledger ??= new DbLedger(db)), durable: true };
+  if (env.NODE_ENV === "production" && (env.CHECKOUT_MODE ?? "mock") !== "mock") throw new Error("Test/live mode requires DATABASE_URL.");
+  return { ledger: mockSet(session).ledger, durable: false };
 }

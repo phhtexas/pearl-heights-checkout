@@ -93,7 +93,7 @@ describe("guards", () => {
     expect(() => getAdapters("none", { CHECKOUT_MODE: "live" } as any)).toThrow(/Live mode blocked/);
   });
   it("validation rejects bad input and never accepts a client-supplied price", () => {
-    const good = { property: "edgewood", checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, guest: { firstName: "A", lastName: "B", email: "a@b.co", phone: "2105550100" }, agreed: true, acceptedTotal: 100, price: 1 };
+    const good = { property: "edgewood", checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, guest: { firstName: "A", lastName: "B", email: "a@b.co", phone: "2105550100" }, agreed: true, acceptedTotal: 100, price: 1, quoteId: "00000000-0000-4000-8000-000000000001", attemptKey: "00000000-0000-4000-8000-000000000002" };
     expect(parseCheckout(good)).not.toHaveProperty("price");
     expect(() => parseCheckout({ ...good, checkIn: "04/05/2027" })).toThrow(ValidationError);
     expect(() => parseCheckout({ ...good, adults: 2.5 })).toThrow(ValidationError);

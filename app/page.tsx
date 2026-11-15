@@ -23,6 +23,7 @@ export default function Checkout() {
   const [co, setCo] = useState<string | null>(null);
   const [adults, setAdults] = useState(2), [children, setChildren] = useState(0), [infants, setInfants] = useState(0);
   const [quote, setQuote] = useState<Quote | null>(null);
+  const [quoteId, setQuoteId] = useState("");
   const [expiresAt, setExpiresAt] = useState(0);
   const [now, setNow] = useState(Date.now());
   const [guest, setGuest] = useState({ firstName: "", lastName: "", email: "", phone: "" });
@@ -70,7 +71,7 @@ export default function Checkout() {
     const r = await fetch("/api/quote", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants }) });
     const j = await r.json(); setBusy(false);
     if (!r.ok) { setErr(j.error); return; }
-    setQuote(j.quote); setExpiresAt(j.expiresAt); setStep("total");
+    setQuote(j.quote); setQuoteId(j.quoteId); setExpiresAt(j.expiresAt); setStep("total");
   }
   async function pay() {
     if (now > expiresAt) { await getQuote(); setErr("Your price hold expired, so we rechecked the price. Please review your total."); return; }
@@ -82,9 +83,10 @@ export default function Checkout() {
       if (pm.error || !pm.id) { setBusy(false); setErr(pm.error ?? "Please check your card details."); return; }
       paymentMethodId = pm.id;
     }
-    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, guest, agreed, acceptedTotal: quote!.total, simulate: sim, paymentMethodId }) });
+    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, guest, agreed, acceptedTotal: quote!.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId }) });
     const j = await r.json(); setBusy(false);
-    if (!r.ok) { setErr(j.error); return; }
+    if (j.reason === "quote_expired") { await getQuote(); setErr(j.guestMessage); return; }
+    if (!r.ok) { setErr(j.error ?? j.guestMessage ?? "Something went wrong. No charge was made."); return; }
     if (j.ok) { setResult(j); setStep("done"); return; }
     if (j.reason === "dates_taken") {
       // Back to date selection with fresh availability; nothing was charged or booked.
