@@ -10,7 +10,8 @@ export interface CalendarDay {
 }
 
 export interface HospitableAdapter {
-  getCalendar(propertyUuid: string, start: string, end: string): Promise<CalendarDay[]>;
+  /** `fresh: true` bypasses any cache (required for quote and the pre-payment recheck). */
+  getCalendar(propertyUuid: string, start: string, end: string, opts?: { fresh?: boolean }): Promise<CalendarDay[]>;
   /** Creates a manual reservation. `code` is our booking ref; Hospitable rejects duplicates. */
   createReservation(input: {
     propertyUuid: string; checkIn: string; checkOut: string; adults: number; children: number; infants: number;

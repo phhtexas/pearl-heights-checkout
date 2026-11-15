@@ -26,6 +26,8 @@ export async function POST(req: Request) {
     const q = await ledger.getQuote(input.quoteId);
     const same = q && q.propertyKey === input.property && q.checkIn === input.checkIn && q.checkOut === input.checkOut
       && q.adults === input.adults && q.children === input.children && q.infants === input.infants;
+    // Quote ownership: only the browser session that requested the quote may pay for it.
+    if (q && q.sessionId && q.sessionId !== session.id) return NextResponse.json({ error: "Your price check expired. Please see your total again." }, { status: 400, headers: noStore });
     if (!q || !same) return NextResponse.json({ error: "Your stay details changed. Please see your total again." }, { status: 400, headers: noStore });
     if (q.total !== input.acceptedTotal) return NextResponse.json({ error: "Your total doesn't match the price we showed. Please see your total again." }, { status: 400, headers: noStore });
     if (q.expiresAt.getTime() < Date.now()) return NextResponse.json({ ok: false, reason: "quote_expired", guestMessage: "Your 15-minute price hold expired. Please check your total again." }, { status: 409, headers: noStore });

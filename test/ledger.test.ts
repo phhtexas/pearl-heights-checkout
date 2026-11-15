@@ -1,6 +1,5 @@
 // DB-backed quote acceptance and idempotency (gates from ChatGPT notes 69 and 78), on a real Postgres engine (PGlite).
 import { beforeEach, describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 import type { Db } from "../src/db/client";
 import { DbLedger } from "../src/db/ledger";
@@ -11,9 +10,9 @@ import { buildQuote } from "../src/domain/quote";
 
 async function freshDb(): Promise<{ db: Db; pg: PGlite }> {
   const pg = new PGlite();
-  const schema = readFileSync(new URL("../db/schema.sql", import.meta.url), "utf8");
-  await pg.exec(schema);
-  await pg.exec(schema); // idempotent: running twice must not fail
+  // Apply the versioned migrations exactly as scripts/migrate.mjs splits them (twice: they must be re-runnable).
+  const { loadMigrations } = await import("../scripts/migrate.mjs");
+  for (let pass = 0; pass < 2; pass++) for (const m of loadMigrations()) for (const st of m.statements) await pg.exec(st);
   const db: Db = {
     async query(text, params = []) { return (await pg.query(text, params as any[])).rows as any; },
     async tx(st) { await pg.transaction(async (t) => { for (const [text, p] of st) await t.query(text, p as any[]); }); },
@@ -119,5 +118,58 @@ describe("booking records", () => {
     await expect(ledger.recordBooking(req("PH-ATOM01"), other, o)).rejects.toThrow();
     expect(await count(db, "guests")).toBe(1);
     expect(await count(db, "payments")).toBe(2);
+  });
+});
+
+describe("one active attempt per quote (note 82)", () => {
+  it("simultaneous attempts with DIFFERENT keys for one quote: exactly 1 authorization, reservation, capture and booking", async () => {
+    const h = new MockHospitable(), p = new MockPayments();
+    const { saved, req } = await setup(ledger, h);
+    let runs = 0;
+    const attempt = (i: number) => {
+      const ref = `PH-PAR00${i}`;
+      return ledger.runAttempt(`7777777${i}-7777-4777-8777-777777777777`, saved, ref, async () => {
+        runs++; const o = await runCheckout(req(ref), h, p); if (o.ok) await ledger.recordBooking(req(ref), saved, o); return o; });
+    };
+    const results = await Promise.all([1, 2, 3, 4].map(attempt));
+    expect(runs).toBe(1);
+    expect(p.intents.size).toBe(1);
+    expect([...p.intents.values()].filter((x) => x.status === "captured")).toHaveLength(1);
+    expect(h.reservationCount).toBe(1);
+    expect(await count(db, "bookings")).toBe(1);
+    expect(new Set(results.map((r) => JSON.stringify(r))).size).toBe(1);
+  });
+  it("a crash mid-checkout keeps the quote locked: the next attempt does not run and says 'in progress'", async () => {
+    const h = new MockHospitable(), p = new MockPayments();
+    const { saved, req } = await setup(ledger, h);
+    const crashed = await ledger.runAttempt("88888888-8888-4888-8888-888888888881", saved, "PH-CRASH1", async () => { throw new Error("process died after capture"); });
+    expect(crashed).toMatchObject({ ok: false, reason: "error" });
+    expect((crashed as any).guestMessage).toMatch(/don't pay again/);
+    let ran = false;
+    const next = await ledger.runAttempt("88888888-8888-4888-8888-888888888882", saved, "PH-CRASH2", async () => { ran = true; return runCheckout(req("PH-CRASH2"), h, p); });
+    expect(ran).toBe(false);
+    expect(next).toMatchObject({ ok: false, reason: "in_progress" });
+    expect(p.intents.size).toBe(0);
+  });
+  it("a holder still 'running' after its lease expired is never taken over", async () => {
+    const h = new MockHospitable(), p = new MockPayments();
+    const { saved, req } = await setup(ledger, h);
+    await db.query(`INSERT INTO checkout_attempts (attempt_key, quote_id, quote_version, booking_ref, status) VALUES ('stuck', $1, $2, 'PH-STUCK1', 'running')`, [saved.id, saved.version]);
+    await db.query(`UPDATE quotes SET active_attempt = 'stuck', lease_until = now() - interval '1 second' WHERE id = $1`, [saved.id]);
+    let ran = false;
+    const r = await ledger.runAttempt("99999999-9999-4999-8999-999999999999", saved, "PH-STUCK2", async () => { ran = true; return runCheckout(req("PH-STUCK2"), h, p); });
+    expect(ran).toBe(false);
+    expect(r).toMatchObject({ reason: "in_progress" });
+  });
+  it("the lease is released after a decline so the guest can retry", async () => {
+    const h = new MockHospitable(), p = new MockPayments("card_declined");
+    const { saved } = await setup(ledger, h);
+    await ledger.runAttempt("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1", saved, "PH-REL001", async () => runCheckout({ ...(await setup(ledger, h)).req("PH-REL001") }, h, p));
+    const [row] = await db.query<any>(`SELECT active_attempt FROM quotes WHERE id = $1`, [saved.id]);
+    expect(row.active_attempt).toBeNull();
+  });
+  it("quotes remember the browser session that requested them", async () => {
+    const { saved } = await setup(ledger, new MockHospitable());
+    expect((await ledger.getQuote(saved.id))!.sessionId).toBe("sess");
   });
 });

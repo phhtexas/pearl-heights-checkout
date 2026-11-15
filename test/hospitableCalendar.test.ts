@@ -63,3 +63,80 @@ describe("closed for check-in / check-out", () => {
     expect(d).toMatchObject({ closedForCheckin: true, closedForCheckout: false });
   });
 });
+
+describe("Hospitable client controls (note 82)", () => {
+  const ok = (days: unknown) => ({ ok: true, status: 200, json: async () => ({ data: { days } }) });
+  it("fresh reads bypass the 60-second cache", async () => {
+    let n = 0;
+    const f = (async () => { n++; return ok([{ date: "2027-03-08", status: { available: true }, price: { amount: 100 * n, currency: "USD" } }]); }) as any;
+    const src = hospitableCalendarSource("t", f);
+    expect((await src(UUID, "2027-03-08", "2027-03-08"))[0]!.price).toBe(100);
+    expect((await src(UUID, "2027-03-08", "2027-03-08"))[0]!.price).toBe(100); // cached
+    expect((await src(UUID, "2027-03-08", "2027-03-08", { fresh: true }))[0]!.price).toBe(200);
+    expect(n).toBe(2);
+  });
+  it("retries 429/5xx at most twice with backoff, then fails", async () => {
+    const statuses: number[] = []; const waits: number[] = [];
+    const f = (async () => { statuses.push(503); return { ok: false, status: 503, json: async () => ({}) }; }) as any;
+    await expect(hospitableCalendarSource("t", f, async (ms) => { waits.push(ms); })(UUID, "2027-03-08", "2027-03-08")).rejects.toMatchObject({ code: "upstream_error" });
+    expect(statuses).toHaveLength(3);
+    expect(waits).toEqual([300, 900]);
+  });
+  it("does not retry 401", async () => {
+    let n = 0;
+    const f = (async () => { n++; return { ok: false, status: 401, json: async () => ({}) }; }) as any;
+    await expect(hospitableCalendarSource("t", f, async () => {})(UUID, "2027-03-08", "2027-03-08")).rejects.toMatchObject({ code: "auth_failed" });
+    expect(n).toBe(1);
+  });
+  it("retries a timeout/network error, then succeeds", async () => {
+    let n = 0;
+    const f = (async (_u: string, init: any) => { n++; expect(init.signal).toBeDefined(); if (n === 1) throw new Error("timeout"); return ok([]); }) as any;
+    expect(await hospitableCalendarSource("t", f, async () => {})(UUID, "2027-03-08", "2027-03-08")).toEqual([]);
+    expect(n).toBe(2);
+  });
+  it("rejects malformed responses: bad date, fractional or negative price, non-USD, non-array", async () => {
+    for (const days of [[{ date: "03/08/2027" }], [{ date: "2027-03-08", price: { amount: 1.5 } }], [{ date: "2027-03-08", price: { amount: -1 } }],
+      [{ date: "2027-03-08", price: { amount: 1, currency: "EUR" } }], "nope"]) {
+      const f = (async () => ok(days)) as any;
+      await expect(hospitableCalendarSource("t", f)(UUID, "2027-03-08", "2027-03-08")).rejects.toMatchObject({ code: "bad_response" });
+    }
+  });
+  it("only calls the fixed Hospitable base URL and refuses malformed ids/dates", async () => {
+    const f = (async () => ok([])) as any;
+    await expect(hospitableCalendarSource("t", f)("../../evil", "2027-03-08", "2027-03-08")).rejects.toMatchObject({ code: "bad_request" });
+    await expect(hospitableCalendarSource("t", f)(UUID, "2027-3-8", "2027-03-08")).rejects.toMatchObject({ code: "bad_request" });
+  });
+});
+
+describe("pre-payment recheck is fresh (note 82)", async () => {
+  const { runCheckout } = await import("../src/services/checkout");
+  const { getProperty } = await import("../src/domain/properties");
+  const { buildQuote } = await import("../src/domain/quote");
+  const { MockPayments } = await import("../src/adapters/mock");
+  const indianola = getProperty("indianola");
+  const stay = { property: indianola, checkIn: "2027-03-08", checkOut: "2027-03-10", adults: 2, children: 0, infants: 0, now: new Date("2026-11-14T20:00:00Z") };
+  const guest = { firstName: "T", lastName: "G", email: "t@example.com", phone: "2105550100" };
+  function changingSource(after: "blocked" | "price") {
+    let changed = false;
+    const f = (async () => ({ ok: true, status: 200, json: async () => ({ data: { days: [
+      { date: "2027-03-08", status: { available: !(changed && after === "blocked") }, price: { amount: changed && after === "price" ? 70000 : 60700, currency: "USD" }, min_stay: 2 },
+      { date: "2027-03-09", status: { available: true }, price: { amount: 43700, currency: "USD" }, min_stay: 2 },
+    ] } }) })) as any;
+    return { src: hospitableCalendarSource("t", f), change: () => { changed = true; } };
+  }
+  for (const kind of ["blocked", "price"] as const) {
+    it(`a ${kind === "blocked" ? "night booked" : "price change"} inside the cache window is caught: 0 authorization, reservation, capture`, async () => {
+      const { src, change } = changingSource(kind);
+      const h = new MockHospitable("none", src), p = new MockPayments();
+      const cal = await h.getCalendar(indianola.hospitableUuid, stay.checkIn, stay.checkOut); // browse: fills the cache
+      const q = buildQuote({ ...stay, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
+      change(); // Airbnb booking / PriceLabs update lands; the cached browse copy is now stale
+      expect((await h.getCalendar(indianola.hospitableUuid, stay.checkIn, stay.checkOut))[0]!.price).toBe(60700); // cache still stale
+      const r = await runCheckout({ ...stay, guest, bookingRef: "PH-FRESH1", acceptedTotal: q.total }, h, p);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.reason).toBe(kind === "blocked" ? "dates_taken" : "price_changed");
+      expect(p.intents.size).toBe(0);
+      expect(h.reservationCount).toBe(0);
+    });
+  }
+});

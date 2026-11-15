@@ -1,5 +1,4 @@
--- Pearl Heights direct checkout: Postgres schema v1 (Checkout build spec, section 4).
--- Idempotent: safe to run on every deploy (scripts/migrate.mjs).
+-- 0001 initial schema (Checkout build spec, section 4). Written with IF NOT EXISTS because it was first applied unversioned.
 -- Money is integer cents. Times are timestamptz (UTC); guest-facing times are shown in America/Chicago.
 
 CREATE TABLE IF NOT EXISTS guests (
@@ -116,19 +115,3 @@ CREATE TABLE IF NOT EXISTS audit_log (
   at          timestamptz NOT NULL DEFAULT now()
 );
 
--- v2 (Nov 14, 2026): one row per checkout attempt. The browser sends a fresh attempt_key per Pay press and
--- reuses it on network retries; a repeated request returns the stored outcome instead of charging again.
-CREATE TABLE IF NOT EXISTS checkout_attempts (
-  attempt_key   text PRIMARY KEY,
-  quote_id      uuid NOT NULL,
-  quote_version int  NOT NULL,
-  booking_ref   text NOT NULL UNIQUE,
-  status        text NOT NULL CHECK (status IN ('running', 'done')),
-  outcome       jsonb,
-  created_at    timestamptz NOT NULL DEFAULT now(),
-  finished_at   timestamptz,
-  FOREIGN KEY (quote_id, quote_version) REFERENCES quotes(id, version)
-);
--- One confirmed booking per accepted quote (a second tab cannot book the same quote twice).
-CREATE UNIQUE INDEX IF NOT EXISTS bookings_one_per_quote ON bookings (quote_id, quote_version);
-ALTER TABLE quotes ADD COLUMN IF NOT EXISTS session_id text;

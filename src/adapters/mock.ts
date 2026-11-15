@@ -27,17 +27,17 @@ export class MockHospitable implements HospitableAdapter {
   /** `source` = real Hospitable calendar (read-only); without it, the Nov 14 snapshot is used. */
   constructor(public failure: MockFailure = "none", private source?: CalendarSource) {}
 
-  private async baseCalendar(uuid: string, start: string, end: string): Promise<CalendarDay[]> {
+  private async baseCalendar(uuid: string, start: string, end: string, fresh = false): Promise<CalendarDay[]> {
     if (!keyByUuid[uuid]) throw new AdapterError("Unknown property", "unknown_property");
-    if (this.source) return this.source(uuid, start, end);
+    if (this.source) return this.source(uuid, start, end, { fresh });
     const cal = SNAP[keyByUuid[uuid]!]!;
     return Object.entries(cal)
       .filter(([d]) => d >= start && d <= end)
       .map(([date, [avail, price, minStay]]) => ({ date, available: avail === 1, price: price * 100, minStay }));
   }
 
-  async getCalendar(uuid: string, start: string, end: string): Promise<CalendarDay[]> {
-    const base = await this.baseCalendar(uuid, start, end);
+  async getCalendar(uuid: string, start: string, end: string, opts: { fresh?: boolean } = {}): Promise<CalendarDay[]> {
+    const base = await this.baseCalendar(uuid, start, end, opts.fresh === true);
     // "Dates booked on Airbnb during checkout": every requested night is now taken.
     if (this.failure === "dates_taken") return base.map((d) => ({ ...d, available: false }));
     const blocked = this.blocked.get(uuid) ?? new Set();
@@ -48,7 +48,7 @@ export class MockHospitable implements HospitableAdapter {
     if (this.failure === "reservation_fails") throw new AdapterError("Hospitable unavailable", "upstream_error");
     if (this.codes.has(i.code)) throw new AdapterError("You have already used that reservation code", "duplicate_code");
     const nights: string[] = [];
-    const cal = await this.getCalendar(i.propertyUuid, i.checkIn, i.checkOut);
+    const cal = await this.getCalendar(i.propertyUuid, i.checkIn, i.checkOut, { fresh: true });
     for (const d of cal) if (d.date < i.checkOut) { if (!d.available) throw new AdapterError("Dates unavailable", "unavailable"); nights.push(d.date); }
     const set = this.blocked.get(i.propertyUuid) ?? new Set<string>();
     nights.forEach((n) => set.add(n));

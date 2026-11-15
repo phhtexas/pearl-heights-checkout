@@ -3,9 +3,24 @@
 Custom direct-booking checkout for Pearl Heights Homes (PR Portfolio Properties LLC, dba Pearl Heights Homes).
 Guests book on `book.pearlheightshomes.com`; reservations are created in Hospitable and paid through Stripe.
 
-Status: **working test checkout in mock mode** (`CHECKOUT_MODE=mock`). Fake Hospitable and Stripe adapters; nothing can charge a card or create a real reservation.
+Status: **test checkout** (`CHECKOUT_MODE=test`): Stripe test mode (cards only), real Hospitable calendar (read-only), fake reservations, Neon Postgres. No live keys exist.
 
-Run locally: `npm install`, `npm run dev`, open http://localhost:3000. Tests: `npm test` (39 tests).
+Run locally: `npm install`, `CHECKOUT_MODE=mock npm run dev`, open http://localhost:3000.
+Tests: `npm test` (unit + PGlite database tests), `npm run typecheck`, `npm run build`.
+E2E (Playwright, local): `CHECKOUT_MODE=mock ALLOW_MOCK=true npx next start -p 3100`, then `node e2e/calendar-switch.mjs` and `node e2e/full-flow.mjs`.
+
+## Database migrations
+
+`db/migrations/NNNN_name.sql` are applied in order by `scripts/migrate.mjs` before every Vercel build. Each runs in one
+transaction that first takes `pg_advisory_xact_lock`, and is recorded with a SHA-256 checksum in `schema_migrations`.
+Editing an applied file fails the build: add a new migration instead. Migrations are written to be re-runnable.
+
+## Hospitable client controls
+
+Server-only token (`HOSPITABLE_API_TOKEN`, sensitive), fixed base URL `https://public.api.hospitable.com/v2`, validated
+UUID/dates, 8 s timeout, at most 2 retries on 429/5xx/network (300 ms, 900 ms), response schema validation (ISO date,
+integer cents, USD, boolean status), errors carry only a status code, nothing upstream is logged. Browsing uses a 60 s
+cache; quotes and the pre-payment recheck always read fresh. Reservations are never written in test mode.
 
 Guards: a production build refuses mock adapters unless `ALLOW_MOCK=true` (private demo only). `CHECKOUT_MODE=live` refuses to start until `TAX_RATES_CONFIRMED`, `STRIPE_CHECKLIST_PASSED` and `ATTORNEY_APPROVED` are all `true`. The 5%-below-Airbnb claim is not implemented.
 
@@ -18,7 +33,10 @@ Guards: a production build refuses mock adapters unless `ALLOW_MOCK=true` (priva
 | Cancellation refunds | `src/domain/refunds.ts` | Terms draft revision 3 |
 | Verification deadlines (24 h / 2 h / before access) | `src/domain/verification.ts` | Oscar, Nov 14, 2026 |
 | Booking state machine | `src/domain/bookingState.ts` | Checkout build spec, section 3 |
-| Database | `db/schema.sql` | Checkout build spec, section 4 |
+| Database (versioned migrations) | `db/migrations/*.sql`, `scripts/migrate.mjs` | Build spec section 4; ChatGPT notes 69, 78, 82 |
+| Durable quotes, attempts, quote lease, booking records | `src/db/ledger.ts` | ChatGPT notes 78, 82 |
+| Stripe test mode (cards only, manual capture) | `src/adapters/stripe.ts`, `app/StripeCard.tsx` | ChatGPT notes 75-78 |
+| Hospitable calendar, read-only | `src/adapters/hospitableCalendar.ts` | Oscar, Nov 14: real calendar, fake bookings |
 | Payment-to-booking flow with rollback | `src/services/checkout.ts` | Build spec section 3 |
 | Mock Hospitable + Stripe | `src/adapters/mock.ts` | Behaves like the live test of Nov 14 (duplicate codes rejected, instant block) |
 | API routes | `app/api/*` | calendar, quote, checkout |

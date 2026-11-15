@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const now = new Date();
     if (s.checkIn < earliestCheckIn(now)) return NextResponse.json({ error: "Same-day bookings close at 12 PM Central. Please choose a later check-in date." }, { status: 400, headers: noStore });
     const { hosp } = getAdapters("none", process.env, session.id);
-    const cal = await hosp.getCalendar(property.hospitableUuid, s.checkIn, s.checkOut);
+    const cal = await hosp.getCalendar(property.hospitableUuid, s.checkIn, s.checkOut, { fresh: true });
     const nights = cal.filter((d) => d.date < s.checkOut);
     if (nights.some((d) => !d.available)) return NextResponse.json({ error: "Some nights in this range are already booked." }, { status: 409, headers: noStore });
     if (nights[0]?.closedForCheckin) return NextResponse.json({ error: "Check-in isn't available on that date. Please choose another day." }, { status: 400, headers: noStore });

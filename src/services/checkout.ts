@@ -40,7 +40,7 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
 
   // 1. Re-quote from the live calendar and recheck availability.
   step("PAY_PRESSED", "recheck availability and price");
-  const cal = await hosp.getCalendar(req.property.hospitableUuid, req.checkIn, req.checkOut);
+  const cal = await hosp.getCalendar(req.property.hospitableUuid, req.checkIn, req.checkOut, { fresh: true });
   const nights = cal.filter((d) => d.date < req.checkOut);
   if (nights.some((d) => !d.available)) {
     step("RESERVATION_FAILED", "dates no longer available; no card touched");
@@ -90,7 +90,7 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
   step("RESERVATION_OK", `reservation ${reservationId}`);
 
   // 4. Confirm the block is visible before charging (live test: under 1 second).
-  const after = await hosp.getCalendar(req.property.hospitableUuid, req.checkIn, req.checkOut);
+  const after = await hosp.getCalendar(req.property.hospitableUuid, req.checkIn, req.checkOut, { fresh: true });
   if (after.filter((d) => d.date < req.checkOut).some((d) => d.available)) log.push("warning: block not yet visible; reconciliation job will re-check");
 
   // 5. Capture.
@@ -100,7 +100,7 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
   } catch (e) {
     step("CAPTURE_FAILED", "capture failed; cancelling reservation; alert Oscar");
     await hosp.cancelReservation(reservationId);
-    const reopened = await hosp.getCalendar(req.property.hospitableUuid, req.checkIn, req.checkOut);
+    const reopened = await hosp.getCalendar(req.property.hospitableUuid, req.checkIn, req.checkOut, { fresh: true });
     if (reopened.filter((d) => d.date < req.checkOut).every((d) => d.available)) step("DATES_REOPENED", "dates confirmed open");
     else log.push("dates not yet open; guest sees 'cancellation is being completed' until the calendar confirms");
     return { ok: false, state, reason: "capture_failed", guestMessage: "Your payment didn't go through, so this booking was cancelled." + HOLD_NOTE, log };
