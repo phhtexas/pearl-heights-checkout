@@ -1,6 +1,7 @@
 import snapshot from "../../data/calendar-snapshot.json";
 import { PROPERTIES } from "../domain/properties";
 import { AdapterError, CalendarDay, HospitableAdapter, PaymentsAdapter } from "./types";
+import type { CalendarSource } from "./hospitableCalendar";
 
 /**
  * Mock adapters for CHECKOUT_MODE=mock. They behave like Hospitable and Stripe
@@ -23,19 +24,24 @@ export class MockHospitable implements HospitableAdapter {
   private blocked = new Map<string, Set<string>>(); // uuid -> dates
   private codes = new Map<string, { uuid: string; nights: string[] }>();
   private byId = new Map<string, string>();
-  constructor(public failure: MockFailure = "none") {}
+  /** `source` = real Hospitable calendar (read-only); without it, the Nov 14 snapshot is used. */
+  constructor(public failure: MockFailure = "none", private source?: CalendarSource) {}
 
-  async getCalendar(uuid: string, start: string, end: string): Promise<CalendarDay[]> {
-    const cal = SNAP[keyByUuid[uuid] ?? ""];
-    if (!cal) throw new AdapterError("Unknown property", "unknown_property");
-    const blocked = this.blocked.get(uuid) ?? new Set();
-    // "Dates booked on Airbnb during checkout": every requested night is now taken.
-    if (this.failure === "dates_taken") return Object.entries(cal)
-      .filter(([d]) => d >= start && d <= end)
-      .map(([date, [, price, minStay]]) => ({ date, available: false, price: price * 100, minStay }));
+  private async baseCalendar(uuid: string, start: string, end: string): Promise<CalendarDay[]> {
+    if (!keyByUuid[uuid]) throw new AdapterError("Unknown property", "unknown_property");
+    if (this.source) return this.source(uuid, start, end);
+    const cal = SNAP[keyByUuid[uuid]!]!;
     return Object.entries(cal)
       .filter(([d]) => d >= start && d <= end)
-      .map(([date, [avail, price, minStay]]) => ({ date, available: avail === 1 && !blocked.has(date), price: price * 100, minStay }));
+      .map(([date, [avail, price, minStay]]) => ({ date, available: avail === 1, price: price * 100, minStay }));
+  }
+
+  async getCalendar(uuid: string, start: string, end: string): Promise<CalendarDay[]> {
+    const base = await this.baseCalendar(uuid, start, end);
+    // "Dates booked on Airbnb during checkout": every requested night is now taken.
+    if (this.failure === "dates_taken") return base.map((d) => ({ ...d, available: false }));
+    const blocked = this.blocked.get(uuid) ?? new Set();
+    return base.map((d) => ({ ...d, available: d.available && !blocked.has(d.date) }));
   }
 
   async createReservation(i: Parameters<HospitableAdapter["createReservation"]>[0]) {

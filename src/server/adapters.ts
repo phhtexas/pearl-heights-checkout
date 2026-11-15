@@ -3,6 +3,7 @@ import { HospitableAdapter, PaymentsAdapter } from "../adapters/types";
 import { BookingStore, MemoryBookingStore } from "../services/bookingStore";
 import { StripePayments, assertTestKeys } from "../adapters/stripe";
 import { getDb } from "../db/client";
+import { CalendarSource, hospitableCalendarSource } from "../adapters/hospitableCalendar";
 import { DbLedger, Ledger, MemoryLedger } from "../db/ledger";
 
 /**
@@ -17,7 +18,7 @@ import { DbLedger, Ledger, MemoryLedger } from "../db/ledger";
  */
 type MockSet = { hosp: MockHospitable; pay: MockPayments; store: BookingStore; ledger: MemoryLedger; used: number };
 /** One isolated mock calendar + payments per tester session (ChatGPT note 73), capped in memory. */
-const g = globalThis as unknown as { __phh?: Map<string, MockSet>; __stripe?: StripePayments; __ledger?: DbLedger };
+const g = globalThis as unknown as { __phh?: Map<string, MockSet>; __stripe?: StripePayments; __ledger?: DbLedger; __cal?: CalendarSource };
 const MAX_SESSIONS = 200;
 
 function mockSet(session: string): MockSet {
@@ -28,7 +29,7 @@ function mockSet(session: string): MockSet {
       const oldest = [...g.__phh.entries()].sort((a, b) => a[1].used - b[1].used)[0];
       if (oldest) g.__phh.delete(oldest[0]);
     }
-    set = { hosp: new MockHospitable(), pay: new MockPayments(), store: new MemoryBookingStore(), ledger: new MemoryLedger(), used: 0 };
+    set = { hosp: new MockHospitable("none", liveCalendar()), pay: new MockPayments(), store: new MemoryBookingStore(), ledger: new MemoryLedger(), used: 0 };
     g.__phh.set(session, set);
   }
   set.used = Date.now();
@@ -84,4 +85,10 @@ export function getLedger(env: NodeJS.ProcessEnv = process.env, session = "defau
   if (db) return { ledger: (g.__ledger ??= new DbLedger(db)), durable: true };
   if (env.NODE_ENV === "production" && (env.CHECKOUT_MODE ?? "mock") !== "mock") throw new Error("Test/live mode requires DATABASE_URL.");
   return { ledger: mockSet(session).ledger, durable: false };
+}
+
+/** Real Hospitable prices/availability (read-only) when HOSPITABLE_API_TOKEN is set; else the snapshot. */
+function liveCalendar(env: NodeJS.ProcessEnv = process.env): CalendarSource | undefined {
+  if (!env.HOSPITABLE_API_TOKEN) return undefined;
+  return (g.__cal ??= hospitableCalendarSource(env.HOSPITABLE_API_TOKEN));
 }
