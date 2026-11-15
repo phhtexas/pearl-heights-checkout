@@ -1,0 +1,23 @@
+// Guest flow through the real screens (mock mode, local): pick dates, see total, fill details, pay (double-click), confirmation.
+import { createRequire } from "node:module";
+const { chromium } = createRequire(import.meta.url)("playwright");
+const base = process.argv[2] ?? "http://localhost:3100";
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+const checkouts = [];
+page.on("request", (r) => { if (r.url().endsWith("/api/checkout")) checkouts.push(JSON.parse(r.postData())); });
+await page.goto(base);
+await page.getByRole("button", { name: /^613 Indianola/ }).click();
+await page.getByLabel("Next month").click();
+await page.waitForFunction(() => [...document.querySelectorAll("button.day small")].some((s) => s.textContent));
+const free = await page.$$eval("button.day:not([disabled])", (b) => b.filter((x) => x.querySelector("small")?.textContent).map((x) => x.getAttribute("aria-label")));
+await page.getByLabel(free[2]).click(); await page.getByLabel(free[4]).click();
+await page.getByRole("button", { name: "See my total" }).click();
+await page.getByRole("button", { name: "Continue" }).click();
+for (const [label, v] of [["First name", "Test"], ["Last name", "Guest"], ["Email", "test@example.com"], ["Mobile phone", "2105550100"]]) await page.getByLabel(label).fill(v);
+await page.getByRole("checkbox").check();
+await page.getByRole("button", { name: /^Pay / }).dblclick();
+await page.waitForSelector("text=Payment received");
+const heading = await page.locator("h2").innerText();
+console.log({ heading, checkoutRequests: checkouts.length, hasQuoteId: checkouts.every((c) => /^[0-9a-f-]{36}$/.test(c.quoteId)), attemptKeys: new Set(checkouts.map((c) => c.attemptKey)).size });
+await browser.close();
