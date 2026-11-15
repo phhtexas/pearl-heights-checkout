@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { checkLimit, LIMITS, tooMany } from "@/server/rateLimit";
+import { getDb } from "@/db/client";
 import { getProperty } from "@/domain/properties";
 import { buildQuote, QuoteError } from "@/domain/quote";
 import { getAdapters, getLedger } from "@/server/adapters";
@@ -10,6 +12,8 @@ export const dynamic = "force-dynamic";
 const noStore = { "Cache-Control": "no-store" };
 
 export async function POST(req: Request) {
+  const rl = await checkLimit(getDb(), req, LIMITS.quote);
+  if (!rl.ok) return tooMany(rl.retryAfterS);
   const session = readSession(req);
   try {
     const s = parseStay(await req.json());

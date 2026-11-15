@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { checkLimit, LIMITS, tooMany } from "@/server/rateLimit";
+import { getDb } from "@/db/client";
 import { getProperty } from "@/domain/properties";
 import { bookingAttempt } from "@/services/bookingFlow";
 import { getAdapters, getLedger } from "@/server/adapters";
@@ -16,6 +18,8 @@ export async function POST(req: Request) {
   // Same-origin only (basic CSRF protection; rate limiting is a separate gate).
   const origin = req.headers.get("origin");
   if (origin && origin !== new URL(req.url).origin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: noStore });
+  const rl = await checkLimit(getDb(), req, LIMITS.checkout);
+  if (!rl.ok) return tooMany(rl.retryAfterS);
   const session = readSession(req);
   try {
     const b = await req.json();

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { checkLimit, LIMITS, tooMany } from "@/server/rateLimit";
+import { getDb } from "@/db/client";
 import { getProperty } from "@/domain/properties";
 import { getAdapters } from "@/server/adapters";
 import { readSession, withSession } from "@/server/session";
@@ -11,6 +13,8 @@ const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const todayCT = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
 
 export async function GET(req: Request) {
+  const rl = await checkLimit(getDb(), req, LIMITS.calendar);
+  if (!rl.ok) return tooMany(rl.retryAfterS);
   const url = new URL(req.url);
   const session = readSession(req);
   let p;

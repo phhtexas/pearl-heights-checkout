@@ -4,6 +4,7 @@ import { getAdapters, getLedger } from "@/server/adapters";
 import { DbLedger } from "@/db/ledger";
 import { getDb } from "@/db/client";
 import { runDueSecondCharges } from "@/services/secondCharge";
+import { purgeOldRateLimits } from "@/server/rateLimit";
 import { getProperty } from "@/domain/properties";
 import { verificationDeadline } from "@/domain/verification";
 
@@ -25,7 +26,8 @@ async function handle(req: Request): Promise<Response> {
   const { hosp, pay } = getAdapters("none", process.env, "reconciler");
   const reconciliation = await runReconciliation(ledger, { hosp, pay, propertyUuid: (k) => getProperty(k).hospitableUuid, verification: (ci) => verificationDeadline(new Date(), ci) });
   const secondCharges = await runDueSecondCharges(getDb()!, pay);
-  const counts = { reconciliation, secondCharges };
+  const rateLimitWindowsPurged = await purgeOldRateLimits(getDb()!).catch(() => 0);
+  const counts = { reconciliation, secondCharges, rateLimitWindowsPurged };
   console.info("maintenance run", JSON.stringify(counts));
   return NextResponse.json(counts, { headers: noStore });
 }

@@ -7,6 +7,7 @@ vi.mock("@/server/reconcileRunner", async (orig) => ({ ...(await orig<typeof imp
 const charges = vi.fn(async () => ({ due: 0, paid: 0, retry_scheduled: 0, failed_final: 0, skipped: 0, ambiguous: 0 }));
 vi.mock("@/services/secondCharge", () => ({ runDueSecondCharges: charges }));
 vi.mock("@/db/client", () => ({ getDb: () => ({}) }));
+vi.mock("@/server/rateLimit", () => ({ purgeOldRateLimits: async () => 0 }));
 vi.mock("@/server/adapters", async () => {
   const { DbLedger } = await import("../src/db/ledger");
   return { getLedger: () => ({ ledger: Object.create(DbLedger.prototype), durable: true }), getAdapters: () => ({ hosp: {}, pay: {} }) };
@@ -44,8 +45,8 @@ describe.each(["GET", "POST"] as const)("%s /api/internal/reconcile", (method) =
     expect(charges).toHaveBeenCalledTimes(1);
     expect(r.headers.get("cache-control")).toBe("no-store");
     const body = await r.json();
-    expect(Object.keys(body).sort()).toEqual(["reconciliation", "secondCharges"]);
-    const leaves = (o: any): unknown[] => Object.values(o).flatMap((v) => (typeof v === "object" ? leaves(v) : [v]));
+    expect(Object.keys(body).sort()).toEqual(["rateLimitWindowsPurged", "reconciliation", "secondCharges"]);
+    const leaves = (o: any): unknown[] => (typeof o === "object" ? Object.values(o).flatMap(leaves) : [o]);
     expect(leaves(body).every((v) => typeof v === "number")).toBe(true); // counts only
   });
 });
