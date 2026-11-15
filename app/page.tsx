@@ -32,7 +32,7 @@ export default function Checkout() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [resent, setResent] = useState(false);
-  const [cfg, setCfg] = useState<{ mode: string; publishableKey?: string }>({ mode: "mock" });
+  const [cfg, setCfg] = useState<{ mode: string; publishableKey?: string }>({ mode: "loading" });
   const createPm = useRef<CreatePm | null>(null);
   const onCardReady = useCallback((fn: CreatePm | null) => { createPm.current = fn; }, []);
   const stripeMode = cfg.mode === "test" && !!cfg.publishableKey;
@@ -101,7 +101,7 @@ export default function Checkout() {
 
   return (
     <>
-      <div className="banner">{stripeMode ? "Test checkout · Stripe test payments · fake bookings · no real charges" : "Test checkout · fake payments and bookings · no real charges"} ·{" "}
+      <div className="banner">{cfg.mode === "loading" ? "Test checkout · no real charges" : stripeMode ? "Test checkout · Stripe test payments · fake bookings · no real charges" : "Test checkout · fake payments and bookings · no real charges"} ·{" "}
         <button className="linkish" onClick={async () => { await fetch("/api/mock/reset", { method: "POST" }); setStep("stay"); setCi(null); setCo(null); setQuote(null); setResult(null); setErr(""); reloadCalendar(); }}>Reset my test bookings</button></div>
       <main className="phone">
         <div className="head">
