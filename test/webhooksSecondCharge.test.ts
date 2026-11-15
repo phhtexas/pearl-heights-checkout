@@ -126,7 +126,7 @@ describe("Stripe webhooks", () => {
   it("replays are acknowledged without effects", async () => {
     const p = new MockPayments();
     const { initialPi } = await splitBooking(p);
-    const e = event("evt_r1", "charge.refunded", 2_000_000_000, { id: "ch_1", payment_intent: initialPi, amount: 100 });
+    const e = event("evt_r1", "charge.refunded", 2_000_000_000, { id: "ch_1", payment_intent: initialPi, amount: 100, amount_refunded: 100, refunded: true });
     expect(await handleStripeEvent(db, e)).toBe("processed");
     expect(await handleStripeEvent(db, e)).toBe("duplicate");
     expect((await one(`SELECT count(*)::int AS n FROM webhook_events`)).n).toBe(1);
@@ -134,7 +134,7 @@ describe("Stripe webhooks", () => {
   it("out of order: an older event never overwrites a newer status", async () => {
     const p = new MockPayments();
     const { initialPi } = await splitBooking(p);
-    await handleStripeEvent(db, event("evt_new", "charge.refunded", 2_000_000_100, { id: "ch_1", payment_intent: initialPi }));
+    await handleStripeEvent(db, event("evt_new", "charge.refunded", 2_000_000_100, { id: "ch_1", payment_intent: initialPi, amount: 100, amount_refunded: 100, refunded: true }));
     await handleStripeEvent(db, event("evt_old", "payment_intent.succeeded", 2_000_000_000, { id: initialPi, status: "succeeded" }));
     expect((await one(`SELECT status FROM payments WHERE kind = 'initial'`)).status).toBe("refunded");
   });
@@ -165,5 +165,101 @@ describe("Stripe webhooks", () => {
     expect((await one(`SELECT processed_at FROM webhook_events WHERE external_event_id = 'evt_fail'`)).processed_at).toBeNull();
     expect(await handleStripeEvent(db, e)).not.toBe("duplicate");
     expect((await one(`SELECT processed_at FROM webhook_events WHERE external_event_id = 'evt_fail'`)).processed_at).not.toBeNull();
+  });
+});
+
+describe("note 95 fixes", () => {
+  const SECRET = "whsec_test_" + "c".repeat(24);
+  const ev = (id: string, type: string, created: number, obj: Record<string, unknown>) =>
+    ({ id, object: "event", type, created, livemode: false, data: { object: obj } }) as unknown as Stripe.Event;
+
+  it("(1) two concurrent deliveries of the same new event: effects run once; the other returns in_progress", async () => {
+    const p = new MockPayments();
+    const { initialPi } = await splitBooking(p);
+    let effects = 0;
+    const counting: Db = { ...db, query: async (t, prm) => { if (/^\s*UPDATE payments SET refunded_cents/.test(t)) { effects++; await new Promise((r) => setTimeout(r, 20)); } return db.query(t, prm); } };
+    const e = ev("evt_conc", "charge.refunded", 10, { id: "ch_1", payment_intent: initialPi, amount: 1000, amount_refunded: 200 });
+    const results = await Promise.all([handleStripeEvent(counting, e), handleStripeEvent(counting, e)]);
+    expect(results.sort()).toEqual(["in_progress", "processed"]);
+    expect(effects).toBe(1);
+    expect(await handleStripeEvent(db, e)).toBe("duplicate");
+  });
+  it("(1) a crash after the dispute audit but before processed_at does not duplicate the audit on retry", async () => {
+    const p = new MockPayments();
+    const { initialPi } = await splitBooking(p);
+    const e = ev("evt_disp", "charge.dispute.created", 11, { id: "dp_1", payment_intent: initialPi, amount: 500 });
+    const crashing: Db = { ...db, query: async (t, prm) => { if (/SET processed_at = now\(\)/.test(t)) throw new Error("crash"); return db.query(t, prm); } };
+    await expect(handleStripeEvent(crashing, e)).rejects.toThrow();
+    expect(await handleStripeEvent(db, e)).toBe("processed");
+    expect((await one(`SELECT count(*)::int AS n FROM audit_log WHERE action = 'dispute_opened'`)).n).toBe(1);
+  });
+  it("(2) partial then full refund; out-of-order delivery never lowers the cumulative amount", async () => {
+    const p = new MockPayments();
+    const { initialPi } = await splitBooking(p);
+    const pay = () => one(`SELECT status, refunded_cents FROM payments WHERE kind = 'initial'`);
+    await handleStripeEvent(db, ev("evt_p1", "charge.refunded", 100, { id: "ch_1", payment_intent: initialPi, amount: 1000, amount_refunded: 300, refunded: false }));
+    expect(await pay()).toEqual({ status: "partially_refunded", refunded_cents: 300 });
+    await handleStripeEvent(db, ev("evt_full", "charge.refunded", 300, { id: "ch_1", payment_intent: initialPi, amount: 1000, amount_refunded: 1000, refunded: true }));
+    expect(await pay()).toEqual({ status: "refunded", refunded_cents: 1000 });
+    // An older partial-refund event delivered late:
+    await handleStripeEvent(db, ev("evt_p2_late", "charge.refunded", 200, { id: "ch_1", payment_intent: initialPi, amount: 1000, amount_refunded: 600, refunded: false }));
+    expect(await pay()).toEqual({ status: "refunded", refunded_cents: 1000 });
+    // An even older payment_intent.succeeded never downgrades a refunded payment:
+    await handleStripeEvent(db, ev("evt_old_success", "payment_intent.succeeded", 50, { id: initialPi, status: "succeeded" }));
+    expect(await pay()).toEqual({ status: "refunded", refunded_cents: 1000 });
+  });
+  it("(2) out-of-order partials: larger cumulative amount wins", async () => {
+    const p = new MockPayments();
+    const { initialPi } = await splitBooking(p);
+    await handleStripeEvent(db, ev("evt_b", "charge.refunded", 200, { id: "ch_1", payment_intent: initialPi, amount: 1000, amount_refunded: 500 }));
+    await handleStripeEvent(db, ev("evt_a", "charge.refunded", 100, { id: "ch_1", payment_intent: initialPi, amount: 1000, amount_refunded: 200 }));
+    expect(await one(`SELECT status, refunded_cents FROM payments WHERE kind = 'initial'`)).toEqual({ status: "partially_refunded", refunded_cents: 500 });
+  });
+  it("(3) persistent ambiguity stops: manual_review, one Stripe charge via the same key, no longer due", async () => {
+    const { SECOND_CHARGE_MAX_AMBIGUOUS } = await import("../src/services/secondCharge");
+    const p = new MockPayments();
+    await splitBooking(p);
+    p.offSession = "timeout_always";
+    let last: any;
+    for (let i = 0; i < SECOND_CHARGE_MAX_AMBIGUOUS + 2; i++) { last = await runDueSecondCharges(db, p); await dueAgain(); }
+    expect(last).toMatchObject({ due: 0 });
+    expect((await job()).status).toBe("manual_review");
+    expect((await scheduled()).status).toBe("manual_review");
+    expect(offSessionCharges(p)).toBe(1);
+    expect([...p.intents.keys()].filter((k) => k.includes(":scheduled:"))).toEqual(["pi_mock_PH-SPL001:scheduled:1"]);
+  });
+  it("(3) ambiguity past 48 h after the scheduled time -> manual_review", async () => {
+    const p = new MockPayments();
+    await splitBooking(p);
+    await db.query(`UPDATE payments SET scheduled_for = now() - interval '49 hours' WHERE kind = 'scheduled'`);
+    p.offSession = "timeout_after_charge";
+    expect(await runDueSecondCharges(db, p)).toMatchObject({ manual_review: 1 });
+  });
+  it("(4) missing saved card -> manual_review; no key, no decline consumed, no charge", async () => {
+    const p = new MockPayments();
+    await splitBooking(p);
+    p.savedMethod = async () => null;
+    expect(await runDueSecondCharges(db, p)).toMatchObject({ manual_review: 1 });
+    expect(await one(`SELECT status, attempts, decline_count FROM payments WHERE kind = 'scheduled'`)).toEqual({ status: "manual_review", attempts: 0, decline_count: 0 });
+    expect(offSessionCharges(p)).toBe(0);
+    await dueAgain();
+    expect(await runDueSecondCharges(db, p)).toMatchObject({ due: 0 });
+  });
+  it("(4) authentication required -> requires_action + manual review; no further off-session tries", async () => {
+    const p = new MockPayments();
+    await splitBooking(p);
+    p.offSession = "auth_required";
+    expect(await runDueSecondCharges(db, p)).toMatchObject({ manual_review: 1 });
+    expect(await one(`SELECT status, decline_count FROM payments WHERE kind = 'scheduled'`)).toEqual({ status: "requires_action", decline_count: 0 });
+    expect((await one(`SELECT state FROM bookings`)).state).toBe("confirmed"); // booking intact
+    await dueAgain();
+    expect(await runDueSecondCharges(db, p)).toMatchObject({ due: 0 });
+  });
+  it("(5) body limit: oversized chunked stream and oversized declared length are refused before any work", async () => {
+    const { readBodyLimited } = await import("../src/server/stripeWebhook");
+    const big = new ReadableStream({ start(c) { for (let i = 0; i < 20; i++) c.enqueue(new Uint8Array(100_000)); c.close(); } });
+    expect(await readBodyLimited(new Request("https://x.test", { method: "POST", body: big, duplex: "half" } as any), 1_000_000)).toBeNull();
+    expect(await readBodyLimited(new Request("https://x.test", { method: "POST", body: "x", headers: { "content-length": "2000000" } }), 1_000_000)).toBeNull();
+    expect(await readBodyLimited(new Request("https://x.test", { method: "POST", body: "ok" }), 1_000_000)).toBe("ok");
   });
 });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
-import { handleStripeEvent, verifyStripeEvent, WebhookSignatureError } from "@/server/stripeWebhook";
+import { handleStripeEvent, MAX_WEBHOOK_BYTES, readBodyLimited, verifyStripeEvent, WebhookSignatureError } from "@/server/stripeWebhook";
 
 export const dynamic = "force-dynamic";
 const noStore = { "Cache-Control": "no-store" };
@@ -10,7 +10,8 @@ export async function POST(req: Request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   const db = getDb();
   if (!secret || !db) return NextResponse.json({ error: "Not configured" }, { status: 503, headers: noStore });
-  const raw = await req.text(); // raw body: verified before any parsing
+  const raw = await readBodyLimited(req, MAX_WEBHOOK_BYTES); // raw body: bounded, then verified before any parsing
+  if (raw === null) return NextResponse.json({ error: "Payload too large" }, { status: 413, headers: noStore });
   let event;
   try {
     event = verifyStripeEvent(raw, req.headers.get("stripe-signature"), secret);

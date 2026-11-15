@@ -32,3 +32,17 @@ describe("POST /api/webhooks/stripe", () => {
     expect(handled).not.toHaveBeenCalled();
   });
 });
+
+describe("POST /api/webhooks/stripe body limit (note 95)", () => {
+  it("oversized unsigned and signed bodies -> 413 no-store, nothing processed", async () => {
+    process.env.STRIPE_WEBHOOK_SECRET = SECRET;
+    const huge = JSON.stringify({ id: "evt_big", object: "event", type: "x", created: 1, livemode: false, data: { object: { pad: "a".repeat(1_100_000) } } });
+    for (const sig of [undefined, Stripe.webhooks.generateTestHeaderString({ payload: huge, secret: SECRET })]) {
+      const chunked = new ReadableStream({ start(c) { const b = new TextEncoder().encode(huge); for (let i = 0; i < b.length; i += 65536) c.enqueue(b.slice(i, i + 65536)); c.close(); } });
+      const r = await route.POST(new Request("https://x.test/api/webhooks/stripe", { method: "POST", body: chunked, duplex: "half", headers: sig ? { "stripe-signature": sig } : {} } as any));
+      expect(r.status).toBe(413);
+      expect(r.headers.get("cache-control")).toBe("no-store");
+    }
+    expect(handled).not.toHaveBeenCalled();
+  });
+});

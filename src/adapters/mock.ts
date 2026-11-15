@@ -121,7 +121,7 @@ export class MockPayments implements PaymentsAdapter {
   authorizeThenTimeout = false;
   captureThenTimeout = false;
   /** Test switches for the second charge. */
-  offSession: "ok" | "decline" | "auth_required" | "timeout_after_charge" = "ok";
+  offSession: "ok" | "decline" | "auth_required" | "timeout_after_charge" | "timeout_always" = "ok";
   saved = new Map<string, { customerId: string; paymentMethodId: string }>();
   async savedMethod(pi: string) {
     return this.saved.get(pi) ?? (this.intents.has(pi) ? { customerId: "cus_mock", paymentMethodId: "pm_mock_saved" } : null);
@@ -129,11 +129,12 @@ export class MockPayments implements PaymentsAdapter {
   async chargeSaved(i: { customerId: string; paymentMethodId: string; amount: number; idempotencyKey: string }) {
     const id = `pi_mock_${i.idempotencyKey}`;
     const existing = this.intents.get(id);
+    if (existing && this.offSession === "timeout_always") throw new AdapterError("Stripe timeout", "upstream_error");
     if (existing) return { paymentIntentId: id, status: "succeeded" as const }; // idempotent replay
     if (this.offSession === "decline") throw new AdapterError("Your card was declined.", "card_declined");
     if (this.offSession === "auth_required") throw new AdapterError("Authentication required", "authentication_required");
     this.intents.set(id, { amount: i.amount, status: "captured" });
-    if (this.offSession === "timeout_after_charge") throw new AdapterError("Stripe timeout", "upstream_error");
+    if (this.offSession === "timeout_after_charge" || this.offSession === "timeout_always") throw new AdapterError("Stripe timeout", "upstream_error");
     return { paymentIntentId: id, status: "succeeded" as const };
   }
   async status(id: string) {
