@@ -3,15 +3,15 @@ import { neon } from "@neondatabase/serverless";
 /** Minimal database interface so production (Neon over HTTP) and tests (PGlite) share the same SQL. */
 export interface Db {
   query<T = Record<string, unknown>>(text: string, params?: unknown[]): Promise<T[]>;
-  /** Runs all statements in one transaction (all or nothing). */
-  tx(statements: Array<[string, unknown[]]>): Promise<void>;
+  /** Runs all statements in one transaction (all or nothing); returns each statement's rows. */
+  tx(statements: Array<[string, unknown[]]>): Promise<any[][]>;
 }
 
 export function neonDb(url: string): Db {
   const sql = neon(url);
   return {
     async query<T>(text: string, params: unknown[] = []) { return (await sql.query(text, params)) as T[]; },
-    async tx(statements) { await sql.transaction(statements.map(([t, p]) => sql.query(t, p))); },
+    async tx(statements) { return (await sql.transaction(statements.map(([t, p]) => sql.query(t, p)))) as any[][]; },
   };
 }
 

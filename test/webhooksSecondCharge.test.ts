@@ -13,7 +13,7 @@ import { runMigrations } from "../scripts/migrate.mjs";
 
 const wrap = (pg: PGlite): Db => ({
   async query(text, params = []) { return (await pg.query(text, params as any[])).rows as any; },
-  async tx(st) { await pg.transaction(async (t) => { for (const [text, p] of st) await t.query(text, p as any[]); }); },
+  async tx(st) { return pg.transaction(async (t) => { const out: any[][] = []; for (const [text, p] of st) out.push((await t.query(text, p as any[])).rows as any[]); return out; }); },
 });
 let db: Db, ledger: DbLedger;
 beforeEach(async () => { db = wrap(new PGlite()); await runMigrations(db, undefined, () => {}); ledger = new DbLedger(db, 5); });
@@ -35,7 +35,11 @@ async function splitBooking(p: MockPayments, ref = "PH-SPL001") {
 }
 const scheduled = () => one(`SELECT status, attempts, stripe_payment_intent_id AS pi, amount_cents FROM payments WHERE kind = 'scheduled'`);
 const job = () => one(`SELECT status, run_at, last_error FROM jobs WHERE type = 'second_payment'`);
-const dueAgain = () => db.query(`UPDATE jobs SET run_at = now() - interval '1 second' WHERE type = 'second_payment'`);
+/** Time passes: the job and the payment's retry time are both due (simulates the 24 h wait). */
+const dueAgain = async () => {
+  await db.query(`UPDATE jobs SET run_at = now() - interval '1 second' WHERE type = 'second_payment'`);
+  await db.query(`UPDATE payments SET next_attempt_at = now() - interval '1 second' WHERE kind = 'scheduled' AND next_attempt_at IS NOT NULL`);
+};
 const offSessionCharges = (p: MockPayments) => [...p.intents.keys()].filter((k) => k.includes(":scheduled:")).length;
 
 describe("second charge", () => {
@@ -261,5 +265,79 @@ describe("note 95 fixes", () => {
     expect(await readBodyLimited(new Request("https://x.test", { method: "POST", body: big, duplex: "half" } as any), 1_000_000)).toBeNull();
     expect(await readBodyLimited(new Request("https://x.test", { method: "POST", body: "x", headers: { "content-length": "2000000" } }), 1_000_000)).toBeNull();
     expect(await readBodyLimited(new Request("https://x.test", { method: "POST", body: "ok" }), 1_000_000)).toBe("ok");
+  });
+});
+
+describe("note 97: second-charge crash consistency", () => {
+  const expireClaim = () => db.query(`UPDATE jobs SET claim_expires_at = now() - interval '1 second' WHERE type = 'second_payment'`);
+  /** A db whose transaction fails at the final job update (after the payment/audit statements ran) -> full rollback. */
+  const failingAtJobUpdate = (): Db => ({ ...db, tx: async (st) => db.tx([...st.slice(0, -1), ["SELECT 1/0", []]]) });
+  const stripeCalls = (p: MockPayments) => { let n = 0; const c = p.chargeSaved.bind(p), s = p.savedMethod.bind(p);
+    p.chargeSaved = async (i) => { n++; return c(i); }; p.savedMethod = async (x) => { n++; return s(x); }; return () => n; };
+
+  for (const [name, mode, expectAfter] of [
+    ["paid", "ok", { status: "paid", keys: ["pi_mock_PH-SPL001:scheduled:1"] }],
+    ["decline", "decline", { status: "retrying", keys: [] }],
+    ["auth required", "auth_required", { status: "requires_action", keys: [] }],
+  ] as const) {
+    it(`(1) failure at the ${name} commit rolls back fully; recovery reaches one consistent state with no extra charge`, async () => {
+      const p = new MockPayments();
+      await splitBooking(p);
+      p.offSession = mode;
+      await expect(runDueSecondCharges(failingAtJobUpdate(), p)).rejects.toThrow();
+      expect(await one(`SELECT status, attempts, decline_count FROM payments WHERE kind = 'scheduled'`)).toEqual({ status: "scheduled", attempts: 0, decline_count: 0 });
+      expect((await one(`SELECT count(*)::int AS n FROM audit_log WHERE action LIKE 'second_payment%'`)).n).toBe(0);
+      await expireClaim(); // the dead worker's claim expires
+      await runDueSecondCharges(db, p);
+      const pay = await one(`SELECT status, attempts, decline_count FROM payments WHERE kind = 'scheduled'`);
+      expect(pay.status).toBe(expectAfter.status);
+      expect(pay.attempts).toBe(1); // same key n=1 reused, not a new key
+      expect([...p.intents.keys()].filter((k) => k.includes(":scheduled:"))).toEqual(expectAfter.keys);
+      if (mode === "decline") expect(pay.decline_count).toBe(1);
+    });
+  }
+  for (const terminal of ["requires_action", "manual_review", "failed_final", "refunded", "partially_refunded", "paid"]) {
+    it(`(2) stale reclaimed job + payment ${terminal}: zero Stripe calls, job repaired`, async () => {
+      const p = new MockPayments();
+      await splitBooking(p);
+      await db.query(`UPDATE payments SET status = $1 WHERE kind = 'scheduled'`, [terminal]);
+      await db.query(`UPDATE jobs SET status = 'running', claim_token = 'dead', claim_expires_at = now() - interval '1 second' WHERE type = 'second_payment'`);
+      const calls = stripeCalls(p);
+      expect(await runDueSecondCharges(db, p)).toMatchObject({ due: 1, skipped: 1 });
+      expect(calls()).toBe(0);
+      expect((await job()).status).not.toBe("running");
+      expect((await job()).status).not.toBe("pending");
+    });
+  }
+  it("(3) after a decline, a stale/forced-due job cannot retry before the 24 h retry time", async () => {
+    const p = new MockPayments();
+    await splitBooking(p);
+    p.offSession = "decline";
+    await runDueSecondCharges(db, p);
+    await db.query(`UPDATE jobs SET run_at = now() - interval '1 second' WHERE type = 'second_payment'`); // job due, payment retry not
+    const calls = stripeCalls(p);
+    expect(await runDueSecondCharges(db, p)).toMatchObject({ skipped: 1 });
+    expect(calls()).toBe(0);
+    expect(await one(`SELECT decline_count, attempts FROM payments WHERE kind = 'scheduled'`)).toEqual({ decline_count: 1, attempts: 1 });
+    expect(new Date((await job()).run_at).getTime() - Date.now()).toBeGreaterThan(23 * 3600_000); // job re-aligned to the retry time
+  });
+  it("(4) worker B reclaims an expired claim while A is in Stripe: only B commits, one audit row, no overwrite", async () => {
+    const p = new MockPayments();
+    await splitBooking(p);
+    let releaseA!: () => void;
+    const aBlocked = new Promise<void>((r) => { releaseA = r; });
+    const realCharge = p.chargeSaved.bind(p);
+    let call = 0;
+    p.chargeSaved = async (i) => { if (++call === 1) await aBlocked; return realCharge(i); };
+    const a = runDueSecondCharges(db, p); // A claims, then waits inside Stripe
+    await new Promise((r) => setTimeout(r, 50));
+    await expireClaim();
+    const b = await runDueSecondCharges(db, p); // B reclaims and finishes (same key n=1)
+    expect(b).toMatchObject({ paid: 1 });
+    releaseA();
+    expect(await a).toMatchObject({ skipped: 1, paid: 0 }); // A's commit matches nothing
+    expect((await one(`SELECT count(*)::int AS n FROM audit_log WHERE action = 'second_payment_paid'`)).n).toBe(1);
+    expect(await one(`SELECT status, attempts FROM payments WHERE kind = 'scheduled'`)).toEqual({ status: "paid", attempts: 1 });
+    expect([...p.intents.keys()].filter((k) => k.includes(":scheduled:"))).toEqual(["pi_mock_PH-SPL001:scheduled:1"]);
   });
 });

@@ -15,7 +15,7 @@ import { runMigrations } from "../scripts/migrate.mjs";
 
 const wrap = (pg: PGlite): Db => ({
   async query(text, params = []) { return (await pg.query(text, params as any[])).rows as any; },
-  async tx(st) { await pg.transaction(async (t) => { for (const [text, p] of st) await t.query(text, p as any[]); }); },
+  async tx(st) { return pg.transaction(async (t) => { const out: any[][] = []; for (const [text, p] of st) out.push((await t.query(text, p as any[])).rows as any[]); return out; }); },
 });
 const NOW = new Date("2026-11-14T20:00:00Z");
 const prop = getProperty("edgewood");

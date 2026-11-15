@@ -23,7 +23,7 @@ describe("cron auth", () => {
 describe("runner", () => {
   it("overlapping runs on the same queue: each item handled once; counts only, no IDs", async () => {
     const pg = new PGlite();
-    const db: Db = { async query(t, p = []) { return (await pg.query(t, p as any[])).rows as any; }, async tx(st) { await pg.transaction(async (x) => { for (const [t, p] of st) await x.query(t, p as any[]); }); } };
+    const db: Db = { async query(t, p = []) { return (await pg.query(t, p as any[])).rows as any; }, async tx(st) { return pg.transaction(async (x) => { const out: any[][] = []; for (const [t, p] of st) out.push((await x.query(t, p as any[])).rows as any[]); return out; }); } };
     await runMigrations(db, undefined, () => {});
     const ledger = new DbLedger(db, 5);
     // One queued item whose IDs are known (block never visible), now blocked -> will capture.

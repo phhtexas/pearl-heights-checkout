@@ -15,7 +15,7 @@ import { runMigrations, loadMigrations } from "../scripts/migrate.mjs";
 function wrap(pg: PGlite): Db {
   return {
     async query(text, params = []) { return (await pg.query(text, params as any[])).rows as any; },
-    async tx(st) { await pg.transaction(async (t) => { for (const [text, p] of st) await t.query(text, p as any[]); }); },
+    async tx(st) { return pg.transaction(async (t) => { const out: any[][] = []; for (const [text, p] of st) out.push((await t.query(text, p as any[])).rows as any[]); return out; }); },
   };
 }
 async function freshDb(): Promise<Db> {
