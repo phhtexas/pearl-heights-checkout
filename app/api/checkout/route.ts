@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
     const { hosp, pay, mode } = getAdapters((b.simulate ?? "none") as MockFailure, process.env, session.id);
     const bookingRef = newRef();
-    const request = { ...input, property: getProperty(input.property), bookingRef, now: new Date() };
+    const request = { ...input, property: getProperty(input.property), bookingRef, now: new Date(), lockedQuote: q.quote };
     const view = await ledger.runAttempt(input.attemptKey, q, bookingRef, async () => {
       const outcome = await bookingAttempt(ledger instanceof DbLedger ? ledger : null, q, request, hosp, pay);
       console.info("checkout", bookingRef, outcome.state, outcome.log.join(" | "));

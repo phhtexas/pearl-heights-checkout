@@ -48,6 +48,18 @@ describe("checkout orchestration (mock Hospitable + Stripe)", () => {
     expect(p.intents.size).toBe(0);
   });
 
+  it("15-minute price lock: honors the locked quote when the live price moved", async () => {
+    const h = new MockHospitable(), p = new MockPayments();
+    const req = await request(h, "PH-LOCK1");
+    // Build a "locked" quote $10 cheaper than live, accepted by the guest.
+    const live = buildQuote({ ...req, nightlyRates: Object.fromEntries((await h.getCalendar(req.property.hospitableUuid, req.checkIn, req.checkOut)).filter((d) => d.date < req.checkOut).map((d) => [d.date, d.price])) });
+    const lq = { ...live, total: live.total - 1000, plan: { ...live.plan, dueNow: live.plan.dueNow - 1000 } };
+    const r = await runCheckout({ ...req, acceptedTotal: lq.total, lockedQuote: lq }, h, p);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.quote.total).toBe(lq.total);
+  });
+
   it("creates no reservation when the card is declined", async () => {
     const h = new MockHospitable(), p = new MockPayments("card_declined");
     const r = await runCheckout(await request(h, "PH-DECL"), h, p);

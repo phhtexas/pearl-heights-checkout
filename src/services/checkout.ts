@@ -10,6 +10,8 @@ export interface CheckoutRequest {
   checkIn: string; checkOut: string;
   adults: number; children: number; infants: number;
   payPlan?: "full" | "split";
+  /** The saved quote the guest accepted, still inside its 15-minute price lock (route checks expiry). */
+  lockedQuote?: Quote;
   guest: { firstName: string; lastName: string; email: string; phone: string };
   bookingRef: string;
   acceptedTotal: number; // the total the guest saw and accepted (cents)
@@ -80,6 +82,12 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
     quote = buildQuote({ ...req, nightlyRates: Object.fromEntries(nights.map((d) => [d.date, d.price])) });
   } catch (e) {
     throw new PreSideEffectError(`recheck failed (${code(e)})`);
+  }
+  // 15-minute price lock: a live price change inside the lock does not change what the guest pays.
+  if (quote.total !== req.acceptedTotal && req.lockedQuote && req.lockedQuote.total === req.acceptedTotal
+      && req.lockedQuote.plan.split === quote.plan.split) {
+    log.push(`live price ${quote.total} differs; honoring locked quote ${req.lockedQuote.total}`);
+    quote = req.lockedQuote;
   }
   if (quote.total !== req.acceptedTotal) {
     log.push(`price changed from ${req.acceptedTotal} to ${quote.total}; guest must accept the new total`);
