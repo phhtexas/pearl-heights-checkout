@@ -40,6 +40,14 @@ export interface PaymentsAdapter {
   status(paymentIntentId: string): Promise<PaymentStatus>;
   /** Reconciliation: PaymentIntents created for a booking ref (metadata.booking_ref). */
   findByRef(bookingRef: string): Promise<string[]>;
+  /** The Stripe customer + card saved during the first payment (split plans only). */
+  savedMethod(paymentIntentId: string): Promise<{ customerId: string; paymentMethodId: string } | null>;
+  /**
+   * Off-session charge of a saved card, captured immediately. Idempotent on `idempotencyKey`.
+   * Definite outcomes: resolves { status: "succeeded" } or throws card_declined / authentication_required.
+   * Any other error is ambiguous: retry later with the SAME key (Stripe returns the original result).
+   */
+  chargeSaved(input: { customerId: string; paymentMethodId: string; amount: number; idempotencyKey: string; description: string; metadata: Record<string, string> }): Promise<{ paymentIntentId: string; status: "succeeded" }>;
 }
 
 export class AdapterError extends Error {

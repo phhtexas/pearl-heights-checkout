@@ -89,6 +89,31 @@ export class StripePayments implements PaymentsAdapter {
     return r.data.map((p) => p.id);
   }
 
+  async savedMethod(id: string) {
+    const pi = await this.stripe.paymentIntents.retrieve(id);
+    const customerId = typeof pi.customer === "string" ? pi.customer : pi.customer?.id;
+    const paymentMethodId = typeof pi.payment_method === "string" ? pi.payment_method : pi.payment_method?.id;
+    return customerId && paymentMethodId ? { customerId, paymentMethodId } : null;
+  }
+
+  async chargeSaved(i: { customerId: string; paymentMethodId: string; amount: number; idempotencyKey: string; description: string; metadata: Record<string, string> }) {
+    try {
+      const pi = await this.stripe.paymentIntents.create({
+        amount: i.amount, currency: "usd", customer: i.customerId, payment_method: i.paymentMethodId,
+        off_session: true, confirm: true, allowed_payment_method_types: ["card"], description: i.description, metadata: i.metadata,
+      }, { idempotencyKey: i.idempotencyKey });
+      if (pi.status === "succeeded") return { paymentIntentId: pi.id, status: "succeeded" as const };
+      if (pi.status === "requires_action") throw new AdapterError("Card requires authentication", "authentication_required");
+      throw new AdapterError(`Unexpected status ${pi.status}`, "upstream_error");
+    } catch (e) {
+      if (e instanceof AdapterError) throw e;
+      const err = e as { type?: string; code?: string };
+      if (err.code === "authentication_required") throw new AdapterError("Card requires authentication", "authentication_required");
+      if (err.type === "StripeCardError") throw new AdapterError("Card declined", "card_declined");
+      throw new AdapterError("Payment service error", "upstream_error");
+    }
+  }
+
   async voidAuthorization(id: string) {
     const pi = await this.stripe.paymentIntents.retrieve(id);
     if (pi.status === "requires_capture" || pi.status === "requires_payment_method" || pi.status === "requires_confirmation") {

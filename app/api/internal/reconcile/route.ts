@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { authorized, runReconciliation } from "@/server/reconcileRunner";
 import { getAdapters, getLedger } from "@/server/adapters";
 import { DbLedger } from "@/db/ledger";
+import { getDb } from "@/db/client";
+import { runDueSecondCharges } from "@/services/secondCharge";
 import { getProperty } from "@/domain/properties";
 import { verificationDeadline } from "@/domain/verification";
 
@@ -21,8 +23,10 @@ async function handle(req: Request): Promise<Response> {
   const { ledger } = getLedger(process.env, "reconciler");
   if (!(ledger instanceof DbLedger)) return NextResponse.json({ error: "Not configured" }, { status: 503, headers: noStore });
   const { hosp, pay } = getAdapters("none", process.env, "reconciler");
-  const counts = await runReconciliation(ledger, { hosp, pay, propertyUuid: (k) => getProperty(k).hospitableUuid, verification: (ci) => verificationDeadline(new Date(), ci) });
-  console.info("reconcile run", JSON.stringify(counts));
+  const reconciliation = await runReconciliation(ledger, { hosp, pay, propertyUuid: (k) => getProperty(k).hospitableUuid, verification: (ci) => verificationDeadline(new Date(), ci) });
+  const secondCharges = await runDueSecondCharges(getDb()!, pay);
+  const counts = { reconciliation, secondCharges };
+  console.info("maintenance run", JSON.stringify(counts));
   return NextResponse.json(counts, { headers: noStore });
 }
 
