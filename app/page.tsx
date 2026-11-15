@@ -5,8 +5,10 @@ import { PROPERTIES } from "@/domain/properties";
 import type { Quote } from "@/domain/quote";
 
 /**
- * Direct checkout, layout "option E" (Oscar, Nov 15, 2026): the home arrives pre-selected (?home=claywell),
- * Review → Your details → Confirm and pay → booked. One page that becomes two columns on desktop.
+ * Direct checkout, layout "option E" (Oscar, Nov 15, 2026). Phone follows the option E mockup element for element:
+ * header (back · logo · "1 of 3"), price-lock bar, home card with Dates/Guests rows, pay choice, price details,
+ * cancellation, trust badges, and a fixed footer with the labeled 3-step bar and the main button.
+ * Desktop follows the option E desktop mockup: steps on the left, sticky price card on the right.
  */
 type Day = { date: string; available: boolean; price: number; minStay: number; closedForCheckin?: boolean; closedForCheckout?: boolean };
 type Step = "review" | "details" | "pay" | "done";
@@ -19,9 +21,21 @@ const fmtRange = (a: string, b: string) => `${fmtDay(a)} – ${fmtDay(b, true)}`
 const chargeDay = (iso: string | Date) =>
   new Date(iso).toLocaleDateString("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric" });
 const addDays = (iso: string, n: number) => new Date(Date.parse(iso + "T00:00:00Z") + n * 86_400_000).toISOString().slice(0, 10);
+const nightsOf = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000);
 const SIMS = [["none", "Everything works"], ["dates_taken", "Dates booked on Airbnb during checkout"], ["card_declined", "Card declined"], ["reservation_fails", "Hospitable reservation fails"], ["capture_fails", "Payment capture fails"]] as const;
 const CARD_SIMS = ["card_declined", "capture_fails"];
-const STEPS: [Step, string][] = [["review", "Review"], ["details", "Your details"], ["pay", "Confirm and pay"]];
+const STEPS: [Step, string, string][] = [["review", "Review", "Review"], ["details", "Your details", "Your details"], ["pay", "Confirm and pay", "Payment"]];
+const PHOTOS: Record<string, { src: string; alt: string }> = { claywell: { src: "/homes/claywell.jpg", alt: "The Claywell main bedroom with fireplace" } };
+
+function Badges() {
+  return (
+    <div className="badges">
+      <span><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 9l7-5 7 5v7a1 1 0 0 1-1 1h-3v-4H7v4H4a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /></svg><b>Book direct</b>with the hosts</span>
+      <span><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="9" width="12" height="8" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" /><path d="M7 9V6.5a3 3 0 0 1 6 0V9" fill="none" stroke="currentColor" strokeWidth="1.6" /></svg><b>Secure payment</b>by Stripe</span>
+      <span><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" strokeWidth="1.6" /><path d="M10 6.5V10l2.3 1.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg><b>Local hosts</b>usually reply in 1 hr</span>
+    </div>
+  );
+}
 
 export default function Checkout() {
   const [home, setHome] = useState("claywell");
@@ -35,7 +49,7 @@ export default function Checkout() {
   const [draft, setDraft] = useState<{ ci: string | null; co: string | null }>({ ci: null, co: null });
   const [adults, setAdults] = useState(2), [children, setChildren] = useState(0), [infants, setInfants] = useState(0);
   const [plan, setPlan] = useState<"full" | "split">("full");
-  const [ready, setReady] = useState(false); // URL params applied
+  const [ready, setReady] = useState(false);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [quoteId, setQuoteId] = useState("");
   const [expiresAt, setExpiresAt] = useState(0);
@@ -53,6 +67,7 @@ export default function Checkout() {
   const stripeMode = cfg.mode === "test" && !!cfg.publishableKey;
   const prop = PROPERTIES.find((p) => p.key === home)!;
   const guests = adults + children;
+  const photo = PHOTOS[home];
 
   // Pre-selected home and stay from the home's page: ?home=claywell&checkIn=2027-01-05&checkOut=2027-01-07&adults=4
   useEffect(() => {
@@ -80,7 +95,6 @@ export default function Checkout() {
   const days = cal.property === home ? cal.days : [];
   const byDate = useMemo(() => Object.fromEntries(days.map((d) => [d.date, d])), [days]);
 
-  // No dates yet: open the calendar first.
   useEffect(() => { if (ready && !ci && !co && step === "review" && sheet === null) openDates(); }, [ready, ci, co]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getQuote = useCallback(async (payPlan: "full" | "split" = plan) => {
@@ -95,7 +109,7 @@ export default function Checkout() {
   }, [ci, co, home, adults, children, infants, plan]);
   useEffect(() => { if (ci && co) void getQuote(); }, [ci, co, home, adults, children, infants]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function choosePlan(p: "full" | "split") { if (p === plan) return; setPlan(p); void getQuote(p); }
+  function choosePlan(p: "full" | "split") { if (p === plan && quote && quote.plan.split === (p === "split")) return; setPlan(p); void getQuote(p); }
   function openDates() { setDraft({ ci, co }); if (ci) setMonth(ci.slice(0, 7)); setSheet("dates"); }
   function pickDay(iso: string) {
     if (!draft.ci || draft.co || iso <= draft.ci) { setDraft({ ci: iso, co: null }); return; }
@@ -126,7 +140,7 @@ export default function Checkout() {
     setBusy(false);
     if (j.reason === "quote_expired") { await getQuote(); setErr(j.guestMessage); return; }
     if (!r.ok) { setErr(j.error ?? j.guestMessage ?? "Something went wrong. No charge was made."); return; }
-    if (j.ok) { setResult(j); setStep("done"); return; }
+    if (j.ok) { setResult(j); setStep("done"); window.scrollTo(0, 0); return; }
     if (j.reason === "dates_taken") {
       setResult(null); setQuote(null); setCi(null); setCo(null); setStep("review"); setCalVersion((v) => v + 1);
       setErr(j.guestMessage + " Please choose new dates.");
@@ -139,60 +153,67 @@ export default function Checkout() {
     setStep("review"); setCi(null); setCo(null); setQuote(null); setResult(null); setErr(""); setAgreed(false); setPlan("full");
     setGuest({ firstName: "", lastName: "", email: "", phone: "" }); setCalVersion((v) => v + 1);
   }
+  const go = (s: Step) => { setErr(""); setStep(s); window.scrollTo(0, 0); };
 
   const left = Math.max(0, expiresAt - now);
   const lockText = `${Math.floor(left / 60000)}:${String(Math.floor(left / 1000) % 60).padStart(2, "0")}`;
-  const detailsOk = guest.firstName.trim() && guest.lastName.trim() && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guest.email) && guest.phone.replace(/\D/g, "").length >= 10;
+  const detailsOk = !!(guest.firstName.trim() && guest.lastName.trim() && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guest.email) && guest.phone.replace(/\D/g, "").length >= 10);
   const folded = quote ? quote.lodging + quote.extraGuestFee + quote.cleaning + quote.protection : 0;
   const balance = quote?.plan.scheduled ? chargeDay(quote.plan.scheduled.chargeAt) : "";
+  const stepIdx = STEPS.findIndex(([s]) => s === step);
+  // Verification window: 24 hours when booked 48+ hours before check-in, otherwise 2 hours (Terms section 1).
+  const deadlineWindow = ci && Date.parse(ci + "T22:00:00Z") - now >= 48 * 3_600_000 ? "24 hours" : "2 hours";
 
-  // Calendar rules: same-day cutoff and booked nights come from the server; minimum stay from Hospitable.
+  // The one main action per step (fixed footer on phones, inline on desktop).
+  const primary = step === "review" ? { label: "Continue to your details", disabled: !quote || quoting, run: () => go("details") }
+    : step === "details" ? { label: "Continue to payment", disabled: !detailsOk, run: () => go("pay") }
+    : step === "pay" && quote ? { label: busy ? "Processing…" : `Confirm and pay ${money(quote.plan.dueNow)}`, disabled: !agreed || busy, run: pay }
+    : null;
+
   const dayState = (iso: string) => {
     const d = byDate[iso];
     if (!d) return { ok: false, price: "" };
-    const choosingCheckout = draft.ci && !draft.co && iso > draft.ci;
-    if (choosingCheckout) {
-      const start = byDate[draft.ci!];
-      const min = start?.minStay ?? 2;
-      // Every night between check-in and this check-out must be free, and the stay must meet the minimum.
+    if (draft.ci && !draft.co && iso > draft.ci) {
+      const min = byDate[draft.ci]?.minStay ?? 2;
       let free = true;
-      for (let x = draft.ci!; x < iso; x = addDays(x, 1)) if (!byDate[x]?.available) { free = false; break; }
-      const nights = Math.round((Date.parse(iso) - Date.parse(draft.ci!)) / 86_400_000);
-      return { ok: free && nights >= min && !d.closedForCheckout, price: "" };
+      for (let x = draft.ci; x < iso; x = addDays(x, 1)) if (!byDate[x]?.available) { free = false; break; }
+      return { ok: free && nightsOf(draft.ci, iso) >= min && !d.closedForCheckout, price: "" };
     }
     return { ok: d.available && !d.closedForCheckin, price: d.available ? "$" + Math.round(d.price / 100) : "" };
   };
-  const draftMin = draft.ci ? byDate[draft.ci]?.minStay ?? 2 : 2;
+  const draftMin = draft.ci ? byDate[draft.ci]?.minStay ?? 2 : byDate[days.find((d) => d.available)?.date ?? ""]?.minStay ?? 2;
 
-  const summary = (
-    <aside className="sum" aria-label="Your stay">
-      <div className="photo" aria-hidden="true"><span>{prop.name}</span></div>
-      <div className="sumBody">
-        <div><div className="homeName">{prop.name}</div><div className="muted">{prop.area} · sleeps {prop.maxGuests} · direct booking</div></div>
-        {ci && co && <div className="sumLine"><span>{fmtRange(ci, co)}</span><span>{guests} {guests === 1 ? "guest" : "guests"}</span></div>}
-        {quote && (<div className="price">
-          <div className="h3">Price details</div>
-          <div className="ln"><span>{quote.nights} {quote.nights === 1 ? "night" : "nights"} × {money(Math.round(folded / quote.nights))}</span><span>{money(folded)}</span></div>
-          <div className="ln"><span>Taxes</span><span>{money(quote.tax)}</span></div>
-          <div className="ln total"><span>Total <u>USD</u></span><span>{money(quote.total)}</span></div>
-          <button className="link tight" onClick={() => setSheet("breakdown")}>Price breakdown</button>
-        </div>)}
-        <div className="badges">
-          <span><b>Book direct</b><br />with the hosts</span>
-          <span><b>Secure payment</b><br />by Stripe</span>
-          <span><b>Local hosts</b><br />usually reply in 1 hr</span>
-        </div>
-      </div>
-    </aside>
-  );
+  const photoEl = (h: number) => photo
+    ? <img className="photoImg" src={photo.src} alt={photo.alt} style={{ height: h }} />
+    : <div className="photo" style={{ height: h }} aria-hidden="true"><span>{prop.name}</span></div>;
+
+  const priceRows = quote && (<>
+    <div className="ln"><span>{quote.nights} {quote.nights === 1 ? "night" : "nights"} × {money(Math.round(folded / quote.nights))}</span><span>{money(folded)}</span></div>
+    <div className="ln"><span>Taxes</span><span>{money(quote.tax)}</span></div>
+    <div className="ln total"><span>Total <u>USD</u></span><span>{money(quote.total)}</span></div>
+    <button className="link tight" onClick={() => setSheet("breakdown")}>Price breakdown</button>
+  </>);
 
   const cancelLine = quote && (
     <section className="cancel">
       <span className={quote.nonRefundable ? "dot gray" : "dot"} aria-hidden="true">{quote.nonRefundable ? "i" : "✓"}</span>
       {quote.nonRefundable
-        ? <div><b>Non-refundable</b><div className="muted">This reservation is non-refundable. <button className="link inline" onClick={() => setSheet("policy")}>Full policy</button></div></div>
-        : <div><b className="green">Free cancellation</b><div className="muted">Cancel within 24 hours for a full refund. <button className="link inline" onClick={() => setSheet("policy")}>View policy</button></div></div>}
+        ? <div><b>Non-refundable</b><div className="sub">This reservation is non-refundable. <button className="link inline" onClick={() => setSheet("policy")}>Full policy</button></div></div>
+        : <div><b className="green">Free cancellation</b><div className="sub">Cancel within 24 hours for a full refund. <button className="link inline" onClick={() => setSheet("policy")}>View policy</button></div></div>}
     </section>
+  );
+
+  // Desktop right column (option E desktop mockup).
+  const aside = (
+    <aside className="sum" aria-label="Your stay">
+      {photoEl(190)}
+      <div className="sumBody">
+        <div><div className="homeName">{prop.name} — {prop.area}</div><div className="muted">Entire home · sleeps {prop.maxGuests} · direct booking</div></div>
+        {step !== "review" && ci && co && <div className="sumLine"><span>{fmtRange(ci, co)}</span><span>{guests} {guests === 1 ? "guest" : "guests"}</span></div>}
+        {quote && <div className="price"><div className="h3">Price details</div>{priceRows}</div>}
+        <Badges />
+      </div>
+    </aside>
   );
 
   return (
@@ -205,68 +226,78 @@ export default function Checkout() {
       </div>
 
       <header className="top">
+        <span className="mobileOnly hdrSide">{(step === "details" || step === "pay") &&
+          <button className="back" aria-label="Back" onClick={() => go(step === "pay" ? "details" : "review")}>‹</button>}</span>
         <div className="brand">Pearl Heights <span>HOMES</span></div>
-        {step !== "done" && <ol className="progress" aria-label="Checkout steps">
-          {STEPS.map(([k, label], i) => {
-            const idx = STEPS.findIndex(([s]) => s === step);
-            return <li key={k} className={i < idx ? "past" : i === idx ? "now" : ""} aria-current={i === idx ? "step" : undefined}><span>{i + 1}</span>{label}</li>;
-          })}
+        <span className="mobileOnly hdrSide stepOf">{step !== "done" ? `${stepIdx + 1} of 3` : ""}</span>
+        {step !== "done" && <ol className="progress desktopOnlyFlex" aria-label="Checkout steps">
+          {STEPS.map(([k, label], i) => <li key={k} className={i < stepIdx ? "past" : i === stepIdx ? "now" : ""} aria-current={i === stepIdx ? "step" : undefined}><span>{i + 1}</span>{label}</li>)}
         </ol>}
       </header>
 
       {quote && step !== "done" && (
-        <div className="lock" role="status">{left > 0
-          ? <><span>Your price is locked for</span><b>{lockText}</b></>
-          : <span>Price lock ended · we'll recheck the price</span>}</div>
+        <div className="lock" role="status">
+          <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.4" /><path d="M8 4.5V8l2.2 1.4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>
+          {left > 0 ? <><span>Your price is locked for</span><b>{lockText}</b></> : <span>Price lock ended · we'll recheck the price</span>}
+        </div>
       )}
 
-      <div className="layout">
+      <div className={"layout" + (step === "done" ? " single" : "")}>
         <main className="flow">
           {step === "review" && (<>
             <h1>Review and continue</h1>
-            <div className="mobileOnly">{summary}</div>
-            <section className="trip">
+
+            {/* Phone: home card with Dates and Guests rows (option E). */}
+            <section className="homeCard mobileOnly">
+              {photoEl(172)}
+              <div className="hcHead"><div className="homeName">{prop.name} — {prop.area}</div><div className="muted">Entire home · sleeps {prop.maxGuests} · direct booking</div></div>
+              <div className="hcRow"><div><div className="cap">Dates</div><div className="val">{ci && co ? fmtRange(ci, co) : "Choose your dates"}</div>{ci && co && <div className="muted">{nightsOf(ci, co)} {nightsOf(ci, co) === 1 ? "night" : "nights"}</div>}</div>
+                <button className="chip" aria-label="Change dates" onClick={openDates}>{ci ? "Change" : "Choose"}</button></div>
+              <div className="hcRow"><div><div className="cap">Guests</div><div className="val">{guests} {guests === 1 ? "guest" : "guests"}{infants ? `, ${infants} ${infants === 1 ? "infant" : "infants"}` : ""}</div></div>
+                <button className="chip" aria-label="Change guests" onClick={() => setSheet("guests")}>Change</button></div>
+            </section>
+
+            {/* Desktop: Your trip rows (option E desktop). */}
+            <section className="trip desktopOnly">
               <h2>Your trip</h2>
               <div className="tripRow"><div><b>Dates</b><div className="muted">{ci && co ? fmtRange(ci, co) : "Choose your dates"}</div></div>
                 <button className="chip" onClick={openDates}>{ci ? "Change" : "Choose"}</button></div>
               <div className="tripRow"><div><b>Guests</b><div className="muted">{guests} {guests === 1 ? "guest" : "guests"}{infants ? `, ${infants} ${infants === 1 ? "infant" : "infants"}` : ""}</div></div>
                 <button className="chip" onClick={() => setSheet("guests")}>Change</button></div>
             </section>
+
             {quote && (<section className="plans">
               <h2>Choose when to pay</h2>
               <button className={"plan" + (!quote.plan.split ? " on" : "")} onClick={() => choosePlan("full")} aria-pressed={!quote.plan.split}>
                 <span className="radio" /><span className="pt">Pay {money(quote.total)} now</span></button>
               {quote.splitPlan && (
-                <button className={"plan" + (quote.plan.split ? " on" : "")} onClick={() => choosePlan("split")} aria-pressed={quote.plan.split} disabled={quoting}>
+                <button className={"plan tall" + (quote.plan.split ? " on" : "")} onClick={() => choosePlan("split")} aria-pressed={quote.plan.split} disabled={quoting}>
                   <span className="radio" />
                   <span className="grow"><span className="pt">Pay {money(quote.splitPlan.dueNow)} now, the rest later</span>
-                    <span className="muted">Second {money(quote.splitPlan.scheduled!.amount)} auto-charged {chargeDay(quote.splitPlan.scheduled!.chargeAt)}</span></span>
+                    <span className="sub14">Second {money(quote.splitPlan.scheduled!.amount)} auto-charged {chargeDay(quote.splitPlan.scheduled!.chargeAt)}</span></span>
                   <span className="pill">No interest</span>
                 </button>)}
             </section>)}
+
+            {quote && <section className="priceSec mobileOnly"><h2>Price details</h2>{priceRows}</section>}
             {cancelLine}
+            <div className="mobileOnly"><Badges /></div>
             {quoting && <div className="muted" role="status">Checking price and availability…</div>}
-            {err && <div className="err" role="alert">{err}</div>}
-            <button className="btn" disabled={!quote || quoting} onClick={() => setStep("details")}>Continue to your details</button>
           </>)}
 
           {step === "details" && (<>
-            <button className="back" aria-label="Back" onClick={() => setStep("review")}>‹</button>
+            <button className="back desktopOnly" aria-label="Back" onClick={() => go("review")}>‹</button>
             <h1>Your details</h1>
-            <p className="muted">The main guest must be 25 or older and stay at the home.</p>
-            <div className="two">
-              {(["firstName", "lastName"] as const).map((k) => (
-                <label key={k}><span className="lbl">{k === "firstName" ? "First name" : "Last name"}</span>
-                  <input className="f" autoComplete={k === "firstName" ? "given-name" : "family-name"} value={guest[k]} onChange={(e) => setGuest({ ...guest, [k]: e.target.value })} /></label>))}
-            </div>
-            <label><span className="lbl">Email</span><input className="f" type="email" autoComplete="email" value={guest.email} onChange={(e) => setGuest({ ...guest, email: e.target.value })} /></label>
-            <label><span className="lbl">Mobile phone</span><input className="f" type="tel" autoComplete="tel" value={guest.phone} onChange={(e) => setGuest({ ...guest, phone: e.target.value })} /></label>
-            <div className="box">After payment you'll sign the rental agreement and verify your ID. The address, door code and Wi-Fi are sent once both are done.</div>
-            <button className="btn" disabled={!detailsOk} onClick={() => setStep("pay")}>Continue to payment</button>
+            <div className="muted">The person booking must be 25 or older and stay at the home.</div>
+            <label className="fld"><span className="lbl">First name</span><input className="f" autoComplete="given-name" value={guest.firstName} onChange={(e) => setGuest({ ...guest, firstName: e.target.value })} /></label>
+            <label className="fld"><span className="lbl">Last name</span><input className="f" autoComplete="family-name" value={guest.lastName} onChange={(e) => setGuest({ ...guest, lastName: e.target.value })} /></label>
+            <label className="fld"><span className="lbl">Email</span><input className="f" type="email" autoComplete="email" value={guest.email} onChange={(e) => setGuest({ ...guest, email: e.target.value })} /></label>
+            <label className="fld"><span className="lbl">Mobile phone</span><input className="f" type="tel" autoComplete="tel" value={guest.phone} onChange={(e) => setGuest({ ...guest, phone: e.target.value })} /></label>
+            <div className="muted">We use your phone for your stay details. Your private stay link is emailed after booking.</div>
           </>)}
 
           {step === "pay" && quote && (<>
-            <button className="back" aria-label="Back" onClick={() => setStep("details")}>‹</button>
+            <button className="back desktopOnly" aria-label="Back" onClick={() => go("details")}>‹</button>
             <h1>Confirm and pay</h1>
             <div className="card">
               <div className="ln"><span>{prop.name} · {fmtRange(ci!, co!)}</span></div>
@@ -274,33 +305,45 @@ export default function Checkout() {
               <div className="ln"><span>Due today</span><b>{money(quote.plan.dueNow)}</b></div>
               {quote.plan.split && <div className="ln muted"><span>Charged {balance}</span><span>{money(quote.plan.scheduled!.amount)}</span></div>}
             </div>
-            <div className="accept"><span className="lbl">We accept</span><span>Visa · Mastercard · American Express · Discover</span></div>
+            <div className="accept"><div className="cap">We accept</div>
+              <div className="brands" aria-label="Accepted cards"><span className="visa">VISA</span><span>Mastercard</span><span>Amex</span><span>Discover</span></div></div>
             {stripeMode
               ? <><StripeCard publishableKey={cfg.publishableKey!} amount={quote.plan.dueNow} saveForLater={quote.plan.split} onReady={onCardReady} />
                   <div className="muted">Test mode: card 4242 4242 4242 4242, any future date, any CVC. Decline: 4000 0000 0000 0002.</div></>
-              : <div className="box sand">Stripe's secure card form goes here. In test mode nothing is charged.</div>}
+              : <div className="cardForm">Secure card form (Stripe) appears here</div>}
             <label className="chk"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
               <span>{quote.plan.split ? `I authorize Pearl Heights Homes to charge ${money(quote.plan.scheduled!.amount)} to this card on ${balance} at 4:00 PM CT, when flexible cancellation ends. ` : ""}
                 I'm at least 25 and will stay at the home. I agree to the <a href="https://pearlheightshomes.com/terms-and-conditions/" target="_blank" rel="noreferrer">Terms</a>, <a href="https://pearlheightshomes.com/house-rules/" target="_blank" rel="noreferrer">House rules</a> and <button className="link inline" onClick={(e) => { e.preventDefault(); setSheet("policy"); }}>Cancellation policy</button>.</span></label>
-            <label><span className="lbl">Test: simulate</span>
+            <div className="muted small">After paying, you'll sign the rental agreement and verify your ID within {deadlineWindow}.</div>
+            <label className="fld"><span className="lbl">Test: simulate</span>
               <select className="f" value={sim} onChange={(e) => setSim(e.target.value)}>{SIMS.filter(([v]) => !(stripeMode && CARD_SIMS.includes(v))).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-            {err && <div className="err" role="alert">{err}</div>}
             {result && !result.ok && <div className="alert">{result.guestMessage}</div>}
-            <button className="btn" disabled={!agreed || busy} onClick={pay}>{busy ? "Processing…" : `Confirm and pay ${money(quote.plan.dueNow)}`}</button>
           </>)}
 
           {step === "done" && result?.ok && (<>
             <div className="okmark" aria-hidden="true">✓</div>
             <h1>You're booked, {guest.firstName}!</h1>
-            <div>{prop.name} · {fmtRange(ci!, co!)} · {guests} guests · Booking {result.bookingRef}</div>
+            <div>{prop.name} · {fmtRange(ci!, co!)} · {guests} {guests === 1 ? "guest" : "guests"} · Booking {result.bookingRef}</div>
             <div className="box warm">To keep your reservation, please finish two quick steps by <b>{result.verification.deadlineText}</b>: sign the rental agreement and verify your ID.</div>
             <div className="muted">Paid today: {money(quote!.plan.dueNow)}{quote!.plan.split ? ` · ${money(quote!.plan.scheduled!.amount)} on ${balance}` : ""}</div>
             <div className="muted">Test mode: no email is sent. Questions: <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
             <button className="btn ghost" onClick={restart}>Start another booking</button>
           </>)}
+
+          {err && <div className="err" role="alert">{err}</div>}
+          {primary && <button className="btn desktopOnly" disabled={primary.disabled} onClick={primary.run}>{primary.label}</button>}
         </main>
-        {step !== "done" && <div className="desktopOnly">{summary}{cancelLine && step !== "review" ? cancelLine : null}</div>}
+        {step !== "done" && <div className="side desktopOnly">{aside}</div>}
       </div>
+
+      {primary && (
+        <footer className="foot mobileOnly">
+          <div className="bars" aria-label="Checkout progress">
+            {STEPS.map(([k, , short], i) => <div key={k} className={i <= stepIdx ? "on" : ""}><i /><span>{i + 1} {short}</span></div>)}
+          </div>
+          <button className="btn" disabled={primary.disabled} onClick={primary.run}>{primary.label}</button>
+        </footer>
+      )}
 
       {sheet && (
         <div className="scrim" onClick={(e) => { if (e.target === e.currentTarget) setSheet(null); }}>
@@ -310,10 +353,10 @@ export default function Checkout() {
 
             {sheet === "dates" && (<>
               <div className="row"><button className="nav" aria-label="Previous month" onClick={() => shiftMonth(-1)}>‹</button>
-                <b>{new Date(month + "-15T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "long", year: "numeric" })}</b>
+                <div className="center"><b>{new Date(month + "-15T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "long", year: "numeric" })}</b><div className="muted small">{draftMin}-night minimum</div></div>
                 <button className="nav" aria-label="Next month" onClick={() => shiftMonth(1)}>›</button></div>
               <div className="grid">
-                {"SMTWTFS".split("").map((d, i) => <div key={i} className="dow">{d}</div>)}
+                {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => <div key={d} className="dow">{d}</div>)}
                 {Array.from({ length: monthDays.pad }, (_, i) => <div key={"p" + i} />)}
                 {monthDays.list.map((iso) => {
                   const s = dayState(iso);
@@ -322,16 +365,17 @@ export default function Checkout() {
                 })}
               </div>
               {days.length === 0 && <div className="muted" role="status">Loading availability and prices…</div>}
-              <div className="muted">{draft.ci && draft.co ? fmtRange(draft.ci, draft.co) : draft.ci ? `Now choose check-out. Minimum stay: ${draftMin} nights.` : "Choose your check-in date."}</div>
+              <div className="hint">{draft.ci && draft.co ? `${fmtRange(draft.ci, draft.co)} · ${nightsOf(draft.ci, draft.co)} nights` : draft.ci ? "Now choose your check-out date." : "Choose your check-in date."}</div>
+              <div className="muted small">Crossed-out days are already booked or not available for check-in. The minimum stay comes from each home's settings.</div>
               <button className="btn" disabled={!draft.ci || !draft.co} onClick={saveDates}>Save dates</button>
             </>)}
 
             {sheet === "guests" && (<>
-              {([["Adults", "Ages 13+", adults, setAdults, 1], ["Children", "Ages 2–12", children, setChildren, 0], ["Infants", "Under 2, free", infants, setInfants, 0]] as const).map(([l, sub, v, set, min]) => (
+              {([["Adults", "Ages 13+", adults, setAdults, 1], ["Children", "Ages 2–12", children, setChildren, 0], ["Infants", "Under 2", infants, setInfants, 0]] as const).map(([l, sub, v, set, min]) => (
                 <div key={l} className="row gr"><div><b>{l}</b><div className="muted">{sub}</div></div><span className="stepper">
                   <button aria-label={"Fewer " + l} disabled={v <= min} onClick={() => set(v - 1)}>−</button><b>{v}</b>
                   <button aria-label={"More " + l} disabled={l === "Infants" ? v >= 6 : guests >= prop.maxGuests} onClick={() => set(v + 1)}>+</button></span></div>))}
-              <div className="muted">{prop.name} sleeps {prop.maxGuests}.{guests > prop.extraGuestFrom ? ` Extra-guest fee ${money(prop.extraGuestFee)}/night for each guest over ${prop.extraGuestFrom}.` : ""}</div>
+              <div className="muted">Sleeps {prop.maxGuests}. Infants don't count toward the limit.{guests > prop.extraGuestFrom ? ` Extra-guest fee ${money(prop.extraGuestFee)}/night for each guest over ${prop.extraGuestFrom}.` : ""}</div>
               <button className="btn" onClick={() => setSheet(null)}>Save guests</button>
             </>)}
 
@@ -339,9 +383,12 @@ export default function Checkout() {
               <div className="ln"><span>{quote.nights} nights</span><span>{money(quote.lodging)}</span></div>
               {quote.extraGuestFee > 0 && <div className="ln"><span>Extra guests</span><span>{money(quote.extraGuestFee)}</span></div>}
               <div className="ln"><span>Cleaning</span><span>{money(quote.cleaning)}</span></div>
-              <div className="ln"><span>Damage waiver — $5,000 coverage<br /><a className="small" href="https://pearlheightshomes.com/damage-waiver-terms" target="_blank" rel="noreferrer">Waiver terms</a></span><span>{money(quote.protection)}</span></div>
+              <div className="ln"><span>Damage waiver — $5,000 coverage</span><span>{money(quote.protection)}</span></div>
               <div className="ln"><span>Taxes</span><span>{money(quote.tax)}</span></div>
-              <div className="ln total"><span>Total USD</span><span>{money(quote.total)}</span></div>
+              <div className="ln total"><span>Total (USD)</span><span>{money(quote.total)}</span></div>
+              <div className="muted small">Damage waiver — $5,000 coverage: covers accidental damage during your stay, as described in the <a href="https://pearlheightshomes.com/damage-waiver-terms" target="_blank" rel="noreferrer">waiver terms and conditions</a>.</div>
+              <div className="muted small">Tax shown is an example rate until confirmed by our accountant.</div>
+              <button className="btn ghost" onClick={() => setSheet(null)}>Close</button>
             </>)}
 
             {sheet === "policy" && quote && (quote.nonRefundable
