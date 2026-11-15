@@ -209,7 +209,7 @@ export function Listing({ home, prop, policy }: { home: HomeContent; prop: Prop;
             <h1>{home.title}</h1>
             <div className="L-sub">{home.subtitle}</div>
             <div className="L-cap">{home.capacity.guests} guests · {home.capacity.bedrooms} bedrooms · {home.capacity.beds} beds · {home.capacity.baths} baths</div>
-            {home.rating && <a className="L-rating" href="#reviews">★ {home.rating.value.toFixed(2)} · {home.rating.count} {home.rating.source.toLowerCase()}</a>}
+            {home.rating && <a className="L-rating" href="#reviews">★ {home.rating.value.toFixed(2)} · {home.rating.count} {home.rating.source}</a>}
           </section>
 
           {ci && co && <div className="L-mobileBook">{booking}</div>}
@@ -251,7 +251,7 @@ export function Listing({ home, prop, policy }: { home: HomeContent; prop: Prop;
           {home.rating && (
             <section id="reviews" className="L-sec">
               <h2>★ {home.rating.value.toFixed(2)} · {home.rating.count} ratings</h2>
-              <p className="muted">From {home.rating.source.toLowerCase()}. Reviews below are quoted word for word.</p>
+              <p className="muted">Ratings and reviews from Airbnb guests. Reviews are quoted word for word.</p>
               <div className="L-cats">{home.rating.categories.map(([c, v]) => <div key={c}><span>{c}</span><b>{v.toFixed(1)}</b></div>)}</div>
               <div className="L-reviews">{home.reviews.slice(0, 4).map((r) => (
                 <figure key={r.name + r.when} className="L-review"><blockquote>{r.text.length > 240 ? r.text.slice(0, 240).replace(/\s\S*$/, "") + "…" : r.text}</blockquote>

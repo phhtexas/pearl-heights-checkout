@@ -114,7 +114,7 @@ export const HOMES: Record<string, HomeContent> = {
   { id: "cLLecDHJNPl6RSh1SjKnGN9xYY8aNujzydZbFiLL", alt: "Bonus room exterior lit at night" }
     ],
     rating: {
-      value: 4.97, count: 78, source: "Airbnb guest ratings",
+      value: 4.97, count: 78, source: "ratings from Airbnb guests",
       categories: [["Cleanliness", 4.99], ["Accuracy", 4.97], ["Check-in", 4.99], ["Communication", 4.99], ["Location", 4.99], ["Value", 4.95]],
     },
     highlights: [
