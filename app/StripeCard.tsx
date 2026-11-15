@@ -14,7 +14,7 @@ export function StripeCard({ publishableKey, amount, saveForLater, onReady }: { 
     <Elements stripe={getStripe(publishableKey)} options={{
       mode: "payment", amount, currency: "usd", captureMethod: "manual", paymentMethodCreation: "manual", allowedPaymentMethodTypes: ["card"],
       ...(saveForLater ? { setupFutureUsage: "off_session" as const } : {}),
-      appearance: { theme: "night", variables: { colorPrimary: "#7fbfaa", borderRadius: "10px" } },
+      appearance: { theme: "stripe", variables: { colorPrimary: "#111315", borderRadius: "12px", fontSizeBase: "16px" } },
     }}>
       <Inner onReady={onReady} />
     </Elements>
