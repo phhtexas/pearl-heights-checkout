@@ -263,6 +263,13 @@ export function Listing({ home, prop, policy }: { home: HomeContent; prop: Prop;
           <section id="location" className="L-sec">
             <h2>Where you'll be</h2>
             <p className="L-p">{home.location.text}</p>
+            <ul className="L-list">{home.location.facts.map((f) => <li key={f}>{f}</li>)}</ul>
+            {home.location.mapBbox && (
+              <div className="L-map">
+                <iframe title={`Map of the area around ${home.neighborhood} (approximate, not the exact address)`} loading="lazy" referrerPolicy="no-referrer"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${home.location.mapBbox}&layer=mapnik`} />
+                <span className="L-mapArea" aria-hidden="true" />
+              </div>)}
             <p className="muted">{home.location.note}</p>
           </section>
 

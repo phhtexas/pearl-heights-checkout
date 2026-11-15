@@ -21,7 +21,7 @@ export interface HomeContent {
   topAmenities: string[];
   goodFit: string[];
   notFit: string[];
-  location: { text: string; note: string };
+  location: { text: string; note: string; facts: string[]; mapBbox?: string };
   reviews: { name: string; when: string; text: string }[];
   host: { names: string; since: string; facts: string[]; bio: string };
   thingsToKnow: { title: string; items: string[] }[];
@@ -118,9 +118,9 @@ export const HOMES: Record<string, HomeContent> = {
       categories: [["Cleanliness", 4.99], ["Accuracy", 4.97], ["Check-in", 4.99], ["Communication", 4.99], ["Location", 4.99], ["Value", 4.95]],
     },
     highlights: [
-      { title: "Walk to the Pearl", text: "Guests describe the Pearl as about a block away, an easy walk even with children.", source: "R (guest reviews)" },
+      { title: "Walk to the Pearl", text: "About a 3-minute walk to the Pearl, the River Walk and restaurants.", source: "A listing; confirmed by Oscar (chat, Nov 15)" },
       { title: "One level, no stairs", text: "A single-level home: no stairs inside.", source: "H/A listing" },
-      { title: "Ready for little ones", text: "A playroom with toys and books, plus a crib, pack-n-play, high chair and baby bath on request.", source: "A amenities (crib, pack-n-play, high chair, baby bath: 'available upon request')" },
+      { title: "Ready for little ones", text: "A playroom with toys and books, plus a crib, pack-n-play, high chair and baby bath kept at the home.", source: "A amenities; Oscar (chat, Nov 15): kept at the house, set up on request" },
       { title: "Backyard and bonus room", text: "Fenced backyard with lounge seating and string lights, plus a bonus room with TV, workspace and kids' area.", source: "H/A listing" },
     ],
     summary: "A redesigned 5-bedroom, 3.5-bath home for families and groups of up to 10, close to the Pearl and the Museum Reach of the River Walk. Open kitchen with an island, living room with a smart TV, a dedicated workspace, a playroom, and a large backyard with lounge seating.",
@@ -130,22 +130,25 @@ export const HOMES: Record<string, HomeContent> = {
       { room: "Bedroom 3", beds: "1 queen bed" },
       { room: "Bedroom 4", beds: "1 queen bed" },
       { room: "Bedroom 5", beds: "1 queen bed" },
+      { room: "Bathrooms", beds: "2 private (bedrooms 1 and 2) · 1 shared hall bath · 1 half bath" },
     ],
     topAmenities: ["Full kitchen", "Fast WiFi", "Dedicated workspace", "Free parking", "Washer and dryer", "Fenced backyard", "Crib and high chair", "Playroom"],
     amenityGroups: [
       { group: "Kitchen and dining", items: ["Full kitchen: electric stove, slide-in electric oven, dishwasher", "4-door French-door refrigerator and freezer", "Microwave, toaster, blender, kettle", "Drip coffee maker, French press and Keurig; coffee", "Pots and pans, oil, salt and pepper", "Dishes, silverware, wine glasses, baking sheet", "Trash compactor", "Dining table"] },
-      { group: "Family", items: ["Children's playroom with toys, books and games", "Children's books and toys (ages 0–2 and 2–5)", "Crib (on request; sheets provided)", "Pack-n-play travel crib (on request)", "High chair with straps and tray (on request)", "Baby bath (on request)", "Children's dinnerware", "Outlet covers and table corner guards", "Board games"] },
+      { group: "Family", items: ["Children's playroom with toys, books and games", "Children's books and toys (ages 0–2 and 2–5)", "Crib (sheets provided)", "Pack-n-play travel crib", "High chair with straps and tray", "Baby bath", "Children's dinnerware", "Outlet covers and table corner guards", "Board games"] },
       { group: "Bedroom and laundry", items: ["Cotton hotel-style sheets, extra pillows and blankets", "Room-darkening shades", "Closets and hangers", "Free washer and dryer in the home", "Iron, hair dryer"] },
       { group: "Bathroom", items: ["Bathtub", "Vegan shampoo, conditioner and body wash", "Towels, soap and toilet paper", "Hot water"] },
       { group: "Entertainment and work", items: ["55-inch HDTV with Netflix, Disney+ and Roku", "Free weights and yoga mat", "Books and board games", "Dedicated workspace", "WiFi"] },
       { group: "Heating and cooling", items: ["Central air conditioning", "Ductless split A/C", "Central heating", "Ceiling fans", "Electric indoor fireplace"] },
-      { group: "Outdoors, parking and access", items: ["Private, fully fenced backyard", "Outdoor furniture", "Private entrance", "Free parking on premises (car gate)", "Free street parking", "Single-level home, no stairs", "Accessible parking spot (at least 11 ft wide) and lit path to the entrance", "Self check-in with keypad"] },
+      { group: "Outdoors, parking and access", items: ["Private, fully fenced backyard", "Outdoor furniture", "Private entrance", "Free parking behind the car gate for up to 3 cars", "Free street parking", "Single-level home, no stairs", "Accessible parking spot (at least 11 ft wide) and lit path to the entrance", "Self check-in with keypad"] },
       { group: "Safety", items: ["Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher", "First aid kit", "Two exterior security cameras (see Things to know)"] },
     ],
     goodFit: ["Families with babies and young kids", "Groups of up to 10 who want separate bedrooms", "Guests who want to walk to the Pearl and the River Walk", "Remote workers (dedicated workspace)"],
     notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking or vaping anywhere on the property", "Late-night noise: quiet hours are 10 PM to 8 AM", "Guests who don't want exterior security cameras (two outside, recording audio)"],
     location: {
-      text: "Tobin Hill, near the Pearl and the Museum Reach of the River Walk. Guests mention walking to the Pearl and short rides to the zoo and museums.",
+      text: "Tobin Hill, near the Pearl and the Museum Reach of the River Walk.",
+      facts: ["About a 3-minute walk to the Pearl, the River Walk and restaurants", "About a 5-minute drive to the San Antonio Zoo, the DoSeum and the Witte Museum"],
+      mapBbox: "-98.4960,29.4360,-98.4730,29.4520",
       note: "The exact address is shared after your booking is confirmed and your rental agreement and ID check are complete.",
     },
     reviews: [
@@ -172,8 +175,9 @@ export const HOMES: Record<string, HomeContent> = {
       { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 3 minutes each). The address, entry steps and WiFi appear in your private stay page once both are done." },
       { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
       { q: "Can I pay in two parts?", a: "When check-in is more than 30 days away, you can pay half now and the rest automatically 30 days before check-in, at no extra cost." },
-      { q: "Is the home good for babies and toddlers?", a: "Yes: there's a playroom with toys and books, children's dinnerware, outlet covers and corner guards, and a crib, pack-n-play, high chair and baby bath on request. Just tell us what you need when you book." },
-      { q: "Is there parking?", a: "Yes: free parking on the property behind a car gate, plus free street parking. There's an accessible parking spot at least 11 feet wide and a lit path to the entrance." },
+      { q: "Is the home good for babies and toddlers?", a: "Yes: there's a playroom with toys and books, children's dinnerware, outlet covers and corner guards, and a crib, pack-n-play, high chair and baby bath kept at the home. Tell us what you'd like set up." },
+      { q: "Is there an outdoor grill?", a: "No, there's no outdoor grill. The kitchen is fully equipped." },
+      { q: "Is there parking?", a: "Yes: free parking behind the car gate for up to 3 cars, plus free street parking. There's an accessible parking spot at least 11 feet wide and a lit path to the entrance." },
     ],
     registration: "STR-25-13500115",
     sources: [
@@ -189,17 +193,12 @@ export const HOMES: Record<string, HomeContent> = {
       { fact: "Exterior security cameras, alarms", source: "Airbnb 'Things to know' + Hospitable amenities" },
       { fact: "Host facts (Superhost, 4 years, 460 reviews 4.98, languages, bio)", source: "Airbnb host profile on the listing, Nov 15, 2026" },
       { fact: "Response time 'usually within an hour'", source: "Airbnb host details ('Responds within an hour')" },
+      { fact: "3-min walk to the Pearl / 5-min drive to Zoo, DoSeum, Witte; no grill; bathroom layout; 3 cars behind gate; baby items kept at home; stove + A/C issues from May 2026 review fixed", source: "Oscar (chat, Nov 15, 2026)" },
+      { fact: "Area map (approximate, no pin)", source: "OpenStreetMap embed; Oscar approved an area map (chat, Nov 15)" },
       { fact: "Registration STR-25-13500115", source: "Airbnb listing registration details" },
       { fact: "Cancellation summary", source: "Generated from the checkout's policy engine (src/domain/policy.ts)" },
     ],
     missing: [
-      "Walking/drive times: listing says '3-min walk to the Pearl' and '5-min drive to the Zoo, DoSeum, Witte'; guests say 'a block' / 'under 5 minutes'. Shown only as guest quotes until Oscar confirms.",
-      "Map of the general area (no exact address): needs Oscar's OK.",
-      "Stove and A/C: a May 2026 review said the electric stove was weak and the primary + adjacent bedroom ran warmer. Fixed? Disclose if not.",
-      "Outdoor grill: not listed on Airbnb; confirm there isn't one.",
-      "Bathroom layout: 2 en-suites (bedrooms 1 and 2) are known; where are the other full bath and the half bath?",
-      "Driveway: how many cars fit behind the gate?",
-      "Baby items 'on request': are they always in the home, or brought in on request (and how much notice)?",
       "Photo room labels from Oscar (alt text is descriptive; rooms aren't labeled).",
       "Pricing promise vs Airbnb: not shown (no substantiated comparison).",
     ],
