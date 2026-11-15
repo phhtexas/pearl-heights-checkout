@@ -86,7 +86,7 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
   // 15-minute price lock: a live price change inside the lock does not change what the guest pays.
   if (quote.total !== req.acceptedTotal && req.lockedQuote && req.lockedQuote.total === req.acceptedTotal
       && req.lockedQuote.plan.split === quote.plan.split) {
-    log.push(`live price ${quote.total} differs; honoring locked quote ${req.lockedQuote.total}`);
+    log.push(`price_lock_honored locked=${req.lockedQuote.total} live=${quote.total} absorbed=${quote.total - req.lockedQuote.total}`);
     quote = req.lockedQuote;
   }
   if (quote.total !== req.acceptedTotal) {

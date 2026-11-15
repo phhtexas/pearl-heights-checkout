@@ -61,6 +61,11 @@ export default function Checkout() {
   const [busy, setBusy] = useState(false);
   const [quoting, setQuoting] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [notice, setNotice] = useState("");
+  const [fieldErr, setFieldErr] = useState<Partial<Record<"firstName" | "lastName" | "email" | "phone", string>>>({});
+  const lastTotal = useRef<number | null>(null);
+  const sheetRef = useRef<HTMLDivElement | null>(null);
+  const opener = useRef<HTMLElement | null>(null);
   const [cfg, setCfg] = useState<{ mode: string; publishableKey?: string }>({ mode: "loading" });
   const createPm = useRef<CreatePm | null>(null);
   const onCardReady = useCallback((fn: CreatePm | null) => { createPm.current = fn; }, []);
@@ -104,13 +109,38 @@ export default function Checkout() {
     const j = await r.json().catch(() => ({}));
     setQuoting(false);
     if (!r.ok) { setQuote(null); setErr(j.error ?? "We couldn't price these dates. Please try other dates."); return; }
+    const prev = lastTotal.current;
+    if (prev != null && prev !== j.quote.total) {
+      setNotice(`Your total changed from ${money(prev)} to ${money(j.quote.total)}. Please review it before you pay.`);
+      setAgreed(false); // a changed total needs fresh acceptance
+    } else setNotice("");
+    lastTotal.current = j.quote.total;
     setQuote(j.quote); setQuoteId(j.quoteId); setExpiresAt(j.expiresAt);
     if (payPlan === "split" && !j.quote.splitPlan) setPlan("full");
   }, [ci, co, home, adults, children, infants, plan]);
   useEffect(() => { if (ci && co) void getQuote(); }, [ci, co, home, adults, children, infants]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sheets: focus moves in, Tab stays inside, Escape closes, focus returns to the button that opened it.
+  useEffect(() => {
+    if (!sheet) { opener.current?.focus?.(); return; }
+    const el = sheetRef.current;
+    el?.querySelector<HTMLElement>("button, [href], input, select")?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { setSheet(null); return; }
+      if (e.key !== "Tab" || !el) return;
+      const f = [...el.querySelectorAll<HTMLElement>("button:not([disabled]), [href], input, select")];
+      if (!f.length) return;
+      const first = f[0]!, last = f[f.length - 1]!;
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [sheet]);
+  const openSheet = (s: Exclude<Sheet, null>) => { opener.current = document.activeElement as HTMLElement; if (s === "dates") openDates(); else setSheet(s); };
+
   function choosePlan(p: "full" | "split") { if (p === plan && quote && quote.plan.split === (p === "split")) return; setPlan(p); void getQuote(p); }
-  function openDates() { setDraft({ ci, co }); if (ci) setMonth(ci.slice(0, 7)); setSheet("dates"); }
+  function openDates() { if (!opener.current) opener.current = document.activeElement as HTMLElement; setDraft({ ci, co }); if (ci) setMonth(ci.slice(0, 7)); setSheet("dates"); }
   function pickDay(iso: string) {
     if (!draft.ci || draft.co || iso <= draft.ci) { setDraft({ ci: iso, co: null }); return; }
     setDraft({ ci: draft.ci, co: iso });
@@ -153,11 +183,22 @@ export default function Checkout() {
     setStep("review"); setCi(null); setCo(null); setQuote(null); setResult(null); setErr(""); setAgreed(false); setPlan("full");
     setGuest({ firstName: "", lastName: "", email: "", phone: "" }); setCalVersion((v) => v + 1);
   }
+  function submitDetails() {
+    const e: typeof fieldErr = {};
+    if (!guest.firstName.trim()) e.firstName = "Enter your first name.";
+    if (!guest.lastName.trim()) e.lastName = "Enter your last name.";
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guest.email)) e.email = "Enter a valid email so we can send your confirmation.";
+    if (guest.phone.replace(/\D/g, "").length < 10) e.phone = "Enter a mobile number with area code.";
+    setFieldErr(e);
+    if (Object.keys(e).length) { setTimeout(() => document.getElementById("errsum")?.focus(), 0); return; }
+    go("pay");
+  }
   const go = (s: Step) => { setErr(""); setStep(s); window.scrollTo(0, 0); };
 
   const left = Math.max(0, expiresAt - now);
+  const lockMin = Math.ceil(left / 60000);
+  const lockAnnounce = left <= 0 ? "Your price lock ended. We'll recheck the price before you pay." : lockMin === 5 || lockMin === 1 ? `${lockMin} ${lockMin === 1 ? "minute" : "minutes"} left on your price lock.` : "";
   const lockText = `${Math.floor(left / 60000)}:${String(Math.floor(left / 1000) % 60).padStart(2, "0")}`;
-  const detailsOk = !!(guest.firstName.trim() && guest.lastName.trim() && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guest.email) && guest.phone.replace(/\D/g, "").length >= 10);
   const folded = quote ? quote.lodging + quote.extraGuestFee + quote.cleaning + quote.protection : 0;
   const balance = quote?.plan.scheduled ? chargeDay(quote.plan.scheduled.chargeAt) : "";
   const stepIdx = STEPS.findIndex(([s]) => s === step);
@@ -166,7 +207,7 @@ export default function Checkout() {
 
   // The one main action per step (fixed footer on phones, inline on desktop).
   const primary = step === "review" ? { label: "Continue to your details", disabled: !quote || quoting, run: () => go("details") }
-    : step === "details" ? { label: "Continue to payment", disabled: !detailsOk, run: () => go("pay") }
+    : step === "details" ? { label: "Continue to payment", disabled: false, run: submitDetails }
     : step === "pay" && quote ? { label: busy ? "Processing…" : `Confirm and pay ${money(quote.plan.dueNow)}`, disabled: !agreed || busy, run: pay }
     : null;
 
@@ -191,15 +232,15 @@ export default function Checkout() {
     <div className="ln"><span>{quote.nights} {quote.nights === 1 ? "night" : "nights"} × {money(Math.round(folded / quote.nights))}</span><span>{money(folded)}</span></div>
     <div className="ln"><span>Taxes</span><span>{money(quote.tax)}</span></div>
     <div className="ln total"><span>Total <u>USD</u></span><span>{money(quote.total)}</span></div>
-    <button className="link tight" onClick={() => setSheet("breakdown")}>Price breakdown</button>
+    <button className="link tight" onClick={() => openSheet("breakdown")}>Price breakdown</button>
   </>);
 
   const cancelLine = quote && (
     <section className="cancel">
       <span className={quote.nonRefundable ? "dot gray" : "dot"} aria-hidden="true">{quote.nonRefundable ? "i" : "✓"}</span>
       {quote.nonRefundable
-        ? <div><b>Non-refundable</b><div className="sub">This reservation is non-refundable. <button className="link inline" onClick={() => setSheet("policy")}>Full policy</button></div></div>
-        : <div><b className="green">Free cancellation</b><div className="sub">Cancel within 24 hours for a full refund. <button className="link inline" onClick={() => setSheet("policy")}>View policy</button></div></div>}
+        ? <div><b>Non-refundable</b><div className="sub">This reservation is non-refundable. <button className="link inline" onClick={() => openSheet("policy")}>Full policy</button></div></div>
+        : <div><b className="green">Free cancellation</b><div className="sub">Cancel within 24 hours for a full refund. <button className="link inline" onClick={() => openSheet("policy")}>View policy</button></div></div>}
     </section>
   );
 
@@ -236,12 +277,13 @@ export default function Checkout() {
       </header>
 
       {quote && step !== "done" && (
-        <div className="lock" role="status">
+        <div className="lock">
           <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.4" /><path d="M8 4.5V8l2.2 1.4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>
-          {left > 0 ? <><span>Your price is locked for</span><b>{lockText}</b></> : <span>Price lock ended · we'll recheck the price</span>}
+          {left > 0 ? <><span>Your price is locked for</span><b aria-hidden="true">{lockText}</b><span className="sr">{Math.ceil(left / 60000)} minutes</span></> : <span>Price lock ended · we'll recheck the price</span>}
         </div>
       )}
 
+      <div className="sr" aria-live="polite">{quote && step !== "done" ? lockAnnounce : ""}</div>
       <div className={"layout" + (step === "done" ? " single" : "")}>
         <main className="flow">
           {step === "review" && (<>
@@ -252,18 +294,18 @@ export default function Checkout() {
               {photoEl(172)}
               <div className="hcHead"><div className="homeName">{prop.name} — {prop.area}</div><div className="muted">Entire home · sleeps {prop.maxGuests} · direct booking</div></div>
               <div className="hcRow"><div><div className="cap">Dates</div><div className="val">{ci && co ? fmtRange(ci, co) : "Choose your dates"}</div>{ci && co && <div className="muted">{nightsOf(ci, co)} {nightsOf(ci, co) === 1 ? "night" : "nights"}</div>}</div>
-                <button className="chip" aria-label="Change dates" onClick={openDates}>{ci ? "Change" : "Choose"}</button></div>
+                <button className="chip" aria-label="Change dates" onClick={() => openSheet("dates")}>{ci ? "Change" : "Choose"}</button></div>
               <div className="hcRow"><div><div className="cap">Guests</div><div className="val">{guests} {guests === 1 ? "guest" : "guests"}{infants ? `, ${infants} ${infants === 1 ? "infant" : "infants"}` : ""}</div></div>
-                <button className="chip" aria-label="Change guests" onClick={() => setSheet("guests")}>Change</button></div>
+                <button className="chip" aria-label="Change guests" onClick={() => openSheet("guests")}>Change</button></div>
             </section>
 
             {/* Desktop: Your trip rows (option E desktop). */}
             <section className="trip desktopOnly">
               <h2>Your trip</h2>
               <div className="tripRow"><div><b>Dates</b><div className="muted">{ci && co ? fmtRange(ci, co) : "Choose your dates"}</div></div>
-                <button className="chip" onClick={openDates}>{ci ? "Change" : "Choose"}</button></div>
+                <button className="chip" onClick={() => openSheet("dates")}>{ci ? "Change" : "Choose"}</button></div>
               <div className="tripRow"><div><b>Guests</b><div className="muted">{guests} {guests === 1 ? "guest" : "guests"}{infants ? `, ${infants} ${infants === 1 ? "infant" : "infants"}` : ""}</div></div>
-                <button className="chip" onClick={() => setSheet("guests")}>Change</button></div>
+                <button className="chip" onClick={() => openSheet("guests")}>Change</button></div>
             </section>
 
             {quote && (<section className="plans">
@@ -280,6 +322,7 @@ export default function Checkout() {
             </section>)}
 
             {quote && <section className="priceSec mobileOnly"><h2>Price details</h2>{priceRows}</section>}
+            {notice && <div className="notice" role="status">{notice}</div>}
             {cancelLine}
             <div className="mobileOnly"><Badges /></div>
             {quoting && <div className="muted" role="status">Checking price and availability…</div>}
@@ -289,16 +332,19 @@ export default function Checkout() {
             <button className="back desktopOnly" aria-label="Back" onClick={() => go("review")}>‹</button>
             <h1>Your details</h1>
             <div className="muted">The person booking must be 25 or older and stay at the home.</div>
-            <label className="fld"><span className="lbl">First name</span><input className="f" autoComplete="given-name" value={guest.firstName} onChange={(e) => setGuest({ ...guest, firstName: e.target.value })} /></label>
-            <label className="fld"><span className="lbl">Last name</span><input className="f" autoComplete="family-name" value={guest.lastName} onChange={(e) => setGuest({ ...guest, lastName: e.target.value })} /></label>
-            <label className="fld"><span className="lbl">Email</span><input className="f" type="email" autoComplete="email" value={guest.email} onChange={(e) => setGuest({ ...guest, email: e.target.value })} /></label>
-            <label className="fld"><span className="lbl">Mobile phone</span><input className="f" type="tel" autoComplete="tel" value={guest.phone} onChange={(e) => setGuest({ ...guest, phone: e.target.value })} /></label>
+            {Object.keys(fieldErr).length > 0 && <div id="errsum" className="alert" tabIndex={-1} role="alert">Please fix {Object.keys(fieldErr).length === 1 ? "this" : "these"}: {Object.values(fieldErr).join(" ")}</div>}
+            {([["firstName", "First name", "given-name", "text"], ["lastName", "Last name", "family-name", "text"], ["email", "Email", "email", "email"], ["phone", "Mobile phone", "tel", "tel"]] as const).map(([k, label, ac, type]) => (
+              <label key={k} className="fld"><span className="lbl">{label}</span>
+                <input className={"f" + (fieldErr[k] ? " bad" : "")} type={type} autoComplete={ac} value={guest[k]} aria-invalid={!!fieldErr[k]} aria-describedby={fieldErr[k] ? k + "-err" : undefined}
+                  onChange={(e) => { setGuest({ ...guest, [k]: e.target.value }); if (fieldErr[k]) setFieldErr({ ...fieldErr, [k]: undefined }); }} />
+                {fieldErr[k] && <span id={k + "-err"} className="err">{fieldErr[k]}</span>}</label>))}
             <div className="muted">We use your phone for your stay details. Your private stay link is emailed after booking.</div>
           </>)}
 
           {step === "pay" && quote && (<>
             <button className="back desktopOnly" aria-label="Back" onClick={() => go("details")}>‹</button>
             <h1>Confirm and pay</h1>
+            {notice && <div className="notice" role="status">{notice}</div>}
             <div className="card">
               <div className="ln"><span>{prop.name} · {fmtRange(ci!, co!)}</span></div>
               <div className="ln"><span>Total</span><b>{money(quote.total)}</b></div>
@@ -311,13 +357,14 @@ export default function Checkout() {
               ? <><StripeCard publishableKey={cfg.publishableKey!} amount={quote.plan.dueNow} saveForLater={quote.plan.split} onReady={onCardReady} />
                   <div className="muted">Test mode: card 4242 4242 4242 4242, any future date, any CVC. Decline: 4000 0000 0000 0002.</div></>
               : <div className="cardForm">Secure card form (Stripe) appears here</div>}
-            <label className="chk"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-              <span>{quote.plan.split ? `I authorize Pearl Heights Homes to charge ${money(quote.plan.scheduled!.amount)} to this card on ${balance} at 4:00 PM CT, when flexible cancellation ends. ` : ""}
-                I'm at least 25 and will stay at the home. I agree to the <a href="https://pearlheightshomes.com/terms-and-conditions/" target="_blank" rel="noreferrer">Terms</a>, <a href="https://pearlheightshomes.com/house-rules/" target="_blank" rel="noreferrer">House rules</a> and <button className="link inline" onClick={(e) => { e.preventDefault(); setSheet("policy"); }}>Cancellation policy</button>.</span></label>
+            
             <div className="muted small">After paying, you'll sign the rental agreement and verify your ID within {deadlineWindow}.</div>
             <label className="fld"><span className="lbl">Test: simulate</span>
               <select className="f" value={sim} onChange={(e) => setSim(e.target.value)}>{SIMS.filter(([v]) => !(stripeMode && CARD_SIMS.includes(v))).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
             {result && !result.ok && <div className="alert">{result.guestMessage}</div>}
+            <label className="chk"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+              <span>{quote.plan.split ? `I authorize Pearl Heights Homes to charge ${money(quote.plan.scheduled!.amount)} to this card on ${balance} at 4:00 PM CT, when flexible cancellation ends. ` : ""}
+                I'm at least 25 and will stay at the home. I agree to the <a href="https://pearlheightshomes.com/terms-and-conditions/" target="_blank" rel="noreferrer">Terms</a>, <a href="https://pearlheightshomes.com/house-rules/" target="_blank" rel="noreferrer">House rules</a> and <button className="link inline" onClick={(e) => { e.preventDefault(); openSheet("policy"); }}>Cancellation policy</button>.</span></label>
           </>)}
 
           {step === "done" && result?.ok && (<>
@@ -338,16 +385,16 @@ export default function Checkout() {
 
       {primary && (
         <footer className="foot mobileOnly">
-          <div className="bars" aria-label="Checkout progress">
-            {STEPS.map(([k, , short], i) => <div key={k} className={i <= stepIdx ? "on" : ""}><i /><span>{i + 1} {short}</span></div>)}
-          </div>
+          <ol className="bars" aria-label="Checkout progress">
+            {STEPS.map(([k, , short], i) => <li key={k} className={i <= stepIdx ? "on" : ""} aria-current={i === stepIdx ? "step" : undefined}><i aria-hidden="true" /><span>{i + 1} {short}</span></li>)}
+          </ol>
           <button className="btn" disabled={primary.disabled} onClick={primary.run}>{primary.label}</button>
         </footer>
       )}
 
       {sheet && (
         <div className="scrim" onClick={(e) => { if (e.target === e.currentTarget) setSheet(null); }}>
-          <div className="sheet" role="dialog" aria-modal="true" aria-label={{ dates: "Change dates", guests: "Change guests", breakdown: "Price breakdown", policy: "Cancellation policy" }[sheet]}>
+          <div className="sheet" ref={sheetRef} role="dialog" aria-modal="true" aria-label={{ dates: "Change dates", guests: "Change guests", breakdown: "Price breakdown", policy: "Cancellation policy" }[sheet]}>
             <div className="sheetHead"><h2>{{ dates: "Change dates", guests: "Change guests", breakdown: "Price breakdown", policy: "Cancellation policy" }[sheet]}</h2>
               <button className="x" aria-label="Close" onClick={() => setSheet(null)}>×</button></div>
 
@@ -361,7 +408,8 @@ export default function Checkout() {
                 {monthDays.list.map((iso) => {
                   const s = dayState(iso);
                   const cls = "day" + (iso === draft.ci || iso === draft.co ? " sel" : draft.ci && draft.co && iso > draft.ci && iso < draft.co ? " in" : "");
-                  return <button key={iso} className={cls} disabled={!s.ok} onClick={() => pickDay(iso)} aria-label={iso}>{Number(iso.slice(8))}<small>{s.price}</small></button>;
+                  const why = !byDate[iso] ? "not available" : draft.ci && !draft.co && iso > draft.ci && !s.ok ? "not available as check-out (booked night or under the minimum stay)" : !s.ok ? "booked or not available for check-in" : s.price ? s.price + " per night" : "available";
+                  return <button key={iso} className={cls} disabled={!s.ok} onClick={() => pickDay(iso)} aria-label={`${fmtDay(iso, true)}, ${why}`} aria-pressed={iso === draft.ci || iso === draft.co}>{Number(iso.slice(8))}<small>{s.price}</small></button>;
                 })}
               </div>
               {days.length === 0 && <div className="muted" role="status">Loading availability and prices…</div>}
