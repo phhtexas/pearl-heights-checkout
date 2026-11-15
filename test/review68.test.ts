@@ -87,6 +87,8 @@ describe("guards", () => {
   it("production refuses mock adapters unless explicitly allowed", () => {
     expect(() => getAdapters("none", { NODE_ENV: "production", CHECKOUT_MODE: "mock" } as any)).toThrow(/not allowed in production/);
     expect(() => getAdapters("none", { NODE_ENV: "production", CHECKOUT_MODE: "mock", ALLOW_MOCK: "true" } as any)).not.toThrow();
+    expect(() => getAdapters("none", { NODE_ENV: "production", VERCEL_ENV: "preview", CHECKOUT_MODE: "mock" } as any)).not.toThrow();
+    expect(() => getAdapters("none", { NODE_ENV: "production", VERCEL_ENV: "production", CHECKOUT_MODE: "mock" } as any)).toThrow(/not allowed in production/);
   });
   it("live mode is blocked until taxes, Stripe checklist and attorney are confirmed", () => {
     expect(launchGateErrors({} as any)).toHaveLength(3);

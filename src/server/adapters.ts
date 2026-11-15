@@ -58,7 +58,9 @@ export function getAdapters(failure: MockFailure = "none", env: NodeJS.ProcessEn
   }
   if (mode !== "mock" && mode !== "test") throw new Error(`CHECKOUT_MODE=${mode} is not implemented yet; use mock or test.`);
   // Hospitable is still mocked in both modes (Oscar, Nov 14: real calendar later, fake bookings), so the mock guard applies.
-  if (env.NODE_ENV === "production" && env.ALLOW_MOCK !== "true") throw new Error("Mock adapters are not allowed in production.");
+  // Vercel branch previews have no secrets: they run fully mocked (fake calendar, fake payments, in memory) for design review.
+  const previewMock = env.VERCEL_ENV === "preview" && mode === "mock";
+  if (env.NODE_ENV === "production" && env.ALLOW_MOCK !== "true" && !previewMock) throw new Error("Mock adapters are not allowed in production.");
   const set = mockSet(session);
   set.hosp.failure = failure;
   set.pay.failure = failure;
