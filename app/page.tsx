@@ -152,7 +152,7 @@ export default function Checkout() {
               <div className="ln"><span>{quote.nights} nights</span><span>{money(quote.lodging)}</span></div>
               {quote.extraGuestFee > 0 && <div className="ln"><span>Extra guests</span><span>{money(quote.extraGuestFee)}</span></div>}
               <div className="ln"><span>Cleaning</span><span>{money(quote.cleaning)}</span></div>
-              <div className="ln"><span>Damage protection (Waivo, up to $5,000)</span><span>{money(quote.protection)}</span></div>
+              <div className="ln"><span>Damage waiver — $5,000 coverage</span><span>{money(quote.protection)}</span></div>
               <div className="ln"><span>Taxes ({(quote.taxRate * 100).toFixed(2)}%, provisional)</span><span>{money(quote.tax)}</span></div>
               <div className="ln total"><span>Total</span><span>USD {money(quote.total)}</span></div>
             </div>
