@@ -45,4 +45,17 @@ export const nightsBetween = (checkIn: string, checkOut: string): string[] => {
   return out;
 };
 
+/** "Sunday, November 15, 2026, 6:52 PM CT" (server-authoritative; same text for screen, email and records). */
+export function formatChicagoDateTime(at: Date): string {
+  const s = new Intl.DateTimeFormat("en-US", {
+    timeZone: TIMEZONE, weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
+  }).format(at);
+  return s.replace(" at ", ", ") + " CT";
+}
+
+/** "Nov 16, 2026" as a calendar date in Central time. */
+export function formatChicagoDate(at: Date): string {
+  return new Intl.DateTimeFormat("en-US", { timeZone: TIMEZONE, month: "short", day: "numeric", year: "numeric" }).format(at);
+}
+
 export { HOUR, DAY };

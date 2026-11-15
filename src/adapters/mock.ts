@@ -29,6 +29,10 @@ export class MockHospitable implements HospitableAdapter {
     const cal = SNAP[keyByUuid[uuid] ?? ""];
     if (!cal) throw new AdapterError("Unknown property", "unknown_property");
     const blocked = this.blocked.get(uuid) ?? new Set();
+    // "Dates booked on Airbnb during checkout": every requested night is now taken.
+    if (this.failure === "dates_taken") return Object.entries(cal)
+      .filter(([d]) => d >= start && d <= end)
+      .map(([date, [, price, minStay]]) => ({ date, available: false, price: price * 100, minStay }));
     return Object.entries(cal)
       .filter(([d]) => d >= start && d <= end)
       .map(([date, [avail, price, minStay]]) => ({ date, available: avail === 1 && !blocked.has(date), price: price * 100, minStay }));
@@ -60,6 +64,9 @@ export class MockHospitable implements HospitableAdapter {
     const set = this.blocked.get(r.uuid);
     r.nights.forEach((n) => set?.delete(n));
   }
+
+  /** Number of reservations created (for tests). */
+  get reservationCount() { return this.codes.size; }
 
   /** Test helper: simulate an Airbnb booking landing on these dates. */
   blockDates(uuid: string, dates: string[]) {

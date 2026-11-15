@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { PROPERTIES } from "@/domain/properties";
 import type { Quote } from "@/domain/quote";
+import { formatChicagoDate } from "@/domain/time";
 
 type Day = { date: string; available: boolean; price: number; minStay: number };
 const money = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -25,6 +26,7 @@ export default function Checkout() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [resent, setResent] = useState(false);
   const prop = PROPERTIES.find((p) => p.key === home)!;
 
   useEffect(() => { fetch(`/api/calendar?property=${home}`).then((r) => r.json()).then((j) => setDays(j.days ?? [])); }, [home, result]);
@@ -57,8 +59,15 @@ export default function Checkout() {
     const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, guest, agreed, acceptedTotal: quote!.total, simulate: sim }) });
     const j = await r.json(); setBusy(false);
     if (!r.ok) { setErr(j.error); return; }
+    if (j.ok) { setResult(j); setStep("done"); return; }
+    if (j.reason === "dates_taken") {
+      // Back to date selection with fresh availability; nothing was charged or booked.
+      setResult(null); setQuote(null); setCi(null); setCo(null); setStep("stay");
+      setDays([]); fetch(`/api/calendar?property=${home}`).then((r) => r.json()).then((d) => setDays(d.days ?? []));
+      setErr(j.guestMessage + " Please choose new dates.");
+      return;
+    }
     setResult(j);
-    if (j.ok) setStep("done");
   }
   const left = Math.max(0, expiresAt - now);
   const timer = `Price held for ${Math.floor(left / 60000)}:${String(Math.floor(left / 1000) % 60).padStart(2, "0")}`;
@@ -119,7 +128,7 @@ export default function Checkout() {
             </div>
             <div className="muted">Your complete stay total is shown above. {timer}</div>
             <div className="box">{quote.plan.split
-              ? <>Pay {money(quote.plan.dueNow)} today. {money(quote.plan.scheduled!.amount)} is charged automatically on {new Date(quote.plan.scheduled!.chargeAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}.</>
+              ? <>Pay {money(quote.plan.dueNow)} today. {money(quote.plan.scheduled!.amount)} is charged automatically on {formatChicagoDate(new Date(quote.plan.scheduled!.chargeAt))}.</>
               : <>Check-in is within 30 days, so the full {money(quote.total)} is charged today.</>}</div>
             {err && <div className="err">{err}</div>}
             <button className="btn" onClick={() => setStep("pay")}>Continue</button>
@@ -132,25 +141,27 @@ export default function Checkout() {
               <label key={k}><div className="lbl">{{ firstName: "First name", lastName: "Last name", email: "Email", phone: "Mobile phone" }[k]}</div>
                 <input className="f" value={guest[k]} onChange={(e) => setGuest({ ...guest, [k]: e.target.value })} /></label>))}
             <div className="box sand">Stripe's secure payment form goes here. In test mode nothing is charged.</div>
-            <div className="box">After payment you'll sign the rental agreement and verify your ID. The address, door code and wifi are sent only after both are done.</div>
+            <div className="box">After payment you'll sign the rental agreement and verify your ID. The address, door code and Wi-Fi are sent only after both are done.</div>
             <label className="chk"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-              <span>I'm at least 25 and will stay at the home. I agree to the <a href="https://pearlheightshomes.com/house-rules/" target="_blank">house rules</a> and <a href="https://pearlheightshomes.com/terms-and-conditions/" target="_blank">cancellation policy</a>, and I authorize Pearl Heights Homes to charge {money(quote.plan.dueNow)} today{quote.plan.split ? ` and ${money(quote.plan.scheduled!.amount)} on the scheduled date` : ""}.</span></label>
+              <span>I'm at least 25 and will stay at the home. I agree to the <a href="https://pearlheightshomes.com/house-rules/" target="_blank">house rules</a> and <a href="https://pearlheightshomes.com/terms-and-conditions/" target="_blank">cancellation policy</a>, and I authorize Pearl Heights Homes to charge {money(quote.plan.dueNow)} today{quote.plan.split ? ` and ${money(quote.plan.scheduled!.amount)} on ${formatChicagoDate(new Date(quote.plan.scheduled!.chargeAt))}` : ""}.</span></label>
             <label><div className="lbl">Test: simulate</div>
               <select className="f" value={sim} onChange={(e) => setSim(e.target.value)}>{SIMS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
             {err && <div className="err">{err}</div>}
             {result && !result.ok && <div className="alert">{result.guestMessage}</div>}
             <div className="muted">{timer}</div>
             <button className="btn" disabled={!agreed || busy} onClick={pay}>{busy ? "Processing…" : `Pay ${money(quote.plan.dueNow)}`}</button>
-            <button className="btn ghost" onClick={() => { setResult(null); setStep(result?.reason === "dates_taken" ? "stay" : "total"); }}>{result?.reason === "dates_taken" ? "Choose new dates" : "Back"}</button>
-            {result && <pre className="log">{result.log.join("\n")}</pre>}
+            <button className="btn ghost" onClick={() => { setResult(null); setStep("total"); }}>Back</button>
           </>)}
 
           {step === "done" && result?.ok && (<>
-            <h2>Payment received. Two quick steps left.</h2>
-            <div className="muted">Booking {result.reservationId.replace("mock-res-", "")} · {prop.name} · {fmt(ci!)} – {fmt(co!)}</div>
-            <div className="box">Sign the rental agreement and verify your ID by {new Date(result.verification.deadline).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" })}. The address, door code and wifi are sent after both are done.</div>
-            <pre className="log">{result.log.join("\n")}</pre>
-            <button className="btn ghost" onClick={() => { setStep("stay"); setCi(null); setCo(null); setQuote(null); setResult(null); setAgreed(false); setGuest({ firstName: "", lastName: "", email: "", phone: "" }); }}>Start another booking</button>
+            <h2>Payment received. Your booking needs two more steps.</h2>
+            <div className="muted">Booking {result.bookingRef} · {prop.name} · {fmt(ci!)} – {fmt(co!)}</div>
+            <div className="box"><b>Check your email to sign the rental agreement and verify your ID.</b><br />
+              Please finish both by {result.verification.deadlineText}. The address, door code and Wi-Fi are sent only after both are done.</div>
+            <button className="btn" onClick={() => setResent(true)}>Resend the email</button>
+            {resent && <div className="muted">Test mode: no email is actually sent.</div>}
+            <div className="muted">Didn't get it? Check spam, or email <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a> with your booking number.</div>
+            <button className="btn ghost" onClick={() => { setStep("stay"); setCi(null); setCo(null); setQuote(null); setResult(null); setResent(false); setAgreed(false); setGuest({ firstName: "", lastName: "", email: "", phone: "" }); }}>Start another booking</button>
           </>)}
         </div>
       </main>

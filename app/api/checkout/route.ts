@@ -3,6 +3,7 @@ import { getProperty } from "@/domain/properties";
 import { runCheckoutOnce } from "@/services/checkout";
 import { getAdapters } from "@/server/adapters";
 import { parseCheckout, ValidationError, redact } from "@/server/validate";
+import { guestView } from "@/server/guestView";
 import type { MockFailure } from "@/adapters/mock";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +18,14 @@ export async function POST(req: Request) {
     const b = await req.json();
     const input = parseCheckout(b);
     const { hosp, pay, store, mode } = getAdapters((b.simulate ?? "none") as MockFailure);
+    const bookingRef = input.bookingRef ?? newRef();
     const outcome = await runCheckoutOnce({
-      ...input, property: getProperty(input.property), bookingRef: input.bookingRef ?? newRef(), now: new Date(),
+      ...input, property: getProperty(input.property), bookingRef, now: new Date(),
     }, hosp, pay, store);
     getAdapters("none"); // reset simulated failure
-    return NextResponse.json({ mode, ...outcome }, { headers: noStore });
+    // The internal state log stays on the server; guests only see guestView().
+    console.info("checkout", bookingRef, outcome.state, outcome.log.join(" | "));
+    return NextResponse.json({ mode, ...guestView(outcome, bookingRef) }, { headers: noStore });
   } catch (e) {
     if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400, headers: noStore });
     console.error("checkout error", redact(String((e as Error).message)));
