@@ -9,8 +9,13 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 const noStore = { "Cache-Control": "no-store" };
 
-/** POST only (GET and others get 405 from Next). Not scheduled until CRON_SECRET is set after review. */
-export async function POST(req: Request) {
+/**
+ * Reconciliation runner. GET is what Vercel Cron sends (with Authorization: Bearer $CRON_SECRET); POST is kept for
+ * controlled manual runs. Both go through this one handler (ChatGPT note 91, approved by Oscar Nov 14, 2026).
+ * Authentication is ONLY the Authorization header: never user agent, query string or cookies.
+ * Not scheduled: no cron entry in vercel.json and CRON_SECRET unset until the next review.
+ */
+async function handle(req: Request): Promise<Response> {
   if (!process.env.CRON_SECRET) return NextResponse.json({ error: "Not configured" }, { status: 503, headers: noStore });
   if (!authorized(req.headers.get("authorization"), process.env.CRON_SECRET)) return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: noStore });
   const { ledger } = getLedger(process.env, "reconciler");
@@ -20,3 +25,6 @@ export async function POST(req: Request) {
   console.info("reconcile run", JSON.stringify(counts));
   return NextResponse.json(counts, { headers: noStore });
 }
+
+export const GET = handle;
+export const POST = handle;
