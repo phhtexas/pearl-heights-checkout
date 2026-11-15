@@ -12,6 +12,7 @@ export interface CheckoutRequest {
   guest: { firstName: string; lastName: string; email: string; phone: string };
   bookingRef: string;
   acceptedTotal: number; // the total the guest saw and accepted (cents)
+  paymentMethodId?: string; // Stripe PaymentMethod from the browser (test/live)
   now: Date;
 }
 
@@ -57,6 +58,9 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
     ({ paymentIntentId: pi } = await pay.authorize({
       amount: quote.plan.dueNow, idempotencyKey: `${req.bookingRef}:initial`,
       description: `${req.property.name} ${req.checkIn} to ${req.checkOut} (${req.bookingRef})`, savePaymentMethod: quote.plan.split,
+      paymentMethodId: req.paymentMethodId,
+      customer: { name: `${req.guest.firstName} ${req.guest.lastName}`, email: req.guest.email, phone: req.guest.phone },
+      metadata: { booking_ref: req.bookingRef, property: req.property.key, check_in: req.checkIn, check_out: req.checkOut },
     }));
   } catch (e) {
     step("AUTH_FAILED", `authorization failed: ${(e as Error).message}`);

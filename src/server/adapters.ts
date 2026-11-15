@@ -1,6 +1,7 @@
 import { MockHospitable, MockPayments, MockFailure } from "../adapters/mock";
 import { HospitableAdapter, PaymentsAdapter } from "../adapters/types";
 import { BookingStore, MemoryBookingStore } from "../services/bookingStore";
+import { StripePayments, assertTestKeys } from "../adapters/stripe";
 
 /**
  * Picks adapters by CHECKOUT_MODE. Only "mock" exists today; "test" (Stripe test mode + Hospitable)
@@ -14,7 +15,7 @@ import { BookingStore, MemoryBookingStore } from "../services/bookingStore";
  */
 type MockSet = { hosp: MockHospitable; pay: MockPayments; store: BookingStore; used: number };
 /** One isolated mock calendar + payments per tester session (ChatGPT note 73), capped in memory. */
-const g = globalThis as unknown as { __phh?: Map<string, MockSet> };
+const g = globalThis as unknown as { __phh?: Map<string, MockSet>; __stripe?: StripePayments };
 const MAX_SESSIONS = 200;
 
 function mockSet(session: string): MockSet {
@@ -52,10 +53,22 @@ export function getAdapters(failure: MockFailure = "none", env: NodeJS.ProcessEn
     const errs = launchGateErrors(env);
     if (errs.length) throw new Error("Live mode blocked: " + errs.join(" "));
   }
-  if (mode !== "mock") throw new Error(`CHECKOUT_MODE=${mode} is not implemented yet; use mock.`);
+  if (mode !== "mock" && mode !== "test") throw new Error(`CHECKOUT_MODE=${mode} is not implemented yet; use mock or test.`);
+  // Hospitable is still mocked in both modes (Oscar, Nov 14: real calendar later, fake bookings), so the mock guard applies.
   if (env.NODE_ENV === "production" && env.ALLOW_MOCK !== "true") throw new Error("Mock adapters are not allowed in production.");
   const set = mockSet(session);
   set.hosp.failure = failure;
   set.pay.failure = failure;
+  if (mode === "test") {
+    g.__stripe ??= StripePayments.fromEnv(env); // refuses anything but test keys
+    return { hosp: set.hosp as HospitableAdapter, pay: g.__stripe as PaymentsAdapter, store: set.store, mode };
+  }
   return { hosp: set.hosp as HospitableAdapter, pay: set.pay as PaymentsAdapter, store: set.store, mode };
+}
+
+/** What the browser needs to render the payment form. Only the publishable key is ever sent. */
+export function publicConfig(env: NodeJS.ProcessEnv = process.env): { mode: string; publishableKey?: string } {
+  const mode = env.CHECKOUT_MODE ?? "mock";
+  if (mode === "test") return { mode, publishableKey: assertTestKeys(env).publishable };
+  return { mode };
 }

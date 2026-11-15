@@ -20,7 +20,13 @@ export interface HospitableAdapter {
 
 export interface PaymentsAdapter {
   /** Authorize only (manual capture). Idempotent on `idempotencyKey`. */
-  authorize(input: { amount: Cents; idempotencyKey: string; description: string; savePaymentMethod: boolean }): Promise<{ paymentIntentId: string }>;
+  authorize(input: {
+    amount: Cents; idempotencyKey: string; description: string; savePaymentMethod: boolean;
+    /** Stripe PaymentMethod created in the browser by the Payment Element (test/live only). */
+    paymentMethodId?: string;
+    customer?: { name: string; email: string; phone?: string };
+    metadata?: Record<string, string>;
+  }): Promise<{ paymentIntentId: string }>;
   capture(paymentIntentId: string): Promise<void>;
   voidAuthorization(paymentIntentId: string): Promise<void>;
 }

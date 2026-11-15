@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { StripeCard, type CreatePm } from "./StripeCard";
 import { PROPERTIES } from "@/domain/properties";
 import type { Quote } from "@/domain/quote";
 import { formatChicagoDate } from "@/domain/time";
@@ -8,6 +9,7 @@ type Day = { date: string; available: boolean; price: number; minStay: number };
 const money = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 const fmt = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 const SIMS = [["none", "Everything works"], ["dates_taken", "Dates booked on Airbnb during checkout"], ["card_declined", "Card declined"], ["reservation_fails", "Hospitable reservation fails"], ["capture_fails", "Payment capture fails"]] as const;
+const CARD_SIMS = ["card_declined", "capture_fails"]; // in Stripe test mode, use Stripe's test cards instead
 
 export default function Checkout() {
   const [step, setStep] = useState<"stay" | "total" | "pay" | "done">("stay");
@@ -27,6 +29,11 @@ export default function Checkout() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [resent, setResent] = useState(false);
+  const [cfg, setCfg] = useState<{ mode: string; publishableKey?: string }>({ mode: "mock" });
+  const createPm = useRef<CreatePm | null>(null);
+  const onCardReady = useCallback((fn: CreatePm | null) => { createPm.current = fn; }, []);
+  const stripeMode = cfg.mode === "test" && !!cfg.publishableKey;
+  useEffect(() => { fetch("/api/config").then((r) => r.json()).then(setCfg).catch(() => undefined); }, []);
   const prop = PROPERTIES.find((p) => p.key === home)!;
 
   useEffect(() => { fetch(`/api/calendar?property=${home}`).then((r) => r.json()).then((j) => setDays(j.days ?? [])); }, [home, result]);
@@ -56,7 +63,14 @@ export default function Checkout() {
   async function pay() {
     if (now > expiresAt) { await getQuote(); setErr("Your price hold expired, so we rechecked the price. Please review your total."); return; }
     setErr(""); setBusy(true);
-    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, guest, agreed, acceptedTotal: quote!.total, simulate: sim }) });
+    let paymentMethodId: string | undefined;
+    if (stripeMode) {
+      if (!createPm.current) { setBusy(false); setErr("The payment form is still loading. Please try again."); return; }
+      const pm = await createPm.current({ name: `${guest.firstName} ${guest.lastName}`.trim(), email: guest.email, phone: guest.phone });
+      if (pm.error || !pm.id) { setBusy(false); setErr(pm.error ?? "Please check your card details."); return; }
+      paymentMethodId = pm.id;
+    }
+    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, guest, agreed, acceptedTotal: quote!.total, simulate: sim, paymentMethodId }) });
     const j = await r.json(); setBusy(false);
     if (!r.ok) { setErr(j.error); return; }
     if (j.ok) { setResult(j); setStep("done"); return; }
@@ -141,12 +155,15 @@ export default function Checkout() {
             {(["firstName", "lastName", "email", "phone"] as const).map((k) => (
               <label key={k}><div className="lbl">{{ firstName: "First name", lastName: "Last name", email: "Email", phone: "Mobile phone" }[k]}</div>
                 <input className="f" value={guest[k]} onChange={(e) => setGuest({ ...guest, [k]: e.target.value })} /></label>))}
-            <div className="box sand">Stripe's secure payment form goes here. In test mode nothing is charged.</div>
+            {stripeMode
+              ? <><div className="lbl">Card</div><StripeCard publishableKey={cfg.publishableKey!} amount={quote.plan.dueNow} saveForLater={quote.plan.split} onReady={onCardReady} />
+                  <div className="muted">Stripe test mode: use card 4242 4242 4242 4242, any future date, any CVC. Decline test: 4000 0000 0000 0002.</div></>
+              : <div className="box sand">Stripe's secure payment form goes here. In test mode nothing is charged.</div>}
             <div className="box">After payment you'll sign the rental agreement and verify your ID. The address, door code and Wi-Fi are sent only after both are done.</div>
             <label className="chk"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
               <span>I'm at least 25 and will stay at the home. I agree to the <a href="https://pearlheightshomes.com/house-rules/" target="_blank">house rules</a> and <a href="https://pearlheightshomes.com/terms-and-conditions/" target="_blank">cancellation policy</a>, and I authorize Pearl Heights Homes to charge {money(quote.plan.dueNow)} today{quote.plan.split ? ` and ${money(quote.plan.scheduled!.amount)} on ${formatChicagoDate(new Date(quote.plan.scheduled!.chargeAt))}` : ""}.</span></label>
             <label><div className="lbl">Test: simulate</div>
-              <select className="f" value={sim} onChange={(e) => setSim(e.target.value)}>{SIMS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+              <select className="f" value={sim} onChange={(e) => setSim(e.target.value)}>{SIMS.filter(([v]) => !(stripeMode && CARD_SIMS.includes(v))).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
             {err && <div className="err">{err}</div>}
             {result && !result.ok && <div className="alert">{result.guestMessage}</div>}
             <div className="muted">{timer}</div>
