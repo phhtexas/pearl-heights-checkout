@@ -107,3 +107,16 @@ describe("refunds (Nov 15 rules)", () => {
     expect(r.refund).toBe(q2.total);
   });
 });
+
+describe("check-in day (Terms: waiver refunded only before the check-in date)", () => {
+  const ci = "2027-01-05";
+  const q = quoteAt(ci, "2027-01-07", NOW);
+  it("11:59:59 PM the day before: waiver refunded", () => {
+    const r = computeRefund({ quote: q, checkIn: ci, bookedAt: NOW, cancelledAt: new Date("2027-01-05T05:59:59Z"), paidSoFar: q.total, reason: "guest" });
+    expect(r.tier).toBe("under_14"); expect(r.refund).toBe(q.protection);
+  });
+  it("12:00 AM CT on check-in day: nothing refundable", () => {
+    const r = computeRefund({ quote: q, checkIn: ci, bookedAt: NOW, cancelledAt: new Date("2027-01-05T06:00:00Z"), paidSoFar: q.total, reason: "guest" });
+    expect(r.tier).toBe("check_in_day"); expect(r.refund).toBe(0);
+  });
+});

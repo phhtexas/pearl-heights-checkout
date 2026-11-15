@@ -237,6 +237,12 @@ export class DbLedger implements Ledger {
     await this.db.tx(st);
   }
 
+  /** Note 135: record that the 15-minute price lock was honored. No guest PII. */
+  async auditPriceLock(bookingId: string, a: { bookingRef: string; quoteId: string; locked: number; live: number; absorbed: number; at: Date }): Promise<void> {
+    await this.db.query(`INSERT INTO audit_log (booking_id, actor, action, after) VALUES ($1, 'system', 'price_lock_honored', $2)`,
+      [bookingId, JSON.stringify({ booking_ref: a.bookingRef, quote_id: a.quoteId, locked_total: a.locked, live_total: a.live, absorbed: a.absorbed, at: a.at.toISOString() })]);
+  }
+
   /** Best effort: a booking that ended without any payment or reservation is closed. */
   async closeBooking(bookingId: string, state: string): Promise<void> {
     await this.db.query(`UPDATE bookings SET state = $2, updated_at = now() WHERE id = $1 AND confirmed_at IS NULL`, [bookingId, state]).catch(() => undefined);

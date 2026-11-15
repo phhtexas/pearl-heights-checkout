@@ -237,3 +237,26 @@ describe("P0: migration lock race (note 85)", () => {
     expect(await runMigrations(d, undefined, () => {})).toEqual(loadMigrations().map((m) => m.file));
   });
 });
+
+describe("price lock audit (note 135)", () => {
+  it("records locked/live/absorbed with quote id and booking ref in audit_log, no guest PII", async () => {
+    const h = new MockHospitable(), p = new MockPayments();
+    const { saved, quote, req } = await setup(ledger, h);
+    const locked = { ...quote, total: quote.total - 1000, plan: { ...quote.plan, dueNow: quote.plan.dueNow - 500, scheduled: { ...quote.plan.scheduled!, amount: quote.plan.scheduled!.amount - 500 } } };
+    const out = await bookingAttempt(ledger, saved, { ...req("PH-LCK001"), payPlan: "split", acceptedTotal: locked.total, lockedQuote: locked }, h, p, fast);
+    expect(out.ok).toBe(true);
+    const rows = await db.query<any>(`SELECT after FROM audit_log WHERE action = 'price_lock_honored'`);
+    expect(rows.length).toBe(1);
+    const a = typeof rows[0].after === "string" ? JSON.parse(rows[0].after) : rows[0].after;
+    expect(a).toMatchObject({ booking_ref: "PH-LCK001", quote_id: saved.id, locked_total: locked.total, live_total: quote.total, absorbed: 1000 });
+    expect(JSON.stringify(a)).not.toMatch(/@|Guest|2105550100/);
+  });
+  it("a failed audit write never blocks the booking", async () => {
+    const h = new MockHospitable(), p = new MockPayments();
+    const { saved, quote, req } = await setup(ledger, h);
+    const locked = { ...quote, total: quote.total - 1000 };
+    (ledger as any).auditPriceLock = async () => { throw new Error("db down"); };
+    const out = await bookingAttempt(ledger, saved, { ...req("PH-LCK002"), payPlan: "split", acceptedTotal: locked.total, lockedQuote: locked }, h, p, fast);
+    expect(out.ok).toBe(true);
+  });
+});

@@ -20,7 +20,9 @@ export interface CheckoutRequest {
 }
 
 export type CheckoutOutcome =
-  | { ok: true; state: BookingState; quote: Quote; reservationId: string; paymentIntentId: string; verification: VerificationDeadline; log: string[] }
+  | { ok: true; state: BookingState; quote: Quote; reservationId: string; paymentIntentId: string; verification: VerificationDeadline; log: string[];
+      /** Set when the 15-minute price lock was honored over a different live price (note 135: persisted to audit_log). */
+      priceLock?: { locked: number; live: number; absorbed: number } }
   | { ok: false; state: BookingState; reason: "price_changed" | "dates_taken" | "card_declined" | "authentication_required" | "unsupported_method" | "reservation_failed" | "capture_failed" | "processing" | "retryable_error";
       guestMessage: string; newTotal?: number; log: string[]; reconcile?: Reconcile };
 
@@ -83,10 +85,12 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
   } catch (e) {
     throw new PreSideEffectError(`recheck failed (${code(e)})`);
   }
+  let priceLock: { locked: number; live: number; absorbed: number } | undefined;
   // 15-minute price lock: a live price change inside the lock does not change what the guest pays.
   if (quote.total !== req.acceptedTotal && req.lockedQuote && req.lockedQuote.total === req.acceptedTotal
       && req.lockedQuote.plan.split === quote.plan.split) {
     log.push(`price_lock_honored locked=${req.lockedQuote.total} live=${quote.total} absorbed=${quote.total - req.lockedQuote.total}`);
+    priceLock = { locked: req.lockedQuote.total, live: quote.total, absorbed: quote.total - req.lockedQuote.total };
     quote = req.lockedQuote;
   }
   if (quote.total !== req.acceptedTotal) {
@@ -175,5 +179,5 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
   }
   step("CAPTURE_OK", "payment captured; send confirmation + receipt; schedule verification jobs");
 
-  return { ok: true, state, quote, reservationId, paymentIntentId: pi, verification: verificationDeadline(req.now, req.checkIn), log };
+  return { ok: true, state, quote, reservationId, paymentIntentId: pi, verification: verificationDeadline(req.now, req.checkIn), log, ...(priceLock ? { priceLock } : {}) };
 }

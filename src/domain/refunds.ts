@@ -1,6 +1,6 @@
 import { Cents, roundCents } from "./money";
 import { flexibleCutoff, isNonRefundableBooking, Quote } from "./quote";
-import { addDaysISO } from "./time";
+import { addDaysISO, chicagoInstant } from "./time";
 import { checkInInstant, hoursBetween } from "./time";
 
 /**
@@ -24,7 +24,7 @@ export interface RefundInput {
 }
 
 export interface RefundResult {
-  tier: "full_no_fee" | "grace_24h" | "non_refundable" | "30_plus" | "14_to_29" | "under_14" | "after_check_in" | "nonpayment";
+  tier: "full_no_fee" | "grace_24h" | "non_refundable" | "30_plus" | "14_to_29" | "under_14" | "check_in_day" | "after_check_in" | "nonpayment";
   retained: Cents;
   refund: Cents;
   processingFee: Cents;
@@ -39,6 +39,9 @@ export const GRACE_HOURS = 24;
 /** Below this many days before check-in, nothing is refunded except the damage waiver. */
 export const HALF_REFUND_DAYS = 14;
 /** From this instant the 50% tier ends and only the damage waiver is refunded. */
+/** Waivo refunds a waiver only on a request received before the check-in DATE (Terms section 2): from 12:00 AM CT
+ *  on check-in day nothing is refundable, waiver included. */
+export const checkInDayStart = (checkIn: string): Date => chicagoInstant(checkIn, 0);
 export const halfRefundCutoff = (checkIn: string): Date => checkInInstant(addDaysISO(checkIn, -HALF_REFUND_DAYS));
 
 export function computeRefund(i: RefundInput): RefundResult {
@@ -72,5 +75,6 @@ export function computeRefund(i: RefundInput): RefundResult {
   // 30+ tier ends at the exact instant the second payment is charged (4:00 PM CT, 30 days out).
   if (i.cancelledAt.getTime() < flexibleCutoff(i.checkIn).getTime()) return result("30_plus", fee);
   if (i.cancelledAt.getTime() < halfRefundCutoff(i.checkIn).getTime()) return result("14_to_29", Math.round(totalExProtection / 2));
+  if (i.cancelledAt.getTime() >= checkInDayStart(i.checkIn).getTime()) return result("check_in_day", paidSoFar);
   return result("under_14", totalExProtection);
 }

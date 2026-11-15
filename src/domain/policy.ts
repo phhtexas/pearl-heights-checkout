@@ -1,5 +1,5 @@
 import { flexibleCutoff, isNonRefundableBooking, NON_REFUNDABLE_WINDOW_DAYS } from "./quote";
-import { GRACE_HOURS, HALF_REFUND_DAYS, halfRefundCutoff, PROCESSING_FEE_RATE, RefundResult } from "./refunds";
+import { checkInDayStart, GRACE_HOURS, HALF_REFUND_DAYS, halfRefundCutoff, PROCESSING_FEE_RATE, RefundResult } from "./refunds";
 import { addHours, checkInInstant, formatChicagoDateTime } from "./time";
 
 /**
@@ -18,7 +18,13 @@ export interface StayPolicy { nonRefundable: boolean; rows: PolicyRow[]; footer:
 
 const pct = Math.round(PROCESSING_FEE_RATE * 100);
 
-export function stayPolicy(checkIn: string, bookedAt: Date): StayPolicy {
+/**
+ * @param bookedAt the actual booking time (confirmation, portal, emails) or, before payment, the quote time.
+ * @param opts.exactGrace false before payment (note 135): the 24-hour end is shown as "within 24 hours after booking",
+ *   because the real booked_at is only known once payment succeeds.
+ */
+export function stayPolicy(checkIn: string, bookedAt: Date, opts: { exactGrace?: boolean } = {}): StayPolicy {
+  const exactGrace = opts.exactGrace ?? true;
   const footer = [
     "If we cancel because the rental agreement and ID check aren't completed in time or don't match, everything you paid is refunded.",
     "All times are Central Time, measured against the 4:00 PM check-in.",
@@ -32,15 +38,18 @@ export function stayPolicy(checkIn: string, bookedAt: Date): StayPolicy {
     };
   }
   const grace = addHours(bookedAt, GRACE_HOURS);
-  const flex = flexibleCutoff(checkIn), half = halfRefundCutoff(checkIn), ci = checkInInstant(checkIn);
+  const flex = flexibleCutoff(checkIn), half = halfRefundCutoff(checkIn), day = checkInDayStart(checkIn), ci = checkInInstant(checkIn);
   const row = (tier: PolicyRow["tier"], until: Date | undefined, when: string, outcome: string): PolicyRow =>
     ({ tier, when, outcome, ...(until ? { until: until.toISOString(), untilText: formatChicagoDateTime(until) } : {}) });
   const rows: PolicyRow[] = [
-    row("grace_24h", grace, `Within ${GRACE_HOURS} hours of booking`, "Everything back, no fee."),
+    exactGrace
+      ? row("grace_24h", grace, `Within ${GRACE_HOURS} hours of booking`, "Everything back, no fee.")
+      : { tier: "grace_24h", until: grace.toISOString(), when: `Within ${GRACE_HOURS} hours after booking`, outcome: "Everything back, no fee." },
   ];
   // Later tiers only appear if they still start after the grace window ends.
   if (flex > grace) rows.push(row("30_plus", flex, "30 days or more before check-in", `Everything back minus a ${pct}% processing fee. Any scheduled payment is cancelled.`));
   if (half > grace) rows.push(row("14_to_29", half, `${HALF_REFUND_DAYS} to 29 days before check-in`, "50% of the stay back, plus the damage waiver."));
-  rows.push(row("under_14", ci, `Less than ${HALF_REFUND_DAYS} days before check-in`, "No refund except the damage waiver."));
+  rows.push(row("under_14", day, `Less than ${HALF_REFUND_DAYS} days before check-in, until the day before`, "No refund except the damage waiver."));
+  rows.push(row("check_in_day", ci, "On check-in day", "No refund."));
   return { nonRefundable: false, rows, footer };
 }

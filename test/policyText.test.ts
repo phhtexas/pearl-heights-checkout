@@ -40,3 +40,16 @@ describe("policy text is generated from the refund engine", () => {
     });
   }
 });
+
+describe("before payment the 24-hour end is not shown as an exact time (note 135)", () => {
+  it("quote-time policy says 'within 24 hours after booking' with no clock time", () => {
+    const p = stayPolicy("2027-01-05", new Date("2026-11-15T17:00:00Z"), { exactGrace: false });
+    expect(p.rows[0]!.when).toBe("Within 24 hours after booking");
+    expect(p.rows[0]!.untilText).toBeUndefined();
+    expect(p.rows[1]!.untilText).toContain("December 6, 2026, 4:00 PM CT");
+  });
+  it("after booking the exact deadline comes from booked_at", () => {
+    const p = stayPolicy("2027-01-05", new Date("2026-11-15T19:07:00Z"));
+    expect(p.rows[0]!.untilText).toBe("Monday, November 16, 2026, 1:07 PM CT");
+  });
+});
