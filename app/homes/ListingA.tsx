@@ -241,9 +241,9 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
       <main className="A-main">
         <section className="A-intro">
           <h1>{home.title}</h1>
-          <div className="A-sub">{home.neighborhood}, San Antonio</div>
+          <div className="A-sub">{home.neighborhood}, San Antonio · Entire home</div>
           {home.rating && <a className="A-rating" href="#reviews"><Icon name="star" size={14} />{home.rating.value.toFixed(2)} · {home.rating.count} reviews</a>}
-          <div className="A-cap">Entire home · {home.capacity.bedrooms} bedrooms · {home.capacity.beds} beds · {home.capacity.baths} baths · sleeps {home.capacity.guests}</div>
+          <div className="A-cap">{home.capacity.bedrooms} bedrooms · {home.capacity.beds} beds · {home.capacity.baths} baths · sleeps {home.capacity.guests}</div>
         </section>
 
         <section className="A-host">
