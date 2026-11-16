@@ -208,3 +208,5 @@ html { scroll-padding-bottom: 96px; }
   .L-outline { width: auto; display: inline-flex; padding: 0 22px; }
   .L-badges { display: none; }
 }
+.L-rooms, .L-reviews { scroll-padding-inline: 20px; }
+@media (min-width: 960px) { .L-rooms, .L-reviews { scroll-padding-inline: 0; } }
