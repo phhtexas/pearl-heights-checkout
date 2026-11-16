@@ -36,8 +36,8 @@ const AV_COLORS = ["#c9b8a3", "#a9b9a6", "#b3b8c9", "#c9a9a9", "#b9adc4", "#a7c0
 const DOTS = 5;
 /** Note 150: compact, factual trust proof beside the booking action (approved wording). */
 const TRUST = "Airbnb Superhosts · 4.98 across 460 Airbnb reviews · Secure payment by Stripe";
-/** Business contact for the footer, as Oscar gave it in chat (Nov 16, 2026). */
-const CONTACT = { email: "bookings@thepearlheightshomes.com", phone: "(210) 400-2540", tel: "+12104002540", place: "San Antonio, TX" }; // the reference shows five dots; with more photos they track position along the set
+/** Business contact for the footer; Oscar confirmed both in chat (Nov 16, 2026, ~11:40 AM CT), incl. the "thepearlheightshomes.com" domain. */
+const CONTACT = { email: "bookings@thepearlheightshomes.com", phone: "(210) 400-2540", tel: "+12104002540", place: "San Antonio, TX" };
 
 /** Photo tour groups, matched from each photo's description (first match wins). Labels describe the space, not a specific bedroom. */
 const TOUR: [string, RegExp][] = [
