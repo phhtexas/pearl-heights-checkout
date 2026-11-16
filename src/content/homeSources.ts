@@ -102,6 +102,7 @@ export const HOME_SOURCES: Record<string, { sources: { fact: string; source: str
       { fact: "Review quotes (4, the 5-star ones), names, months", source: "Hospitable review records = Airbnb reviews, word for word, Nov 16, 2026 — Oscar to approve" },
       { fact: "Amenities (gas stove, upstairs mini fridge, grill, sun loungers, arcade, shuffleboard, safe, ethernet, baby gates, window guards, luggage drop-off, accessible parking spot)", source: "Airbnb amenities + accessibility, Nov 16, 2026; Hospitable description" },
       { fact: "Parking: 2 cars inside the gate, 1 outside, free street parking", source: "Hospitable/Airbnb description" },
+      { fact: "Cameras record audio (Indianola, Claywell)", source: "Oscar (chat, Nov 16, 2026)" },
       { fact: "Cameras: 4 exterior (doorbell, driveway, 2 along the sides facing the street); none inside", source: "Airbnb 'Home safety', host's own wording; Oscar (chat, Nov 16): no indoor cameras" },
       { fact: "Check-in 4 PM / check-out 10 AM; keypad", source: "Hospitable + Airbnb 'Things to know'" },
       { fact: "House rules, 8 guests, quiet hours, checkout steps", source: "Hospitable rules + checkout tasks; Airbnb 'Up to 8 overnight guests'" },
@@ -114,7 +115,6 @@ export const HOME_SOURCES: Record<string, { sources: { fact: string; source: str
     missing: [
       "Room-card photos: which bedroom photo is which bedroom is a best guess.",
       "Commercial photography rule: not stated for this home; not shown.",
-      "Whether exterior cameras record audio: not stated; not shown.",
     ],
   },
   claywell: {
