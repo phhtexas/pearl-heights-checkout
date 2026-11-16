@@ -1,0 +1,65 @@
+/**
+ * Where every visible fact on each home page comes from, and what is still missing.
+ * Kept apart from homes.ts so these internal notes never ship to the browser (homes.ts is used by client components).
+ * Server-only: import it from scripts/tests, never from a "use client" file.
+ */
+export const HOME_SOURCES: Record<string, { sources: { fact: string; source: string }[]; missing: string[] }> = {
+  "736": {
+    sources: [
+      { fact: "Title, capacity (10 guests, 5 bedrooms, 5 beds, 3.5 baths), beds per room", source: "Hospitable property API + Airbnb listing, Nov 15, 2026" },
+      { fact: "Neighborhood 'Tobin Hill'", source: "Airbnb listing 'Where you'll be', Nov 15, 2026" },
+      { fact: "Photos (71) and their order", source: "Hospitable direct-booking gallery; alt text written by Claude from the photos" },
+      { fact: "Rating 4.97 from 78 ratings; category averages", source: "Airbnb listing (4.97 · 78 reviews) and Hospitable review records (78 rated reviews, avg 4.974)" },
+      { fact: "Review quotes (6), names, months", source: "Airbnb reviews as shown on the listing, word for word; approved by Oscar (chat, Nov 15) — attorney to confirm before launch" },
+      { fact: "Amenities incl. 'on request' baby items, appliance details, TV/streaming, A/C types, accessible parking spot, lit path", source: "Airbnb listing amenities + accessibility panels, Nov 15, 2026 (Hospitable list as cross-check)" },
+      { fact: "Camera details (2 exterior: car gate + doorbell; motion-activated; audio)", source: "Airbnb 'Safety & property', host's own wording" },
+      { fact: "No commercial photography; checkout steps; 'Up to 10 overnight guests' / only reservation guests use the home", source: "Airbnb house rules (re-checked Nov 16, 2026)" },
+      { fact: "Baby items 'on request'", source: "Airbnb amenities: crib, pack 'n play, high chair, baby bath 'available upon request' (re-checked Nov 16, 2026)" },
+      { fact: "House rules, quiet hours, 25+ holder", source: "Hospitable additional rules; Oscar decisions (25+, no parties)" },
+      { fact: "Exterior security cameras, alarms", source: "Airbnb 'Things to know' + Hospitable amenities" },
+      { fact: "Host photo", source: "Hosts' Airbnb profile picture (Hospitable listing data, platform_picture), Nov 16, 2026; requested by Oscar. Self-hosted at /homes/hosts/oscar-fernanda.jpg (note 155)" },
+      { fact: "Per-review 5.0 ratings on the six quoted reviews", source: "Hospitable review records (public rating 5.00 each), Nov 16, 2026" },
+      { fact: "Host facts (Superhost, 4 years, 460 reviews 4.98, languages, bio)", source: "Airbnb host profile on the listing, Nov 15, 2026" },
+      { fact: "Response time 'usually within an hour'", source: "Airbnb host details ('Responds within an hour')" },
+      { fact: "3-min walk to the Pearl / 5-min drive to Zoo, DoSeum, Witte; no grill; bathroom layout; 3 cars behind gate; baby items kept at home; stove + A/C issues from May 2026 review fixed", source: "Oscar (chat, Nov 15, 2026)" },
+      { fact: "Area map (approximate point between the home and the Pearl, never the house)", source: "OpenStreetMap tiles; Oscar approved an area map (chat, Nov 15) and the Airbnb-style marker map (chat, Nov 16)" },
+      { fact: "Registration STR-25-13500115", source: "Airbnb listing registration details" },
+      { fact: "Direct-site 25+ reservation-holder rule (differs from Airbnb's 'under 25 with a parent or guardian')", source: "Oscar (chat, Nov 16, 2026): keep the direct rule" },
+      { fact: "No toddler bed (Airbnb description mentions one; bed list does not)", source: "Oscar (chat, Nov 16, 2026)" },
+      { fact: "'Local hosts' badge", source: "Airbnb description ('we're just minutes away'); Oscar confirmed still true (chat, Nov 16, 2026)" },
+      { fact: "Cancellation summary", source: "Generated from the checkout's policy engine (src/domain/policy.ts)" },
+    ],
+    missing: [
+      "Photo room labels from Oscar (alt text is descriptive; rooms aren't labeled).",
+      "Pricing promise vs Airbnb: not shown (no substantiated comparison).",
+    ],
+  },
+  edgewood: {
+    sources: [
+      { fact: "Title, capacity (8 guests, 2 bedrooms, 3 beds, 1 bath), beds per room", source: "Hospitable property API + Airbnb listing, Nov 16, 2026" },
+      { fact: "Neighborhood 'Alamo Heights'; listing highlights", source: "Airbnb listing, Nov 16, 2026" },
+      { fact: "Photos (53 of 56) and their order; primary/guest bedroom captions", source: "Hospitable direct-booking gallery; alt text written by Claude from the photos. Left out: 2 photos showing the house number, 1 of the gate keypad" },
+      { fact: "Rating 4.99 from 239 reviews; category averages", source: "Airbnb listing (4.99 · 239 reviews) and Hospitable review records (239 rated reviews, avg 4.992; categories averaged)" },
+      { fact: "Review quotes (6), names, months, 5.0 each", source: "Hospitable review records = Airbnb reviews, word for word, Nov 16, 2026 — Oscar to approve" },
+      { fact: "Amenities (incl. 770 Mbps WiFi, 65-inch TV and services, Tesla Level 2 charger, 4 driveway spaces, baby items on request / baby bath always, radiant heating, lit path)", source: "Airbnb amenities + accessibility panels, Nov 16, 2026 (Hospitable list as cross-check)" },
+      { fact: "Summary ('newly remodeled', playroom, workspace, backyard)", source: "Hospitable/Airbnb summary + amenities" },
+      { fact: "Location facts (near Broadway; The Quarry and Lincoln Heights a few blocks away; short drive to DoSeum, Zoo, Witte, McNay, the Pearl)", source: "Hospitable neighborhood overview (host's own words)" },
+      { fact: "Check-in 4 PM / check-out 10 AM; smart lock", source: "Hospitable check-in/out times + Airbnb 'Things to know'" },
+      { fact: "House rules, 8 guests, quiet hours, checkout steps", source: "Airbnb house rules + Hospitable rules and checkout tasks, Nov 16, 2026" },
+      { fact: "Camera details, alarms", source: "Airbnb 'Safety & property', host's own wording" },
+      { fact: "Direct-site 25+ reservation-holder rule", source: "Oscar's 736 decision (chat, Nov 16, 2026), applied to this home — Oscar to confirm" },
+      { fact: "'Local hosts' badge", source: "Hospitable interaction preferences ('We live just minutes from the house')" },
+      { fact: "Area map (center set ~0.5 mile from the home, never the house)", source: "OpenStreetMap tiles; same approach Oscar approved for 736" },
+      { fact: "Host block, photo", source: "Shared hosts block (see 736)" },
+      { fact: "Cancellation summary", source: "Generated from the checkout's policy engine (src/domain/policy.ts)" },
+    ],
+    missing: [
+      "City STR registration: none shown on the Airbnb listing (home is in the City of Alamo Heights) — Oscar to confirm; nothing shown until then.",
+      "'Featured in Condé Nast Traveler' (in the Airbnb summary): left out until there's a link or copy of the feature.",
+      "Check-in note in Hospitable says 3:00 PM / 11:00 AM; listing times say 4:00 PM / 10:00 AM. Page uses 4/10 — Oscar to confirm.",
+      "Basketball hoop (mentioned in reviews, not in the amenity list): left out unless Oscar confirms.",
+      "Bathroom details (double vanity, shower only?) beyond '1 full bathroom': not stated.",
+      "Outdoor grill: unknown, not mentioned.",
+    ],
+  },
+};

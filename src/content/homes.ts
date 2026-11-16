@@ -1,6 +1,6 @@
 /**
  * Listing-page content per home (template: 736 Myrtle, ChatGPT notes 138–139).
- * RULE: every visible fact has a source below; anything unverified is listed in `missing` and not shown as fact.
+ * RULE: every visible fact has a source in homeSources.ts (kept out of the browser bundle); anything unverified is listed in `missing` and not shown as fact.
  * Sources: H = Hospitable property API (Nov 15, 2026); A = the home's Airbnb listing page (read Nov 15, 2026);
  * R = Hospitable review records (Airbnb reviews); O = Oscar's decisions in chat.
  */
@@ -13,6 +13,8 @@ export interface HomeContent {
   capacity: { guests: number; bedrooms: number; beds: number; baths: number };
   photoBase: string;
   photos: { id: string; alt: string }[];
+  /** Photo for each sleeping card, same order as `sleeping` (ids from `photos`). */
+  roomPhotos: string[];
   rating?: { value: number; count: number; source: string; categories: [string, number][] };
   highlights: { title: string; text: string; source: string }[];
   summary: string;
@@ -26,10 +28,18 @@ export interface HomeContent {
   host: { names: string; since: string; facts: string[]; bio: string; photo?: string };
   thingsToKnow: { title: string; items: string[] }[];
   faq: { q: string; a: string }[];
-  registration: string;
-  sources: { fact: string; source: string }[];
-  missing: string[];
+  /** City STR registration, only when the listing shows one. */
+  registration?: string;
 }
+
+/** Shared host block (Airbnb host profile, Nov 15–16, 2026). */
+const HOSTS: HomeContent["host"] = {
+  names: "Oscar & Fernanda",
+  photo: "/homes/hosts/oscar-fernanda.jpg",
+  since: "Hosting for 4 years",
+  facts: ["Airbnb Superhosts", "4.98 average across 460 Airbnb reviews of our homes", "Speak English and Spanish", "Usually reply within an hour"],
+  bio: "Hello! We’re a family of four who love to travel and experience new places and cultures. With a 5-year-old girl and a 2-year-old boy, we know the importance of comfort and hospitality. As both guests and hosts, we value cleanliness, thoughtful touches, and creating a welcoming space. We set up our homes to feel like places we’d want our own family to stay in—cozy, well-equipped, and inviting. Our goal is to ensure every stay feels like home!",
+  };
 
 export const HOMES: Record<string, HomeContent> = {
   "736": {
@@ -113,6 +123,10 @@ export const HOMES: Record<string, HomeContent> = {
   { id: "D8iKlxQv3zSa71sYsnhRUgEQRwwkGHN6hUK9L7qX", alt: "Bonus room sliding door to the patio" },
   { id: "cLLecDHJNPl6RSh1SjKnGN9xYY8aNujzydZbFiLL", alt: "Bonus room exterior lit at night" }
     ],
+    roomPhotos: [
+      "AMyRewULeO20lFQFkRFWrNe7c3vr7OYCIKAQATmP", "jZCUKfTCluAkxsNcIkwKlg4tbbcWnFByKScze6A8", "c4KYo3CgFK4Kkh12P5auyXNIqTYFAzS3ihZCkw5F",
+      "QSN5MvVxsp5HP1pUba2bAbXmVYaHMIrBTO2jMvn3", "eMTLaWUswh02vPrOIB3bXluq8osxAB5Weit9PXTi", "1bi1pgTc4hSHL1561okYKpWcH4kuKZaTvokSvrJX",
+    ],
     rating: {
       value: 4.97, count: 78, source: "ratings from Airbnb guests",
       categories: [["Cleanliness", 4.99], ["Accuracy", 4.97], ["Check-in", 4.99], ["Communication", 4.99], ["Location", 4.99], ["Value", 4.95]],
@@ -159,13 +173,7 @@ export const HOMES: Record<string, HomeContent> = {
       { name: "Liliana", when: "September 2026", rating: 5, text: "This house was perfection! 😍 Besides being absolutely beautiful, it had everything we could possibly need while on our trip. We were a big family of 8, and we all fit perfectly and had plenty of space. Everything was also very clean and well taken care of. Even the little details were great, like the shampoo, conditioner, body wash, and lotion they provided. They were actually really good! The backyard with the string lights was exactly what we were looking for and made our evenings there even more special. Communication with the hosts was also top-notch. They were very responsive and helpful throughout our stay. We truly enjoyed our stay and would definitely stay here again! ❤️" },
       { name: "Savanna", when: "July 2026", rating: 5, text: "This was our 2nd year in a row to stay here! We were a group of 10, with 4 kids, it was the best set up which is why we booked for the 2nd time. It is 20 minutes from seaworld and about 7 minutes from the river walk! Great location and great set up. We all had our individual rooms and felt safe and at home! Oscar and Fernanda were also incredibly fast responding to every question we had. We would absolutely book again for the 3rd time! Thanks for having us!!" },
     ],
-    host: {
-      names: "Oscar & Fernanda",
-      photo: "/homes/hosts/oscar-fernanda.jpg",
-      since: "Hosting for 4 years",
-      facts: ["Airbnb Superhosts", "4.98 average across 460 Airbnb reviews of our homes", "Speak English and Spanish", "Usually reply within an hour"],
-      bio: "Hello! We’re a family of four who love to travel and experience new places and cultures. With a 5-year-old girl and a 2-year-old boy, we know the importance of comfort and hospitality. As both guests and hosts, we value cleanliness, thoughtful touches, and creating a welcoming space. We set up our homes to feel like places we’d want our own family to stay in—cozy, well-equipped, and inviting. Our goal is to ensure every stay feels like home!",
-    },
+    host: HOSTS, // same hosts on every home (Airbnb host profile)
     thingsToKnow: [
       { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a door keypad"] },
       { title: "House rules", items: ["Up to 10 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, close all doors, windows and the car gate, and send us a quick message"] },
@@ -181,33 +189,129 @@ export const HOMES: Record<string, HomeContent> = {
       { q: "Is there parking?", a: "Yes: free parking behind the car gate for up to 3 cars, plus free street parking. There's an accessible parking spot at least 11 feet wide and a lit path to the entrance." },
     ],
     registration: "STR-25-13500115",
-    sources: [
-      { fact: "Title, capacity (10 guests, 5 bedrooms, 5 beds, 3.5 baths), beds per room", source: "Hospitable property API + Airbnb listing, Nov 15, 2026" },
-      { fact: "Neighborhood 'Tobin Hill'", source: "Airbnb listing 'Where you'll be', Nov 15, 2026" },
-      { fact: "Photos (71) and their order", source: "Hospitable direct-booking gallery; alt text written by Claude from the photos" },
-      { fact: "Rating 4.97 from 78 ratings; category averages", source: "Airbnb listing (4.97 · 78 reviews) and Hospitable review records (78 rated reviews, avg 4.974)" },
-      { fact: "Review quotes (6), names, months", source: "Airbnb reviews as shown on the listing, word for word; approved by Oscar (chat, Nov 15) — attorney to confirm before launch" },
-      { fact: "Amenities incl. 'on request' baby items, appliance details, TV/streaming, A/C types, accessible parking spot, lit path", source: "Airbnb listing amenities + accessibility panels, Nov 15, 2026 (Hospitable list as cross-check)" },
-      { fact: "Camera details (2 exterior: car gate + doorbell; motion-activated; audio)", source: "Airbnb 'Safety & property', host's own wording" },
-      { fact: "No commercial photography; checkout steps; 'Up to 10 overnight guests' / only reservation guests use the home", source: "Airbnb house rules (re-checked Nov 16, 2026)" },
-      { fact: "Baby items 'on request'", source: "Airbnb amenities: crib, pack 'n play, high chair, baby bath 'available upon request' (re-checked Nov 16, 2026)" },
-      { fact: "House rules, quiet hours, 25+ holder", source: "Hospitable additional rules; Oscar decisions (25+, no parties)" },
-      { fact: "Exterior security cameras, alarms", source: "Airbnb 'Things to know' + Hospitable amenities" },
-      { fact: "Host photo", source: "Hosts' Airbnb profile picture (Hospitable listing data, platform_picture), Nov 16, 2026; requested by Oscar. Self-hosted at /homes/hosts/oscar-fernanda.jpg (note 155)" },
-      { fact: "Per-review 5.0 ratings on the six quoted reviews", source: "Hospitable review records (public rating 5.00 each), Nov 16, 2026" },
-      { fact: "Host facts (Superhost, 4 years, 460 reviews 4.98, languages, bio)", source: "Airbnb host profile on the listing, Nov 15, 2026" },
-      { fact: "Response time 'usually within an hour'", source: "Airbnb host details ('Responds within an hour')" },
-      { fact: "3-min walk to the Pearl / 5-min drive to Zoo, DoSeum, Witte; no grill; bathroom layout; 3 cars behind gate; baby items kept at home; stove + A/C issues from May 2026 review fixed", source: "Oscar (chat, Nov 15, 2026)" },
-      { fact: "Area map (approximate point between the home and the Pearl, never the house)", source: "OpenStreetMap tiles; Oscar approved an area map (chat, Nov 15) and the Airbnb-style marker map (chat, Nov 16)" },
-      { fact: "Registration STR-25-13500115", source: "Airbnb listing registration details" },
-      { fact: "Direct-site 25+ reservation-holder rule (differs from Airbnb's 'under 25 with a parent or guardian')", source: "Oscar (chat, Nov 16, 2026): keep the direct rule" },
-      { fact: "No toddler bed (Airbnb description mentions one; bed list does not)", source: "Oscar (chat, Nov 16, 2026)" },
-      { fact: "'Local hosts' badge", source: "Airbnb description ('we're just minutes away'); Oscar confirmed still true (chat, Nov 16, 2026)" },
-      { fact: "Cancellation summary", source: "Generated from the checkout's policy engine (src/domain/policy.ts)" },
+  },
+  edgewood: {
+    key: "edgewood",
+    slug: "edgewood-alamo-heights",
+    title: "Stylish, Charming Home In The Heart of San Antonio",
+    subtitle: "Entire home in Alamo Heights, San Antonio",
+    neighborhood: "Alamo Heights",
+    capacity: { guests: 8, bedrooms: 2, beds: 3, baths: 1 },
+    photoBase: "https://assets.hospitable.com/property_images/921018/",
+    photos: [
+      { id: "3AwyCByNAQ84CAJ5joG6CUIYKuUPgM3ieYszVxj4", alt: "Living room with blue-and-white tiled fireplace and lounge chairs" },
+      { id: "tY1tCBt4WN2H7By1jtORrYdTupnyl8dTmTa5vaBA", alt: "Front of the house at dusk with walkway and lawn" },
+      { id: "jsxHrz1q969b24VWxaft9sqV5JQIeuibReG5kCjA", alt: "Front porch with bistro table and chairs" },
+      { id: "wiqikkrCnBZCyJ9r40UasdjU8xj8C1BIA4rpB0n5", alt: "Living room with sofa, tiled fireplace and wood front door" },
+      { id: "kwc24bDBYWU9smZXIdIL0Ofn169mY2yhlUoxfpKC", alt: "Living room open to the dining area" },
+      { id: "du7WtNoISDNgDihBRkxnCQVE8uOXz3lNeQDp2bFe", alt: "Back patio with sofa, sling chairs and coffee table" },
+      { id: "xVRdvzzgp7l69HsIbCLrLSZoec3GOSBrU7dpYq5D", alt: "Bedroom with bed, ceiling fan and sling chair" },
+      { id: "Z5TOI0AmYd6wR3oQYbP1kdGSkdBNxCFI8nUHt6LQ", alt: "Front porch and entry steps" },
+      { id: "2yWUp0JLIujhk40K9NHi3RT3Eu0HBvJ3CmhEO9wt", alt: "Living room with sofa, two armchairs and tiled fireplace" },
+      { id: "iQzlrJsy15AY9eiKK0PVqZRWz9kNVsMJzu9ohBhb", alt: "Living room TV above the tiled fireplace" },
+      { id: "5fXTEI6FbjNnZuMeavJ4BLsV0r3Rlw4hLWBDMLiQ", alt: "Front porch with welcome mat and fall pumpkins" },
+      { id: "jFC3N0q2YYWi5rI7vwoa5lEjgql8yLFnJJIy0v06", alt: "Dining area with mural wall and wood table" },
+      { id: "Na2jaWAHucthhJMT26smB5airCcRUDaqElF9JlxR", alt: "Front of the house and lawn at dusk" },
+      { id: "kucGJZXhwFYxmNJnoY8nvhspZMpfVxvyaC6tyYdc", alt: "Covered back patio with sectional and lounge chairs" },
+      { id: "5kcgZ7aHbBs4MgdDcixMdB6Mm3BY4zxqw6MP66JK", alt: "Playroom with pink sofa, seen from the living room" },
+      { id: "tC6utY4P9xBfT8pBayYHlCIJBpCrr3pV4NrUHLht", alt: "Console table with lamp" },
+      { id: "WmqGBS1hlzuByujNmgqLv2MBbIby1o8ynDMTKrgZ", alt: "Living room window looking onto the front porch" },
+      { id: "LUudXN0FvFdW1xJdIsA1UgbEhVkovQQYI61IOHjW", alt: "Front porch at dusk with bistro table" },
+      { id: "pwp2FEaOx1fIFSp7wPTS9WXtiQayhpmrTwV6SmtF", alt: "Front porch and house lit at dusk" },
+      { id: "0drrSxfDAdPJN5mGjTwBJSanKlCdQBxl6CiCOYur", alt: "Front porch detail" },
+      { id: "OAxnBVLyN86W88itsAjzgpdaaOcJkfGEOwIhf590", alt: "Kids' table and stools in the playroom" },
+      { id: "EF1kcYIfFJFfobeSPdlVAEr5rwW2bdZ0jHNPjMT2", alt: "Playroom sofa under the windows" },
+      { id: "AHzOvyGtKz2tWQyfgsjYosOvtaX1Qe0ilhxL2ajS", alt: "Playroom with patterned tile floor, pink sofa and cubby shelves" },
+      { id: "XJQuC16KWELowTcSprRspTsWpioC0jCO0Tqi0PWB", alt: "Dining bench cushion and mural wall" },
+      { id: "pwQs69s6DX6gSLTaRALv2NRO2P7cK26lYoj1mA16", alt: "Dining bench with storage baskets and pillows" },
+      { id: "m6XfxPL8gTiuopmp1EpFLJQ3tGdYrMWsO7QpGcTT", alt: "Dining table with plants and mural" },
+      { id: "Gos1S0aChwRJJW0UIaauHkzBRxKuHcVh90nbr5w3", alt: "Bathroom with double vanity and lit mirror" },
+      { id: "0I690INorv4LN6unFCXlv4NhNWMjrP6DZ0iPQB35", alt: "Bathroom double sink with black faucets" },
+      { id: "VTIgHlVxSaTvX3jw3bCepQ85JMJoFuGxCd3AFcHW", alt: "Glass shower with patterned tile" },
+      { id: "U6RAUV0WZ3QooF4ClLqDI29Z92JbetjjWALSWDV3", alt: "Rain shower head" },
+      { id: "rxkzpgv9CtFV7hjsQBwp52rmEOTPjzai1NABUBcI", alt: "Bathroom sink and soap dispenser" },
+      { id: "4EdnBAtWQ3iksTI1Dlmo6s5l2ceqit9l8uBmtbZc", alt: "Primary bedroom with king bed and bench" },
+      { id: "z869jCg1ZtdpY8S9f9EaiA6op6ow0fALZH7dPJl4", alt: "Primary bedroom king bed with pillows" },
+      { id: "BugxBCm1uHMalw22tQ35MZDw6C2wyN6iOw3MCJEy", alt: "Primary bedroom lounge chair" },
+      { id: "QGgFZ7IlO8Wz36Jp2bfrTQxVbeq3O0rSfaV7Nk8T", alt: "King bed with side table and lamp" },
+      { id: "UbupKxJZhzTX2ByKrOOG6VcQqPGnRyfwGLb5jK1R", alt: "Guest bedroom queen bed with Texas pillow" },
+      { id: "7vcKwgiHn8H7Qdge4S6uvXy3tHysMbtcHULm7BIM", alt: "Queen bed with tufted headboard" },
+      { id: "HKfvhkmIMUeo5gvBIt6SBosH4VGLWNwfnIhFtqRY", alt: "Queen bed under a window with lamps" },
+      { id: "uAhJ6USefOlFYb86TxUWV4uQvPc0pgDHghoZm4gn", alt: "Kitchen with retro blue refrigerator and gray cabinets" },
+      { id: "OMgzTORvwdViDWEsjVYOksEJERkteQKnrelnTfe8", alt: "Kitchen refrigerator, open" },
+      { id: "Wje51v8zFPRJDcsm4mpjHv5L7q7sY9ia1l3dEIrD", alt: "Bowl of lemons on the kitchen table" },
+      { id: "ke80ADnllc63drEZcSK5pueTgXRoOlVvRZ5LT7Fb", alt: "Breakfast nook dining bench and table" },
+      { id: "n1JfrKJItwqm2S0acYtcx0yzFT1TeHqCQyZVNdkO", alt: "Coffee station on a wood kitchen counter" },
+      { id: "cyN8yVCIdbnH2b3G8h7OVV5KK2B6GQ2lh6Ch27Cq", alt: "Backyard lawn with string lights at dusk" },
+      { id: "OAmtqYJTOJaKdxx4ivQDQGzmAOJD5a9Rv9ybolXV", alt: "Backyard with Adirondack chairs and string lights" },
+      { id: "3SF6BJiw6b3YH4Cddx0wEh5OMfa9JlLuiXKlbEdF", alt: "Patio seating with coffee table" },
+      { id: "WlFHxp37fpPpmNz3bxHYaNm9UZaiyeP1cuKdULZL", alt: "Driveway and back of the house at dusk" },
+      { id: "slIfkn5THEWfqADGgQlfaeIgWcSvnXp0wxInsxTg", alt: "Patio sofa below a window" },
+      { id: "IELVInz6XIQGFJ9Kqv4oeqKAeEgGdyyDxuM0l0YC", alt: "EV charger: Tesla wall connector" },
+      { id: "BE7jYmEHs1WKBsCQ94EpBS1FyozKe97cJr8reHQh", alt: "Front of the house and lawn" },
+      { id: "tRczqPOrAEpM8f7cnOUmQcy4BlOdWvrFBfczXXsF", alt: "Front porch and lawn" },
+      { id: "lNsZ4R2hb6tjEmB9HeNZGQnYAJzUiHcwiB48vAYg", alt: "Aerial view of the house and neighborhood" },
+      { id: "eUYh4rPWySkC6SaUq9kvcn9YuwmWgHcFgRYQ0ZjZ", alt: "Front walkway and house" }
     ],
-    missing: [
-      "Photo room labels from Oscar (alt text is descriptive; rooms aren't labeled).",
-      "Pricing promise vs Airbnb: not shown (no substantiated comparison).",
+    roomPhotos: ["UbupKxJZhzTX2ByKrOOG6VcQqPGnRyfwGLb5jK1R", "4EdnBAtWQ3iksTI1Dlmo6s5l2ceqit9l8uBmtbZc", "2yWUp0JLIujhk40K9NHi3RT3Eu0HBvJ3CmhEO9wt", "Gos1S0aChwRJJW0UIaauHkzBRxKuHcVh90nbr5w3"],
+    rating: {
+      value: 4.99, count: 239, source: "ratings from Airbnb guests",
+      categories: [["Cleanliness", 5.0], ["Accuracy", 4.99], ["Check-in", 4.98], ["Communication", 4.99], ["Location", 5.0], ["Value", 4.95]],
+    },
+    highlights: [
+      { title: "In Alamo Heights", text: "A quiet Alamo Heights street, a short drive to the Pearl, the River Walk and the McNay Art Museum.", source: "A listing highlights" },
+      { title: "Parking for 4 cars", text: "Free driveway parking for four cars, plus a Level 2 EV charger (Tesla only).", source: "A amenities" },
+      { title: "Ready for little ones", text: "A playroom with toys, books and games and a baby bath at the home; crib, pack 'n play and high chair on request.", source: "A amenities" },
+      { title: "Fenced backyard and patio", text: "A private, fully fenced backyard with a patio and outdoor furniture.", source: "A amenities" },
+    ],
+    summary: "A newly remodeled 2-bedroom home for up to 8 guests on a quiet street in Alamo Heights. Living room with a 65-inch TV and an electric fireplace, a children's playroom, a dedicated workspace with fast WiFi, and a fully fenced backyard with a patio.",
+    sleeping: [
+      { room: "Bedroom 1", beds: "1 queen bed" },
+      { room: "Bedroom 2 (primary)", beds: "1 king bed" },
+      { room: "Living room", beds: "1 sofa bed" },
+      { room: "Bathroom", beds: "1 full bathroom" },
+    ],
+    topAmenities: ["Full kitchen", "Fast WiFi (770 Mbps)", "Dedicated workspace", "Free driveway parking (4 cars)", "Washer and dryer", "Fenced backyard", "EV charger (Tesla)", "Playroom"],
+    amenityGroups: [
+      { group: "Kitchen and dining", items: ["Full kitchen: Samsung stainless steel electric stove and oven, dishwasher", "Refrigerator and freezer", "Microwave, toaster, blender, kettle", "Drip coffee maker, French press and Keurig; coffee", "Pots and pans, oil, salt and pepper", "Dishes, silverware, wine glasses, baking sheet", "Dining table"] },
+      { group: "Family", items: ["Children's playroom with toys, books and games", "Children's books and toys (ages 0–2 and 2–5)", "Mini crib, on request (sheets provided)", "Pack 'n play travel crib, on request", "High chair, on request", "Baby bath (always at the home)", "Children's dinnerware", "Outlet covers", "Board games"] },
+      { group: "Bedroom and laundry", items: ["Cotton hotel-style sheets, extra pillows and blankets", "Room-darkening shades", "Closet and hangers", "Free washer and dryer in the home", "Iron, hair dryer"] },
+      { group: "Bathroom", items: ["Vegan shampoo, conditioner and shower gel", "Towels, soap and toilet paper", "Cleaning products", "Hot water"] },
+      { group: "Entertainment and work", items: ["65-inch HDTV with Netflix, Roku, Amazon Prime Video, premium cable and Fire TV", "Free weights and yoga mat", "Books and life-size games", "Dedicated workspace with laptop stand and surge protector", "Fast WiFi (770 Mbps)"] },
+      { group: "Heating and cooling", items: ["Central air conditioning", "Central and radiant heating", "Ceiling fans", "Electric indoor fireplace"] },
+      { group: "Outdoors, parking and access", items: ["Private, fully fenced backyard", "Private patio and outdoor furniture", "Private entrance", "Free driveway parking for 4 cars", "Free street parking", "Level 2 EV charger (Tesla only)", "Single-level home, no stairs", "Lit path to the guest entrance", "Self check-in with smart lock", "Long stays (28 nights or more) allowed"] },
+      { group: "Safety", items: ["Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher", "First aid kit", "Two exterior security cameras (see Things to know)"] },
+    ],
+    goodFit: ["Families with babies and young kids", "Guests who want a quiet residential street in Alamo Heights", "Remote workers (dedicated workspace, fast WiFi)", "Tesla drivers (Level 2 charger on site)"],
+    notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking or vaping anywhere on the property", "Late-night noise: quiet hours are 10 PM to 8 AM", "Groups who need more than one bathroom", "Guests who don't want exterior security cameras (two outside, recording audio)"],
+    location: {
+      text: "Alamo Heights, a quiet neighborhood near Broadway.",
+      facts: ["A few blocks from The Quarry and Lincoln Heights shopping centers: restaurants, coffee shops and shops", "A short drive to the DoSeum, the San Antonio Zoo, the Witte Museum and the McNay Art Museum", "A short drive to the Pearl and the River Walk"],
+      mapBbox: "-98.4790,29.4845,-98.4560,29.5005", // area center set apart from the home so the circle never pinpoints the house
+      note: "The exact address is shared after your booking is confirmed and your rental agreement and ID check are complete.",
+    },
+    reviews: [
+      { name: "Mark", when: "November 2026", rating: 5, text: "A fantastic home to explore everything San Antonio has to offer. Close to the airport, downtown, highways, great dining and shopping, etc. We found it the perfect size for our family of 5 and would definitely stay again." },
+      { name: "Patti", when: "October 2026", rating: 5, text: "This house was wonderful! Spotless, quiet, great walkable neighborhood and friendly hosts. Can’t wait to stay at the Alamo Heights House again!" },
+      { name: "Danielle", when: "August 2026", rating: 5, text: "Such a great place to stay! The house was perfect for my husband, toddler and I while we visited for a week. It’s nicely decorated and CLEAN - cleanest Airbnb I’ve ever stayed in! The beds and linens were super comfortable and the play area and toys were great for our 1.5 year old. And my husband loved the basketball hoop in the backyard haha. The area is nice and quiet and the hosts are very nice, accommodating and quick to reply to messages. You can tell they put a lot of time and care into making this a nice place for guests - would highly recommend staying here!" },
+      { name: "Austin", when: "June 2026", rating: 5, text: "Oscar & Fernanda were great hosts. Their place was perfect for a quick getaway with our infant. He really enjoyed the playroom and it was great to have a dedicated space for him. All the amenities were as listed and getting in and out was a breeze. Great location for a family vacation, would definitely stay there again for future visits to San Antonio." },
+      { name: "Cheryl", when: "May 2026", rating: 5, text: "Oscar and Fernanda were great hosts!  Very friendly! I love the Alamo Heights house! It is such a cute house! The privacy gate made me feel very safe. The neighborhood is amazing! The house is exactly as described in the listing. I would love to stay here again!" },
+      { name: "Zoe", when: "May 2026", rating: 5, text: "This home was in a great location! Quick trip to HEB, the zoo, great restaurants, and coffee shops. Especially wonderful when traveling with kids as they had a stocked playroom, crib, stool, fenced in backyard/driveway, etc. Would definitely stay here again!" }
+    ],
+    host: HOSTS,
+    thingsToKnow: [
+      { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a smart lock"] },
+      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, used towels on the woven basket in the main bedroom, trash out, lights off, close all doors, windows and the car gate, and send us a quick message"] },
+      { title: "Safety and property", items: ["Two exterior security cameras: one faces the car entry gate and one is the front-door doorbell. They are motion-activated, record audio, and are checked occasionally, not monitored live.", "Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher and first aid kit"] },
+    ],
+    faq: [
+      { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
+      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 3 minutes each). The address, entry steps and WiFi appear in your private stay page once both are done." },
+      { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
+      { q: "Can I pay in two parts?", a: "When check-in is more than 30 days away, you can pay half now and the rest automatically 30 days before check-in, at no extra cost." },
+      { q: "Is the home good for babies and toddlers?", a: "Yes: there's a playroom with toys, books and games, children's dinnerware, outlet covers and a baby bath. A mini crib, pack 'n play and high chair are available on request." },
+      { q: "Is there parking?", a: "Yes: free driveway parking for 4 cars, plus free street parking. There's also a Level 2 EV charger for Teslas." },
+      { q: "How many bathrooms are there?", a: "One full bathroom." },
     ],
   },
 };

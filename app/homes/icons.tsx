@@ -56,7 +56,7 @@ export function iconFor(text: string): string {
   const rules: [RegExp, string][] = [
     [/refund|cancel|non-refundable|booked (more|7)|after that/, "refund"], [/exact dates|amounts/, "check"],
     [/before you leave|dishes/, "home"], [/alarm/, "alarm"], [/first aid|extinguisher/, "first"], [/camera|photograph|filming/, "camera"],
-    [/walk|pearl/, "walk"], [/stairs|single-level|one level/, "stairs"], [/little ones|baby|crib|high chair|pack-n-play/, "baby"],
+    [/walk|pearl/, "walk"], [/alamo heights|neighborhood/, "pin"], [/ev charger|tesla/, "car"], [/stairs|single-level|one level/, "stairs"], [/little ones|baby|crib|high chair|pack-n-play/, "baby"],
     [/backyard|bonus room|outdoor|patio/, "tree"], [/check-in|keypad|self check/, "key"], [/check-out|quiet hours|before 10/, "clock"],
     [/parking|car gate/, "car"], [/wifi|internet/, "wifi"], [/kitchen|coffee|stove|dining/, "kitchen"], [/washer|dryer|laundry/, "washer"],
     [/workspace|work/, "desk"], [/playroom|toys/, "play"], [/guests|reservation holder|25 or older/, "people"], [/parties|events/, "ban"],

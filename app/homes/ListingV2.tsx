@@ -24,14 +24,10 @@ const money = (c: number) => (c / 100).toLocaleString("en-US", { style: "currenc
 const fmt = (iso: string) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric" });
 const addDays = (iso: string, n: number) => new Date(Date.parse(iso + "T00:00:00Z") + n * 86_400_000).toISOString().slice(0, 10);
 const nightsOf = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000);
+const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 const slugify = (t: string) => t.toLowerCase().replace(/[^a-z]+/g, "-");
 const range = (a: string, b: string) => (a.slice(0, 7) === b.slice(0, 7) ? `${fmt(a)}–${Number(b.slice(8))}` : `${fmt(a)} – ${fmt(b)}`);
 
-/** Room-card photos (best match from the gallery; room labels still to be confirmed by Oscar). */
-const ROOM_PHOTOS = [
-  "AMyRewULeO20lFQFkRFWrNe7c3vr7OYCIKAQATmP", "jZCUKfTCluAkxsNcIkwKlg4tbbcWnFByKScze6A8", "c4KYo3CgFK4Kkh12P5auyXNIqTYFAzS3ihZCkw5F",
-  "QSN5MvVxsp5HP1pUba2bAbXmVYaHMIrBTO2jMvn3", "eMTLaWUswh02vPrOIB3bXluq8osxAB5Weit9PXTi", "1bi1pgTc4hSHL1561okYKpWcH4kuKZaTvokSvrJX",
-];
 const AV_COLORS = ["#c9b8a3", "#a9b9a6", "#b3b8c9", "#c9a9a9", "#b9adc4", "#a7c0c2"]; // soft initial circles for reviewers
 const DOTS = 5;
 /** Note 150: compact, factual trust proof beside the booking action (approved wording). */
@@ -49,15 +45,18 @@ const TOUR: [string, RegExp][] = [
   ["Bedrooms", /bed|crib|pillow/i],
   ["Bathrooms", /bath|shower|vanity/i],
   ["Bonus room", /bonus room/i],
+  ["Playroom", /playroom/i],
   ["Kids' play area", /kids|play table/i],
   ["Workspace", /workspace|desk/i],
   ["Laundry", /laundry|washer/i],
   ["Backyard and patio", /backyard|patio|pergola|lawn chairs/i],
+  ["EV charger", /ev charger/i],
   ["Exterior", /front|house|street|side|driveway|entrance|exterior/i],
   ["Neighborhood", /aerial|neighborhood/i],
 ];
 const groupOf = (alt: string) => {
   if (/bonus room/i.test(alt)) return "Bonus room"; // bonus-room shots also mention the lawn or night lighting
+  if (/playroom/i.test(alt)) return "Playroom"; // playroom shots also mention a sofa or kids' table
   if (/aerial|neighborhood/i.test(alt)) return "Neighborhood";
   return TOUR.find(([, re]) => re.test(alt))?.[0] ?? "More photos";
 };
@@ -242,7 +241,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
     const [w, so, e, n] = (home.location.mapBbox ?? "0,0,0,0").split(",").map(Number) as [number, number, number, number];
     return { lat: (so + n) / 2, lon: (w + e) / 2 }; // bbox center: between the home and the Pearl, never the exact house
   }, [home.location.mapBbox]);
-  const roomPhoto = (i: number) => ROOM_PHOTOS[i] ?? ROOM_PHOTOS[0]!;
+  const roomPhoto = (i: number) => home.roomPhotos[i] ?? home.roomPhotos[0] ?? home.photos[0]!.id; // per-home room-card photos (content file)
   const roomAlt = (id: string) => home.photos.find((p) => p.id === id)?.alt ?? "";
 
   return (
@@ -280,7 +279,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
           <h1>{home.title}</h1>
           <div className="V-sub">{home.neighborhood}, San Antonio · Entire home</div>
           {home.rating && <a className="V-rating" href="#reviews"><Icon name="star" size={14} />{home.rating.value.toFixed(2)} · {home.rating.count} reviews</a>}
-          <div className="V-cap">{home.capacity.bedrooms} bedrooms · {home.capacity.beds} beds · {home.capacity.baths} baths · sleeps {home.capacity.guests}</div>
+          <div className="V-cap">{plural(home.capacity.bedrooms, "bedroom")} · {plural(home.capacity.beds, "bed")} · {plural(home.capacity.baths, "bath")} · sleeps {home.capacity.guests}</div>
         </section>
 
         <section className="V-host">
@@ -372,7 +371,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
         <section id="faq" className="V-sec">
           <h2>Questions</h2>
           {home.faq.map((f) => <details key={f.q} className="V-faq"><summary>{f.q}<Icon name="chev" size={18} /></summary><p>{f.a}</p></details>)}
-          <p className="V-note">City short-term rental registration {home.registration}</p>
+          {home.registration && <p className="V-note">City short-term rental registration {home.registration}</p>}
         </section>
 
         <ul className="V-badges" aria-label="Booking direct">
@@ -418,7 +417,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
             <li><span>Terms of service <em>(coming soon)</em></span></li>
             <li><span>Privacy policy <em>(coming soon)</em></span></li>
           </ul>
-          <p className="V-footSmall">City short-term rental registration {home.registration} · © {new Date().getFullYear()} Pearl Heights Homes</p>
+          <p className="V-footSmall">{home.registration && <>City short-term rental registration {home.registration} · </>}© {new Date().getFullYear()} Pearl Heights Homes</p>
         </div>
       </footer>
 

@@ -19,7 +19,7 @@ const scrollLocked = (p) => p.evaluate(() => getComputedStyle(document.body).ove
 
 for (const [label, ctxOpts] of [["phone", devices["iPhone 13"]], ["desktop", { viewport: { width: 1280, height: 900 } }]]) {
   const page = await (await b.newContext(ctxOpts)).newPage();
-  await page.goto(`${BASE}/homes/736-myrtle`); await page.waitForSelector("h1");
+  await page.goto(`${BASE}/homes/${process.env.LISTING_SLUG ?? "736-myrtle"}`); await page.waitForSelector("h1");
   await axe(page, `${label} page`);
 
   // Photo tour via keyboard from the counter button.
@@ -33,7 +33,7 @@ for (const [label, ctxOpts] of [["phone", devices["iPhone 13"]], ["desktop", { v
   for (let i = 0; i < 30; i++) await page.keyboard.press("Tab");
   ok(await inDialog(page), `${label}: Tab x30 stays inside the tour`);
   await page.keyboard.press("Escape");
-  ok(!(await page.locator(".V-tour").count()) && /Photo \d+ of 71/.test(await focusDesc(page)), `${label}: Escape closes the tour and focus returns to the photo counter (${await focusDesc(page)})`);
+  ok(!(await page.locator(".V-tour").count()) && /Photo \d+ of \d+/.test(await focusDesc(page)), `${label}: Escape closes the tour and focus returns to the photo counter (${await focusDesc(page)})`);
 
   // Map full screen.
   await page.focus(".V-expand"); await page.keyboard.press("Enter");
