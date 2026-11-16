@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 export default {
+  // Put CSS in the page itself so the first paint doesn't wait on separate style files (note 150 item 4, slow-4G LCP).
+  experimental: { inlineCss: true },
   images: {
     // Listing photos come from the home's Hospitable direct-booking gallery.
     // Host profile photo comes from the hosts' Airbnb profile (via Hospitable's listing data).
@@ -8,5 +10,6 @@ export default {
       { protocol: "https", hostname: "a0.muscache.com", pathname: "/im/pictures/user/**" },
     ],
     formats: ["image/avif", "image/webp"],
+    qualities: [60, 75],
   },
 };

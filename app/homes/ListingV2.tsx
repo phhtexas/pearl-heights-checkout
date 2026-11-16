@@ -262,7 +262,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
           onClick={() => { setTourFocus(null); open("tour"); }} onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
           {home.photos.map((p, i) => (
             <div className="V-slide" key={p.id} aria-hidden={i !== slide}>
-              {Math.abs(i - slide) <= 2 && <Image src={src(p.id)} alt={p.alt} fill sizes="(min-width: 960px) 1040px, 100vw" priority={i === 0} loading={i === 0 ? undefined : "lazy"} style={{ objectFit: "cover" }} />}
+              {Math.abs(i - slide) <= 2 && <Image src={src(p.id)} alt={p.alt} fill sizes="(min-width: 960px) 1040px, 100vw" quality={60} priority={i === 0} loading={i === 0 ? undefined : "lazy"} style={{ objectFit: "cover" }} />}
             </div>))}
         </div>
         <button className="V-arrow prev" onClick={() => goSlide(slide - 1)} disabled={slide === 0} aria-label="Previous photo"><Icon name="back" size={18} /></button>
