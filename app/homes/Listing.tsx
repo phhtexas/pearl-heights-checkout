@@ -252,7 +252,7 @@ export function Listing({ home, prop, policy }: { home: HomeContent; prop: Prop;
             <section id="reviews" className="L-sec">
               <h2>★ {home.rating.value.toFixed(2)} · {home.rating.count} ratings</h2>
               <p className="muted">Ratings and reviews from Airbnb guests. Reviews are quoted word for word.</p>
-              <div className="L-cats">{home.rating.categories.map(([c, v]) => <div key={c}><span>{c}</span><b>{v.toFixed(1)}</b></div>)}</div>
+              <div className="L-cats">{home.rating.categories.map(([c, v]) => <div key={c}><span>{c}</span><b>{v.toFixed(2)}</b></div>)}</div>
               <div className="L-reviews">{home.reviews.slice(0, 4).map((r) => (
                 <figure key={r.name + r.when} className="L-review"><blockquote>{r.text.length > 240 ? r.text.slice(0, 240).replace(/\s\S*$/, "") + "…" : r.text}</blockquote>
                   <figcaption><b>{r.name}</b> · {r.when} · Airbnb</figcaption></figure>))}</div>
