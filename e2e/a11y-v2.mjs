@@ -48,7 +48,8 @@ for (const [label, ctxOpts] of [["phone", devices["iPhone 13"]], ["desktop", { v
   await page.focus(cta); await page.keyboard.press("Enter");
   await page.waitForSelector('[aria-label="Select dates"]');
   ok(await inDialog(page) && await scrollLocked(page), `${label}: dates dialog takes focus and locks the page`);
-  await page.waitForSelector(".day:not([disabled])");
+  await page.waitForSelector(".day"); // the current month may be fully booked; the dialog is checked either way
+  await page.waitForTimeout(500);
   await axe(page, `${label} dates dialog`);
   await page.keyboard.press("Escape");
   ok(/Check availability/.test(await focusDesc(page)), `${label}: focus returns to Check availability`);

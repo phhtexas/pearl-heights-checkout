@@ -46,10 +46,11 @@ const TOUR: [string, RegExp][] = [
   ["Bathrooms", /bath|shower|vanity/i],
   ["Bonus room", /bonus room/i],
   ["Playroom", /playroom/i],
+  ["Game room", /game room|arcade|shuffleboard/i],
   ["Kids' play area", /kids|play table/i],
   ["Workspace", /workspace|desk/i],
   ["Laundry", /laundry|washer/i],
-  ["Backyard and patio", /backyard|patio|pergola|lawn chairs/i],
+  ["Backyard and patio", /backyard|patio|pergola|lawn chairs|deck/i],
   ["EV charger", /ev charger/i],
   ["Exterior", /front|house|street|side|driveway|entrance|exterior/i],
   ["Neighborhood", /aerial|neighborhood/i],
@@ -57,6 +58,7 @@ const TOUR: [string, RegExp][] = [
 const groupOf = (alt: string) => {
   if (/bonus room/i.test(alt)) return "Bonus room"; // bonus-room shots also mention the lawn or night lighting
   if (/playroom/i.test(alt)) return "Playroom"; // playroom shots also mention a sofa or kids' table
+  if (/game room|arcade|shuffleboard/i.test(alt)) return "Game room"; // game-room shots also mention seating or windows
   if (/aerial|neighborhood/i.test(alt)) return "Neighborhood";
   return TOUR.find(([, re]) => re.test(alt))?.[0] ?? "More photos";
 };
