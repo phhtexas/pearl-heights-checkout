@@ -212,12 +212,16 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
           <div className="A-cap">Entire home · {home.capacity.bedrooms} bedrooms · {home.capacity.beds} beds · {home.capacity.baths} baths · sleeps {home.capacity.guests}</div>
         </section>
 
+        <nav className="A-anchors" aria-label="On this page">
+          <a href="#overview">Overview</a><a href="#sleep">Bedrooms</a><a href="#amenities">Amenities</a><a href="#reviews">Reviews</a><a href="#location">Location</a><a href="#hosts">Hosts</a><a href="#rules">House rules</a><a href="#faq">Questions</a>
+        </nav>
+
         <section className="A-host">
           <div className="A-avatar" aria-hidden="true">O&amp;F</div>
           <div><b>Hosted by {home.host.names}</b><span>{home.host.facts[0]} · {home.host.facts.find((f) => /reply/i.test(f)) ?? ""}</span></div>
         </section>
 
-        <ul className="A-high">{home.highlights.map((h) => <li key={h.title}><Icon name={iconFor(h.title)} size={18} /><div><b>{h.title}</b><span>{h.text}</span></div></li>)}</ul>
+        <ul id="overview" className="A-high">{home.highlights.map((h) => <li key={h.title}><Icon name={iconFor(h.title)} size={18} /><div><b>{h.title}</b><span>{h.text}</span></div></li>)}</ul>
 
         <section className="A-sec">
           <h2>About this home</h2>
@@ -225,7 +229,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
           <button className="A-more" onClick={() => setMore(!more)} aria-expanded={more}>{more ? "Show less" : "Show more"}</button>
         </section>
 
-        <section className="A-sec">
+        <section id="sleep" className="A-sec">
           <h2>Sleeping arrangements</h2>
           <div className="A-rooms">{home.sleeping.map((r, i) => (
             <div key={r.room} className="A-room">
@@ -235,13 +239,21 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
           </div>
         </section>
 
-        <section className="A-sec">
+        <section id="amenities" className="A-sec">
           <h2>Amenities</h2>
           <ul className="A-list">{home.topAmenities.map((a) => <li key={a}><Icon name={iconFor(a)} size={18} />{a}</li>)}</ul>
           <button className="A-outline" onClick={() => open("amenities")}>Show all {amenityCount} amenities</button>
         </section>
 
         <section className="A-sec">
+          <h2>Is this home right for you?</h2>
+          <h3 className="A-h3">Great for</h3>
+          <ul className="A-list A-rules">{home.goodFit.map((x) => <li key={x}><Icon name="check" size={18} />{x}</li>)}</ul>
+          <h3 className="A-h3">Not a fit for</h3>
+          <ul className="A-list A-rules">{home.notFit.map((x) => <li key={x}><Icon name="x" size={18} />{x}</li>)}</ul>
+        </section>
+
+        <section id="location" className="A-sec">
           <h2>Location</h2>
           {home.location.mapBbox && (
             <div className="A-map">
@@ -250,7 +262,9 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
               <span className="A-mapArea" aria-hidden="true" />
               <span className="A-mapTag">Approximate area</span>
             </div>)}
-          <p className="A-p">{home.location.text} {home.location.facts.map((f) => f + ".").join(" ")} {home.location.note}</p>
+          <p className="A-p">{home.location.text}</p>
+          <ul className="A-list A-rules A-facts">{home.location.facts.map((f) => <li key={f}><Icon name={/drive/.test(f) ? "car" : "walk"} size={18} />{f}</li>)}</ul>
+          <p className="A-note">{home.location.note}</p>
         </section>
 
         {home.rating && (
@@ -266,7 +280,17 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
           </section>
         )}
 
-        <section className="A-sec">
+        <section id="hosts" className="A-sec">
+          <h2>Meet your hosts</h2>
+          <div className="A-hostcard">
+            <div className="A-avatar big" aria-hidden="true">O&amp;F</div>
+            <div><b>{home.host.names}</b><ul>{home.host.facts.map((f) => <li key={f}>{f}</li>)}</ul></div>
+          </div>
+          <p className="A-p">{home.host.bio}</p>
+          <a className="A-outline" href="mailto:bookings@pearlheightshomes.com?subject=Question%20about%20736%20Myrtle">Ask us a question</a>
+        </section>
+
+        <section id="rules" className="A-sec">
           <h2>House rules</h2>
           <ul className="A-list A-rules">{houseRules.map((r, i) => <li key={r}><Icon name={i === 0 ? "clock" : iconFor(r)} size={18} />{r}</li>)}</ul>
         </section>
@@ -275,6 +299,12 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
           <h2>Cancellation policy</h2>
           <div className="A-cancel"><Icon name="check" size={18} /><b>{policy[0]}</b></div>
           {policy.slice(1).map((p) => <p key={p} className="A-cancelSub">{p}</p>)}
+        </section>
+
+        <section id="faq" className="A-sec">
+          <h2>Questions</h2>
+          {home.faq.map((f) => <details key={f.q} className="A-faq"><summary>{f.q}<Icon name="chev" size={18} /></summary><p>{f.a}</p></details>)}
+          <p className="A-note">City short-term rental registration {home.registration}</p>
         </section>
 
         <ul className="A-badges" aria-label="Booking direct">

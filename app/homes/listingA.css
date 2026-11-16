@@ -87,3 +87,28 @@
 .A-barLinks button { background: none; border: 0; padding: 0; font: inherit; text-decoration: underline; cursor: pointer; color: inherit; min-height: 24px; }
 .A-barErr { font-size: 12px; color: #b03a2e; }
 .A-cta { flex: none; min-height: 48px; padding: 0 24px; border: 0; border-radius: 10px; background: #17191b; color: #fff; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+
+/* Sections brought over from the current page (Oscar, Nov 16). */
+.A-anchors { display: flex; gap: 8px; overflow-x: auto; margin: 18px -16px 0; padding: 10px 16px; border-top: 1px solid #eeeeec; border-bottom: 1px solid #eeeeec; position: sticky; top: 0; background: #fff; z-index: 4; scrollbar-width: none; }
+.A-anchors::-webkit-scrollbar { display: none; }
+.A-anchors a { flex: none; font-size: 14px; font-weight: 500; color: #17191b; text-decoration: none; padding: 8px 14px; border-radius: 999px; background: #f4f3f1; }
+.A-anchors + .A-host { margin-top: 0; border-top: 0; }
+.A-sec, .A-high { scroll-margin-top: 64px; }
+html { scroll-padding-bottom: 96px; }
+.A-h3 { font-size: 15px; font-weight: 600; margin: 4px 0 12px; }
+.A-list + .A-h3 { margin-top: 18px; }
+.A-facts { margin: 14px 0 12px; }
+.A-note { font-size: 13.5px; color: #6a6e72; margin: 0 0 8px; }
+.A-avatar.big { width: 72px; height: 72px; border-radius: 36px; font-size: 18px; }
+.A-hostcard { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; }
+.A-hostcard b { font-size: 16px; font-weight: 600; }
+.A-hostcard ul { margin: 4px 0 0; padding-left: 18px; font-size: 14px; color: #3a3f44; display: flex; flex-direction: column; gap: 2px; }
+#hosts .A-p { margin-bottom: 16px; }
+a.A-outline { display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.A-faq { border-bottom: 1px solid #eeeeec; }
+.A-faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px; font-size: 15px; font-weight: 600; }
+.A-faq summary::-webkit-details-marker { display: none; }
+.A-faq summary .L-ico { transition: transform .2s; }
+.A-faq[open] summary .L-ico { transform: rotate(180deg); }
+.A-faq p { margin: 0 0 14px; font-size: 14.5px; line-height: 1.55; color: #3a3f44; }
+#faq .A-note { margin-top: 16px; }
