@@ -99,7 +99,7 @@ export const HOME_SOURCES: Record<string, { sources: { fact: string; source: str
       { fact: "Neighborhood 'Lavaca'; walk times (Tower 2, Alamodome 4, Hemisfair 5, Convention Center 5, River Walk 8, Alamo 10 min); airport ~10 min, Pearl ~8 min by car", source: "Hospitable/Airbnb description (host's own words), Nov 16, 2026" },
       { fact: "Photos (all 70) and their order", source: "Hospitable direct-booking gallery; alt text written by Claude from the photos. Two aerial photos have the hosts' labels for nearby attractions (kept, same as Oscar's Edgewood photo decision)" },
       { fact: "Rating 4.8 from 5 reviews; category averages", source: "Airbnb listing (4.8 · 5 reviews; categories) and Hospitable review records (5 rated)" },
-      { fact: "Review quotes (4, the 5-star ones), names, months", source: "Hospitable review records = Airbnb reviews, word for word, Nov 16, 2026 — Oscar to approve" },
+      { fact: "All 5 reviews (four 5-star, one 4-star), names, months, ratings", source: "Hospitable review records = Airbnb reviews, word for word, Nov 16, 2026; all five shown per ChatGPT note 166 (only 5 reviews exist)" },
       { fact: "Amenities (gas stove, upstairs mini fridge, grill, sun loungers, arcade, shuffleboard, safe, ethernet, baby gates, window guards, luggage drop-off, accessible parking spot)", source: "Airbnb amenities + accessibility, Nov 16, 2026; Hospitable description" },
       { fact: "Parking: 2 cars inside the gate, 1 outside, free street parking", source: "Hospitable/Airbnb description" },
       { fact: "Cameras record audio (Indianola, Claywell)", source: "Oscar (chat, Nov 16, 2026)" },

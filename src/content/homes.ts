@@ -562,7 +562,8 @@ export const HOMES: Record<string, HomeContent> = {
       { name: "Sandra", when: "October 2026", rating: 5, text: "We loved our stay in this beautiful home! The location is great to walk to the river, the King William  area Hemisphere park! Wonderful outside area and the neighborhood felt very safe walking in! We will definitely stay here again on our next trip!" },
       { name: "Michele", when: "October 2026", rating: 5, text: "Beautiful home inside and out. We truly enjoyed our time in this amazing home!" },
       { name: "Xiaoshan", when: "September 2026", rating: 5, text: "We absolutely loved our stay! The location is great, offering quick and easy access to both downtown and the convention center. The house is very roomy. We enjoyed the second-floor deck, the backyard, and the game room. This property is an excellent choice for a family trip, and Oscar and Fernanda were wonderful hosts. We would happily stay here again!" },
-      { name: "Anders", when: "September 2026", rating: 5, text: "Great stay - super nice house, super close to everything!" }
+      { name: "Anders", when: "September 2026", rating: 5, text: "Great stay - super nice house, super close to everything!" },
+      { name: "Ashok", when: "September 2026", rating: 4, text: "Place was good." }
     ],
     host: HOSTS,
     thingsToKnow: [

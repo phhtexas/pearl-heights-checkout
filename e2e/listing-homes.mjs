@@ -8,7 +8,7 @@ const ok = (c, m) => { console.log((c ? "ok  - " : "FAIL- ") + m); if (!c) proce
 const HOMES = [
   { slug: "edgewood-alamo-heights", key: "edgewood", title: "Stylish, Charming Home In The Heart of San Antonio", cap: "2 bedrooms · 3 beds · 1 bath · sleeps 8", registration: false, mustNot: [/147 E/i, /Edgewood Place/i, /welcomehome/i, /Cond[eé] Nast/i] },
   { slug: "752-myrtle", key: "752", title: "5-Star Family-Friendly 3BR Walk to Pearl Riverwalk", cap: "3 bedrooms · 3 beds · 2 baths · sleeps 8", registration: true, mustNot: [/752 E(ast)? Myrtle/i, /Burger Boy/i] },
-  { slug: "613-indianola", key: "indianola", title: "Downtown SA House: Walk to Tower & Alamodome", cap: "3 bedrooms · 3 beds · 2 baths · sleeps 8", registration: true, mustNot: [/613 Indianola St/i, /1515/, /welcomehome/i, /TheDowntownHouse/i, /#1/] },
+  { slug: "613-indianola", key: "indianola", title: "Downtown SA House: Walk to Tower & Alamodome", cap: "3 bedrooms · 3 beds · 2 baths · sleeps 8", registration: true, reviews: 5, mustNot: [/613 Indianola St/i, /1515/, /welcomehome/i, /TheDowntownHouse/i, /#1/] },
   { slug: "claywell-alamo-heights", key: "claywell", title: "Large Family Home in the Heart of Alamo Heights", cap: "3 bedrooms · 5 beds · 2 baths · sleeps 8", registration: false, mustNot: [/110 Claywell/i, /Commercial photography allowed/i, /#1/] },
 ];
 
@@ -26,6 +26,7 @@ for (const h of HOMES) {
   ok(text.includes("registration") === h.registration, `${h.key}: registration line ${h.registration ? "shown" : "hidden"}`);
   for (const re of h.mustNot) ok(!re.test(text), `${h.key}: page does not show ${re}`);
   ok(!/facebook/i.test(await page.content()), `${h.key}: no Facebook element`);
+  if (h.reviews !== undefined) ok((await page.locator(".V-review").count()) === h.reviews, `${h.key}: shows all ${h.reviews} reviews`);
   const imgs = await page.$$eval("img", (a) => a.slice(0, 3).map((i) => i.currentSrc));
   ok(imgs.some((s) => s.includes("hospitable.com") || s.includes("property_images")), `${h.key}: real photos`);
   // Reserve without dates opens the date sheet; pick dates, then hand off.
