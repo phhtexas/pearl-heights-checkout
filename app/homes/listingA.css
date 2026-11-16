@@ -177,3 +177,7 @@ a.A-outline { display: flex; align-items: center; justify-content: center; text-
 .A-rav { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 15px; }
 .A-review { justify-content: flex-start; }
 .A-review blockquote { flex: 1; }
+
+/* Nov 16: cover photo with rounded top corners only. */
+.A-hero { border-radius: 18px 18px 0 0; overflow: hidden; margin-top: 8px; }
+.A-carousel { border-radius: 18px 18px 0 0; }
