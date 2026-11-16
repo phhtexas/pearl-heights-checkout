@@ -17,12 +17,13 @@ import "./listingA.css";
  */
 type Day = { date: string; available: boolean; price: number; minStay: number; closedForCheckin?: boolean; closedForCheckout?: boolean };
 type Prop = { key: string; name: string; maxGuests: number; extraGuestFrom: number; extraGuestFee: number };
-type Sheet = null | "dates" | "guests" | "amenities";
+type Sheet = null | "dates" | "guests" | "amenities" | "tour";
 
 const money = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: c % 100 ? 2 : 0 });
 const fmt = (iso: string) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric" });
 const addDays = (iso: string, n: number) => new Date(Date.parse(iso + "T00:00:00Z") + n * 86_400_000).toISOString().slice(0, 10);
 const nightsOf = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000);
+const slugify = (t: string) => t.toLowerCase().replace(/[^a-z]+/g, "-");
 const range = (a: string, b: string) => (a.slice(0, 7) === b.slice(0, 7) ? `${fmt(a)}–${Number(b.slice(8))}` : `${fmt(a)} – ${fmt(b)}`);
 
 /** Room-card photos (best match from the gallery; room labels still to be confirmed by Oscar). */
@@ -30,7 +31,28 @@ const ROOM_PHOTOS = [
   "AMyRewULeO20lFQFkRFWrNe7c3vr7OYCIKAQATmP", "jZCUKfTCluAkxsNcIkwKlg4tbbcWnFByKScze6A8", "c4KYo3CgFK4Kkh12P5auyXNIqTYFAzS3ihZCkw5F",
   "QSN5MvVxsp5HP1pUba2bAbXmVYaHMIrBTO2jMvn3", "eMTLaWUswh02vPrOIB3bXluq8osxAB5Weit9PXTi", "1bi1pgTc4hSHL1561okYKpWcH4kuKZaTvokSvrJX",
 ];
-const HERO = 5; // the reference shows five dots
+const DOTS = 5; // the reference shows five dots; with more photos they track position along the set
+
+/** Photo tour groups, matched from each photo's description (first match wins). Labels describe the space, not a specific bedroom. */
+const TOUR: [string, RegExp][] = [
+  ["Living room", /^(living|electric fireplace|open living)|sectional|mantel|hallway/i],
+  ["Full kitchen", /kitchen|refrigerator|coffee|snack|glassware/i],
+  ["Dining area", /dining/i],
+  ["Bedrooms", /bed|crib|pillow/i],
+  ["Bathrooms", /bath|shower|vanity/i],
+  ["Bonus room", /bonus room/i],
+  ["Kids' play area", /kids|play table/i],
+  ["Workspace", /workspace|desk/i],
+  ["Laundry", /laundry|washer/i],
+  ["Backyard and patio", /backyard|patio|pergola|lawn chairs/i],
+  ["Exterior", /front|house|street|side|driveway|entrance|exterior/i],
+  ["Neighborhood", /aerial|neighborhood/i],
+];
+const groupOf = (alt: string) => {
+  if (/bonus room/i.test(alt)) return "Bonus room"; // bonus-room shots also mention the lawn or night lighting
+  if (/aerial|neighborhood/i.test(alt)) return "Neighborhood";
+  return TOUR.find(([, re]) => re.test(alt))?.[0] ?? "More photos";
+};
 
 export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop; policy: string[] }) {
   const [sheet, setSheet] = useState<Sheet>(null);
@@ -177,6 +199,11 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
   const houseRules = [
     `${checkIO[0]} · ${checkIO[1]}`, checkIO[2], find(rules, /parties/), find(rules, /smok/), find(rules, /pets/i), find(rules, /^Up to/), find(rules, /quiet/i), find(safety, /camera/),
   ].filter(Boolean) as string[];
+  const tour = useMemo(() => {
+    const m = new Map<string, HomeContent["photos"]>();
+    for (const p of home.photos) { const g = groupOf(p.alt); m.set(g, [...(m.get(g) ?? []), p]); }
+    return [...TOUR.map(([n]) => n), "More photos"].filter((n) => m.has(n)).map((n) => ({ name: n, photos: m.get(n)! }));
+  }, [home.photos]);
   const amenityCount = home.amenityGroups.reduce((n, g) => n + g.items.length, 0);
   const roomPhoto = (i: number) => ROOM_PHOTOS[i] ?? ROOM_PHOTOS[0]!;
   const roomAlt = (id: string) => home.photos.find((p) => p.id === id)?.alt ?? "";
@@ -195,13 +222,14 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
       {shared && <div className="A-toast" role="status">{shared}</div>}
 
       <section className="A-hero" aria-label="Photos">
-        <div className="A-carousel" onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
-          {home.photos.slice(0, HERO).map((p, i) => (
+        <div className="A-carousel" onClick={() => open("tour")} onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
+          {home.photos.map((p, i) => (
             <div className="A-slide" key={p.id}>
               <Image src={src(p.id)} alt={p.alt} fill sizes="(min-width: 600px) 560px, 100vw" priority={i === 0} loading={i === 0 ? undefined : "lazy"} style={{ objectFit: "cover" }} />
             </div>))}
         </div>
-        <div className="A-dots" aria-hidden="true">{Array.from({ length: HERO }, (_, i) => <span key={i} className={i === slide ? "on" : ""} />)}</div>
+        <div className="A-dots" aria-hidden="true">{Array.from({ length: DOTS }, (_, i) => <span key={i} className={i === Math.round((slide / Math.max(1, home.photos.length - 1)) * (DOTS - 1)) ? "on" : ""} />)}</div>
+        <button className="A-count" onClick={() => open("tour")} aria-label={`Photo ${slide + 1} of ${home.photos.length}. Open the photo tour`}>{slide + 1} / {home.photos.length}</button>
       </section>
 
       <main className="A-main">
@@ -328,10 +356,42 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
         {quote ? <button className="A-cta" onClick={reserve}>Reserve</button> : <button className="A-cta" onClick={() => open("dates")}>Check availability</button>}
       </footer>
 
-      {sheet && (
+      {sheet === "tour" && (
+        <div ref={sheetRef} className="A-tour" role="dialog" aria-modal="true" aria-label="Photo tour">
+          <div className="A-tourTop">
+            <button className="A-icoBtn" onClick={() => setSheet(null)} aria-label="Back to the listing"><Icon name="back" size={22} /></button>
+            <h2>Photo tour</h2>
+            <div className="A-acts">
+              <button className="A-icoBtn" onClick={share} aria-label="Share this home"><Icon name="share" size={20} /></button>
+              <button className={"A-icoBtn" + (saved ? " A-saved" : "")} onClick={toggleSave} aria-pressed={saved} aria-label={saved ? "Saved" : "Save this home"}><Icon name="heart" size={20} /></button>
+            </div>
+          </div>
+          <div className="A-tourThumbs">{tour.map((g) => (
+            <a key={g.name} href={"#tour-" + slugify(g.name)} className="A-tourThumb" onClick={(e) => { e.preventDefault(); document.getElementById("tour-" + slugify(g.name))?.scrollIntoView({ behavior: "smooth" }); }}>
+              <span className="A-tourThumbPh"><Image src={src(g.photos[0]!.id)} alt="" fill sizes="150px" style={{ objectFit: "cover" }} /></span>
+              <span>{g.name}</span>
+            </a>))}
+          </div>
+          {tour.map((g) => (
+            <section key={g.name} id={"tour-" + slugify(g.name)} className="A-tourSec">
+              <h3>{g.name}</h3>
+              <div className="A-tourSub">{g.photos.length} {g.photos.length === 1 ? "photo" : "photos"}</div>
+              <div className="A-tourGrid">{g.photos.map((p, i) => (
+                <figure key={p.id} className={"A-tourPh" + (i % 3 === 0 ? " big" : "")}>
+                  <Image src={src(p.id)} alt={p.alt} fill sizes={i % 3 === 0 ? "(min-width: 600px) 528px, 100vw" : "(min-width: 600px) 264px, 50vw"} loading="lazy" style={{ objectFit: "cover" }} />
+                </figure>))}
+              </div>
+            </section>))}
+          <div className="A-tourCta">
+            {quote ? <button className="A-cta" onClick={reserve}>Reserve</button> : <button className="A-cta" onClick={() => { setSheet(null); setTimeout(() => open("dates"), 0); }}>Check availability</button>}
+          </div>
+        </div>
+      )}
+
+      {sheet && sheet !== "tour" && (
         <div className="scrim" onClick={(e) => { if (e.target === e.currentTarget) setSheet(null); }}>
-          <div ref={sheetRef} className="sheet" role="dialog" aria-modal="true" aria-label={{ dates: "Select dates", guests: "Guests", amenities: "All amenities" }[sheet]}>
-            <div className="sheetHead"><h2>{{ dates: "Select dates", guests: "Guests", amenities: "All amenities" }[sheet]}</h2>
+          <div ref={sheetRef} className="sheet" role="dialog" aria-modal="true" aria-label={{ dates: "Select dates", guests: "Guests", amenities: "All amenities" }[sheet as "dates" | "guests" | "amenities"]}>
+            <div className="sheetHead"><h2>{{ dates: "Select dates", guests: "Guests", amenities: "All amenities" }[sheet as "dates" | "guests" | "amenities"]}</h2>
               <button className="x" aria-label="Close" onClick={() => setSheet(null)}>×</button></div>
 
             {sheet === "dates" && (<>
