@@ -230,7 +230,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
   const find = (list: string[], re: RegExp) => list.find((x) => re.test(x));
   const checkIO = tk("Check-in and check-out"), rules = tk("House rules"), safety = tk("Safety and property");
   const houseRules = [
-    `${checkIO[0]} · ${checkIO[1]}`, checkIO[2], find(rules, /parties/), find(rules, /smok/), find(rules, /pets/i), find(rules, /^Up to/), find(rules, /quiet/i), find(safety, /camera/),
+    `${checkIO[0]} · ${checkIO[1]}`, checkIO[2], find(rules, /parties/), find(rules, /smok/), find(rules, /pets/i), find(rules, /^Up to/), find(rules, /quiet/i), find(safety, /camera/), find(safety, /^No cameras inside/),
   ].filter(Boolean) as string[];
   const tour = useMemo(() => {
     const m = new Map<string, HomeContent["photos"]>();

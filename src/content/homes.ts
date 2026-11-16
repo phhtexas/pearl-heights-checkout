@@ -155,7 +155,7 @@ export const HOMES: Record<string, HomeContent> = {
       { group: "Entertainment and work", items: ["55-inch HDTV with Netflix, Disney+ and Roku", "Free weights and yoga mat", "Books and board games", "Dedicated workspace", "WiFi"] },
       { group: "Heating and cooling", items: ["Central air conditioning", "Ductless split A/C", "Central heating", "Ceiling fans", "Electric indoor fireplace"] },
       { group: "Outdoors, parking and access", items: ["Private, fully fenced backyard", "Outdoor furniture", "Private entrance", "Free parking behind the car gate for up to 3 cars", "Free street parking", "Single-level home, no stairs", "Accessible parking spot (at least 11 ft wide) and lit path to the entrance", "Self check-in with keypad"] },
-      { group: "Safety", items: ["Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher", "First aid kit", "Two exterior security cameras (see Things to know)"] },
+      { group: "Safety", items: ["Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher", "First aid kit", "Two exterior security cameras (see Things to know)", "No cameras inside the home"] },
     ],
     goodFit: ["Families with babies and young kids", "Groups of up to 10 who want separate bedrooms", "Guests who want to walk to the Pearl and the River Walk", "Remote workers (dedicated workspace)"],
     notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking or vaping anywhere on the property", "Late-night noise: quiet hours are 10 PM to 8 AM", "Guests who don't want exterior security cameras (two outside, recording audio)"],
@@ -177,7 +177,7 @@ export const HOMES: Record<string, HomeContent> = {
     thingsToKnow: [
       { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a door keypad"] },
       { title: "House rules", items: ["Up to 10 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, close all doors, windows and the car gate, and send us a quick message"] },
-      { title: "Safety and property", items: ["Two exterior security cameras: one faces the car entry gate and one is the front-door doorbell. They are motion-activated, record audio, and are checked occasionally, not monitored live.", "Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher and first aid kit"] },
+      { title: "Safety and property", items: ["Two exterior security cameras: one faces the car entry gate and one is the front-door doorbell. They are motion-activated, record audio, and are checked occasionally, not monitored live.", "No cameras inside the home", "Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher and first aid kit"] },
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
@@ -283,7 +283,7 @@ export const HOMES: Record<string, HomeContent> = {
       { group: "Entertainment and work", items: ["65-inch HDTV with Netflix, Roku, Amazon Prime Video, premium cable and Fire TV", "Free weights and yoga mat", "Books and life-size games", "Dedicated workspace with laptop stand and surge protector", "Fast WiFi (770 Mbps)"] },
       { group: "Heating and cooling", items: ["Central air conditioning", "Central and radiant heating", "Ceiling fans", "Electric indoor fireplace"] },
       { group: "Outdoors, parking and access", items: ["Private, fully fenced backyard", "Basketball hoop in the backyard", "Private patio and outdoor furniture", "Private entrance", "Free driveway parking for 4 cars", "Free street parking", "Level 2 EV charger (Tesla only)", "Single-level home, no stairs", "Lit path to the guest entrance", "Self check-in with smart lock", "Long stays (28 nights or more) allowed"] },
-      { group: "Safety", items: ["Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher", "First aid kit", "Two exterior security cameras (see Things to know)"] },
+      { group: "Safety", items: ["Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher", "First aid kit", "Two exterior security cameras (see Things to know)", "No cameras inside the home"] },
     ],
     goodFit: ["Families with babies and young kids", "Guests who want a quiet residential street in Alamo Heights", "Remote workers (dedicated workspace, fast WiFi)", "Tesla drivers (Level 2 charger on site)"],
     notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking or vaping anywhere on the property", "Late-night noise: quiet hours are 10 PM to 8 AM", "Groups who need more than one bathroom", "Guests who don't want exterior security cameras (two outside, recording audio)"],
@@ -305,7 +305,7 @@ export const HOMES: Record<string, HomeContent> = {
     thingsToKnow: [
       { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a smart lock"] },
       { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, used towels on the woven basket in the main bedroom, trash out, lights off, close all doors, windows and the car gate, and send us a quick message"] },
-      { title: "Safety and property", items: ["Two exterior security cameras: one faces the car entry gate and one is the front-door doorbell. They are motion-activated, record audio, and are checked occasionally, not monitored live.", "Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher and first aid kit"] },
+      { title: "Safety and property", items: ["Two exterior security cameras: one faces the car entry gate and one is the front-door doorbell. They are motion-activated, record audio, and are checked occasionally, not monitored live.", "No cameras inside the home", "Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher and first aid kit"] },
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },

@@ -408,7 +408,7 @@ export default function Checkout() {
             <div>{prop.name} · {fmtRange(ci!, co!)} · {guests} {guests === 1 ? "guest" : "guests"} · Booking {result.bookingRef}</div>
             <div className="box warm">To keep your reservation, please finish two quick steps by <b>{result.verification.deadlineText}</b>: sign the rental agreement and verify your ID.</div>
             <div className="muted">Paid today: {money(quote!.plan.dueNow)}{quote!.plan.split ? ` · ${money(quote!.plan.scheduled!.amount)} on ${balance}` : ""}</div>
-            <div className="muted">Test mode: no email is sent. Questions: <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
+            <div className="muted">Test mode: no email is sent. Questions: <a href="mailto:bookings@thepearlheightshomes.com">bookings@thepearlheightshomes.com</a></div>
             <button className="btn ghost" onClick={restart}>Start another booking</button>
           </>)}
 
