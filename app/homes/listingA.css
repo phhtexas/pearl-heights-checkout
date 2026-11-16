@@ -167,3 +167,13 @@ a.A-outline { display: flex; align-items: center; justify-content: center; text-
 .T-zoom button + button { border-top: 1px solid #eeeeec; }
 .T-credit { position: absolute; right: 6px; bottom: 4px; font-size: 10px; color: #55595d; background: rgba(255, 255, 255, .8); padding: 1px 5px; border-radius: 4px; text-decoration: none; }
 .A-mapBig .T-map { height: 100%; }
+
+/* Nov 16: host photo + review stars and initials. */
+.A-avatarPh { position: relative; overflow: hidden; background: #ece7df; }
+.A-rstar { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; }
+.A-rstar svg path { fill: currentColor; }
+.A-review figcaption { display: flex; align-items: center; gap: 10px; line-height: 1.35; }
+.A-review figcaption b { color: #17191b; font-weight: 600; }
+.A-rav { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 15px; }
+.A-review { justify-content: flex-start; }
+.A-review blockquote { flex: 1; }

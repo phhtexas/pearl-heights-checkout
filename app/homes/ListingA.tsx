@@ -32,6 +32,7 @@ const ROOM_PHOTOS = [
   "AMyRewULeO20lFQFkRFWrNe7c3vr7OYCIKAQATmP", "jZCUKfTCluAkxsNcIkwKlg4tbbcWnFByKScze6A8", "c4KYo3CgFK4Kkh12P5auyXNIqTYFAzS3ihZCkw5F",
   "QSN5MvVxsp5HP1pUba2bAbXmVYaHMIrBTO2jMvn3", "eMTLaWUswh02vPrOIB3bXluq8osxAB5Weit9PXTi", "1bi1pgTc4hSHL1561okYKpWcH4kuKZaTvokSvrJX",
 ];
+const AV_COLORS = ["#c9b8a3", "#a9b9a6", "#b3b8c9", "#c9a9a9", "#b9adc4", "#a7c0c2"]; // soft initial circles for reviewers
 const DOTS = 5; // the reference shows five dots; with more photos they track position along the set
 
 /** Photo tour groups, matched from each photo's description (first match wins). Labels describe the space, not a specific bedroom. */
@@ -246,7 +247,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
         </section>
 
         <section className="A-host">
-          <div className="A-avatar" aria-hidden="true">O&amp;F</div>
+          <HostPhoto home={home} size={44} />
           <div><b>Hosted by {home.host.names}</b><span>{home.host.facts[0]} · {home.host.facts.find((f) => /reply/i.test(f)) ?? ""}</span></div>
         </section>
 
@@ -301,8 +302,9 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
             <div className="A-score"><Icon name="star" size={14} />{home.rating.value.toFixed(2)} · {home.rating.count} reviews</div>
             <div className="A-reviews">{home.reviews.map((r) => (
               <figure key={r.name + r.when} className="A-review">
+                {r.rating && <div className="A-rstar"><Icon name="star" size={13} />{r.rating.toFixed(1)}</div>}
                 <blockquote>“{r.text.length > 150 ? r.text.slice(0, 150).replace(/\s\S*$/, "") + "…" : r.text}”</blockquote>
-                <figcaption>{r.name} · {r.when}</figcaption>
+                <figcaption><span className="A-rav" aria-hidden="true" style={{ background: AV_COLORS[r.name.charCodeAt(0) % AV_COLORS.length] }}>{r.name[0]}</span><span><b>{r.name}</b><br />{r.when} · Airbnb</span></figcaption>
               </figure>))}
             </div>
           </section>
@@ -311,7 +313,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
         <section id="hosts" className="A-sec">
           <h2>Meet your hosts</h2>
           <div className="A-hostcard">
-            <div className="A-avatar big" aria-hidden="true">O&amp;F</div>
+            <HostPhoto home={home} size={72} />
             <div><b>{home.host.names}</b><ul>{home.host.facts.map((f) => <li key={f}>{f}</li>)}</ul></div>
           </div>
           <p className="A-p">{home.host.bio}</p>
@@ -438,3 +440,14 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
     </div>
   );
 }
+
+/** Hosts' Airbnb profile photo in the round avatar; falls back to initials if there is no photo. */
+function HostPhoto({ home, size }: { home: HomeContent; size: number }) {
+  if (!home.host.photo) return <div className={"A-avatar" + (size > 50 ? " big" : "")} aria-hidden="true">O&amp;F</div>;
+  return (
+    <div className={"A-avatar A-avatarPh" + (size > 50 ? " big" : "")}>
+      <Image src={home.host.photo} alt={`${home.host.names}, your hosts`} fill sizes={`${size}px`} style={{ objectFit: "cover" }} />
+    </div>
+  );
+}
+
