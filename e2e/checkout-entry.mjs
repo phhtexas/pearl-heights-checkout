@@ -37,12 +37,12 @@ await entry("desktop 736", { viewport: { width: 1280, height: 900 } }, `${BASE}/
   await ctx.addInitScript(() => { window.__seen = []; const scan = () => { const t = [...document.querySelectorAll("body > * :not(.testbar):not(.testbar *)")].length ? [...document.querySelectorAll(".top, .lock, .layout, .foot, .side, .scrim")].map((e) => e.innerText).join("\n") : ""; if (location.search.includes("home=736")) { for (const w of ["The Claywell", "Choose your dates"]) if (t.includes(w)) window.__seen.push(w); for (const i of document.images) if ((i.currentSrc || i.src).includes("claywell.jpg")) window.__seen.push("claywell.jpg"); } }; new MutationObserver(scan).observe(document, { subtree: true, childList: true, characterData: true }); });
   const page = await ctx.newPage();
   await page.goto(`${BASE}/homes/736-myrtle`);
-  await page.click(".A-bar .A-cta");
+  await page.click(".V-bar .V-cta");
   await page.waitForSelector(".day:not([disabled])");
   for (let i = 0; i < 6 && !(await page.locator('[aria-label^="Sun, Jan 10, 2027"]').count()); i++) await page.click('[aria-label="Next month"]');
   await page.click('[aria-label^="Sun, Jan 10, 2027"]'); await page.click('[aria-label^="Tue, Jan 12, 2027"]'); await page.click("text=Save dates");
-  await page.waitForSelector(".A-bar b:has-text('total')");
-  await page.click(".A-bar .A-cta");
+  await page.waitForSelector(".V-bar b:has-text('total')");
+  await page.click(".V-bar .V-cta");
   await page.waitForSelector(".plan", { timeout: 15000 });
   const seen = [...new Set(await page.evaluate(() => window.__seen))];
   ok(seen.length === 0, `listing → Reserve → checkout: no wrong home or empty dates on the way in (seen: ${seen.join(", ") || "none"})`);

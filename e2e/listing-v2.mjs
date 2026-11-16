@@ -1,5 +1,5 @@
 // Listing option A: renders, dates → total → Reserve hands off to Checkout E with dates and guests.
-// Run: ALLOW_MOCK=true npx next start -p 3401 ; BASE_URL=http://localhost:3401 node e2e/listing-a.mjs [shotsDir]
+// Run: ALLOW_MOCK=true npx next start -p 3401 ; BASE_URL=http://localhost:3401 node e2e/listing-v2.mjs [shotsDir]
 import { createRequire } from "node:module";
 const { chromium, devices } = createRequire(import.meta.url)("playwright");
 const BASE = process.env.BASE_URL ?? "http://localhost:3401";
@@ -10,7 +10,7 @@ const ctx = await browser.newContext({ ...devices["iPhone 13"] });
 const page = await ctx.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
-await page.goto(`${BASE}/homes/736-myrtle/v2`);
+await page.goto(`${BASE}/homes/736-myrtle`);
 await page.waitForSelector("h1");
 ok((await page.textContent("h1")) === "Large Family House Next to the Pearl", "title is the 736 title");
 ok((await page.locator(".V-dots span").count()) === 5, "five hero dots");
@@ -58,24 +58,37 @@ await browser.close();
 {
   const b = await chromium.launch();
   const ph = await (await b.newContext(devices["iPhone 13"])).newPage();
-  await ph.goto(`${BASE}/homes/736-myrtle/v2`); await ph.waitForSelector("h1");
-  ok((await ph.textContent(".V-bar")).includes("Airbnb Superhosts · 4.98 across 460 Airbnb reviews · Secure payment by Stripe"), "phone: trust proof sits in the booking bar");
+  await ph.goto(`${BASE}/homes/736-myrtle`); await ph.waitForSelector("h1");
+  const trust = ph.locator(".V-bar .V-barTrust");
+  ok((await trust.textContent()) === "Airbnb Superhosts · 4.98 across 460 Airbnb reviews · Secure payment by Stripe", "phone: trust proof sits in the booking bar");
+  const below = await ph.evaluate(() => { const t = document.querySelector(".V-bar .V-barTrust").getBoundingClientRect(), c = document.querySelector(".V-bar .V-cta").getBoundingClientRect(); return t.top >= c.bottom - 1; });
+  ok(below && (await trust.evaluate((e) => getComputedStyle(e).fontStyle)) === "italic", "phone: trust line is italic and below the button");
   const foot = await ph.textContent(".V-footer");
-  ok(foot.includes("bookings@thepearlheightshomes.com") && foot.includes("(210) 400-2540") && foot.includes("San Antonio, TX") && foot.includes("Cancellation policy"), "footer: email, phone, city, cancellation link");
+  ok(foot.includes("bookings@thepearlheightshomes.com") && foot.includes("Site managed by PR Portfolio Properties LLC | San Antonio, TX") && foot.includes("Cancellation policy"), "footer: email, managed-by line, cancellation link");
+  ok(!foot.includes("400-2540") && !(await ph.locator('.V-footer a[href^="tel:"]').count()), "footer: no phone number (email only)");
+  ok((await ph.locator('.V-footer .V-social a[href="https://www.instagram.com/pearlheightshomes"]').count()) === 1, "footer: Instagram icon links to instagram.com/pearlheightshomes");
+  const ig = await ph.locator(".V-social").boundingBox(), lg = await ph.locator(".V-footBrand .V-brand").boundingBox();
+  ok(ig.x > lg.x + lg.width - 1 && Math.abs((ig.y + ig.height / 2) - (lg.y + lg.height / 2)) < 20, "footer: social icons sit to the right of the logo");
   ok(/coming soon/.test(foot), "footer: Terms/Privacy marked coming soon (not linked)");
-  ok((await ph.locator('meta[name="robots"]').getAttribute("content")).includes("noindex"), "V2 is noindex");
+  ok(!(await ph.locator('meta[name="robots"]').count()) || !(await ph.locator('meta[name="robots"]').getAttribute("content")).includes("noindex"), "main listing page is indexable (V2 is now the page)");
+  const red = await ph.goto(`${BASE}/homes/736-myrtle/v2`);
+  ok(new URL(ph.url()).pathname === "/homes/736-myrtle" && red.ok(), "old /v2 link redirects to /homes/736-myrtle");
+  const redA = await ph.goto(`${BASE}/homes/736-myrtle/a`);
+  ok(new URL(ph.url()).pathname === "/homes/736-myrtle" && redA.ok(), "old /a link redirects to /homes/736-myrtle");
+  await ph.waitForSelector("h1");
   ok((await ph.locator(".V-slide img").count()) <= 3, `phone: only nearby slides mounted (${await ph.locator(".V-slide img").count()} images of 71)`);
   ok(!(await ph.locator(".V-card").isVisible()), "phone: no desktop booking card");
   const pol = await (await b.newContext()).newPage();
   const r = await pol.goto(`${BASE}/policies/cancellation`);
   ok(r.ok() && (await pol.textContent("h1")) === "Cancellation policy" && (await pol.textContent("main")).includes("cancel within 24 hours after booking"), "cancellation page renders the engine's rules");
   const dk = await (await b.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
-  await dk.goto(`${BASE}/homes/736-myrtle/v2`); await dk.waitForSelector("h1");
+  await dk.goto(`${BASE}/homes/736-myrtle`); await dk.waitForSelector("h1");
   const card = dk.locator(".V-card");
   ok(await card.isVisible() && !(await dk.locator(".V-bar").isVisible()), "desktop: sticky booking card shown, phone bar hidden");
   const cb = await card.boundingBox(), mb = await dk.locator(".V-main").boundingBox();
   ok(cb.x > mb.x + mb.width - 1 && mb.width > 560, `desktop: two columns (content ${Math.round(mb.width)}px + card ${Math.round(cb.width)}px)`);
   ok((await card.textContent()).includes("Secure payment by Stripe"), "desktop: trust proof inside the booking card");
+  ok(await dk.evaluate(() => { const t = document.querySelector(".V-card .V-trust"), c = document.querySelector(".V-card .V-cta"); return t.getBoundingClientRect().top >= c.getBoundingClientRect().bottom - 1 && getComputedStyle(t).fontStyle === "italic"; }), "desktop: trust line is italic and below the button");
   await dk.mouse.wheel(0, 1600); await dk.waitForTimeout(300);
   const cb2 = await card.boundingBox();
   ok(cb2.y >= 0 && cb2.y < 60, `desktop: card stays in view while scrolling (top ${Math.round(cb2.y)}px)`);

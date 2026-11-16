@@ -19,7 +19,7 @@ const scrollLocked = (p) => p.evaluate(() => getComputedStyle(document.body).ove
 
 for (const [label, ctxOpts] of [["phone", devices["iPhone 13"]], ["desktop", { viewport: { width: 1280, height: 900 } }]]) {
   const page = await (await b.newContext(ctxOpts)).newPage();
-  await page.goto(`${BASE}/homes/736-myrtle/v2`); await page.waitForSelector("h1");
+  await page.goto(`${BASE}/homes/736-myrtle`); await page.waitForSelector("h1");
   await axe(page, `${label} page`);
 
   // Photo tour via keyboard from the counter button.

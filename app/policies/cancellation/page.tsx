@@ -9,7 +9,7 @@ export default function Page() {
   const lines = policyOverview();
   return (
     <div className="P-page">
-      <header className="P-top"><a href="/homes/736-myrtle/v2" className="P-brand">Pearl Heights <span>HOMES</span></a></header>
+      <header className="P-top"><a href="/homes/736-myrtle" className="P-brand">Pearl Heights <span>HOMES</span></a></header>
       <main className="P-main">
         <h1>Cancellation policy</h1>
         <p className="P-lead">For stays booked directly with Pearl Heights Homes. Your exact dates and amounts are shown before you pay and in your confirmation.</p>

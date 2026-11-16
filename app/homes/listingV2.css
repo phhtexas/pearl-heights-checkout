@@ -309,3 +309,10 @@ button.V-room { display: flex; flex-direction: column; justify-content: flex-sta
 .V-map .TV-credit { padding: 4px 6px; min-height: 24px; display: inline-flex; align-items: center; }
 .V-cta:hover, .V-page .btn:not(:disabled):not(.ghost):hover { background: #005bbf; } /* #0077ed was 4.3:1 with white; this is 6.6:1 */
 .V-reviews:focus-visible { outline: 3px solid var(--V-blue); outline-offset: 2px; border-radius: 14px; }
+
+/* Nov 16 (Oscar): trust line in italics, below the button (phone bar + desktop card); footer logo row with social icons; email + managed-by line. */
+.V-barTrust, .V-trust { font-style: italic; }
+.V-footLogoRow { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.V-social { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; }
+.V-social a { width: 40px; height: 40px; border-radius: 20px; justify-content: center; color: #17191b; border: 1px solid #dcdcd8; background: #fff; }
+.V-social a:hover { text-decoration: none; border-color: #17191b; }

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { HOMES } from "@/content/homes";
 import { PROPERTIES } from "@/domain/properties";
 import { policyOverview } from "@/domain/policy";
-import { ListingA } from "../ListingA";
+import { ListingV2 } from "../ListingV2";
 
 const bySlug = (slug: string) => Object.values(HOMES).find((h) => h.slug === slug);
 
@@ -18,5 +18,5 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const home = bySlug((await params).slug);
   if (!home) notFound();
   const p = PROPERTIES.find((x) => x.key === home.key)!;
-  return <ListingA home={home} prop={{ key: p.key, name: p.name, maxGuests: p.maxGuests, extraGuestFrom: p.extraGuestFrom, extraGuestFee: p.extraGuestFee }} policy={policyOverview()} />;
+  return <ListingV2 home={home} prop={{ key: p.key, name: p.name, maxGuests: p.maxGuests, extraGuestFrom: p.extraGuestFrom, extraGuestFee: p.extraGuestFee }} policy={policyOverview()} />;
 }

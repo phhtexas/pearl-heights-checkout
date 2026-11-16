@@ -36,8 +36,10 @@ const AV_COLORS = ["#c9b8a3", "#a9b9a6", "#b3b8c9", "#c9a9a9", "#b9adc4", "#a7c0
 const DOTS = 5;
 /** Note 150: compact, factual trust proof beside the booking action (approved wording). */
 const TRUST = "Airbnb Superhosts · 4.98 across 460 Airbnb reviews · Secure payment by Stripe";
-/** Business contact for the footer; Oscar confirmed both in chat (Nov 16, 2026, ~11:40 AM CT), incl. the "thepearlheightshomes.com" domain. */
-const CONTACT = { email: "bookings@thepearlheightshomes.com", phone: "(210) 400-2540", tel: "+12104002540", place: "San Antonio, TX" };
+/** Footer (Oscar, chat Nov 16, 2026): email only (incl. the "thepearlheightshomes.com" domain), managed-by line, Instagram from
+ *  pearlheightshomes.com's own footer link. Facebook icon to be added when Oscar sends the page link. */
+const CONTACT = { email: "bookings@thepearlheightshomes.com", managedBy: "Site managed by PR Portfolio Properties LLC | San Antonio, TX" };
+const SOCIAL = [{ name: "Instagram", icon: "instagram", href: "https://www.instagram.com/pearlheightshomes" }];
 
 /** Photo tour groups, matched from each photo's description (first match wins). Labels describe the space, not a specific bedroom. */
 const TOUR: [string, RegExp][] = [
@@ -245,7 +247,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
 
   return (
     <div className="V-page">
-      <div className="V-test">Version 2 (review) · Test site · nothing is booked or charged</div>
+      <div className="V-test">Test site · nothing is booked or charged</div>
       <header className="V-top">
         <span aria-hidden="true" className="V-topSide" />
         <a href="https://pearlheightshomes.com" className="V-brand">Pearl Heights <span>HOMES</span></a>
@@ -398,11 +400,18 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
 
       <footer className="V-footer">
         <div className="V-footIn">
-          <div className="V-footBrand"><span className="V-brand">Pearl Heights <span>HOMES</span></span><p>Direct bookings with your hosts, Oscar &amp; Fernanda.</p></div>
+          <div className="V-footBrand">
+            <div className="V-footLogoRow">
+              <span className="V-brand">Pearl Heights <span>HOMES</span></span>
+              <ul className="V-social" aria-label="Pearl Heights Homes on social media">
+                {SOCIAL.map((s) => <li key={s.name}><a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={`Pearl Heights Homes on ${s.name} (opens in a new tab)`}><Icon name={s.icon} size={20} /></a></li>)}
+              </ul>
+            </div>
+            <p>Direct bookings with your hosts, Oscar &amp; Fernanda.</p>
+          </div>
           <ul className="V-footContact">
             <li><a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a></li>
-            <li><a href={`tel:${CONTACT.tel}`}>{CONTACT.phone}</a></li>
-            <li>{CONTACT.place}</li>
+            <li>{CONTACT.managedBy}</li>
           </ul>
           <ul className="V-footLinks">
             <li><a href="/policies/cancellation">Cancellation policy</a></li>
@@ -414,7 +423,6 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
       </footer>
 
       <div className="V-bar">
-        <p className="V-barTrust">{TRUST}</p>
         <div className="V-barRow">
         <div className="V-barL">
           {quote
@@ -427,6 +435,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
         </div>
         {quote ? <button className="V-cta" onClick={reserve}>Reserve</button> : <button className="V-cta" onClick={() => open("dates")}>Check availability</button>}
         </div>
+        <p className="V-barTrust">{TRUST}</p>
       </div>
 
       {sheet === "tour" && (

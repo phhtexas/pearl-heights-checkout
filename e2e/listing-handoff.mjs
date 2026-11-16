@@ -11,27 +11,27 @@ const quotes = [];
 page.on("response", async (r) => { if (r.url().endsWith("/api/quote") && r.request().method() === "POST") quotes.push({ req: JSON.parse(r.request().postData() || "{}"), status: r.status(), body: await r.json().catch(() => ({})) }); });
 
 await page.goto(`${BASE}/homes/736-myrtle`);
-await page.click(".A-bar .A-cta");
+await page.click(".V-bar .V-cta");
 await page.waitForSelector(".day:not([disabled])");
 for (let i = 0; i < 6 && !(await page.locator('[aria-label^="Sun, Jan 10, 2027"]:visible').count()); i++) await page.click('[aria-label="Next month"]');
 await page.click('[aria-label^="Sun, Jan 10, 2027"]:visible');
 await page.click('[aria-label^="Tue, Jan 12, 2027"]:visible');
 await page.click("text=Save dates");
-await page.waitForSelector(".A-bar b:has-text('total')");
+await page.waitForSelector(".V-bar b:has-text('total')");
 // 4 adults + 2 children + 1 infant
-await page.click(".A-barLinks button:nth-of-type(2)");
+await page.click(".V-barLinks button:nth-of-type(2)");
 for (let i = 0; i < 2; i++) await page.click('[aria-label="More Adults"]');
 for (let i = 0; i < 2; i++) await page.click('[aria-label="More Children"]');
 await page.click('[aria-label="More Infants"]');
 await page.click("text=Save guests");
-await page.waitForFunction(() => document.querySelector(".A-barLinks")?.textContent?.includes("6 guests"));
-await page.waitForSelector(".A-bar b:has-text('total')");
+await page.waitForFunction(() => document.querySelector(".V-barLinks")?.textContent?.includes("6 guests"));
+await page.waitForSelector(".V-bar b:has-text('total')");
 await page.waitForTimeout(500);
 const listingQuote = quotes.at(-1);
 ok(listingQuote.req.adults === 4 && listingQuote.req.children === 2 && listingQuote.req.infants === 1, "listing quote used 4/2/1");
 const listingTotal = listingQuote.body.quote.total;
 
-await page.click(".A-bar .A-cta");
+await page.click(".V-bar .V-cta");
 await page.waitForURL(/\?home=736/);
 ok(page.url().includes("adults=4&children=2&infants=1"), "hand-off URL carries adults=4&children=2&infants=1");
 await page.waitForSelector(".plan");
