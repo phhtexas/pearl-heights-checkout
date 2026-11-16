@@ -120,7 +120,7 @@ export const HOMES: Record<string, HomeContent> = {
     highlights: [
       { title: "Walk to the Pearl", text: "About a 3-minute walk to the Pearl, the River Walk and restaurants.", source: "A listing; confirmed by Oscar (chat, Nov 15)" },
       { title: "One level, no stairs", text: "A single-level home: no stairs inside.", source: "H/A listing" },
-      { title: "Ready for little ones", text: "A playroom with toys and books, plus a crib, pack-n-play, high chair and baby bath kept at the home.", source: "A amenities; Oscar (chat, Nov 15): kept at the house, set up on request" },
+      { title: "Ready for little ones", text: "A playroom with toys and books, plus a crib, pack-n-play, high chair and baby bath kept at the home and set up on request.", source: "A amenities; Oscar (chat, Nov 15): kept at the house, set up on request" },
       { title: "Backyard and bonus room", text: "Fenced backyard with lounge seating and string lights, plus a bonus room with TV, workspace and kids' area.", source: "H/A listing" },
     ],
     summary: "A redesigned 5-bedroom, 3.5-bath home for families and groups of up to 10, close to the Pearl and the Museum Reach of the River Walk. Open kitchen with an island, living room with a smart TV, a dedicated workspace, a playroom, and a large backyard with lounge seating.",
@@ -135,7 +135,7 @@ export const HOMES: Record<string, HomeContent> = {
     topAmenities: ["Full kitchen", "Fast WiFi", "Dedicated workspace", "Free parking", "Washer and dryer", "Fenced backyard", "Crib and high chair", "Playroom"],
     amenityGroups: [
       { group: "Kitchen and dining", items: ["Full kitchen: electric stove, slide-in electric oven, dishwasher", "4-door French-door refrigerator and freezer", "Microwave, toaster, blender, kettle", "Drip coffee maker, French press and Keurig; coffee", "Pots and pans, oil, salt and pepper", "Dishes, silverware, wine glasses, baking sheet", "Trash compactor", "Dining table"] },
-      { group: "Family", items: ["Children's playroom with toys, books and games", "Children's books and toys (ages 0–2 and 2–5)", "Crib (sheets provided)", "Pack-n-play travel crib", "High chair with straps and tray", "Baby bath", "Children's dinnerware", "Outlet covers and table corner guards", "Board games"] },
+      { group: "Family", items: ["Children's playroom with toys, books and games", "Children's books and toys (ages 0–2 and 2–5)", "Crib, on request (sheets provided)", "Pack-n-play travel crib, on request", "High chair with straps and tray, on request", "Baby bath, on request", "Children's dinnerware", "Outlet covers and table corner guards", "Board games"] },
       { group: "Bedroom and laundry", items: ["Cotton hotel-style sheets, extra pillows and blankets", "Room-darkening shades", "Closets and hangers", "Free washer and dryer in the home", "Iron, hair dryer"] },
       { group: "Bathroom", items: ["Bathtub", "Vegan shampoo, conditioner and body wash", "Towels, soap and toilet paper", "Hot water"] },
       { group: "Entertainment and work", items: ["55-inch HDTV with Netflix, Disney+ and Roku", "Free weights and yoga mat", "Books and board games", "Dedicated workspace", "WiFi"] },
@@ -168,7 +168,7 @@ export const HOMES: Record<string, HomeContent> = {
     },
     thingsToKnow: [
       { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a door keypad"] },
-      { title: "House rules", items: ["Up to 10 guests; only guests on the reservation may stay or visit", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, close all doors, windows and the car gate, and send us a quick message"] },
+      { title: "House rules", items: ["Up to 10 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, close all doors, windows and the car gate, and send us a quick message"] },
       { title: "Safety and property", items: ["Two exterior security cameras: one faces the car entry gate and one is the front-door doorbell. They are motion-activated, record audio, and are checked occasionally, not monitored live.", "Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher and first aid kit"] },
     ],
     faq: [
@@ -189,7 +189,8 @@ export const HOMES: Record<string, HomeContent> = {
       { fact: "Review quotes (6), names, months", source: "Airbnb reviews as shown on the listing, word for word; approved by Oscar (chat, Nov 15) — attorney to confirm before launch" },
       { fact: "Amenities incl. 'on request' baby items, appliance details, TV/streaming, A/C types, accessible parking spot, lit path", source: "Airbnb listing amenities + accessibility panels, Nov 15, 2026 (Hospitable list as cross-check)" },
       { fact: "Camera details (2 exterior: car gate + doorbell; motion-activated; audio)", source: "Airbnb 'Safety & property', host's own wording" },
-      { fact: "No commercial photography; checkout steps", source: "Airbnb house rules" },
+      { fact: "No commercial photography; checkout steps; 'Up to 10 overnight guests' / only reservation guests use the home", source: "Airbnb house rules (re-checked Nov 16, 2026)" },
+      { fact: "Baby items 'on request'", source: "Airbnb amenities: crib, pack 'n play, high chair, baby bath 'available upon request' (re-checked Nov 16, 2026)" },
       { fact: "House rules, quiet hours, 25+ holder", source: "Hospitable additional rules; Oscar decisions (25+, no parties)" },
       { fact: "Exterior security cameras, alarms", source: "Airbnb 'Things to know' + Hospitable amenities" },
       { fact: "Host photo", source: "Hosts' Airbnb profile picture (Hospitable listing data, platform_picture), Nov 16, 2026; requested by Oscar" },
@@ -199,6 +200,9 @@ export const HOMES: Record<string, HomeContent> = {
       { fact: "3-min walk to the Pearl / 5-min drive to Zoo, DoSeum, Witte; no grill; bathroom layout; 3 cars behind gate; baby items kept at home; stove + A/C issues from May 2026 review fixed", source: "Oscar (chat, Nov 15, 2026)" },
       { fact: "Area map (approximate, no pin)", source: "OpenStreetMap embed; Oscar approved an area map (chat, Nov 15)" },
       { fact: "Registration STR-25-13500115", source: "Airbnb listing registration details" },
+      { fact: "Direct-site 25+ reservation-holder rule (differs from Airbnb's 'under 25 with a parent or guardian')", source: "Oscar (chat, Nov 16, 2026): keep the direct rule" },
+      { fact: "No toddler bed (Airbnb description mentions one; bed list does not)", source: "Oscar (chat, Nov 16, 2026)" },
+      { fact: "'Local hosts' badge", source: "Airbnb description ('we're just minutes away'); Oscar confirmed still true (chat, Nov 16, 2026)" },
       { fact: "Cancellation summary", source: "Generated from the checkout's policy engine (src/domain/policy.ts)" },
     ],
     missing: [

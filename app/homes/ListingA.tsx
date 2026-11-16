@@ -234,7 +234,6 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
     const [w, so, e, n] = (home.location.mapBbox ?? "0,0,0,0").split(",").map(Number) as [number, number, number, number];
     return { lat: (so + n) / 2, lon: (w + e) / 2 }; // bbox center: between the home and the Pearl, never the exact house
   }, [home.location.mapBbox]);
-  const amenityCount = home.amenityGroups.reduce((n, g) => n + g.items.length, 0);
   const roomPhoto = (i: number) => ROOM_PHOTOS[i] ?? ROOM_PHOTOS[0]!;
   const roomAlt = (id: string) => home.photos.find((p) => p.id === id)?.alt ?? "";
 
@@ -298,7 +297,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
         <section id="amenities" className="A-sec">
           <h2>Amenities</h2>
           <ul className="A-list">{home.topAmenities.map((a) => <li key={a}><Icon name={iconFor(a)} size={18} />{a}</li>)}</ul>
-          <button className="A-outline" onClick={() => open("amenities")}>Show all {amenityCount} amenities</button>
+          <button className="A-outline" onClick={() => open("amenities")}>Show all amenities</button>
         </section>
 
         <section className="A-sec">
