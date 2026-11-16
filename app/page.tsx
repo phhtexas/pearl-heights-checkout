@@ -264,7 +264,7 @@ export default function Checkout() {
   );
 
   return (
-    <>
+    <div className="ck">
       <div className="testbar">
         <span>Test checkout · {stripeMode ? "Stripe test payments" : "fake payments"} · no real charges</span>
         <label>Home <select value={home} onChange={(e) => { setHome(e.target.value); setCi(null); setCo(null); setQuote(null); setStep("review"); }}>
@@ -456,6 +456,6 @@ export default function Checkout() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

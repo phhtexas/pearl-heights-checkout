@@ -172,3 +172,38 @@ html { scroll-padding-bottom: 200px; scroll-padding-top: 12px; }
 input.f.bad { border-color: var(--bad); }
 .fld .err { display: block; margin-top: 4px; }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+
+/* Nov 16: checkout matches listing option A — Inter type (Marcellus stays on the logo) and Airbnb-style spacing
+   (24px side margins, more room between sections). Scoped to the checkout (.ck) so other pages are unchanged.
+   Inter runs larger than Jost at the same size, so the type scale steps down slightly to match option A. */
+.ck { font: 16px/1.45 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+.ck h1, .ck h2, .ck .h3, .ck .homeName { letter-spacing: -0.01em; }
+.ck h1 { font-size: 26px; line-height: 1.2; }
+.ck h2 { font-size: 19px; }
+.ck .h3 { font-size: 17px; }
+.ck .homeName { font-size: 18px; }
+.ck .val, .ck .pt, .ck .cancel b { font-size: 16px; }
+.ck .ln.total { font-size: 17px; }
+.ck .link { font-size: 16px; }
+.ck .btn { font-size: 17px; }
+.ck .muted, .ck .sub, .ck .hint, .ck .chk, .ck .err, .ck .alert, .ck .box, .ck .notice, .ck .cardForm { font-size: 14.5px; }
+.ck .top { padding: 10px 16px; }
+.ck .lock { padding: 10px 24px; }
+.ck .layout { padding: 26px 24px 200px; }
+.ck .layout.single { padding-bottom: 56px; }
+.ck .flow { gap: 32px; }
+.ck .hcHead { padding: 18px 20px 6px; }
+.ck .hcRow { margin: 0 20px; padding: 16px 0; }
+.ck .plans { gap: 14px; }
+.ck .plan { padding: 20px 18px; gap: 16px; }
+.ck .priceSec { gap: 12px; }
+.ck .badges { padding-top: 24px; }
+.ck .foot { padding: 0 24px calc(18px + env(safe-area-inset-bottom)); }
+.ck .sheet { padding: 22px 24px calc(26px + env(safe-area-inset-bottom)); gap: 14px; }
+@media (min-width: 960px) {
+  .ck h1 { font-size: 30px; }
+  .ck .top { padding: 16px 64px; }
+  .ck .layout { padding: 36px 64px 72px; }
+  .ck .flow { gap: 32px; }
+  .ck .sumBody { padding: 22px 26px 26px; gap: 16px; }
+}
