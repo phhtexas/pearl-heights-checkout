@@ -75,6 +75,22 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
   const [saved, setSaved] = useState(false);
   const [shared, setShared] = useState("");
   const sheetRef = useRef<HTMLDivElement | null>(null);
+  const heroRef = useRef<HTMLElement | null>(null);
+  // As the page scrolls, the content sheet slides over the pinned cover and the cover fades slightly to white.
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const h = heroRef.current;
+      if (!h) return;
+      const p = Math.min(1, Math.max(0, (window.scrollY - h.offsetTop) / Math.max(1, h.offsetHeight)));
+      h.style.setProperty("--fade", (p * 0.6).toFixed(3));
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf); };
+  }, []);
   const opener = useRef<HTMLElement | null>(null);
   const reqId = useRef(0);
   const guests = adults + children;
@@ -233,18 +249,19 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
       </header>
       {shared && <div className="A-toast" role="status">{shared}</div>}
 
-      <section className="A-hero" aria-label="Photos">
+      <section ref={heroRef} className="A-hero" aria-label="Photos">
         <div className="A-carousel" onClick={() => { setTourFocus(null); open("tour"); }} onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
           {home.photos.map((p, i) => (
             <div className="A-slide" key={p.id}>
               <Image src={src(p.id)} alt={p.alt} fill sizes="(min-width: 600px) 560px, 100vw" priority={i === 0} loading={i === 0 ? undefined : "lazy"} style={{ objectFit: "cover" }} />
             </div>))}
         </div>
+        <div className="A-heroFade" aria-hidden="true" />
         <div className="A-dots" aria-hidden="true">{Array.from({ length: DOTS }, (_, i) => <span key={i} className={i === Math.round((slide / Math.max(1, home.photos.length - 1)) * (DOTS - 1)) ? "on" : ""} />)}</div>
         <button className="A-count" onClick={() => { setTourFocus(null); open("tour"); }} aria-label={`Photo ${slide + 1} of ${home.photos.length}. Open the photo tour`}>{slide + 1} / {home.photos.length}</button>
       </section>
 
-      <main className="A-main">
+      <main className="A-main A-sheet">
         <section className="A-intro">
           <h1>{home.title}</h1>
           <div className="A-sub">{home.neighborhood}, San Antonio · Entire home</div>

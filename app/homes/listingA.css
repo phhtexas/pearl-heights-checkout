@@ -187,3 +187,10 @@ a.A-outline { display: flex; align-items: center; justify-content: center; text-
 
 /* Nov 16: room cards are buttons that open the photo tour at that room. */
 button.A-room { display: block; padding: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+
+/* Nov 16: rounded content sheet that slides up over a pinned cover; cover fades slightly to white on scroll. */
+.A-hero { position: sticky; top: 0; z-index: 0; border-radius: 18px 18px 0 0; }
+.A-heroFade { position: absolute; inset: 0; background: #fff; opacity: var(--fade, 0); pointer-events: none; }
+.A-sheet { position: relative; z-index: 1; background: #fff; border-radius: 24px 24px 0 0; margin-top: -24px; padding-top: 26px; box-shadow: 0 -8px 20px rgba(0, 0, 0, .06); }
+.A-dots { bottom: 36px; }
+.A-count { bottom: 34px; }
