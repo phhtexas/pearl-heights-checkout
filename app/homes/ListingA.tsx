@@ -17,7 +17,7 @@ import "./listingA.css";
  */
 type Day = { date: string; available: boolean; price: number; minStay: number; closedForCheckin?: boolean; closedForCheckout?: boolean };
 type Prop = { key: string; name: string; maxGuests: number; extraGuestFrom: number; extraGuestFee: number };
-type Sheet = null | "dates" | "guests" | "amenities" | "tour";
+type Sheet = null | "dates" | "guests" | "amenities" | "tour" | "map";
 
 const money = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: c % 100 ? 2 : 0 });
 const fmt = (iso: string) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric" });
@@ -240,10 +240,6 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
           <div className="A-cap">Entire home · {home.capacity.bedrooms} bedrooms · {home.capacity.beds} beds · {home.capacity.baths} baths · sleeps {home.capacity.guests}</div>
         </section>
 
-        <nav className="A-anchors" aria-label="On this page">
-          <a href="#overview">Overview</a><a href="#sleep">Bedrooms</a><a href="#amenities">Amenities</a><a href="#reviews">Reviews</a><a href="#location">Location</a><a href="#hosts">Hosts</a><a href="#rules">House rules</a><a href="#faq">Questions</a>
-        </nav>
-
         <section className="A-host">
           <div className="A-avatar" aria-hidden="true">O&amp;F</div>
           <div><b>Hosted by {home.host.names}</b><span>{home.host.facts[0]} · {home.host.facts.find((f) => /reply/i.test(f)) ?? ""}</span></div>
@@ -261,7 +257,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
           <h2>Sleeping arrangements</h2>
           <div className="A-rooms">{home.sleeping.map((r, i) => (
             <div key={r.room} className="A-room">
-              <div className="A-roomPh"><Image src={src(roomPhoto(i))} alt={roomAlt(roomPhoto(i))} fill sizes="170px" loading="lazy" style={{ objectFit: "cover" }} /></div>
+              <div className="A-roomPh"><Image src={src(roomPhoto(i))} alt={roomAlt(roomPhoto(i))} fill sizes="(min-width: 600px) 360px, 70vw" loading="lazy" style={{ objectFit: "cover" }} /></div>
               <div className="A-roomTx"><b>{r.room}</b><span>{r.beds}</span></div>
             </div>))}
           </div>
@@ -285,10 +281,11 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
           <h2>Location</h2>
           {home.location.mapBbox && (
             <div className="A-map">
-              <iframe title={`Map of the area around ${home.neighborhood} (approximate, not the exact address)`} loading="lazy" referrerPolicy="no-referrer"
+              <iframe title={`Map of the area around ${home.neighborhood} (approximate, not the exact address)`} loading="lazy" referrerPolicy="no-referrer" tabIndex={-1}
                 src={`https://www.openstreetmap.org/export/embed.html?bbox=${home.location.mapBbox}&layer=mapnik`} />
-              <span className="A-mapArea" aria-hidden="true" />
-              <span className="A-mapTag">Approximate area</span>
+              <span className="A-pin" aria-hidden="true"><Icon name="home" size={22} /></span>
+              <span className="A-mapTag">Approximate location</span>
+              <button className="A-expand" onClick={() => open("map")} aria-label="Open the map full screen"><Icon name="expand" size={20} /></button>
             </div>)}
           <p className="A-p">{home.location.text}</p>
           <ul className="A-list A-rules A-facts">{home.location.facts.map((f) => <li key={f}><Icon name={/drive/.test(f) ? "car" : "walk"} size={18} />{f}</li>)}</ul>
@@ -388,7 +385,24 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
         </div>
       )}
 
-      {sheet && sheet !== "tour" && (
+      {sheet === "map" && home.location.mapBbox && (() => {
+        const [w, so, e, n] = home.location.mapBbox.split(",").map(Number) as [number, number, number, number];
+        const pad = 0.012, lat = ((so + n) / 2).toFixed(4), lon = ((w + e) / 2).toFixed(4);
+        return (
+          <div ref={sheetRef} className="A-tour A-mapFull" role="dialog" aria-modal="true" aria-label="Map">
+            <div className="A-tourTop">
+              <button className="A-icoBtn" onClick={() => setSheet(null)} aria-label="Back to the listing"><Icon name="back" size={22} /></button>
+              <h2>Where you'll be</h2><span />
+            </div>
+            <div className="A-mapBig">
+              <iframe title={`Map of ${home.neighborhood} (approximate location, not the exact address)`} referrerPolicy="no-referrer"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${w - pad},${so - pad},${e + pad},${n + pad}&layer=mapnik&marker=${lat},${lon}`} />
+            </div>
+            <p className="A-note A-mapNote">{home.neighborhood} · Approximate location. {home.location.note}</p>
+          </div>);
+      })()}
+
+      {sheet && sheet !== "tour" && sheet !== "map" && (
         <div className="scrim" onClick={(e) => { if (e.target === e.currentTarget) setSheet(null); }}>
           <div ref={sheetRef} className="sheet" role="dialog" aria-modal="true" aria-label={{ dates: "Select dates", guests: "Guests", amenities: "All amenities" }[sheet as "dates" | "guests" | "amenities"]}>
             <div className="sheetHead"><h2>{{ dates: "Select dates", guests: "Guests", amenities: "All amenities" }[sheet as "dates" | "guests" | "amenities"]}</h2>
