@@ -24,6 +24,9 @@
     "vitest": "2.1.8"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.1.0",
+    "@fontsource/jost": "^5.1.0",
+    "@fontsource/marcellus": "^5.1.0",
     "@neondatabase/serverless": "^1.2.1",
     "@stripe/react-stripe-js": "^7.1.0",
     "@stripe/stripe-js": "^10.3.0",

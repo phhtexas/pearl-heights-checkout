@@ -1,4 +1,15 @@
 import type { ReactNode } from "react";
+// Fonts are self-hosted (same families and weights as before, Latin set) so the first paint doesn't wait on
+// Google's font server (~0.7 s render-blocking on slow 4G; note 150 item 4, Oscar approved Nov 16).
+import "@fontsource/inter/latin-400.css";
+import "@fontsource/inter/latin-500.css";
+import "@fontsource/inter/latin-600.css";
+import "@fontsource/inter/latin-700.css";
+import "@fontsource/jost/latin-400.css";
+import "@fontsource/jost/latin-500.css";
+import "@fontsource/jost/latin-600.css";
+import "@fontsource/jost/latin-700.css";
+import "@fontsource/marcellus/latin-400.css";
 import "./globals.css";
 
 export const metadata = {
@@ -9,12 +20,6 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Jost:wght@400;500;600;700&family=Marcellus&display=swap" rel="stylesheet" />
-      </head>
       <body>{children}</body>
     </html>
   );
