@@ -11,7 +11,8 @@
     "build": "node scripts/migrate.mjs && next build",
     "start": "next start",
     "e2e": "node e2e/date-guest-change.mjs",
-    "e2e:listing": "node e2e/listing-736.mjs"
+    "e2e:listing": "node e2e/listing-736.mjs",
+    "e2e:handoff": "node e2e/listing-handoff.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.16",

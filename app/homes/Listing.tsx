@@ -102,9 +102,9 @@ export function Listing({ home, prop, policy }: { home: HomeContent; prop: Prop;
   }
   function reserve() {
     if (!quote || !ci || !co) return;
-    track("checkout_started", { property: prop.key, nights: quote.nights, guests, total_cents: quote.total }, "cs" + ci + co + guests);
+    track("checkout_started", { property: prop.key, nights: quote.nights, adults, children, infants, total_cents: quote.total }, "cs" + ci + co + adults + "-" + children + "-" + infants);
     // Hands off to Checkout E (unchanged): it re-quotes server-side and starts its own 15-minute price lock.
-    location.href = `/?home=${prop.key}&checkIn=${ci}&checkOut=${co}&adults=${guests}`;
+    location.href = `/?home=${prop.key}&checkIn=${ci}&checkOut=${co}&adults=${adults}&children=${children}&infants=${infants}`;
   }
 
   const dayState = (iso: string) => {

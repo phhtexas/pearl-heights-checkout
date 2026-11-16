@@ -83,8 +83,12 @@ export default function Checkout() {
     if (h && PROPERTIES.some((p) => p.key === h)) setHome(h);
     const a = q.get("checkIn"), b = q.get("checkOut");
     if (a && b && /^\d{4}-\d{2}-\d{2}$/.test(a) && /^\d{4}-\d{2}-\d{2}$/.test(b) && b > a) { setCi(a); setCo(b); setMonth(a.slice(0, 7)); }
-    const n = Number(q.get("adults"));
-    if (Number.isInteger(n) && n >= 1 && n <= 20) setAdults(n);
+    // Guest mix from the home's page (note 144): adults, children and infants arrive separately.
+    const num = (k: string, min: number, max: number) => { const v = q.get(k); const n = Number(v); return v !== null && Number.isInteger(n) && n >= min && n <= max ? n : null; };
+    const ad = num("adults", 1, 20), ch = num("children", 0, 20), inf = num("infants", 0, 6);
+    if (ad !== null) setAdults(ad);
+    if (ch !== null) setChildren(ch);
+    if (inf !== null) setInfants(inf);
     setReady(true);
   }, []);
   useEffect(() => { fetch("/api/config").then((r) => r.json()).then(setCfg).catch(() => undefined); }, []);
