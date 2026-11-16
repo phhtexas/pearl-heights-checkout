@@ -237,3 +237,6 @@ button.A-room { display: block; padding: 0; background: none; text-align: left; 
 .A-tourSec { padding: 22px 24px 10px; }
 .A-mapNote { padding-left: 24px; padding-right: 24px; }
 .A-mapBig { padding: 0 16px; }
+
+/* Room cards are buttons: keep photo and text pinned to the top so cards line up. */
+button.A-room { display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; }
