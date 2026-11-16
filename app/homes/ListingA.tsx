@@ -239,7 +239,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
 
   return (
     <div className="A-page">
-      <div className="A-test">Listing option A · Preview · nothing is booked or charged</div>
+      <div className="A-test">Test site · nothing is booked or charged</div>
       <header className="A-top">
         <span aria-hidden="true" className="A-topSide" />
         <a href="https://pearlheightshomes.com" className="A-brand">Pearl Heights <span>HOMES</span></a>

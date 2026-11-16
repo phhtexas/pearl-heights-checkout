@@ -10,7 +10,7 @@ const ctx = await browser.newContext({ ...devices["iPhone 13"] });
 const page = await ctx.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
-await page.goto(`${BASE}/homes/736-myrtle/a`);
+await page.goto(`${BASE}/homes/736-myrtle`);
 await page.waitForSelector("h1");
 ok((await page.textContent("h1")) === "Large Family House Next to the Pearl", "title is the 736 title");
 ok((await page.locator(".A-dots span").count()) === 5, "five hero dots");
@@ -31,7 +31,7 @@ const firstInBedrooms = await page.locator("#tour-bedrooms .A-tourPh img").first
 const secTop = await page.locator("#tour-bedrooms").evaluate((e) => Math.round(e.getBoundingClientRect().top));
 ok(firstInBedrooms === roomAlt && secTop < 120, `room card opens the tour at Bedrooms with that photo as the cover (${firstInBedrooms}; top ${secTop})`);
 await page.click('[aria-label="Back to the listing"]');
-ok(!/example|no platform fees|Verified local/i.test(await page.textContent("body")), "no example tags or unsourced claims");
+ok(!/example|no platform fees|Verified local|option A/i.test(await page.textContent("body")), "no example tags or unsourced claims");
 await page.waitForTimeout(1500);
 if (SHOTS) await page.screenshot({ path: `${SHOTS}/a-first.png`, fullPage: true });
 await page.click(".A-bar .A-cta");
@@ -53,3 +53,8 @@ ok(/checkOut=2027-01-12&adults=2&children=1&infants=0/.test(page.url()), "Reserv
 const ev = await page.evaluate(() => 1);
 ok(errors.length === 0, "no page errors " + errors.join(" | "));
 await browser.close();
+// Old review link redirects to the main page.
+const b2 = await chromium.launch(); const p2 = await b2.newPage();
+const r = await p2.goto(`${BASE}/homes/736-myrtle/a`);
+ok(new URL(p2.url()).pathname === "/homes/736-myrtle" && r.ok(), "old /a link redirects to /homes/736-myrtle");
+await b2.close();

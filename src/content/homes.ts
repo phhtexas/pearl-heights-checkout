@@ -198,7 +198,7 @@ export const HOMES: Record<string, HomeContent> = {
       { fact: "Host facts (Superhost, 4 years, 460 reviews 4.98, languages, bio)", source: "Airbnb host profile on the listing, Nov 15, 2026" },
       { fact: "Response time 'usually within an hour'", source: "Airbnb host details ('Responds within an hour')" },
       { fact: "3-min walk to the Pearl / 5-min drive to Zoo, DoSeum, Witte; no grill; bathroom layout; 3 cars behind gate; baby items kept at home; stove + A/C issues from May 2026 review fixed", source: "Oscar (chat, Nov 15, 2026)" },
-      { fact: "Area map (approximate, no pin)", source: "OpenStreetMap embed; Oscar approved an area map (chat, Nov 15)" },
+      { fact: "Area map (approximate point between the home and the Pearl, never the house)", source: "OpenStreetMap tiles; Oscar approved an area map (chat, Nov 15) and the Airbnb-style marker map (chat, Nov 16)" },
       { fact: "Registration STR-25-13500115", source: "Airbnb listing registration details" },
       { fact: "Direct-site 25+ reservation-holder rule (differs from Airbnb's 'under 25 with a parent or guardian')", source: "Oscar (chat, Nov 16, 2026): keep the direct rule" },
       { fact: "No toddler bed (Airbnb description mentions one; bed list does not)", source: "Oscar (chat, Nov 16, 2026)" },
