@@ -37,7 +37,7 @@ const HOSTS: HomeContent["host"] = {
   names: "Oscar & Fernanda",
   photo: "/homes/hosts/oscar-fernanda.jpg",
   since: "Hosting for 4 years",
-  facts: ["Airbnb Superhosts", "4.98 average across 460 Airbnb reviews of our homes", "Speak English and Spanish", "Usually reply within an hour"],
+  facts: ["Airbnb Superhosts", "4.98 average across 463 Airbnb reviews of our homes", "Speak English and Spanish", "Usually reply within an hour"],
   bio: "Hello! We’re a family of four who love to travel and experience new places and cultures. With a 5-year-old girl and a 2-year-old boy, we know the importance of comfort and hospitality. As both guests and hosts, we value cleanliness, thoughtful touches, and creating a welcoming space. We set up our homes to feel like places we’d want our own family to stay in—cozy, well-equipped, and inviting. Our goal is to ensure every stay feels like home!",
   };
 
@@ -262,7 +262,7 @@ export const HOMES: Record<string, HomeContent> = {
       { title: "In Alamo Heights", text: "A quiet Alamo Heights street, a short drive to the Pearl, the River Walk and the McNay Art Museum.", source: "A listing highlights" },
       { title: "Parking for 4 cars", text: "Free driveway parking for four cars, plus a Level 2 EV charger (Tesla only).", source: "A amenities" },
       { title: "Ready for little ones", text: "A playroom with toys, books and games and a baby bath at the home; crib, pack 'n play and high chair on request.", source: "A amenities" },
-      { title: "Fenced backyard and patio", text: "A private, fully fenced backyard with a patio and outdoor furniture.", source: "A amenities" },
+      { title: "Fenced backyard and patio", text: "A private, fully fenced backyard with a basketball hoop, a patio and outdoor furniture.", source: "A amenities" },
     ],
     summary: "A newly remodeled 2-bedroom home for up to 8 guests on a quiet street in Alamo Heights. Living room with a 65-inch TV and an electric fireplace, a children's playroom, a dedicated workspace with fast WiFi, and a fully fenced backyard with a patio.",
     sleeping: [
@@ -279,7 +279,7 @@ export const HOMES: Record<string, HomeContent> = {
       { group: "Bathroom", items: ["Vegan shampoo, conditioner and shower gel", "Towels, soap and toilet paper", "Cleaning products", "Hot water"] },
       { group: "Entertainment and work", items: ["65-inch HDTV with Netflix, Roku, Amazon Prime Video, premium cable and Fire TV", "Free weights and yoga mat", "Books and life-size games", "Dedicated workspace with laptop stand and surge protector", "Fast WiFi (770 Mbps)"] },
       { group: "Heating and cooling", items: ["Central air conditioning", "Central and radiant heating", "Ceiling fans", "Electric indoor fireplace"] },
-      { group: "Outdoors, parking and access", items: ["Private, fully fenced backyard", "Private patio and outdoor furniture", "Private entrance", "Free driveway parking for 4 cars", "Free street parking", "Level 2 EV charger (Tesla only)", "Single-level home, no stairs", "Lit path to the guest entrance", "Self check-in with smart lock", "Long stays (28 nights or more) allowed"] },
+      { group: "Outdoors, parking and access", items: ["Private, fully fenced backyard", "Basketball hoop in the backyard", "Private patio and outdoor furniture", "Private entrance", "Free driveway parking for 4 cars", "Free street parking", "Level 2 EV charger (Tesla only)", "Single-level home, no stairs", "Lit path to the guest entrance", "Self check-in with smart lock", "Long stays (28 nights or more) allowed"] },
       { group: "Safety", items: ["Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher", "First aid kit", "Two exterior security cameras (see Things to know)"] },
     ],
     goodFit: ["Families with babies and young kids", "Guests who want a quiet residential street in Alamo Heights", "Remote workers (dedicated workspace, fast WiFi)", "Tesla drivers (Level 2 charger on site)"],

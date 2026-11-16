@@ -60,7 +60,7 @@ await browser.close();
   const ph = await (await b.newContext(devices["iPhone 13"])).newPage();
   await ph.goto(`${BASE}/homes/736-myrtle`); await ph.waitForSelector("h1");
   const trust = ph.locator(".V-bar .V-barTrust");
-  ok((await trust.textContent()) === "Airbnb Superhosts · 4.98 across 460 Airbnb reviews · Secure payment by Stripe", "phone: trust proof sits in the booking bar");
+  ok((await trust.textContent()) === "Airbnb Superhosts · 4.98 across 463 Airbnb reviews · Secure payment by Stripe", "phone: trust proof sits in the booking bar");
   const below = await ph.evaluate(() => { const t = document.querySelector(".V-bar .V-barTrust").getBoundingClientRect(), c = document.querySelector(".V-bar .V-cta").getBoundingClientRect(); return t.top >= c.bottom - 1; });
   ok(below && (await trust.evaluate((e) => getComputedStyle(e).fontStyle)) === "italic", "phone: trust line is italic and below the button");
   const foot = await ph.textContent(".V-footer");
