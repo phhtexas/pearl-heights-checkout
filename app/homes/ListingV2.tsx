@@ -257,7 +257,9 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
       {shared && <div className="V-toast" role="status">{shared}</div>}
 
       <section ref={heroRef} className="V-hero" aria-label="Photos">
-        <div ref={carRef} className="V-carousel" onClick={() => { setTourFocus(null); open("tour"); }} onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
+        <div ref={carRef} className="V-carousel" tabIndex={0} role="region" aria-roledescription="carousel" aria-label={`Photos, ${slide + 1} of ${home.photos.length}. Use the left and right arrow keys to browse; press Enter for the photo tour.`}
+          onKeyDown={(e) => { if (e.key === "ArrowRight") { e.preventDefault(); goSlide(slide + 1); } else if (e.key === "ArrowLeft") { e.preventDefault(); goSlide(slide - 1); } else if (e.key === "Enter") { setTourFocus(null); open("tour"); } }}
+          onClick={() => { setTourFocus(null); open("tour"); }} onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
           {home.photos.map((p, i) => (
             <div className="V-slide" key={p.id} aria-hidden={i !== slide}>
               {Math.abs(i - slide) <= 2 && <Image src={src(p.id)} alt={p.alt} fill sizes="(min-width: 960px) 1040px, 100vw" priority={i === 0} loading={i === 0 ? undefined : "lazy"} style={{ objectFit: "cover" }} />}
@@ -321,7 +323,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
           <h2>Location</h2>
           {home.location.mapBbox && (
             <div className="V-map">
-              <div role="img" aria-label={`Map of ${home.neighborhood}, approximate location (not the exact address)`}><TileMap lat={mapPt.lat} lon={mapPt.lon} zoom={14} /></div>
+              <div className="V-mapWrap"><p className="sr">Map of {home.neighborhood}, showing an approximate location, not the exact address.</p><TileMap lat={mapPt.lat} lon={mapPt.lon} zoom={14} /></div>
               <span className="V-mapTag">Approximate location</span>
               <button className="V-expand" onClick={() => open("map")} aria-label="Open the map full screen"><Icon name="expand" size={20} /></button>
             </div>)}
@@ -334,7 +336,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
           <section id="reviews" className="V-sec">
             <h2>Reviews</h2>
             <div className="V-score"><Icon name="star" size={14} />{home.rating.value.toFixed(2)} · {home.rating.count} reviews</div>
-            <div className="V-reviews">{home.reviews.map((r) => (
+            <div className="V-reviews" tabIndex={0} role="region" aria-label="Guest reviews. Scroll sideways or use the arrow keys.">{home.reviews.map((r) => (
               <figure key={r.name + r.when} className="V-review">
                 {r.rating && <div className="V-rstar"><Icon name="star" size={13} />{r.rating.toFixed(1)}</div>}
                 <blockquote>“{r.text.length > 150 ? r.text.slice(0, 150).replace(/\s\S*$/, "") + "…" : r.text}”</blockquote>
