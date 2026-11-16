@@ -218,3 +218,12 @@ input.f.bad { border-color: var(--bad); }
 .ck .plan.on .radio { border-color: var(--ck-blue); }
 .ck .chk input { accent-color: var(--ck-blue); }
 .ck .photoImg { object-fit: cover; }
+
+/* Note 150: neutral loading skeleton (no home name, photo or dates) until the checkout knows the guest's stay. */
+.skel { background: linear-gradient(90deg, #f0f0ee 25%, #f7f7f5 37%, #f0f0ee 63%); background-size: 400% 100%; border-radius: 14px; animation: skel 1.3s ease infinite; }
+.skelH1 { height: 32px; width: 62%; }
+.skelCard { height: 380px; border-radius: 19px; }
+.skelLine { height: 18px; } .skelLine.short { width: 55%; }
+.skelPlan { height: 76px; border-radius: 15px; }
+@keyframes skel { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } }

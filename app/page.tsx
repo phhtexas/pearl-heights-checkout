@@ -52,6 +52,9 @@ export default function Checkout() {
   const [adults, setAdults] = useState(2), [children, setChildren] = useState(0), [infants, setInfants] = useState(0);
   const [plan, setPlan] = useState<"full" | "split">("full");
   const [ready, setReady] = useState(false);
+  // Note 150: never paint a default home. Until the link's home/dates/guests are read (and, when the link has dates,
+  // until the first price is back), show a neutral skeleton; then reveal the complete checkout at once.
+  const [revealed, setRevealed] = useState(false);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [quoteId, setQuoteId] = useState("");
   const [policy, setPolicy] = useState<StayPolicy | null>(null);
@@ -95,11 +98,14 @@ export default function Checkout() {
     if (ch !== null) setChildren(ch);
     if (inf !== null) setInfants(inf);
     setReady(true);
+    if (!(a && b && b > a)) setRevealed(true); // no dates in the link: the date picker is the first thing to show
   }, []);
+  useEffect(() => { if (!ready) return; const t = setTimeout(() => setRevealed(true), 8000); return () => clearTimeout(t); }, [ready]); // never stay hidden
   useEffect(() => { fetch("/api/config").then((r) => r.json()).then(setCfg).catch(() => undefined); }, []);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
   useEffect(() => {
+    if (!ready) return; // don't fetch the default home's calendar before the link is read
     const ctrl = new AbortController();
     setCal({ property: home, days: [] });
     fetch(`/api/calendar?property=${home}`, { signal: ctrl.signal, cache: "no-store" })
@@ -107,7 +113,7 @@ export default function Checkout() {
       .then((j) => { if (!ctrl.signal.aborted && j.property === home) setCal({ property: home, days: j.days ?? [] }); })
       .catch(() => undefined);
     return () => ctrl.abort();
-  }, [home, calVersion]);
+  }, [home, calVersion, ready]);
   const days = cal.property === home ? cal.days : [];
   const byDate = useMemo(() => Object.fromEntries(days.map((d) => [d.date, d])), [days]);
 
@@ -119,6 +125,7 @@ export default function Checkout() {
     const r = await fetch("/api/quote", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan }) });
     const j = await r.json().catch(() => ({}));
     setQuoting(false);
+    setRevealed(true);
     if (!r.ok) { setQuote(null); setErr(j.error ?? "We couldn't price these dates. Please try other dates."); return; }
     const prev = lastTotal.current;
     if (prev != null && prev !== j.quote.total) {
@@ -266,6 +273,23 @@ export default function Checkout() {
         <Badges />
       </div>
     </aside>
+  );
+
+
+  if (!ready || !revealed) return (
+    <div className="ck" aria-busy="true">
+      <div className="testbar"><span>Test checkout · no real charges</span></div>
+      <header className="top"><span className="hdrSide" /><span className="brand">Pearl Heights <span>HOMES</span></span><span className="hdrSide" /></header>
+      <main className="layout" aria-label="Loading your stay">
+        <p className="sr" role="status">Loading your stay…</p>
+        <div className="flow" aria-hidden="true">
+          <div className="skel skelH1" />
+          <div className="skel skelCard" />
+          <div className="skel skelLine" /><div className="skel skelLine short" />
+          <div className="skel skelPlan" /><div className="skel skelPlan" />
+        </div>
+      </main>
+    </div>
   );
 
   return (

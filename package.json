@@ -12,7 +12,8 @@
     "start": "next start",
     "e2e": "node e2e/date-guest-change.mjs",
     "e2e:listing": "node e2e/listing-a.mjs",
-    "e2e:handoff": "node e2e/listing-handoff.mjs"
+    "e2e:handoff": "node e2e/listing-handoff.mjs",
+    "e2e:entry": "node e2e/checkout-entry.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.16",
