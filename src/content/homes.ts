@@ -161,7 +161,7 @@ export const HOMES: Record<string, HomeContent> = {
     ],
     host: {
       names: "Oscar & Fernanda",
-      photo: "https://a0.muscache.com/im/pictures/user/1826038f-d265-41c6-877b-f2d217548669.jpg?aki_policy=profile_large",
+      photo: "/homes/hosts/oscar-fernanda.jpg",
       since: "Hosting for 4 years",
       facts: ["Airbnb Superhosts", "4.98 average across 460 Airbnb reviews of our homes", "Speak English and Spanish", "Usually reply within an hour"],
       bio: "Hello! We’re a family of four who love to travel and experience new places and cultures. With a 5-year-old girl and a 2-year-old boy, we know the importance of comfort and hospitality. As both guests and hosts, we value cleanliness, thoughtful touches, and creating a welcoming space. We set up our homes to feel like places we’d want our own family to stay in—cozy, well-equipped, and inviting. Our goal is to ensure every stay feels like home!",
@@ -193,7 +193,7 @@ export const HOMES: Record<string, HomeContent> = {
       { fact: "Baby items 'on request'", source: "Airbnb amenities: crib, pack 'n play, high chair, baby bath 'available upon request' (re-checked Nov 16, 2026)" },
       { fact: "House rules, quiet hours, 25+ holder", source: "Hospitable additional rules; Oscar decisions (25+, no parties)" },
       { fact: "Exterior security cameras, alarms", source: "Airbnb 'Things to know' + Hospitable amenities" },
-      { fact: "Host photo", source: "Hosts' Airbnb profile picture (Hospitable listing data, platform_picture), Nov 16, 2026; requested by Oscar" },
+      { fact: "Host photo", source: "Hosts' Airbnb profile picture (Hospitable listing data, platform_picture), Nov 16, 2026; requested by Oscar. Self-hosted at /homes/hosts/oscar-fernanda.jpg (note 155)" },
       { fact: "Per-review 5.0 ratings on the six quoted reviews", source: "Hospitable review records (public rating 5.00 each), Nov 16, 2026" },
       { fact: "Host facts (Superhost, 4 years, 460 reviews 4.98, languages, bio)", source: "Airbnb host profile on the listing, Nov 15, 2026" },
       { fact: "Response time 'usually within an hour'", source: "Airbnb host details ('Responds within an hour')" },

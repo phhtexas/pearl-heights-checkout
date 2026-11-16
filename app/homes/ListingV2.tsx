@@ -37,7 +37,7 @@ const DOTS = 5;
 /** Note 150: compact, factual trust proof beside the booking action (approved wording). */
 const TRUST = "Airbnb Superhosts · 4.98 across 460 Airbnb reviews · Secure payment by Stripe";
 /** Footer (Oscar, chat Nov 16, 2026): email only (incl. the "thepearlheightshomes.com" domain), managed-by line, Instagram from
- *  pearlheightshomes.com's own footer link. Facebook icon to be added when Oscar sends the page link. */
+ *  pearlheightshomes.com's own footer link. Instagram only (note 155). */
 const CONTACT = { email: "bookings@thepearlheightshomes.com", managedBy: "Site managed by PR Portfolio Properties LLC | San Antonio, TX" };
 const SOCIAL = [{ name: "Instagram", icon: "instagram", href: "https://www.instagram.com/pearlheightshomes" }];
 
