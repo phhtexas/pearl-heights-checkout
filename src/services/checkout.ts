@@ -1,3 +1,4 @@
+import type { ConsentRecord } from "@/domain/consent";
 import { HospitableAdapter, PaymentsAdapter, AdapterError } from "../adapters/types";
 import { BookingState, BookingEvent, transition } from "../domain/bookingState";
 import { Property } from "../domain/properties";
@@ -16,6 +17,8 @@ export interface CheckoutRequest {
   bookingRef: string;
   acceptedTotal: number; // the total the guest saw and accepted (cents)
   paymentMethodId?: string; // Stripe PaymentMethod from the browser (test/live)
+  /** Checkbox wording + policy versions accepted, with the server time (saved on the booking row). */
+  consent?: ConsentRecord;
   now: Date;
 }
 

@@ -1,3 +1,4 @@
+import { CONSENT_ID } from "@/domain/consent";
 /** Request validation for API routes. Prices are never taken from the client; only selections are. */
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -41,7 +42,8 @@ export function parseCheckout(b: any) {
   if (!guest.firstName || !guest.lastName) throw new ValidationError("Enter the main guest's first and last name.");
   if (!EMAIL.test(guest.email)) throw new ValidationError("Enter a valid email so we can send your confirmation.");
   if (guest.phone.replace(/\D/g, "").length < 10) throw new ValidationError("Enter a mobile number with area code.");
-  if (b?.agreed !== true) throw new ValidationError("Please accept the house rules, cancellation policy and payment authorization.");
+  if (b?.agreed !== true) throw new ValidationError("Please check the box to accept the terms and payment authorization.");
+  if (b?.consentId !== CONSENT_ID) throw new ValidationError("Our terms were updated. Please refresh the page, review them and check the box again.");
   const acceptedTotal = int(b?.acceptedTotal, "Accepted total", 1, 100_000_000);
   if (b?.bookingRef != null && !REF.test(String(b.bookingRef))) throw new ValidationError("Invalid booking reference.");
   if (b?.paymentMethodId != null && !/^pm_[A-Za-z0-9_]{6,64}$/.test(String(b.paymentMethodId))) throw new ValidationError("Invalid payment details. Please re-enter your card.");

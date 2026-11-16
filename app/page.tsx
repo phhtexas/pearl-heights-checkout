@@ -5,6 +5,7 @@ import { PROPERTIES } from "@/domain/properties";
 import { HOMES } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
 import type { StayPolicy } from "@/domain/policy";
+import { CONSENT_ID, POLICY_LINKS } from "@/domain/consent";
 
 /**
  * Direct checkout, layout "option E" (Oscar, Nov 15, 2026). Phone follows the option E mockup element for element:
@@ -183,7 +184,7 @@ export default function Checkout() {
       if (pm.error || !pm.id) { setBusy(false); setErr(pm.error ?? "Please check your card details."); return; }
       paymentMethodId = pm.id;
     }
-    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId }) });
+    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, consentId: CONSENT_ID, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId }) });
     const j = await r.json().catch(() => ({}));
     setBusy(false);
     if (j.reason === "quote_expired") { await getQuote(); setErr(j.guestMessage); return; }
@@ -399,7 +400,8 @@ export default function Checkout() {
             {result && !result.ok && <div className="alert">{result.guestMessage}</div>}
             <label className="chk"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
               <span>{quote.plan.split ? `I authorize Pearl Heights Homes to charge ${money(quote.plan.scheduled!.amount)} to this card on ${balance} at 4:00 PM CT, when flexible cancellation ends. ` : ""}
-                I'm at least 25 and will stay at the home. I agree to the <a href="https://pearlheightshomes.com/terms-and-conditions/" target="_blank" rel="noreferrer">Terms</a>, <a href="https://pearlheightshomes.com/house-rules/" target="_blank" rel="noreferrer">House rules</a> and <button className="link inline" onClick={(e) => { e.preventDefault(); openSheet("policy"); }}>Cancellation policy</button>.</span></label>
+                {/* Same words as CONSENT_TEXT (src/domain/consent.ts), saved with the booking. Links open in a new tab so the checkout isn't lost. */}
+                <span data-consent>I&apos;m at least 25 and will stay at the home. I agree to the <a href={POLICY_LINKS.bookingTerms} target="_blank" rel="noopener">Direct Booking Terms and Cancellation Policy</a>, the <a href={POLICY_LINKS.rentalAgreement} target="_blank" rel="noopener">Rental Agreement and House Rules</a> (I&apos;ll sign it after paying) and the <a href={POLICY_LINKS.websiteTerms} target="_blank" rel="noopener">Website Terms</a>, and I&apos;ve read the <a href={POLICY_LINKS.privacy} target="_blank" rel="noopener">Privacy Notice</a>. I authorize the payments shown above.</span></span></label>
           </>)}
 
           {step === "done" && result?.ok && (<>
@@ -469,7 +471,7 @@ export default function Checkout() {
               <div className="ln"><span>Damage waiver — $5,000 coverage</span><span>{money(quote.protection)}</span></div>
               <div className="ln"><span>Taxes</span><span>{money(quote.tax)}</span></div>
               <div className="ln total"><span>Total (USD)</span><span>{money(quote.total)}</span></div>
-              <div className="muted small">Damage waiver — $5,000 coverage: covers accidental damage during your stay, as described in the <a href="https://pearlheightshomes.com/damage-waiver-terms" target="_blank" rel="noreferrer">waiver terms and conditions</a>.</div>
+              <div className="muted small">Damage waiver — $5,000 coverage: covers accidental damage during your stay, subject to the provider&apos;s terms (see <a href={`${POLICY_LINKS.bookingTerms}#booking-terms-10`} target="_blank" rel="noopener">Booking Terms, section 10</a>).</div>
               <div className="muted small">Tax shown is an example rate until confirmed by our accountant.</div>
               <button className="btn ghost" onClick={() => setSheet(null)}>Close</button>
             </>)}

@@ -193,10 +193,12 @@ export class DbLedger implements Ledger {
     await this.db.tx([
       [`INSERT INTO guests (id, first_name, last_name, email, phone) VALUES ($1, $2, $3, $4, $5)`,
         [guestId, req.guest.firstName, req.guest.lastName, req.guest.email, req.guest.phone]],
-      [`INSERT INTO bookings (id, booking_ref, quote_id, quote_version, guest_id, state, plan) VALUES ($1, $2, $3, $4, $5, 'checkout_started', $6)`,
-        [bookingId, req.bookingRef, q.id, q.version, guestId, q.quote.plan.split ? "split" : "full"]],
+      [`INSERT INTO bookings (id, booking_ref, quote_id, quote_version, guest_id, state, plan, consent_id, consent_text, policy_versions, consent_accepted_at)
+        VALUES ($1, $2, $3, $4, $5, 'checkout_started', $6, $7, $8, $9, $10)`,
+        [bookingId, req.bookingRef, q.id, q.version, guestId, q.quote.plan.split ? "split" : "full",
+          req.consent?.id ?? null, req.consent?.text ?? null, req.consent ? JSON.stringify(req.consent.versions) : null, req.consent?.acceptedAt ?? null]],
       [`INSERT INTO audit_log (booking_id, actor, action, after) VALUES ($1, 'system', 'checkout_started', $2)`,
-        [bookingId, JSON.stringify({ booking_ref: req.bookingRef, quote: q.id, total: q.total })]],
+        [bookingId, JSON.stringify({ booking_ref: req.bookingRef, quote: q.id, total: q.total, consent: req.consent?.id ?? null })]],
     ]);
     return bookingId;
   }

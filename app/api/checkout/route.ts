@@ -8,6 +8,7 @@ import { parseCheckout, ValidationError, redact } from "@/server/validate";
 import { readSession, withSession } from "@/server/session";
 import { DbLedger } from "@/db/ledger";
 import type { MockFailure } from "@/adapters/mock";
+import { consentRecord } from "@/domain/consent";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -39,7 +40,8 @@ export async function POST(req: Request) {
 
     const { hosp, pay, mode } = getAdapters((b.simulate ?? "none") as MockFailure, process.env, session.id);
     const bookingRef = newRef();
-    const request = { ...input, property: getProperty(input.property), bookingRef, now: new Date(), lockedQuote: q.quote };
+    const now = new Date();
+    const request = { ...input, property: getProperty(input.property), bookingRef, now, lockedQuote: q.quote, consent: consentRecord(now) };
     const view = await ledger.runAttempt(input.attemptKey, q, bookingRef, async () => {
       const outcome = await bookingAttempt(ledger instanceof DbLedger ? ledger : null, q, request, hosp, pay);
       console.info("checkout", bookingRef, outcome.state, outcome.log.join(" | "));

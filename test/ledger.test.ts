@@ -260,3 +260,22 @@ describe("price lock audit (note 135)", () => {
     expect(out.ok).toBe(true);
   });
 });
+
+describe("checkout consent evidence (Legal note 14)", () => {
+  it("saves the exact wording, the policy versions and the server time on the booking", async () => {
+    const { consentRecord, CONSENT_TEXT } = await import("../src/domain/consent");
+    const h = new MockHospitable(), p = new MockPayments();
+    const { saved, req } = await setup(ledger, h);
+    const out = await bookingAttempt(ledger, saved, { ...req("PH-CONS01"), consent: consentRecord(NOW) }, h, p, fast);
+    expect(out.ok).toBe(true);
+    const [row] = await db.query<any>(`SELECT consent_id, consent_text, policy_versions, consent_accepted_at FROM bookings WHERE booking_ref = 'PH-CONS01'`);
+    expect(row.consent_id).toBe("checkout-1.2");
+    expect(row.consent_text).toBe(CONSENT_TEXT);
+    expect(row.policy_versions).toEqual({ bookingTerms: "1.2", rentalAgreement: "1.2", privacy: "1.2", websiteTerms: "1.2" });
+    expect(new Date(row.consent_accepted_at).toISOString()).toBe(NOW.toISOString());
+  });
+  it("promo_code column is gone", async () => {
+    const cols = await db.query<any>(`SELECT column_name FROM information_schema.columns WHERE table_name = 'bookings'`);
+    expect(cols.map((c: any) => c.column_name)).not.toContain("promo_code");
+  });
+});

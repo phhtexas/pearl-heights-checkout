@@ -41,3 +41,21 @@ describe("legal search index", async () => {
     expect(idx.some((e) => e.href.startsWith("/privacy") && /exterior cameras/i.test(e.label))).toBe(true);
   });
 });
+
+describe("checkout consent", async () => {
+  const { CONSENT_TEXT, POLICY_VERSIONS, POLICY_LINKS } = await import("../src/domain/consent");
+  const { LEGAL_VERSION, legalDocs } = await import("../src/content/legal");
+  const { readFileSync } = await import("node:fs");
+  it("covers the current version of every document and links each one's page", () => {
+    for (const v of Object.values(POLICY_VERSIONS)) expect(v).toBe(LEGAL_VERSION);
+    expect(Object.values(POLICY_LINKS).sort()).toEqual(legalDocs().map((d) => d.href).sort());
+  });
+  it("the checkbox on the checkout page says exactly the saved consent text", () => {
+    const src = readFileSync("app/page.tsx", "utf8");
+    const span = /<span data-consent>([\s\S]*?)<\/span>/.exec(src)![1]!;
+    const shown = span.replace(/<a [^>]*>/g, "").replace(/<\/a>/g, "").replace(/&apos;/g, "'");
+    expect(shown).toBe(CONSENT_TEXT);
+    expect(src).not.toContain("pearlheightshomes.com/terms-and-conditions");
+    expect(src).not.toContain("damage-waiver-terms");
+  });
+});
