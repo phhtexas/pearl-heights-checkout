@@ -7,6 +7,7 @@ const ok = (c, m) => { console.log((c ? "ok  - " : "FAIL- ") + m); if (!c) proce
 
 const HOMES = [
   { slug: "edgewood-alamo-heights", key: "edgewood", title: "Stylish, Charming Home In The Heart of San Antonio", cap: "2 bedrooms · 3 beds · 1 bath · sleeps 8", registration: false, mustNot: [/147 E/i, /Edgewood Place/i, /welcomehome/i, /Cond[eé] Nast/i] },
+  { slug: "752-myrtle", key: "752", title: "5-Star Family-Friendly 3BR Walk to Pearl Riverwalk", cap: "3 bedrooms · 3 beds · 2 baths · sleeps 8", registration: true, mustNot: [/752 E(ast)? Myrtle/i, /Burger Boy/i] },
 ];
 
 const browser = await chromium.launch();
@@ -27,7 +28,8 @@ for (const h of HOMES) {
   ok(imgs.some((s) => s.includes("hospitable.com") || s.includes("property_images")), `${h.key}: real photos`);
   // Reserve without dates opens the date sheet; pick dates, then hand off.
   await page.click(".V-bar .V-cta");
-  await page.waitForSelector(".day:not([disabled])");
+  await page.waitForSelector(".day"); // the current month may be fully booked; the loop below moves ahead
+  await page.waitForTimeout(800);
   const days = page.locator(".day:not([disabled]):visible");
   let picked = false;
   for (let m = 0; m < 6 && !picked; m++) {
