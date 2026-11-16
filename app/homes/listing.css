@@ -111,3 +111,100 @@ html { scroll-padding-bottom: 96px; }
 .L-map iframe { width: 100%; height: 100%; border: 0; display: block; pointer-events: none; }
 .L-mapArea { position: absolute; left: 50%; top: 50%; width: 38%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: rgba(17, 19, 21, .14); border: 2px solid rgba(17, 19, 21, .45); }
 .L-list { margin-bottom: 8px; }
+
+/* ── Visual treatment from Oscar's reference (Nov 15): calmer type scale, icon lists, soft cards, outlined buttons ── */
+.L-top { display: grid; grid-template-columns: 44px 1fr 44px; padding: 12px 16px; }
+.L-top .brand { justify-self: center; font-size: 20px; }
+.L-top .brand span { font-size: 9px; letter-spacing: 3px; }
+.L-ask { justify-self: end; width: 40px; height: 40px; min-height: 40px; border: 1px solid var(--line); border-radius: 20px; justify-content: center; color: var(--ink); text-decoration: none; }
+.L-ask span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.L-ico { flex: none; color: var(--ink); }
+
+.L-layout { padding: 20px 20px 120px; }
+.L-intro h1 { font-size: 24px; font-weight: 600; letter-spacing: -.01em; margin-bottom: 4px; }
+.L-sub { font-size: 15px; font-weight: 400; color: var(--muted); }
+.L-cap { font-size: 15px; color: var(--ink); margin-top: 10px; }
+.L-rating { font-size: 15px; margin-top: 6px; }
+.L-anchors { margin: 16px -20px 0; padding: 10px 20px; }
+.L-anchors a { font-size: 13px; padding: 7px 12px; background: #f5f4f2; }
+.L-sec { padding: 24px 0; }
+.L-sec h2 { font-size: 19px; font-weight: 600; margin-bottom: 14px; letter-spacing: -.005em; }
+.L-sec h3 { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
+.L-p { font-size: 15px; line-height: 1.6; color: #2b2f33; }
+.L-sec .muted { font-size: 14px; }
+
+.L-high { gap: 18px; }
+.L-high li { flex-direction: row; gap: 16px; align-items: flex-start; }
+.L-high li > div { display: flex; flex-direction: column; gap: 2px; }
+.L-high b { font-size: 15px; font-weight: 600; }
+.L-high span { font-size: 14px; line-height: 1.45; }
+.L-high .L-ico { margin-top: 1px; }
+
+.L-hostline { gap: 14px; }
+.L-avatar { background: #ebe7e0; color: #4a4339; font-size: 13px; width: 44px; height: 44px; }
+.L-avatar.big { width: 64px; height: 64px; font-size: 17px; }
+.L-hostline b { font-size: 15px; font-weight: 600; }
+
+.L-rooms { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -20px; padding: 2px 20px 6px; scrollbar-width: none; }
+.L-rooms::-webkit-scrollbar { display: none; }
+.L-room { flex: 0 0 150px; scroll-snap-align: start; border: 1px solid #e3e2de; border-radius: 12px; padding: 14px; gap: 6px; font-size: 14px; }
+.L-room b { font-size: 14px; font-weight: 600; }
+
+.L-amen { grid-template-columns: 1fr; gap: 14px; font-size: 15px; margin-bottom: 18px; }
+.L-amen li { display: flex; align-items: center; gap: 14px; }
+.L-amen li::before { content: none; }
+.L-outline { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 46px; border: 1px solid var(--ink); border-radius: 10px; background: #fff; color: var(--ink); font: inherit; font-size: 15px; font-weight: 600; text-decoration: none; cursor: pointer; }
+
+.L-ilist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 1.45; }
+.L-ilist li { display: flex; gap: 12px; align-items: flex-start; }
+.L-ilist .L-ico { width: 18px; height: 18px; margin-top: 2px; }
+.L-ilist li.good { color: var(--green); font-weight: 500; }
+.L-ilist li.good .L-ico { color: var(--green); }
+.L-fit { gap: 20px; }
+
+.L-cats { grid-template-columns: repeat(3, 1fr); gap: 12px 10px; margin: 4px 0 18px; }
+.L-cats div { border-left: 0; padding-left: 0; font-size: 13px; color: var(--muted); }
+.L-cats b { font-size: 16px; color: var(--ink); }
+.L-reviews { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -20px 18px; padding: 2px 20px 4px; scrollbar-width: none; }
+.L-reviews::-webkit-scrollbar { display: none; }
+.L-rcard { flex: 0 0 82%; scroll-snap-align: start; background: #f5f4f2; border-radius: 14px; padding: 16px; margin: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
+.L-rcard blockquote { font-size: 14px; line-height: 1.5; margin: 0; }
+.L-rcard figcaption { font-size: 13px; }
+.sheet .L-rcard { background: none; padding: 0 0 14px; border-bottom: 1px solid var(--soft); border-radius: 0; }
+
+.L-map { border-radius: 14px; }
+.L-hostcard { gap: 14px; }
+.L-hostcard ul { font-size: 14px; }
+.L-know { gap: 22px; }
+.L-faq { padding: 14px 0; }
+.L-faq summary { font-size: 15px; justify-content: space-between; list-style: none; }
+.L-faq summary::-webkit-details-marker { display: none; }
+.L-faq summary::after { content: "⌄"; font-size: 18px; color: var(--muted); transition: transform .15s; }
+.L-faq[open] summary::after { transform: rotate(180deg); }
+.L-faq p { font-size: 14px; color: var(--ink2); line-height: 1.55; }
+
+.L-badges { list-style: none; margin: 8px 0 0; padding: 22px 0 6px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; text-align: center; }
+.L-badges li { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11.5px; color: var(--muted); }
+.L-badges .L-ico { margin-bottom: 4px; }
+.L-badges b { font-size: 11.5px; color: var(--ink); font-weight: 600; }
+
+.L-bar { padding: 12px 20px calc(12px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 16px rgba(0, 0, 0, .04); }
+.L-bar b { font-size: 16px; }
+.L-bar b small { font-weight: 400; font-size: 13px; color: var(--muted); }
+.L-barDates { background: none; border: 0; padding: 0; font: inherit; font-size: 13px; color: var(--ink); text-decoration: underline; cursor: pointer; text-align: left; }
+.L-bar .btn { min-height: 48px; border-radius: 10px; padding: 0 26px; font-size: 16px; }
+.L-book { border-radius: 16px; box-shadow: 0 8px 28px rgba(0, 0, 0, .08); }
+.L-book .btn { border-radius: 10px; min-height: 50px; font-size: 16px; }
+.L-all { border-radius: 8px; font-size: 13px; min-height: 34px; border-color: rgba(17, 19, 21, .25); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); }
+
+@media (min-width: 960px) {
+  .L-top { grid-template-columns: 1fr auto 1fr; padding: 16px 64px; }
+  .L-layout { padding: 28px 64px 64px; }
+  .L-intro h1 { font-size: 30px; }
+  .L-anchors { margin: 16px 0 0; padding: 10px 0; }
+  .L-rooms { margin: 0; padding: 2px 0 6px; flex-wrap: wrap; overflow: visible; }
+  .L-amen { grid-template-columns: 1fr 1fr; }
+  .L-reviews { margin: 0 0 18px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; overflow: visible; }
+  .L-outline { width: auto; display: inline-flex; padding: 0 22px; }
+  .L-badges { display: none; }
+}

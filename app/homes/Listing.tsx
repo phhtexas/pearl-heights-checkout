@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { HomeContent } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
 import { track } from "@/client/track";
+import { Icon, iconFor } from "./icons";
 import "./listing.css";
 
 /**
@@ -181,8 +182,9 @@ export function Listing({ home, prop, policy }: { home: HomeContent; prop: Prop;
     <>
       <div className="L-test">Preview · fake calendar and payments · nothing is booked or charged</div>
       <header className="L-top">
+        <span className="L-topSide" aria-hidden="true" />
         <a href="https://pearlheightshomes.com" className="brand">Pearl Heights <span>HOMES</span></a>
-        <a className="L-ask" href="mailto:bookings@pearlheightshomes.com?subject=Question%20about%20736%20Myrtle">Ask a question</a>
+        <a className="L-ask" href="mailto:bookings@pearlheightshomes.com?subject=Question%20about%20736%20Myrtle" aria-label="Ask a question by email"><Icon name="chat" /><span>Ask</span></a>
       </header>
 
       {/* Gallery: phone = swipe carousel; desktop = 1 large + 4 small. */}
@@ -219,7 +221,7 @@ export function Listing({ home, prop, policy }: { home: HomeContent; prop: Prop;
           </nav>
 
           <section id="overview" className="L-sec">
-            <ul className="L-high">{home.highlights.map((h) => <li key={h.title}><b>{h.title}</b><span>{h.text}</span></li>)}</ul>
+            <ul className="L-high">{home.highlights.map((h) => <li key={h.title}><Icon name={iconFor(h.title)} /><div><b>{h.title}</b><span>{h.text}</span></div></li>)}</ul>
           </section>
 
           <section className="L-sec L-hostline">
@@ -231,20 +233,20 @@ export function Listing({ home, prop, policy }: { home: HomeContent; prop: Prop;
 
           <section id="sleep" className="L-sec">
             <h2>Where you'll sleep</h2>
-            <div className="L-rooms">{home.sleeping.map((r) => <div key={r.room} className="L-room"><b>{r.room}</b><span>{r.beds}</span></div>)}</div>
+            <div className="L-rooms">{home.sleeping.map((r) => <div key={r.room} className="L-room"><Icon name={r.room.startsWith("Bath") ? "bath" : "bed"} size={22} /><b>{r.room}</b><span>{r.beds}</span></div>)}</div>
           </section>
 
           <section id="amenities" className="L-sec">
             <h2>What this home offers</h2>
-            <ul className="L-amen">{home.topAmenities.map((a) => <li key={a}>{a}</li>)}</ul>
-            <button className="btn ghost L-inline" onClick={() => open("amenities")}>Show all amenities</button>
+            <ul className="L-amen">{home.topAmenities.map((a) => <li key={a}><Icon name={iconFor(a)} />{a}</li>)}</ul>
+            <button className="L-outline" onClick={() => open("amenities")}>Show all amenities</button>
           </section>
 
           <section className="L-sec">
             <h2>Is this home right for you?</h2>
             <div className="L-fit">
-              <div><h3>Great for</h3><ul>{home.goodFit.map((x) => <li key={x}>{x}</li>)}</ul></div>
-              <div><h3>Not a fit for</h3><ul>{home.notFit.map((x) => <li key={x}>{x}</li>)}</ul></div>
+              <div><h3>Great for</h3><ul className="L-ilist">{home.goodFit.map((x) => <li key={x}><Icon name="check" />{x}</li>)}</ul></div>
+              <div><h3>Not a fit for</h3><ul className="L-ilist">{home.notFit.map((x) => <li key={x}><Icon name="x" />{x}</li>)}</ul></div>
             </div>
           </section>
 
@@ -254,16 +256,16 @@ export function Listing({ home, prop, policy }: { home: HomeContent; prop: Prop;
               <p className="muted">Ratings and reviews from Airbnb guests. Reviews are quoted word for word.</p>
               <div className="L-cats">{home.rating.categories.map(([c, v]) => <div key={c}><span>{c}</span><b>{v.toFixed(2)}</b></div>)}</div>
               <div className="L-reviews">{home.reviews.slice(0, 4).map((r) => (
-                <figure key={r.name + r.when} className="L-review"><blockquote>{r.text.length > 240 ? r.text.slice(0, 240).replace(/\s\S*$/, "") + "…" : r.text}</blockquote>
+                <figure key={r.name + r.when} className="L-review L-rcard"><blockquote>{r.text.length > 240 ? r.text.slice(0, 240).replace(/\s\S*$/, "") + "…" : r.text}</blockquote>
                   <figcaption><b>{r.name}</b> · {r.when} · Airbnb</figcaption></figure>))}</div>
-              <button className="btn ghost L-inline" onClick={() => open("reviews")}>Show {home.reviews.length} reviews in full</button>
+              <button className="L-outline" onClick={() => open("reviews")}>Show {home.reviews.length} reviews in full</button>
             </section>
           )}
 
           <section id="location" className="L-sec">
             <h2>Where you'll be</h2>
             <p className="L-p">{home.location.text}</p>
-            <ul className="L-list">{home.location.facts.map((f) => <li key={f}>{f}</li>)}</ul>
+            <ul className="L-ilist">{home.location.facts.map((f) => <li key={f}><Icon name={/drive/.test(f) ? "car" : "walk"} />{f}</li>)}</ul>
             {home.location.mapBbox && (
               <div className="L-map">
                 <iframe title={`Map of the area around ${home.neighborhood} (approximate, not the exact address)`} loading="lazy" referrerPolicy="no-referrer"
@@ -280,14 +282,14 @@ export function Listing({ home, prop, policy }: { home: HomeContent; prop: Prop;
               <div><b>{home.host.names}</b><ul>{home.host.facts.map((f) => <li key={f}>{f}</li>)}</ul></div>
             </div>
             <p className="L-p">{home.host.bio}</p>
-            <a className="btn ghost L-inline" href="mailto:bookings@pearlheightshomes.com?subject=Question%20about%20736%20Myrtle">Ask us a question</a>
+            <a className="L-outline" href="mailto:bookings@pearlheightshomes.com?subject=Question%20about%20736%20Myrtle">Ask us a question</a>
           </section>
 
           <section id="know" className="L-sec">
             <h2>Things to know</h2>
             <div className="L-know">
-              {home.thingsToKnow.map((t) => <div key={t.title}><h3>{t.title}</h3><ul>{t.items.map((i) => <li key={i}>{i}</li>)}</ul></div>)}
-              <div><h3>Cancellation</h3><ul>{policy.map((p) => <li key={p}>{p}</li>)}</ul></div>
+              {home.thingsToKnow.map((t) => <div key={t.title}><h3>{t.title}</h3><ul className="L-ilist">{t.items.map((i) => <li key={i}><Icon name={iconFor(i)} />{i}</li>)}</ul></div>)}
+              <div><h3>Cancellation</h3><ul className="L-ilist">{policy.map((p, k) => <li key={p} className={k === 0 ? "good" : ""}><Icon name={k === 0 ? "check" : iconFor(p)} />{p}</li>)}</ul></div>
             </div>
           </section>
 
@@ -296,13 +298,20 @@ export function Listing({ home, prop, policy }: { home: HomeContent; prop: Prop;
             {home.faq.map((f) => <details key={f.q} className="L-faq"><summary>{f.q}</summary><p>{f.a}</p></details>)}
             <p className="muted small">City short-term rental registration {home.registration}</p>
           </section>
+
+          <ul className="L-badges" aria-label="Booking direct">
+            <li><Icon name="home" /><b>Book direct</b><span>with the hosts</span></li>
+            <li><Icon name="lock" /><b>Secure payment</b><span>by Stripe</span></li>
+            <li><Icon name="chat" /><b>Local hosts</b><span>reply within an hour</span></li>
+            <li><Icon name="shield" /><b>Damage waiver</b><span>included</span></li>
+          </ul>
         </main>
         <aside className="L-side">{booking}</aside>
       </div>
 
       {/* Phone: one sticky action. */}
       <footer className="L-bar">
-        <div>{quote ? <><b>{money(quote.total)}</b><span>{fmt(ci!)} – {fmt(co!)} · {guests} guests</span></> : <><b>Add dates</b><span>for the full price</span></>}</div>
+        <div>{quote ? <><b>{money(quote.total)} <small>total</small></b><button className="L-barDates" onClick={() => open("dates")}>{fmt(ci!)} – {fmt(co!)} · {guests} guests</button></> : <><b>Add dates</b><span>for the full price</span></>}</div>
         {quote ? <button className="btn" onClick={reserve}>Reserve</button> : <button className="btn" onClick={() => open("dates")}>Check availability</button>}
       </footer>
 
