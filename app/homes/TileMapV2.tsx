@@ -36,7 +36,7 @@ export function TileMapV2({ lat, lon, zoom: z0, interactive = false, span = 2 }:
       <div className="TV-tiles" aria-hidden="true">
         {tiles.map((t) => (
           // eslint-disable-next-line @next/next/no-img-element
-          <img key={`${z}-${t.x}-${t.y}`} alt="" draggable={false} src={`https://tile.openstreetmap.org/${z}/${((t.x % n) + n) % n}/${t.y}.png`}
+          <img key={`${z}-${t.x}-${t.y}`} alt="" draggable={false} loading={interactive ? "eager" : "lazy"} decoding="async" src={`https://tile.openstreetmap.org/${z}/${((t.x % n) + n) % n}/${t.y}.png`}
             style={{ left: `calc(50% + ${t.left}px)`, top: `calc(50% + ${t.top}px)` }} />
         ))}
       </div>

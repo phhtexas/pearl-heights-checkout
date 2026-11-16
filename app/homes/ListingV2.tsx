@@ -323,7 +323,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
           <h2>Location</h2>
           {home.location.mapBbox && (
             <div className="V-map">
-              <div className="V-mapWrap"><p className="sr">Map of {home.neighborhood}, showing an approximate location, not the exact address.</p><TileMap lat={mapPt.lat} lon={mapPt.lon} zoom={14} /></div>
+              <div className="V-mapWrap"><p className="sr">Map of {home.neighborhood}, showing an approximate location, not the exact address.</p><TileMap lat={mapPt.lat} lon={mapPt.lon} zoom={14} span={1} /></div>
               <span className="V-mapTag">Approximate location</span>
               <button className="V-expand" onClick={() => open("map")} aria-label="Open the map full screen"><Icon name="expand" size={20} /></button>
             </div>)}
