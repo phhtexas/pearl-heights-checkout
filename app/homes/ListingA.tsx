@@ -83,7 +83,9 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
       raf = 0;
       const h = heroRef.current;
       if (!h) return;
-      const p = Math.min(1, Math.max(0, (window.scrollY - h.offsetTop) / Math.max(1, h.offsetHeight)));
+      const sheet = h.nextElementSibling as HTMLElement | null; // the content sheet that slides over the cover
+      if (!sheet) return;
+      const p = Math.min(1, Math.max(0, 1 - sheet.getBoundingClientRect().top / Math.max(1, h.offsetHeight)));
       h.style.setProperty("--fade", (p * 0.6).toFixed(3));
     };
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
