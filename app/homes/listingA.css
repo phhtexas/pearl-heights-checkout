@@ -184,3 +184,6 @@ a.A-outline { display: flex; align-items: center; justify-content: center; text-
 
 /* Nov 16: no divider line under the header. */
 .A-top { border-bottom: 0; }
+
+/* Nov 16: room cards are buttons that open the photo tour at that room. */
+button.A-room { display: block; padding: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }

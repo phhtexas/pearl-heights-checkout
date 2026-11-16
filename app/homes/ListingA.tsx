@@ -71,6 +71,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
   const [qErr, setQErr] = useState("");
   const [slide, setSlide] = useState(0);
   const [more, setMore] = useState(false);
+  const [tourFocus, setTourFocus] = useState<{ group: string; id: string } | null>(null); // photo tour opened from a room card
   const [saved, setSaved] = useState(false);
   const [shared, setShared] = useState("");
   const sheetRef = useRef<HTMLDivElement | null>(null);
@@ -79,6 +80,11 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
   const guests = adults + children;
   const src = (id: string) => home.photoBase + id + ".jpg";
 
+  useEffect(() => {
+    if (sheet !== "tour" || !tourFocus) return;
+    const t = setTimeout(() => document.getElementById("tour-" + slugify(tourFocus.group))?.scrollIntoView(), 0);
+    return () => clearTimeout(t);
+  }, [sheet, tourFocus]);
   useEffect(() => { track("property_viewed", { property: prop.key, variant: "A" }, "pv"); }, [prop.key]);
   useEffect(() => { try { setSaved(localStorage.getItem("ph-saved-" + prop.key) === "1"); } catch { /* no storage */ } }, [prop.key]);
   useEffect(() => {
@@ -228,14 +234,14 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
       {shared && <div className="A-toast" role="status">{shared}</div>}
 
       <section className="A-hero" aria-label="Photos">
-        <div className="A-carousel" onClick={() => open("tour")} onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
+        <div className="A-carousel" onClick={() => { setTourFocus(null); open("tour"); }} onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
           {home.photos.map((p, i) => (
             <div className="A-slide" key={p.id}>
               <Image src={src(p.id)} alt={p.alt} fill sizes="(min-width: 600px) 560px, 100vw" priority={i === 0} loading={i === 0 ? undefined : "lazy"} style={{ objectFit: "cover" }} />
             </div>))}
         </div>
         <div className="A-dots" aria-hidden="true">{Array.from({ length: DOTS }, (_, i) => <span key={i} className={i === Math.round((slide / Math.max(1, home.photos.length - 1)) * (DOTS - 1)) ? "on" : ""} />)}</div>
-        <button className="A-count" onClick={() => open("tour")} aria-label={`Photo ${slide + 1} of ${home.photos.length}. Open the photo tour`}>{slide + 1} / {home.photos.length}</button>
+        <button className="A-count" onClick={() => { setTourFocus(null); open("tour"); }} aria-label={`Photo ${slide + 1} of ${home.photos.length}. Open the photo tour`}>{slide + 1} / {home.photos.length}</button>
       </section>
 
       <main className="A-main">
@@ -262,10 +268,11 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
         <section id="sleep" className="A-sec">
           <h2>Sleeping arrangements</h2>
           <div className="A-rooms">{home.sleeping.map((r, i) => (
-            <div key={r.room} className="A-room">
+            <button key={r.room} className="A-room" aria-label={`${r.room}: see photos`}
+              onClick={() => { const id = roomPhoto(i); setTourFocus({ group: groupOf(roomAlt(id)), id }); open("tour"); }}>
               <div className="A-roomPh"><Image src={src(roomPhoto(i))} alt={roomAlt(roomPhoto(i))} fill sizes="(min-width: 600px) 360px, 70vw" loading="lazy" style={{ objectFit: "cover" }} /></div>
               <div className="A-roomTx"><b>{r.room}</b><span>{r.beds}</span></div>
-            </div>))}
+            </button>))}
           </div>
         </section>
 
@@ -378,7 +385,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
             <section key={g.name} id={"tour-" + slugify(g.name)} className="A-tourSec">
               <h3>{g.name}</h3>
               <div className="A-tourSub">{g.photos.length} {g.photos.length === 1 ? "photo" : "photos"}</div>
-              <div className="A-tourGrid">{g.photos.map((p, i) => (
+              <div className="A-tourGrid">{(tourFocus?.group === g.name ? [...g.photos.filter((p) => p.id === tourFocus.id), ...g.photos.filter((p) => p.id !== tourFocus.id)] : g.photos).map((p, i) => (
                 <figure key={p.id} className={"A-tourPh" + (i % 3 === 0 ? " big" : "")}>
                   <Image src={src(p.id)} alt={p.alt} fill sizes={i % 3 === 0 ? "(min-width: 600px) 528px, 100vw" : "(min-width: 600px) 264px, 50vw"} loading="lazy" style={{ objectFit: "cover" }} />
                 </figure>))}
