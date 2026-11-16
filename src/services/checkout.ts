@@ -19,6 +19,8 @@ export interface CheckoutRequest {
   paymentMethodId?: string; // Stripe PaymentMethod from the browser (test/live)
   /** Checkbox wording + policy versions accepted, with the server time (saved on the booking row). */
   consent?: ConsentRecord;
+  /** Optional marketing opt-ins (separate from the booking consent; saved, nothing sent yet). */
+  marketing?: { email: boolean; sms: boolean };
   now: Date;
 }
 

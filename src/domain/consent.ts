@@ -15,3 +15,17 @@ export const CONSENT_TEXT =
 export interface ConsentRecord { id: string; text: string; versions: typeof POLICY_VERSIONS; acceptedAt: Date }
 
 export const consentRecord = (acceptedAt: Date): ConsentRecord => ({ id: CONSENT_ID, text: CONSENT_TEXT, versions: POLICY_VERSIONS, acceptedAt });
+
+/**
+ * Optional marketing consent (Website Terms V1.2 §7, Privacy Notice §9): two separate boxes, unchecked by default, never a
+ * condition of booking. The saved wording names Pearl Heights Homes and the exact number (texts) or address (email).
+ * Nothing is sent yet: guest messages stay off until that gate opens.
+ */
+export const MARKETING_CONSENT_ID = "marketing-1.2";
+export const marketingEmailText = (email: string) =>
+  `Optional: email me news, availability and offers from Pearl Heights Homes at ${email}. I can unsubscribe anytime.`;
+export const MARKETING_SMS_LINKS = "See the Website Terms and Privacy Notice.";
+export const marketingSmsBody = (phone: string) =>
+  `Optional: text me recurring marketing offers from Pearl Heights Homes at ${phone}, including by automated technology. ` +
+  `Consent is not a condition of booking. Message frequency varies. Message and data rates may apply. Reply STOP to opt out and HELP for help.`;
+export const marketingSmsText = (phone: string) => `${marketingSmsBody(phone)} ${MARKETING_SMS_LINKS}`;

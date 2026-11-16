@@ -5,7 +5,7 @@ import { PROPERTIES } from "@/domain/properties";
 import { HOMES } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
 import type { StayPolicy } from "@/domain/policy";
-import { CONSENT_ID, POLICY_LINKS } from "@/domain/consent";
+import { CONSENT_ID, POLICY_LINKS, marketingEmailText, marketingSmsBody } from "@/domain/consent";
 
 /**
  * Direct checkout, layout "option E" (Oscar, Nov 15, 2026). Phone follows the option E mockup element for element:
@@ -63,6 +63,8 @@ export default function Checkout() {
   const [now, setNow] = useState(Date.now());
   const [guest, setGuest] = useState({ firstName: "", lastName: "", email: "", phone: "" });
   const [agreed, setAgreed] = useState(false);
+  const [mktEmail, setMktEmail] = useState(false); // optional, unchecked by default (Website Terms §7)
+  const [mktSms, setMktSms] = useState(false);
   const [sim, setSim] = useState("none");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -184,7 +186,7 @@ export default function Checkout() {
       if (pm.error || !pm.id) { setBusy(false); setErr(pm.error ?? "Please check your card details."); return; }
       paymentMethodId = pm.id;
     }
-    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, consentId: CONSENT_ID, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId }) });
+    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, consentId: CONSENT_ID, marketingEmail: mktEmail, marketingSms: mktSms, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId }) });
     const j = await r.json().catch(() => ({}));
     setBusy(false);
     if (j.reason === "quote_expired") { await getQuote(); setErr(j.guestMessage); return; }
@@ -200,7 +202,7 @@ export default function Checkout() {
 
   function restart() {
     setStep("review"); setCi(null); setCo(null); setQuote(null); setResult(null); setErr(""); setAgreed(false); setPlan("full");
-    setGuest({ firstName: "", lastName: "", email: "", phone: "" }); setCalVersion((v) => v + 1);
+    setGuest({ firstName: "", lastName: "", email: "", phone: "" }); setMktEmail(false); setMktSms(false); setCalVersion((v) => v + 1);
   }
   function submitDetails() {
     const e: typeof fieldErr = {};
@@ -402,6 +404,13 @@ export default function Checkout() {
               <span>{quote.plan.split ? `I authorize Pearl Heights Homes to charge ${money(quote.plan.scheduled!.amount)} to this card on ${balance} at 4:00 PM CT, when flexible cancellation ends. ` : ""}
                 {/* Same words as CONSENT_TEXT (src/domain/consent.ts), saved with the booking. Links open in a new tab so the checkout isn't lost. */}
                 <span data-consent>I&apos;m at least 25 and will stay at the home. I agree to the <a href={POLICY_LINKS.bookingTerms} target="_blank" rel="noopener">Direct Booking Terms and Cancellation Policy</a>, the <a href={POLICY_LINKS.rentalAgreement} target="_blank" rel="noopener">Rental Agreement and House Rules</a> (I&apos;ll sign it after paying) and the <a href={POLICY_LINKS.websiteTerms} target="_blank" rel="noopener">Website Terms</a>, and I&apos;ve read the <a href={POLICY_LINKS.privacy} target="_blank" rel="noopener">Privacy Notice</a>. I authorize the payments shown above.</span></span></label>
+            <fieldset className="optIn">
+              <legend>Stay in touch (optional)</legend>
+              <label className="chk" data-optin="email"><input type="checkbox" checked={mktEmail} onChange={(e) => setMktEmail(e.target.checked)} />
+                <span>{marketingEmailText(guest.email.trim() || "the email above")}</span></label>
+              <label className="chk" data-optin="sms"><input type="checkbox" checked={mktSms} onChange={(e) => setMktSms(e.target.checked)} />
+                <span>{marketingSmsBody(guest.phone.trim() || "the mobile number above")} See the <a href={POLICY_LINKS.websiteTerms} target="_blank" rel="noopener">Website Terms</a> and <a href={POLICY_LINKS.privacy} target="_blank" rel="noopener">Privacy Notice</a>.</span></label>
+            </fieldset>
           </>)}
 
           {step === "done" && result?.ok && (<>

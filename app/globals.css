@@ -227,3 +227,8 @@ input.f.bad { border-color: var(--bad); }
 .skelPlan { height: 76px; border-radius: 15px; }
 @keyframes skel { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 @media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+
+/* Optional marketing consent (Website Terms §7): visually separate from the required box. */
+.optIn { border: 0; border-top: 1px solid var(--line, #e5e5e5); margin: 4px 0 0; padding: 14px 0 0; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.optIn legend { font-size: 14px; font-weight: 600; padding: 0; margin-bottom: 10px; float: left; width: 100%; }
+.optIn .chk span { font-size: 13.5px; color: var(--muted, #555); line-height: 1.45; }

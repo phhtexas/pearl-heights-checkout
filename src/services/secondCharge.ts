@@ -8,14 +8,19 @@ import { AdapterError, PaymentsAdapter } from "../adapters/types";
  *    overlapping runners never charge twice. A worker that dies leaves an expiring claim.
  *  - Idempotency key `<ref>:scheduled:<n>` where n = 1 + number of DEFINITE declines so far. An ambiguous error
  *    (timeout/5xx) retries later with the SAME key, so Stripe returns the original result instead of charging again.
- *  - Definite card decline: retried daily within the 3-day grace period (Terms), then 'failed_final' + ALERT
- *    (cancellation per Terms is a manual decision for now). Guest emails are a separate gate; the notice is logged.
+ *  - Definite card decline: the 72-hour cure period starts at the FIRST decline (Booking Terms V1.2 §6): first_decline_at
+ *    and cure_deadline_at are saved once and never move. Retries every 24 h, the last one at the deadline; a decline at
+ *    or after the deadline (or the hard cap of tries) -> 'failed_final' + ALERT. The booking is never cancelled
+ *    automatically: Oscar decides. Guest emails are a separate gate; the notice (with the deadline) is logged.
  *  - Authentication required: payment 'requires_action', job 'manual_review', no more off-session tries (note 95).
  *  - No saved card: 'manual_review' (integration/data problem), no key or decline consumed.
  *  - Unknown outcome: same key with backoff; after 12 tries or 48 h past schedule -> 'manual_review', never failed_final.
  *  - Never charges a booking that is cancelled/closed or a payment already paid.
  */
-export const SECOND_CHARGE_MAX_DECLINES = 3; // first try + retries on day 1, 2; final at day 3
+/** Cure period from the first decline (Booking Terms V1.2 §6, Rental Agreement §4). */
+export const SECOND_CHARGE_CURE_HOURS = 72;
+/** Hard cap on declined tries: first + retries at 24 h, 48 h and the 72 h deadline. */
+export const SECOND_CHARGE_MAX_DECLINES = 4;
 /** Unknown outcomes stop after 12 tries or 48 h past the scheduled time, whichever first (note 95). */
 export const SECOND_CHARGE_MAX_AMBIGUOUS = 12;
 export const SECOND_CHARGE_MAX_OVERDUE_S = 48 * 3600;
@@ -76,6 +81,7 @@ async function chargeOne(db: Db, pay: PaymentsAdapter, jobId: string, bookingId:
   const [b] = await db.query<any>(
     `SELECT b.booking_ref, b.state, s.id AS pay_id, s.status AS pay_status, s.amount_cents, s.attempts AS keys_used, s.decline_count,
             EXTRACT(EPOCH FROM (now() - s.scheduled_for))::float AS overdue_s, i.stripe_payment_intent_id AS initial_pi,
+            s.cure_deadline_at, EXTRACT(EPOCH FROM (s.cure_deadline_at - now()))::float AS cure_left_s,
             (SELECT attempts FROM jobs WHERE id = $2) AS job_attempts
      FROM bookings b
      JOIN payments s ON s.booking_id = b.id AND s.kind = 'scheduled'
@@ -114,18 +120,26 @@ async function chargeOne(db: Db, pay: PaymentsAdapter, jobId: string, bookingId:
     }
     if (code === "card_declined") {
       const declines = Number(b.decline_count) + 1;
-      if (declines >= SECOND_CHARGE_MAX_DECLINES) {
+      const cureS = SECOND_CHARGE_CURE_HOURS * 3600;
+      // Seconds left in the cure period (the first decline starts it now).
+      const leftS = b.cure_deadline_at == null ? cureS : Number(b.cure_left_s);
+      if (leftS <= 0 || declines >= SECOND_CHARGE_MAX_DECLINES) {
         const res = await commit({
-          payment: [`UPDATE payments SET status = 'failed_final', attempts = $1, decline_count = $2, last_error = $3 WHERE id = $4`, [n, declines, code, b.pay_id]],
-          audit: { action: "second_payment_failed_final", after: { declines } }, jobStatus: "failed", err: code, result: "failed_final" });
-        if (res === "failed_final") console.error("ALERT second payment failed after grace period; Oscar decides per Terms");
+          payment: [`UPDATE payments SET status = 'failed_final', attempts = $1, decline_count = $2, last_error = $3,
+                       first_decline_at = COALESCE(first_decline_at, now()), cure_deadline_at = COALESCE(cure_deadline_at, now() + make_interval(secs => $5)) WHERE id = $4`,
+            [n, declines, code, b.pay_id, cureS]],
+          audit: { action: "second_payment_failed_final", after: { declines, cure_deadline: b.cure_deadline_at } }, jobStatus: "failed", err: code, result: "failed_final" });
+        if (res === "failed_final") console.error("ALERT second payment still unpaid at the end of the 72-hour cure period; Oscar decides whether to cancel (Booking Terms §6)");
         return res;
       }
+      const waitS = Math.min(RETRY_AFTER_DECLINE_S, leftS); // the last retry lands exactly on the deadline
       const res = await commit({
-        payment: [`UPDATE payments SET status = 'retrying', attempts = $1, decline_count = $2, last_error = $3, next_attempt_at = now() + make_interval(secs => $4) WHERE id = $5`,
-          [n, declines, code, RETRY_AFTER_DECLINE_S, b.pay_id]],
-        jobStatus: "pending", err: code, runAtOffsetS: RETRY_AFTER_DECLINE_S, result: "retry_scheduled" });
-      if (res === "retry_scheduled") console.info("second payment declined; guest notice pending (email gate); retry scheduled");
+        payment: [`UPDATE payments SET status = 'retrying', attempts = $1, decline_count = $2, last_error = $3, next_attempt_at = now() + make_interval(secs => $4),
+                     first_decline_at = COALESCE(first_decline_at, now()), cure_deadline_at = COALESCE(cure_deadline_at, now() + make_interval(secs => $6)) WHERE id = $5`,
+          [n, declines, code, waitS, b.pay_id, cureS]],
+        audit: declines === 1 ? { action: "second_payment_cure_started", after: { cure_hours: SECOND_CHARGE_CURE_HOURS } } : undefined,
+        jobStatus: "pending", err: code, runAtOffsetS: waitS, result: "retry_scheduled" });
+      if (res === "retry_scheduled") console.info(`second payment declined (${declines}); 72-hour cure period running; guest notice pending (email gate); retry scheduled`);
       return res;
     }
     return ambiguous();

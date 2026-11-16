@@ -50,7 +50,9 @@ export function parseCheckout(b: any) {
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!UUID.test(String(b?.quoteId ?? ""))) throw new ValidationError("Your price check is missing. Please go back and see your total again.");
   if (!UUID.test(String(b?.attemptKey ?? ""))) throw new ValidationError("Invalid request. Please refresh and try again.");
-  return { ...stay, guest, acceptedTotal, bookingRef: b?.bookingRef as string | undefined, paymentMethodId: b?.paymentMethodId as string | undefined,
+  // Optional marketing consent: only a literal true counts; anything else is "no".
+  const marketing = { email: b?.marketingEmail === true, sms: b?.marketingSms === true };
+  return { ...stay, guest, acceptedTotal, marketing, bookingRef: b?.bookingRef as string | undefined, paymentMethodId: b?.paymentMethodId as string | undefined,
     quoteId: String(b.quoteId), attemptKey: String(b.attemptKey) };
 }
 

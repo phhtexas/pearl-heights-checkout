@@ -79,7 +79,7 @@ describe("second charge", () => {
     expect(offSessionCharges(p)).toBe(1);
     expect((await scheduled()).pi).toBe("pi_mock_PH-SPL001:scheduled:1");
   });
-  it("declines retry daily within the grace period, then failed_final + alert; never more than the limit", async () => {
+  it("declines retry daily within the 72-hour cure period, then failed_final + alert; never more than the limit", async () => {
     const p = new MockPayments();
     await splitBooking(p);
     p.offSession = "decline";
@@ -93,6 +93,53 @@ describe("second charge", () => {
     expect(await runDueSecondCharges(db, p)).toMatchObject({ failed_final: 1 });
     expect(await scheduled()).toMatchObject({ status: "failed_final", attempts: SECOND_CHARGE_MAX_DECLINES });
     expect((await job()).status).toBe("failed");
+    await dueAgain();
+    expect(await runDueSecondCharges(db, p)).toMatchObject({ due: 0 });
+  });
+  it("the 72-hour cure period starts at the FIRST decline and never moves", async () => {
+    const p = new MockPayments();
+    await splitBooking(p);
+    p.offSession = "decline";
+    const t0 = Date.now();
+    await runDueSecondCharges(db, p);
+    const first = await one(`SELECT first_decline_at, cure_deadline_at, next_attempt_at FROM payments WHERE kind = 'scheduled'`);
+    expect(new Date(first.first_decline_at).getTime()).toBeGreaterThanOrEqual(t0 - 1000);
+    expect(new Date(first.cure_deadline_at).getTime() - new Date(first.first_decline_at).getTime()).toBe(72 * 3600_000);
+    expect(new Date(first.next_attempt_at).getTime() - t0).toBeGreaterThan(23 * 3600_000);
+    expect(await one(`SELECT count(*)::int AS n FROM audit_log WHERE action = 'second_payment_cure_started'`)).toEqual({ n: 1 });
+    await dueAgain();
+    await runDueSecondCharges(db, p);
+    const second = await one(`SELECT first_decline_at, cure_deadline_at FROM payments WHERE kind = 'scheduled'`);
+    expect(second).toEqual({ first_decline_at: first.first_decline_at, cure_deadline_at: first.cure_deadline_at });
+    expect((await scheduled()).status).toBe("retrying"); // not cancelled, not final
+    expect(await one(`SELECT state FROM bookings`)).toMatchObject({ state: "confirmed" });
+  });
+  it("the last retry lands on the deadline, and a decline after it is final (booking left for Oscar)", async () => {
+    const p = new MockPayments();
+    await splitBooking(p);
+    p.offSession = "decline";
+    await runDueSecondCharges(db, p);
+    // 10 hours left in the cure period: the next retry is at the deadline, not 24 h later
+    await db.query(`UPDATE payments SET cure_deadline_at = now() + interval '10 hours' WHERE kind = 'scheduled'`);
+    await dueAgain();
+    expect(await runDueSecondCharges(db, p)).toMatchObject({ retry_scheduled: 1 });
+    const r = await one(`SELECT EXTRACT(EPOCH FROM (next_attempt_at - cure_deadline_at))::float AS gap FROM payments WHERE kind = 'scheduled'`);
+    expect(Math.abs(r.gap)).toBeLessThan(5);
+    // Deadline reached and still declined -> final + alert, booking itself unchanged
+    await db.query(`UPDATE payments SET cure_deadline_at = now() - interval '1 second' WHERE kind = 'scheduled'`);
+    await dueAgain();
+    expect(await runDueSecondCharges(db, p)).toMatchObject({ failed_final: 1 });
+    expect((await scheduled()).status).toBe("failed_final");
+    expect(await one(`SELECT state FROM bookings`)).toMatchObject({ state: "confirmed" });
+  });
+  it("paid within the cure period: done, no more tries", async () => {
+    const p = new MockPayments();
+    await splitBooking(p);
+    p.offSession = "decline";
+    await runDueSecondCharges(db, p);
+    p.offSession = "ok";
+    await dueAgain();
+    expect(await runDueSecondCharges(db, p)).toMatchObject({ paid: 1 });
     await dueAgain();
     expect(await runDueSecondCharges(db, p)).toMatchObject({ due: 0 });
   });

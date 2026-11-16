@@ -279,3 +279,22 @@ describe("checkout consent evidence (Legal note 14)", () => {
     expect(cols.map((c: any) => c.column_name)).not.toContain("promo_code");
   });
 });
+
+describe("optional marketing consent (Website Terms §7)", () => {
+  it("saves nothing when the boxes are left unchecked", async () => {
+    const h = new MockHospitable(), p = new MockPayments();
+    const { saved, req } = await setup(ledger, h);
+    expect((await bookingAttempt(ledger, saved, { ...req("PH-MKT000"), marketing: { email: false, sms: false } }, h, p, fast)).ok).toBe(true);
+    expect(await count(db, "marketing_consents")).toBe(0);
+  });
+  it("saves each checked channel separately, with the exact wording and the contact it covers", async () => {
+    const { marketingSmsText, marketingEmailText } = await import("../src/domain/consent");
+    const h = new MockHospitable(), p = new MockPayments();
+    const { saved, req } = await setup(ledger, h);
+    expect((await bookingAttempt(ledger, saved, { ...req("PH-MKT001"), marketing: { email: false, sms: true } }, h, p, fast)).ok).toBe(true);
+    const rows = await db.query<any>(`SELECT channel, contact, consent_id, consent_text, revoked_at FROM marketing_consents`);
+    expect(rows).toEqual([{ channel: "sms", contact: "2105550100", consent_id: "marketing-1.2", consent_text: marketingSmsText("2105550100"), revoked_at: null }]);
+    expect(rows[0].consent_text).toMatch(/Pearl Heights Homes at 2105550100.*not a condition of booking.*Reply STOP to opt out and HELP for help/);
+    expect(marketingEmailText("a@b.co")).toContain("a@b.co");
+  });
+});

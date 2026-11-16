@@ -12,7 +12,7 @@ export type CancelReason =
   | "guest"                 // guest cancels
   | "verification_missed"   // agreement + ID not done by the deadline
   | "host"                  // Pearl Heights cancels (not for a breach)
-  | "nonpayment";           // scheduled balance still unpaid after the 3-day grace
+  | "nonpayment";           // scheduled balance still unpaid after the 72-hour cure period
 
 export interface RefundInput {
   quote: Quote;

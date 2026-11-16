@@ -1,3 +1,4 @@
+import { MARKETING_CONSENT_ID, marketingEmailText, marketingSmsText } from "../domain/consent";
 import type { Db } from "./client";
 import type { Quote } from "../domain/quote";
 import { PROCESSING_MESSAGE, type CheckoutOutcome, type CheckoutRequest, type Reconcile } from "../services/checkout";
@@ -62,6 +63,18 @@ const WAIT_FOR_RUNNING_MS = 25_000;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 type StoredOutcome = { guest: GuestView; internal?: Record<string, unknown> };
+
+/** Optional marketing opt-ins, saved with the exact wording and the contact they cover (Website Terms §7). */
+function marketingRows(req: CheckoutRequest, guestId: string, bookingId: string): Array<[string, unknown[]]> {
+  const at = req.consent?.acceptedAt ?? req.now;
+  const rows: Array<[string, unknown[]]> = [];
+  const add = (channel: "email" | "sms", contact: string, text: string) => rows.push([
+    `INSERT INTO marketing_consents (guest_id, booking_id, channel, contact, consent_id, consent_text, accepted_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [guestId, bookingId, channel, contact, MARKETING_CONSENT_ID, text, at]]);
+  if (req.marketing?.email) add("email", req.guest.email, marketingEmailText(req.guest.email));
+  if (req.marketing?.sms) add("sms", req.guest.phone, marketingSmsText(req.guest.phone));
+  return rows;
+}
 
 export class DbLedger implements Ledger {
   constructor(private db: Db, private pollMs = 400) {}
@@ -199,6 +212,7 @@ export class DbLedger implements Ledger {
           req.consent?.id ?? null, req.consent?.text ?? null, req.consent ? JSON.stringify(req.consent.versions) : null, req.consent?.acceptedAt ?? null]],
       [`INSERT INTO audit_log (booking_id, actor, action, after) VALUES ($1, 'system', 'checkout_started', $2)`,
         [bookingId, JSON.stringify({ booking_ref: req.bookingRef, quote: q.id, total: q.total, consent: req.consent?.id ?? null })]],
+      ...marketingRows(req, guestId, bookingId),
     ]);
     return bookingId;
   }
