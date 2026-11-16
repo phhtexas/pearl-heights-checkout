@@ -5,6 +5,7 @@ import type { HomeContent } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
 import { track } from "@/client/track";
 import { Icon, iconFor } from "./icons";
+import { TileMap } from "./TileMap";
 import "./listing.css";
 import "./listingA.css";
 
@@ -204,6 +205,10 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
     for (const p of home.photos) { const g = groupOf(p.alt); m.set(g, [...(m.get(g) ?? []), p]); }
     return [...TOUR.map(([n]) => n), "More photos"].filter((n) => m.has(n)).map((n) => ({ name: n, photos: m.get(n)! }));
   }, [home.photos]);
+  const mapPt = useMemo(() => {
+    const [w, so, e, n] = (home.location.mapBbox ?? "0,0,0,0").split(",").map(Number) as [number, number, number, number];
+    return { lat: (so + n) / 2, lon: (w + e) / 2 }; // bbox center: between the home and the Pearl, never the exact house
+  }, [home.location.mapBbox]);
   const amenityCount = home.amenityGroups.reduce((n, g) => n + g.items.length, 0);
   const roomPhoto = (i: number) => ROOM_PHOTOS[i] ?? ROOM_PHOTOS[0]!;
   const roomAlt = (id: string) => home.photos.find((p) => p.id === id)?.alt ?? "";
@@ -281,9 +286,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
           <h2>Location</h2>
           {home.location.mapBbox && (
             <div className="A-map">
-              <iframe title={`Map of the area around ${home.neighborhood} (approximate, not the exact address)`} loading="lazy" referrerPolicy="no-referrer" tabIndex={-1}
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${home.location.mapBbox}&layer=mapnik`} />
-              <span className="A-pin" aria-hidden="true"><Icon name="home" size={22} /></span>
+              <div role="img" aria-label={`Map of ${home.neighborhood}, approximate location (not the exact address)`}><TileMap lat={mapPt.lat} lon={mapPt.lon} zoom={15} /></div>
               <span className="A-mapTag">Approximate location</span>
               <button className="A-expand" onClick={() => open("map")} aria-label="Open the map full screen"><Icon name="expand" size={20} /></button>
             </div>)}
@@ -386,8 +389,6 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
       )}
 
       {sheet === "map" && home.location.mapBbox && (() => {
-        const [w, so, e, n] = home.location.mapBbox.split(",").map(Number) as [number, number, number, number];
-        const pad = 0.012, lat = ((so + n) / 2).toFixed(4), lon = ((w + e) / 2).toFixed(4);
         return (
           <div ref={sheetRef} className="A-tour A-mapFull" role="dialog" aria-modal="true" aria-label="Map">
             <div className="A-tourTop">
@@ -395,8 +396,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
               <h2>Where you'll be</h2><span />
             </div>
             <div className="A-mapBig">
-              <iframe title={`Map of ${home.neighborhood} (approximate location, not the exact address)`} referrerPolicy="no-referrer"
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${w - pad},${so - pad},${e + pad},${n + pad}&layer=mapnik&marker=${lat},${lon}`} />
+              <TileMap lat={mapPt.lat} lon={mapPt.lon} zoom={15} interactive span={4} />
             </div>
             <p className="A-note A-mapNote">{home.neighborhood} · Approximate location. {home.location.note}</p>
           </div>);
