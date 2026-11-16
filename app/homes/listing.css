@@ -210,3 +210,4 @@ html { scroll-padding-bottom: 96px; }
 }
 .L-rooms, .L-reviews { scroll-padding-inline: 20px; }
 @media (min-width: 960px) { .L-rooms, .L-reviews { scroll-padding-inline: 0; } }
+.L-sec ul.L-ilist { padding-left: 0; }
