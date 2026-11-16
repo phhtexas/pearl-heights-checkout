@@ -38,7 +38,7 @@ export const HOME_SOURCES: Record<string, { sources: { fact: string; source: str
     sources: [
       { fact: "Title, capacity (8 guests, 2 bedrooms, 3 beds, 1 bath), beds per room", source: "Hospitable property API + Airbnb listing, Nov 16, 2026" },
       { fact: "Neighborhood 'Alamo Heights'; listing highlights", source: "Airbnb listing, Nov 16, 2026" },
-      { fact: "Photos (53 of 56) and their order; primary/guest bedroom captions", source: "Hospitable direct-booking gallery; alt text written by Claude from the photos. Left out: 2 photos showing the house number, 1 of the gate keypad" },
+      { fact: "Photos (all 56) and their order; primary/guest bedroom captions", source: "Hospitable direct-booking gallery; alt text written by Claude from the photos. House-number and gate-keypad photos added back at Oscar's request (chat, Nov 16, 2026)" },
       { fact: "Rating 4.99 from 239 reviews; category averages", source: "Airbnb listing (4.99 · 239 reviews) and Hospitable review records (239 rated reviews, avg 4.992; categories averaged)" },
       { fact: "Review quotes (6), names, months, 5.0 each", source: "Hospitable review records = Airbnb reviews, word for word, Nov 16, 2026 — Oscar to approve" },
       { fact: "Amenities (incl. 770 Mbps WiFi, 65-inch TV and services, Tesla Level 2 charger, 4 driveway spaces, baby items on request / baby bath always, radiant heating, lit path)", source: "Airbnb amenities + accessibility panels, Nov 16, 2026 (Hospitable list as cross-check)" },
