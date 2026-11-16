@@ -207,3 +207,14 @@ input.f.bad { border-color: var(--bad); }
   .ck .flow { gap: 32px; }
   .ck .sumBody { padding: 22px 26px 26px; gap: 16px; }
 }
+
+/* Nov 16: same blue as listing option A on the checkout's main buttons and selections (black stays for text and outlines). */
+.ck { --ck-blue: #0071e3; --ck-blueSoft: #e8f1fc; }
+.ck .btn:not(:disabled):not(.ghost) { background: var(--ck-blue); }
+.ck .btn:not(:disabled):not(.ghost):hover { background: #0077ed; }
+.ck .day.sel { background: var(--ck-blue); }
+.ck .day.in { background: var(--ck-blueSoft); }
+.ck .plan.on { border-color: var(--ck-blue); }
+.ck .plan.on .radio { border-color: var(--ck-blue); }
+.ck .chk input { accent-color: var(--ck-blue); }
+.ck .photoImg { object-fit: cover; }

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StripeCard, type CreatePm } from "./StripeCard";
 import { PROPERTIES } from "@/domain/properties";
+import { HOMES } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
 import type { StayPolicy } from "@/domain/policy";
 
@@ -74,7 +75,11 @@ export default function Checkout() {
   const stripeMode = cfg.mode === "test" && !!cfg.publishableKey;
   const prop = PROPERTIES.find((p) => p.key === home)!;
   const guests = adults + children;
-  const photo = PHOTOS[home];
+  const listing = HOMES[home];
+  const photo = listing?.photos[0]
+    ? { src: `/_next/image?url=${encodeURIComponent(listing.photoBase + listing.photos[0].id + ".jpg")}&w=828&q=75`, alt: listing.photos[0].alt }
+    : PHOTOS[home];
+  const homeTitle = listing?.title ?? `${prop.name} — ${prop.area}`;
 
   // Pre-selected home and stay from the home's page: ?home=claywell&checkIn=2027-01-05&checkOut=2027-01-07&adults=4
   useEffect(() => {
@@ -255,7 +260,7 @@ export default function Checkout() {
     <aside className="sum" aria-label="Your stay">
       {photoEl(190)}
       <div className="sumBody">
-        <div><div className="homeName">{prop.name} — {prop.area}</div><div className="muted">Entire home · sleeps {prop.maxGuests} · direct booking</div></div>
+        <div><div className="homeName">{homeTitle}</div><div className="muted">Entire home · sleeps {prop.maxGuests} · direct booking</div></div>
         {step !== "review" && ci && co && <div className="sumLine"><span>{fmtRange(ci, co)}</span><span>{guests} {guests === 1 ? "guest" : "guests"}</span></div>}
         {quote && <div className="price"><div className="h3">Price details</div>{priceRows}</div>}
         <Badges />
@@ -298,7 +303,7 @@ export default function Checkout() {
             {/* Phone: home card with Dates and Guests rows (option E). */}
             <section className="homeCard mobileOnly">
               {photoEl(172)}
-              <div className="hcHead"><div className="homeName">{prop.name} — {prop.area}</div><div className="muted">Entire home · sleeps {prop.maxGuests} · direct booking</div></div>
+              <div className="hcHead"><div className="homeName">{homeTitle}</div><div className="muted">Entire home · sleeps {prop.maxGuests} · direct booking</div></div>
               <div className="hcRow"><div><div className="cap">Dates</div><div className="val">{ci && co ? fmtRange(ci, co) : "Choose your dates"}</div>{ci && co && <div className="muted">{nightsOf(ci, co)} {nightsOf(ci, co) === 1 ? "night" : "nights"}</div>}</div>
                 <button className="chip" aria-label="Change dates" onClick={() => openSheet("dates")}>{ci ? "Change" : "Choose"}</button></div>
               <div className="hcRow"><div><div className="cap">Guests</div><div className="val">{guests} {guests === 1 ? "guest" : "guests"}{infants ? `, ${infants} ${infants === 1 ? "infant" : "infants"}` : ""}</div></div>
