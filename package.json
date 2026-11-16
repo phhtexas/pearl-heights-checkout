@@ -14,7 +14,8 @@
     "e2e:listing": "node e2e/listing-v2.mjs",
     "e2e:handoff": "node e2e/listing-handoff.mjs",
     "e2e:entry": "node e2e/checkout-entry.mjs",
-    "e2e:homes": "node e2e/listing-homes.mjs"
+    "e2e:homes": "node e2e/listing-homes.mjs",
+    "e2e:legal": "node e2e/legal.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.16",
