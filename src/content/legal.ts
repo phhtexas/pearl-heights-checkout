@@ -19,13 +19,13 @@ export type Block =
   | { t: "ul"; items: string[] }
   | { t: "table"; head: string[]; rows: string[][] };
 
-export interface LegalDoc { id: string; title: string; summary: string; appliesTo: string; blocks: Block[] }
+export interface LegalDoc { id: string; href: string; title: string; summary: string; appliesTo: string; blocks: Block[] }
 
 const DOCS: Omit<LegalDoc, "blocks">[] = [
-  { id: "booking-terms", title: "Direct Booking Terms and Cancellation Policy", summary: "How a direct reservation is paid, verified, changed and canceled, including the refund schedule.", appliesTo: "If you book a stay directly with us" },
-  { id: "rental-agreement", title: "Rental Agreement and House Rules", summary: "The agreement the reservation holder signs after paying. Fields in brackets are filled in from your reservation.", appliesTo: "If you are the reservation holder" },
-  { id: "privacy", title: "Privacy and Cookie Notice", summary: "What information we collect, how we use and share it, how long we keep it and your choices.", appliesTo: "If you visit the site or book" },
-  { id: "website-terms", title: "Website Terms of Use", summary: "The rules for using this website, the checkout and the guest portal.", appliesTo: "If you use this website" },
+  { id: "booking-terms", href: "/terms", title: "Direct Booking Terms and Cancellation Policy", summary: "How a direct reservation is paid, verified, changed and canceled, including the refund schedule.", appliesTo: "If you book a stay directly with us" },
+  { id: "rental-agreement", href: "/rental-agreement", title: "Rental Agreement and House Rules", summary: "The agreement the reservation holder signs after paying. Fields in brackets are filled in from your reservation.", appliesTo: "If you are the reservation holder" },
+  { id: "privacy", href: "/privacy", title: "Privacy and Cookie Notice", summary: "What information we collect, how we use and share it, how long we keep it and your choices.", appliesTo: "If you visit the site or book" },
+  { id: "website-terms", href: "/website-terms", title: "Website Terms of Use", summary: "The rules for using this website, the checkout and the guest portal.", appliesTo: "If you use this website" },
 ];
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -54,4 +54,34 @@ export function parseLegal(id: string, src: string): Block[] {
 
 export function legalDocs(): LegalDoc[] {
   return DOCS.map((d) => ({ ...d, blocks: parseLegal(d.id, readFileSync(join(process.cwd(), "src/content/legal", `${d.id}.md`), "utf8")) }));
+}
+
+export function legalDoc(id: string): LegalDoc {
+  const d = legalDocs().find((x) => x.id === id);
+  if (!d) throw new Error(`unknown legal doc ${id}`);
+  return d;
+}
+
+/** One search entry per section (or subsection), with plain text, so the search box can suggest exact places. */
+export interface SearchEntry { doc: string; label: string; href: string; text: string }
+
+const plain = (b: Block): string =>
+  b.t === "p" || b.t === "note" ? b.text : b.t === "ul" ? b.items.join(" ") : b.t === "table" ? [b.head, ...b.rows].flat().join(" ") : "";
+
+export function searchIndex(): SearchEntry[] {
+  const out: SearchEntry[] = [];
+  for (const d of legalDocs()) {
+    let cur: SearchEntry | null = null;
+    let section = "";
+    for (const b of d.blocks) {
+      if (b.t === "h") {
+        section = `${b.num ? `${b.num}. ` : ""}${b.text}`;
+        cur = { doc: d.title, label: section, href: `${d.href}#${b.id}`, text: "" }; out.push(cur);
+      } else if (b.t === "sub") {
+        cur = { doc: d.title, label: `${section} \u203a ${b.text}`, href: `${d.href}#${b.id}`, text: "" }; out.push(cur);
+      } else if (cur) cur.text += (cur.text ? " " : "") + plain(b);
+      else { cur = { doc: d.title, label: "Introduction", href: d.href, text: plain(b) }; out.push(cur); }
+    }
+  }
+  return out;
 }

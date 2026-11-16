@@ -27,3 +27,17 @@ describe("draft legal documents (V1.2)", () => {
     expect(b[3]).toMatchObject({ head: ["H1", "H2"], rows: [["r1", "v1"]] });
   });
 });
+
+describe("legal search index", async () => {
+  const { searchIndex } = await import("../src/content/legal");
+  const idx = searchIndex();
+  it("has an entry for every section and subsection, each linking to its own page", () => {
+    expect(idx.length).toBeGreaterThan(80);
+    for (const e of idx) expect(e.href).toMatch(/^\/(terms|rental-agreement|privacy|website-terms)(#[a-z0-9-]+)?$/);
+    expect(new Set(idx.map((e) => e.href)).size).toBe(idx.length);
+  });
+  it("finds the refund schedule and the camera rules", () => {
+    expect(idx.find((e) => e.href.startsWith("/terms#booking-terms-13-booking-made-more"))?.text).toContain("Within 24 hours after booking");
+    expect(idx.some((e) => e.href.startsWith("/privacy") && /exterior cameras/i.test(e.label))).toBe(true);
+  });
+});
