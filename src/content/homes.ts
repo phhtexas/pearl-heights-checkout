@@ -443,7 +443,7 @@ export const HOMES: Record<string, HomeContent> = {
   indianola: {
     key: "indianola",
     slug: "613-indianola",
-    title: "NEW #1 Downtown SA House-Walk to Tower & Alamodome",
+    title: "Downtown SA House: Walk to Tower & Alamodome",
     subtitle: "Entire home in Lavaca, San Antonio",
     neighborhood: "Lavaca",
     capacity: { guests: 8, bedrooms: 3, beds: 3, baths: 2 },
@@ -585,7 +585,7 @@ export const HOMES: Record<string, HomeContent> = {
   claywell: {
     key: "claywell",
     slug: "claywell-alamo-heights",
-    title: "#1 Large Family Home in the Heart of Alamo Heights",
+    title: "Large Family Home in the Heart of Alamo Heights",
     subtitle: "Entire home in Alamo Heights, San Antonio",
     neighborhood: "Alamo Heights",
     capacity: { guests: 8, bedrooms: 3, beds: 5, baths: 2 },
@@ -652,7 +652,7 @@ export const HOMES: Record<string, HomeContent> = {
       { room: "Living room", beds: "1 sofa bed, 1 air mattress" },
       { room: "Bathrooms", beds: "2 full bathrooms" },
     ],
-    topAmenities: ["Full kitchen", "WiFi", "Dedicated workspace", "Free parking", "Washer and dryer", "Fenced backyard", "Fire pit", "Playroom"],
+    topAmenities: ["Full kitchen", "WiFi", "Dedicated workspace", "Free parking (3+ cars)", "Washer and dryer", "Fenced backyard", "Fire pit", "Playroom"],
     amenityGroups: [
       { group: "Kitchen and dining", items: ["Full kitchen: stove, oven, dishwasher", "Refrigerator and freezer", "Microwave, toaster, blender", "Drip coffee maker, espresso machine, French press and Keurig; coffee", "Pots and pans, oil, salt and pepper", "Dishes, silverware, baking sheet", "Dining table"] },
       { group: "Family", items: ["Children's playroom with toys, books and games", "Outdoor playground", "Children's books and toys (ages 0–2, 2–5 and 5–10)", "Toddler bed and crib in the primary bedroom", "Standard crib, on request (sheets provided)", "Pack 'n play travel crib", "High chair with food tray, on request", "Baby bath, on request", "Children's dinnerware", "Outlet covers and table corner guards", "Board games"] },
@@ -660,8 +660,8 @@ export const HOMES: Record<string, HomeContent> = {
       { group: "Bathroom", items: ["Bathtub", "Shampoo, conditioner, body soap and shower gel", "Towels, soap and toilet paper", "Cleaning products", "Hot water"] },
       { group: "Entertainment and work", items: ["TV", "Sound system", "Arcade games", "Exercise equipment", "Books and board games", "Dedicated workspace", "WiFi"] },
       { group: "Heating and cooling", items: ["Central air conditioning", "Central heating", "Ceiling fans", "Indoor fireplace"] },
-      { group: "Outdoors, parking and access", items: ["Private, fully fenced backyard", "Fire pit", "Patio, outdoor furniture and outdoor dining area", "Free parking on the property", "Free street parking", "Lit path to the guest entrance", "Long stays (28 nights or more) allowed"] },
-      { group: "Safety", items: ["Smoke and carbon monoxide alarms", "Fire extinguisher", "First aid kit", "No cameras inside the home"] },
+      { group: "Outdoors, parking and access", items: ["Private, fully fenced backyard", "Fire pit", "Patio, outdoor furniture and outdoor dining area", "Free parking on the property for 3 or more cars", "Free street parking", "Lit path to the guest entrance", "Self check-in with keypad", "Long stays (28 nights or more) allowed"] },
+      { group: "Safety", items: ["Smoke and carbon monoxide alarms", "Fire extinguisher", "First aid kit", "One exterior camera: the front-door doorbell", "No cameras inside the home"] },
     ],
     goodFit: ["Families with babies and young kids (playroom, playground, toddler bed and crib)", "Groups of up to 8 who want three bedrooms", "Guests who want a quiet residential street in Alamo Heights", "Remote workers (dedicated workspace)"],
     notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking or vaping anywhere on the property", "Late-night noise: quiet hours are 10 PM to 8 AM"],
@@ -674,9 +674,9 @@ export const HOMES: Record<string, HomeContent> = {
     reviews: [],
     host: HOSTS,
     thingsToKnow: [
-      { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM"] },
+      { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a door keypad"] },
       { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "Before you leave: dishes in the dishwasher, used towels on the bathroom floor, trash out, lights off, close all doors, windows and the car gate, and send us a quick message"] },
-      { title: "Safety and property", items: ["No cameras inside the home", "Smoke and carbon monoxide alarms", "Fire extinguisher and first aid kit"] },
+      { title: "Safety and property", items: ["One exterior security camera: the front-door doorbell.", "No cameras inside the home", "Smoke and carbon monoxide alarms", "Fire extinguisher and first aid kit"] },
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
@@ -684,7 +684,7 @@ export const HOMES: Record<string, HomeContent> = {
       { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
       { q: "Can I pay in two parts?", a: "Paying in full is the default. When check-in is more than 30 days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost." },
       { q: "Is the home good for babies and toddlers?", a: "Yes: there's a children's playroom, an outdoor playground, a toddler bed and crib in the primary bedroom, children's dinnerware, outlet covers and corner guards. A high chair and baby bath are available on request." },
-      { q: "Is there parking?", a: "Yes: free parking on the property plus free street parking." },
+      { q: "Is there parking?", a: "Yes: free parking on the property for 3 or more cars, plus free street parking." },
       { q: "Does the home have reviews yet?", a: "This home is new on Airbnb and has no reviews yet. Our other homes average 4.98 across 463 Airbnb reviews." },
     ],
   },

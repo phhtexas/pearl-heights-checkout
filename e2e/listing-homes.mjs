@@ -8,8 +8,8 @@ const ok = (c, m) => { console.log((c ? "ok  - " : "FAIL- ") + m); if (!c) proce
 const HOMES = [
   { slug: "edgewood-alamo-heights", key: "edgewood", title: "Stylish, Charming Home In The Heart of San Antonio", cap: "2 bedrooms · 3 beds · 1 bath · sleeps 8", registration: false, mustNot: [/147 E/i, /Edgewood Place/i, /welcomehome/i, /Cond[eé] Nast/i] },
   { slug: "752-myrtle", key: "752", title: "5-Star Family-Friendly 3BR Walk to Pearl Riverwalk", cap: "3 bedrooms · 3 beds · 2 baths · sleeps 8", registration: true, mustNot: [/752 E(ast)? Myrtle/i, /Burger Boy/i] },
-  { slug: "613-indianola", key: "indianola", title: "NEW #1 Downtown SA House-Walk to Tower & Alamodome", cap: "3 bedrooms · 3 beds · 2 baths · sleeps 8", registration: true, mustNot: [/613 Indianola St/i, /1515/, /welcomehome/i, /TheDowntownHouse/i] },
-  { slug: "claywell-alamo-heights", key: "claywell", title: "#1 Large Family Home in the Heart of Alamo Heights", cap: "3 bedrooms · 5 beds · 2 baths · sleeps 8", registration: false, mustNot: [/110 Claywell/i, /Commercial photography allowed/i] },
+  { slug: "613-indianola", key: "indianola", title: "Downtown SA House: Walk to Tower & Alamodome", cap: "3 bedrooms · 3 beds · 2 baths · sleeps 8", registration: true, mustNot: [/613 Indianola St/i, /1515/, /welcomehome/i, /TheDowntownHouse/i, /#1/] },
+  { slug: "claywell-alamo-heights", key: "claywell", title: "Large Family Home in the Heart of Alamo Heights", cap: "3 bedrooms · 5 beds · 2 baths · sleeps 8", registration: false, mustNot: [/110 Claywell/i, /Commercial photography allowed/i, /#1/] },
 ];
 
 const browser = await chromium.launch();
