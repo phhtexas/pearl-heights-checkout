@@ -387,7 +387,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
               <div className="A-tourSub">{g.photos.length} {g.photos.length === 1 ? "photo" : "photos"}</div>
               <div className="A-tourGrid">{(tourFocus?.group === g.name ? [...g.photos.filter((p) => p.id === tourFocus.id), ...g.photos.filter((p) => p.id !== tourFocus.id)] : g.photos).map((p, i) => (
                 <figure key={p.id} className={"A-tourPh" + (i % 3 === 0 ? " big" : "")}>
-                  <Image src={src(p.id)} alt={p.alt} fill sizes={i % 3 === 0 ? "(min-width: 600px) 528px, 100vw" : "(min-width: 600px) 264px, 50vw"} loading="lazy" style={{ objectFit: "cover" }} />
+                  <Image src={src(p.id)} alt={p.alt} fill sizes={i % 3 === 0 ? "(min-width: 600px) 528px, 100vw" : "(min-width: 600px) 264px, 50vw"} loading={tourFocus?.group === g.name && i < 3 ? "eager" : "lazy"} style={{ objectFit: "cover" }} />
                 </figure>))}
               </div>
             </section>))}
