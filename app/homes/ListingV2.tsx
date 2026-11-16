@@ -33,7 +33,11 @@ const ROOM_PHOTOS = [
   "QSN5MvVxsp5HP1pUba2bAbXmVYaHMIrBTO2jMvn3", "eMTLaWUswh02vPrOIB3bXluq8osxAB5Weit9PXTi", "1bi1pgTc4hSHL1561okYKpWcH4kuKZaTvokSvrJX",
 ];
 const AV_COLORS = ["#c9b8a3", "#a9b9a6", "#b3b8c9", "#c9a9a9", "#b9adc4", "#a7c0c2"]; // soft initial circles for reviewers
-const DOTS = 5; // the reference shows five dots; with more photos they track position along the set
+const DOTS = 5;
+/** Note 150: compact, factual trust proof beside the booking action (approved wording). */
+const TRUST = "Airbnb Superhosts · 4.98 across 460 Airbnb reviews · Secure payment by Stripe";
+/** Business contact for the footer, as Oscar gave it in chat (Nov 16, 2026). */
+const CONTACT = { email: "bookings@thepearlheightshomes.com", phone: "(210) 400-2540", tel: "+12104002540", place: "San Antonio, TX" }; // the reference shows five dots; with more photos they track position along the set
 
 /** Photo tour groups, matched from each photo's description (first match wins). Labels describe the space, not a specific bedroom. */
 const TOUR: [string, RegExp][] = [
@@ -76,6 +80,8 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
   const [shared, setShared] = useState("");
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const heroRef = useRef<HTMLElement | null>(null);
+  const carRef = useRef<HTMLDivElement | null>(null);
+  const goSlide = (i: number) => { const c = carRef.current; if (!c) return; const n = Math.max(0, Math.min(home.photos.length - 1, i)); c.scrollTo({ left: n * c.clientWidth, behavior: "smooth" }); setSlide(n); };
   // As the page scrolls, the content sheet slides over the pinned cover and the cover fades slightly to white.
   useEffect(() => {
     let raf = 0;
@@ -83,7 +89,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
       raf = 0;
       const h = heroRef.current;
       if (!h) return;
-      const sheet = h.nextElementSibling as HTMLElement | null; // the content sheet that slides over the cover
+      const sheet = h.parentElement?.querySelector<HTMLElement>(".V-sheet") ?? null; // the content sheet that slides over the cover
       if (!sheet) return;
       const p = Math.min(1, Math.max(0, 1 - sheet.getBoundingClientRect().top / Math.max(1, h.offsetHeight)));
       h.style.setProperty("--fade", (p * 0.6).toFixed(3));
@@ -251,17 +257,20 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
       {shared && <div className="V-toast" role="status">{shared}</div>}
 
       <section ref={heroRef} className="V-hero" aria-label="Photos">
-        <div className="V-carousel" onClick={() => { setTourFocus(null); open("tour"); }} onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
+        <div ref={carRef} className="V-carousel" onClick={() => { setTourFocus(null); open("tour"); }} onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
           {home.photos.map((p, i) => (
-            <div className="V-slide" key={p.id}>
-              <Image src={src(p.id)} alt={p.alt} fill sizes="(min-width: 600px) 560px, 100vw" priority={i === 0} loading={i === 0 ? undefined : "lazy"} style={{ objectFit: "cover" }} />
+            <div className="V-slide" key={p.id} aria-hidden={i !== slide}>
+              {Math.abs(i - slide) <= 2 && <Image src={src(p.id)} alt={p.alt} fill sizes="(min-width: 960px) 1040px, 100vw" priority={i === 0} loading={i === 0 ? undefined : "lazy"} style={{ objectFit: "cover" }} />}
             </div>))}
         </div>
+        <button className="V-arrow prev" onClick={() => goSlide(slide - 1)} disabled={slide === 0} aria-label="Previous photo"><Icon name="back" size={18} /></button>
+        <button className="V-arrow next" onClick={() => goSlide(slide + 1)} disabled={slide >= home.photos.length - 1} aria-label="Next photo"><Icon name="back" size={18} /></button>
         <div className="V-heroFade" aria-hidden="true" />
         <div className="V-dots" aria-hidden="true">{Array.from({ length: DOTS }, (_, i) => <span key={i} className={i === Math.round((slide / Math.max(1, home.photos.length - 1)) * (DOTS - 1)) ? "on" : ""} />)}</div>
         <button className="V-count" onClick={() => { setTourFocus(null); open("tour"); }} aria-label={`Photo ${slide + 1} of ${home.photos.length}. Open the photo tour`}>{slide + 1} / {home.photos.length}</button>
       </section>
 
+      <div className="V-body">
       <main className="V-main V-sheet">
         <section className="V-intro">
           <h1>{home.title}</h1>
@@ -342,7 +351,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
             <div><b>{home.host.names}</b><ul>{home.host.facts.map((f) => <li key={f}>{f}</li>)}</ul></div>
           </div>
           <p className="V-p">{home.host.bio}</p>
-          <a className="V-outline" href="mailto:bookings@pearlheightshomes.com?subject=Question%20about%20736%20Myrtle">Ask us a question</a>
+          <a className="V-outline" href={`mailto:${CONTACT.email}?subject=${encodeURIComponent("Question about " + home.title)}`}>Ask us a question</a>
         </section>
 
         <section id="rules" className="V-sec">
@@ -370,7 +379,41 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
         </ul>
       </main>
 
-      <footer className="V-bar">
+      <aside className="V-card" aria-label="Book this home">
+        <div className="V-cardPrice">
+          {quote ? <><b>{money(quote.total)}</b> <span>total</span></> : <b>{qState === "loading" ? "Checking…" : "Add dates for the full price"}</b>}
+        </div>
+        <div className="V-cardFields">
+          <button className="V-field" onClick={() => open("dates")}><span>Dates</span><b>{ci && co ? `${range(ci, co)} · ${nightsOf(ci, co)} nights` : "Add dates"}</b></button>
+          <button className="V-field" onClick={() => open("guests")}><span>Guests</span><b>{guests} {guests === 1 ? "guest" : "guests"}{infants ? `, ${infants} ${infants === 1 ? "infant" : "infants"}` : ""}</b></button>
+        </div>
+        {(qState === "unavailable" || qState === "error") && <p className="V-cardErr" role="alert">{qErr}</p>}
+        {quote ? <button className="V-cta V-cardCta" onClick={reserve}>Reserve</button> : <button className="V-cta V-cardCta" onClick={() => open("dates")}>Check availability</button>}
+        <p className="V-cardNote">{quote ? "Includes cleaning, the damage waiver and taxes. You'll review everything before you pay." : "Your full total (cleaning, damage waiver and taxes) shows as soon as you pick dates."}</p>
+        <p className="V-trust">{TRUST}</p>
+      </aside>
+      </div>
+
+      <footer className="V-footer">
+        <div className="V-footIn">
+          <div className="V-footBrand"><span className="V-brand">Pearl Heights <span>HOMES</span></span><p>Direct bookings with your hosts, Oscar &amp; Fernanda.</p></div>
+          <ul className="V-footContact">
+            <li><a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a></li>
+            <li><a href={`tel:${CONTACT.tel}`}>{CONTACT.phone}</a></li>
+            <li>{CONTACT.place}</li>
+          </ul>
+          <ul className="V-footLinks">
+            <li><a href="/policies/cancellation">Cancellation policy</a></li>
+            <li><span>Terms of service <em>(coming soon)</em></span></li>
+            <li><span>Privacy policy <em>(coming soon)</em></span></li>
+          </ul>
+          <p className="V-footSmall">City short-term rental registration {home.registration} · © {new Date().getFullYear()} Pearl Heights Homes</p>
+        </div>
+      </footer>
+
+      <div className="V-bar">
+        <p className="V-barTrust">{TRUST}</p>
+        <div className="V-barRow">
         <div className="V-barL">
           {quote
             ? <b>{money(quote.total)} <small>total</small></b>
@@ -381,7 +424,8 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
           {(qState === "unavailable" || qState === "error") && <span className="V-barErr" role="alert">{qErr}</span>}
         </div>
         {quote ? <button className="V-cta" onClick={reserve}>Reserve</button> : <button className="V-cta" onClick={() => open("dates")}>Check availability</button>}
-      </footer>
+        </div>
+      </div>
 
       {sheet === "tour" && (
         <div ref={sheetRef} className="V-tour" role="dialog" aria-modal="true" aria-label="Photo tour">

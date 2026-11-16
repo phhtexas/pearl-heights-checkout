@@ -1,0 +1,10 @@
+.P-page { font-family: "Inter", system-ui, sans-serif; color: #17191b; min-height: 100vh; background: #fff; }
+.P-top { padding: 16px 24px; max-width: 720px; margin: 0 auto; }
+.P-brand { font-family: "Marcellus", Georgia, serif; font-size: 20px; color: #17191b; text-decoration: none; }
+.P-brand span { font-family: "Inter", sans-serif; font-size: 9px; letter-spacing: .18em; margin-left: 6px; vertical-align: 3px; }
+.P-main { max-width: 720px; margin: 0 auto; padding: 16px 24px 64px; font-size: 16px; line-height: 1.6; }
+.P-main h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.01em; margin: 8px 0 12px; }
+.P-main h2 { font-size: 19px; font-weight: 600; margin: 32px 0 8px; }
+.P-lead { color: #3a3f44; }
+.P-list { padding-left: 20px; display: flex; flex-direction: column; gap: 12px; }
+.P-note { margin-top: 32px; font-size: 14px; color: #6a6e72; }
