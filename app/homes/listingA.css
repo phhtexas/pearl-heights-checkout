@@ -194,6 +194,3 @@ button.A-room { display: block; padding: 0; background: none; text-align: left; 
 .A-sheet { position: relative; z-index: 1; background: #fff; border-radius: 24px 24px 0 0; margin-top: -24px; padding-top: 26px; box-shadow: 0 -8px 20px rgba(0, 0, 0, .06); }
 .A-dots { bottom: 36px; }
 .A-count { bottom: 34px; }
-
-/* Nov 16: cover back to square corners (the content sheet keeps its rounded top). */
-.A-hero, .A-carousel { border-radius: 0; }
