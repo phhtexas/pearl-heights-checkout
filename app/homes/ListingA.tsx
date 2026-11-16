@@ -286,7 +286,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
           <h2>Location</h2>
           {home.location.mapBbox && (
             <div className="A-map">
-              <div role="img" aria-label={`Map of ${home.neighborhood}, approximate location (not the exact address)`}><TileMap lat={mapPt.lat} lon={mapPt.lon} zoom={15} /></div>
+              <div role="img" aria-label={`Map of ${home.neighborhood}, approximate location (not the exact address)`}><TileMap lat={mapPt.lat} lon={mapPt.lon} zoom={14} /></div>
               <span className="A-mapTag">Approximate location</span>
               <button className="A-expand" onClick={() => open("map")} aria-label="Open the map full screen"><Icon name="expand" size={20} /></button>
             </div>)}
@@ -396,7 +396,7 @@ export function ListingA({ home, prop, policy }: { home: HomeContent; prop: Prop
               <h2>Where you'll be</h2><span />
             </div>
             <div className="A-mapBig">
-              <TileMap lat={mapPt.lat} lon={mapPt.lon} zoom={15} interactive span={4} />
+              <TileMap lat={mapPt.lat} lon={mapPt.lon} zoom={14} interactive span={4} />
             </div>
             <p className="A-note A-mapNote">{home.neighborhood} · Approximate location. {home.location.note}</p>
           </div>);
