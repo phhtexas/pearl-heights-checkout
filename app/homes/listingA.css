@@ -194,3 +194,18 @@ button.A-room { display: block; padding: 0; background: none; text-align: left; 
 .A-sheet { position: relative; z-index: 1; background: #fff; border-radius: 24px 24px 0 0; margin-top: -24px; padding-top: 26px; box-shadow: 0 -8px 20px rgba(0, 0, 0, .06); }
 .A-dots { bottom: 36px; }
 .A-count { bottom: 34px; }
+
+/* Nov 16: Apple-style blue accent, used sparingly: main buttons, text links, and a few icon groups.
+   Everything else stays ink/grey. #0071e3 on white text = 4.6:1; #0066cc links on white = 5.6:1. */
+.A-page { --A-blue: #0071e3; --A-link: #0066cc; --A-blueSoft: #e8f1fc; }
+.A-cta { background: var(--A-blue); border-radius: 12px; }
+.A-cta:hover { background: #0077ed; }
+.A-tourCta .A-cta { box-shadow: 0 6px 18px rgba(0, 113, 227, .28); }
+.A-page .btn:not(:disabled):not(.ghost) { background: var(--A-blue); }
+.A-page .day.sel { background: var(--A-blue); }
+.A-page .day.in { background: var(--A-blueSoft); }
+.A-more, .A-barLinks button, .A-page .link { color: var(--A-link); }
+.A-more { text-decoration: none; }
+.A-more:hover, .A-barLinks button:hover { text-decoration: underline; }
+/* Icons: highlights, location facts and the trust row only. */
+.A-high .L-ico, .A-facts .L-ico, .A-badges .L-ico { color: var(--A-blue); }
