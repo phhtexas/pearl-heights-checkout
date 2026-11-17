@@ -112,11 +112,11 @@ export function Portal({ stay }: { stay: StayData }) {
             <span className="ST-taskIc"><Ico d={verified ? I.check : I.id} /></span>
             <div className="ST-taskBody">
               <h3>ID check</h3>
-              <p className="ST-dim">{verified ? `Verified · ${s.verifiedAt}` : "A quick photo of your ID and a selfie, handled by a secure ID service."}</p>
+              <p className="ST-dim">{verified ? `Verified · ${s.verifiedAt}` : "A quick photo of your ID and a selfie, handled securely by Stripe Identity."}</p>
               {!verified && !idOpen && <button className="ST-btn" type="button" onClick={() => setIdOpen(true)} disabled={!ready}>Verify my ID</button>}
               {!verified && idOpen && (
                 <div className="ST-panel">
-                  <p>In the real portal, the secure ID check opens here (service not chosen yet). We never see or store your ID photos on this site.</p>
+                  <p>In the real portal, Stripe Identity's secure check opens here. Your ID photos go to Stripe; we never store them on this site.</p>
                   <div className="ST-row"><button className="ST-btn" type="button" onClick={() => { save({ ...s, verifiedAt: nowText() }); setIdOpen(false); }}>Simulate a successful check</button><button className="ST-link" type="button" onClick={() => setIdOpen(false)}>Cancel</button></div>
                 </div>
               )}
