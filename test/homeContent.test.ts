@@ -21,3 +21,22 @@ describe("home page content", () => {
     for (const bad of ["no fees", "skip the cleaning fee", "best rate", "5% less", "waivo", "facebook"]) expect(all).not.toContain(bad);
   });
 });
+
+describe("All Homes page content (mockup C)", async () => {
+  const { EVERY_HOME, mapPoints, guestReviews } = await import("../src/content/allHomes");
+  it("every 'Every home has' tile is true for all five homes", () => {
+    for (const t of EVERY_HOME) for (const [key, h] of Object.entries(HOMES)) {
+      const items = [...h.amenityGroups.flatMap((g) => g.items), ...h.topAmenities].map((s) => s.toLowerCase());
+      expect(items.some((s) => t.match.test(s)), `${t.label} at ${key}`).toBe(true);
+    }
+  });
+  it("map points are each listing's approximate center, never missing", () => {
+    expect(mapPoints().map((p) => p.key).sort()).toEqual(Object.keys(HOMES).sort());
+    for (const p of mapPoints()) { expect(p.lat).toBeGreaterThan(29.3); expect(p.lat).toBeLessThan(29.6); }
+  });
+  it("guest reviews are real 5-star reviews from the listings", () => {
+    const r = guestReviews();
+    expect(r.length).toBeGreaterThanOrEqual(6);
+    for (const x of r) expect(HOMES[x.key]!.reviews.some((y) => y.name === x.name && y.text.startsWith(x.text.replace(/…$/, "")))).toBe(true);
+  });
+});

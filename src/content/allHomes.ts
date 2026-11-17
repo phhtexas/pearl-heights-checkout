@@ -50,3 +50,45 @@ export function homeCards(): HomeCard[] {
     };
   });
 }
+
+/* ---------- Mockup C additions (Oscar, Nov 16: Airbnb-style sections; everything sourced) ---------- */
+
+/** Amenities ALL five homes have (checked against each home's amenity list; a test re-checks it). */
+export const EVERY_HOME: { icon: string; label: string; match: RegExp }[] = [
+  { icon: "kitchen", label: "Full kitchen", match: /^full kitchen/ },
+  { icon: "wifi", label: "Wifi", match: /wifi/ },
+  { icon: "parking", label: "Free parking", match: /^free (driveway |gated )?parking/ },
+  { icon: "ac", label: "Central air", match: /^central air conditioning$/ },
+  { icon: "washer", label: "Washer and dryer", match: /^(free )?washer and (free )?dryer/ },
+  { icon: "yard", label: "Fenced backyard", match: /^private, fully fenced backyard$/ },
+  { icon: "crib", label: "Crib and high chair", match: /crib/ },
+  { icon: "key", label: "Self check-in", match: /^self check-in/ },
+];
+
+/** Questions every home answers the same way: copied from the listing FAQ (736) and the approved cancellation summary. */
+export function sharedFaq(cancellation: string[]): { q: string; a: string }[] {
+  const f = (q: string) => HOMES["736"]!.faq.find((x) => x.q === q)!.a;
+  return [
+    { q: "Why book direct?", a: f("Why book direct?") },
+    { q: "What happens after I book?", a: f("What happens after I book?") },
+    { q: "What are check-in and check-out times?", a: "Check-in is after 4:00 PM and check-out is before 10:00 AM at every home, with self check-in." },
+    { q: "Can I cancel?", a: cancellation.join(" ") },
+    { q: "Is there a damage waiver?", a: f("Is there a damage waiver?") },
+    { q: "Can I pay in two parts?", a: f("Can I pay in two parts?") },
+    { q: "Are pets allowed?", a: "No pets at any of our homes." },
+  ];
+}
+
+/** Approximate map point per home: the listing map's center, which is set apart from the house (never the address). */
+export function mapPoints(): { key: string; lat: number; lon: number }[] {
+  return ORDER.map((key) => {
+    const [w, s, e, n] = HOMES[key]!.location.mapBbox!.split(",").map(Number) as [number, number, number, number];
+    return { key, lat: (s + n) / 2, lon: (w + e) / 2 };
+  });
+}
+
+/** Real 5-star guest reviews, two per reviewed home, newest first in each home's list. */
+export function guestReviews(): { name: string; when: string; text: string; home: string; key: string }[] {
+  return ORDER.flatMap((key) => HOMES[key]!.reviews.filter((r) => (r.rating ?? 5) === 5 && r.text.length > 90).slice(0, 2)
+    .map((r) => ({ name: r.name, when: r.when, text: short(r.text, 230), home: HOMES[key]!.title, key })));
+}
