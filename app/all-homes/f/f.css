@@ -483,3 +483,29 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 @media (prefers-reduced-motion: reduce) { .F-page .F-incChev { transition: none; } }
 @media (max-width: 760px) { .F-page .F-map .C-mapNote { font-size: 11.5px; padding: 5px 10px; left: 8px; top: 8px; white-space: nowrap; max-width: calc(100% - 16px); } }
 @media (max-width: 760px) { .F-page .F-mapCard { aspect-ratio: auto; height: 440px; } } /* room for the note above the top pins */
+/* Oscar, Nov 17: make the open row clearly light up in the brand green */
+.F-page .F-checks li:has(.F-inc[open]) { background: #e3f0ea; box-shadow: inset 4px 0 0 var(--acc); }
+.F-page .F-inc[open] .F-incChev { background: var(--acc); color: #fff; }
+.F-page .F-inc[open] summary span:first-child { color: #0f5f49; }
+.F-page .F-inc[open] p { color: #3e4a44; }
+.F-page .F-inc[open] .F-incChev svg { color: #fff; } .F-page .F-inc:not([open]) .F-incChev svg { color: var(--muted); }
+
+/* Oscar, Nov 17: each home in a neighborhood on its own spaced row with its map pill (pill = the pin label) */
+.F-page .F-hood { padding-top: 22px; padding-bottom: 22px; }
+.F-page .F-hood ul.F-hoodHomes { list-style: none; margin: 14px 0 0; padding: 6px; display: grid; gap: 4px; background: #fff; border-radius: 14px; border: 1px solid var(--line); }
+.F-page .F-hood.is-sel ul.F-hoodHomes { border-color: #d3e1d6; }
+.F-page .F-hoodHomes a { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 10px 10px; border-radius: 10px; text-decoration: none; color: var(--ink); font-size: 15px; line-height: 1.35; transition: background .2s ease; }
+.F-page .F-hoodHomes li + li a { border-top: 0; }
+.F-page .F-hoodHomes li + li { border-top: 1px solid var(--line); padding-top: 4px; }
+.F-page .F-hoodHomes a:hover, .F-page .F-hoodHomes a:focus-visible { background: var(--soft); }
+.F-page .F-hoodHomes a:focus-visible { outline: 3px solid var(--acc); outline-offset: 1px; }
+.F-page .F-hoodPill { background: #fff; color: var(--ink); font-size: 12.5px; font-weight: 600; padding: 4px 9px; border-radius: 999px; box-shadow: 0 1px 5px rgba(0,0,0,.18); white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 52px; text-align: center; }
+.F-page .F-hoodGo { color: var(--muted); }
+.F-page .F-hood { flex-wrap: wrap; }
+.F-page .F-hood > div:first-child { flex: 1; min-width: 0; }
+/* pin of the home being hovered/focused in the list */
+.F-page .F-map .C-pin.is-hot { background: var(--ink); color: #fff; z-index: 4; transform: translate(-50%, -50%) scale(1.08); }
+
+/* homes box spans the whole neighborhood row (not squeezed beside "Add dates") */
+.F-page .F-hood > ul.F-hoodHomes { flex: 1 0 100%; margin-top: 2px; }
+.F-page .F-hoodHomes a { grid-template-columns: 64px 1fr auto; } .F-page .F-hoodPill { justify-self: start; }

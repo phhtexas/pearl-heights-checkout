@@ -74,11 +74,14 @@ export function HomesF({ homes, hero, points, reasons }: {
   };
   const areas = [...new Set(homes.map((h) => h.area))];
   // Oscar, Nov 17: pick a neighborhood -> one circle around its homes on the map (none on load; picking another replaces it).
-  const [selected, setArea] = useState<Area>(null);
+  // Oscar (later, Nov 17): one neighborhood is always selected; Tobin Hill to start.
+  const areaOf = (name: string): Area => ({ name, keys: homes.filter((h) => h.area === name).map((h) => h.key) });
+  const [selected, setArea] = useState<Area>(() => areaOf(areas[0]!));
+  const [hot, setHot] = useState<string | null>(null);
   const selArea = selected?.name;
   const mapRef = useRef<HTMLDivElement>(null);
   const pickArea = (name: string) => {
-    setArea((cur) => (cur?.name === name ? null : { name, keys: homes.filter((h) => h.area === name).map((h) => h.key) }));
+    setArea(areaOf(name));
     // Phones: the map sits under the list, so bring it into view.
     const m = mapRef.current;
     if (m && matchMedia("(max-width: 899px)").matches) {
@@ -162,16 +165,25 @@ export function HomesF({ homes, hero, points, reasons }: {
                         {area}<span className="sr-only">: show on map</span>
                       </button></h3>
                       <p className="F-dim">{list.length} home{list.length > 1 ? "s" : ""}{AREA_NOTE[area] ? ` · ${AREA_NOTE[area]}` : ""}</p>
-                      <ul>{list.map((h) => <li key={h.key}><a href={`#home-${h.key}`}>{h.title}</a></li>)}</ul>
                     </div>
                     <p className="F-hoodPr">{totals.length ? <>from <b>{money(Math.min(...totals))}</b></> : searched ? <span className="F-dim">Not available</span> : <span className="F-dim">Add dates</span>}</p>
+                    {/* each home on its own row with the same pill as its map pin, so two homes read as two */}
+                    <ul className="F-hoodHomes">{list.map((h) => (
+                      <li key={h.key}>
+                        <a href={`#home-${h.key}`} onMouseEnter={() => setHot(h.key)} onMouseLeave={() => setHot(null)} onFocus={() => setHot(h.key)} onBlur={() => setHot(null)}>
+                          <span className="F-hoodPill" aria-hidden="true">{pinLabel(h)}</span>
+                          <span className="F-hoodName">{h.title}</span>
+                          <svg className="F-hoodGo" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+                        </a>
+                      </li>
+                    ))}</ul>
                   </div>
                 );
               })}
             </div>
           </div>
           <div className="F-mapCard" ref={mapRef} data-reveal style={{ ["--d" as string]: "120ms" }}>
-            <PinMap area={selected} pins={homes.map((h) => ({ ...points.find((p) => p.key === h.key)!, label: pinLabel(h), title: h.title, off: !!(searched && s.results[h.key] && !s.results[h.key]!.ok) }))} />
+            <PinMap area={selected} hot={hot} pins={homes.map((h) => ({ ...points.find((p) => p.key === h.key)!, label: pinLabel(h), title: h.title, off: !!(searched && s.results[h.key] && !s.results[h.key]!.ok) }))} />
           </div>
         </div>
       </section>

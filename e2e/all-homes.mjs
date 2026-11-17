@@ -269,7 +269,11 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   { // neighborhoods -> one sage circle on the map (Oscar, Nov 17)
     const circles = () => page.locator(".F-area").count();
     await page.locator(".F-mapCard").scrollIntoViewIfNeeded(); await page.waitForTimeout(700);
-    ok((await circles()) === 0 && (await page.locator(".C-mapNote").innerText()) === "Circles show approximate areas, not exact addresses.", `${tag}: no circle on load; new map note`);
+    ok((await circles()) === 1 && (await page.locator(".F-area").getAttribute("data-area")) === "Tobin Hill" && (await page.locator(".C-mapNote").innerText()) === "Circles show approximate areas, not exact addresses.", `${tag}: Tobin Hill preselected (one circle on load); new map note`);
+    ok(JSON.stringify(await page.locator(".F-hood").first().locator(".F-hoodPill").allInnerTexts()) === JSON.stringify(await page.evaluate(() => ["736", "752"].map((k) => document.querySelector(`.C-pin[data-key="${k}"]`).textContent))), `${tag}: each Tobin Hill home shows the same pill as its map pin`);
+    await page.locator(".F-hoodHomes a").first().hover(); await page.waitForTimeout(250);
+    if (w > 760) ok((await page.locator('.C-pin[data-key="736"]').getAttribute("class")).includes("is-hot"), `${tag}: hovering a home in the list highlights its pin`);
+    await page.mouse.move(0, 0);
     ok(await page.evaluate(() => { const n = document.querySelector(".C-mapNote").getBoundingClientRect(); return [...document.querySelectorAll(".F-map .C-pin")].every((p) => { const r = p.getBoundingClientRect(); return r.top >= n.bottom || r.bottom <= n.top || r.right <= n.left || r.left >= n.right; }); }), `${tag}: map note doesn't cover any pin`);
     const inCircle = (keys) => page.evaluate((keys) => {
       const c = document.querySelector(".F-area").getBoundingClientRect(); const cx = c.left + c.width / 2, cy = c.top + c.height / 2, r = c.width / 2;
@@ -297,7 +301,8 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
     ok(await page.evaluate(() => { const r = document.getElementById("home-claywell").getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; }), `${tag}: pin inside the circle still opens its home`);
     await page.locator(".F-mapCard").scrollIntoViewIfNeeded();
     await page.locator('.F-hoodBtn', { hasText: "Alamo Heights" }).click(); await page.waitForTimeout(500);
-    ok((await circles()) === 0, `${tag}: selecting the same neighborhood again clears the circle`);
+    ok((await circles()) === 1, `${tag}: one neighborhood always stays selected`);
+    await page.locator('.F-hoodBtn', { hasText: "Tobin Hill" }).click(); await page.waitForTimeout(600);
   }
   await page.locator("#reviews").scrollIntoViewIfNeeded(); await page.waitForTimeout(1200);
   ok(await page.evaluate(() => getComputedStyle(document.querySelector(".F-loopTrack")).animationName === "F-marquee"), `${tag}: reviews glide in a loop`);

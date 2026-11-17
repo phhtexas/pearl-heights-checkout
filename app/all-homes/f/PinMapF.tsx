@@ -21,7 +21,7 @@ const project = (lat: number, lon: number, z: number) => {
 export type Pin = { key: string; lat: number; lon: number; label: string; title: string; off?: boolean };
 export type Area = { name: string; keys: string[] } | null;
 
-export function PinMapF({ pins, zoom: baseZoom = 12, area = null }: { pins: Pin[]; zoom?: number; area?: Area }) {
+export function PinMapF({ pins, zoom: baseZoom = 12, area = null, hot = null }: { pins: Pin[]; zoom?: number; area?: Area; hot?: string | null }) {
   const box = useRef<HTMLDivElement>(null);
   const pinEls = useRef<Record<string, HTMLButtonElement | null>>({});
   const [show, setShow] = useState(false);
@@ -106,7 +106,7 @@ export function PinMapF({ pins, zoom: baseZoom = 12, area = null }: { pins: Pin[
       )}
       {spots.map((s) => (
         <button key={s.key} ref={(el) => { pinEls.current[s.key] = el; }} type="button" data-key={s.key}
-          className={`C-pin${s.off ? " is-off" : ""}${area?.keys.includes(s.key) ? " is-area" : ""}`} style={at(s.left, s.top)}
+          className={`C-pin${s.off ? " is-off" : ""}${area?.keys.includes(s.key) ? " is-area" : ""}${hot === s.key ? " is-hot" : ""}`} style={at(s.left, s.top)}
           onClick={() => go(s.key)} aria-label={`${s.title}: ${s.label}. Show this home`}>{s.label}</button>
       ))}
       <p className="sr-only" aria-live="polite">{area ? `${area.name}: ${area.keys.length} home${area.keys.length > 1 ? "s" : ""} circled on the map.` : ""}</p>
