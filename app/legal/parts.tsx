@@ -38,7 +38,7 @@ export function Shell({ crumbs, children }: { crumbs: { label: string; href?: st
   return (
     <div className="L-page">
       <header className="L-top">
-        <a href="/homes/736-myrtle" className="L-brand">Pearl Heights <span>HOMES</span></a>
+        <a href="/homes/736-myrtle" className="L-brand"><img className="brandLogo" src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} /></a>
       </header>
       <main className="L-main" id="top">
         <nav aria-label="Breadcrumb" className="L-crumbs">

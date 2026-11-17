@@ -209,7 +209,7 @@ input.f.bad { border-color: var(--bad); }
 }
 
 /* Nov 16: same blue as listing option A on the checkout's main buttons and selections (black stays for text and outlines). */
-.ck { --ck-blue: #0071e3; --ck-blueSoft: #e8f1fc; }
+.ck { --ck-blue: #127A5E; --ck-blueSoft: #e7f2ee; } /* Nov 17 (Oscar): All Homes teal (was #0071e3) */
 .ck .btn:not(:disabled):not(.ghost) { background: var(--ck-blue); }
 .ck .btn:not(:disabled):not(.ghost):hover { background: #005bbf; } /* a11y: #0077ed was 4.3:1 with white */
 .ck .day.sel { background: var(--ck-blue); }
@@ -232,3 +232,11 @@ input.f.bad { border-color: var(--bad); }
 .optIn { border: 0; border-top: 1px solid var(--line, #e5e5e5); margin: 4px 0 0; padding: 14px 0 0; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .optIn legend { font-size: 14px; font-weight: 600; padding: 0; margin-bottom: 10px; float: left; width: 100%; }
 .optIn .chk span { font-size: 13.5px; color: var(--muted, #555); line-height: 1.45; }
+
+/* Nov 17 (Oscar): the Pearl Heights Homes logo (same artwork as pearlheightshomes.com and All Homes) on every page */
+.brandLogo { display: block; height: 44px; width: auto; }
+.V-brand .brandLogo, .L-brand .brandLogo, .P-brand .brandLogo { height: 44px; }
+.L-brand .brandLogo { margin: 0; }
+.V-brandFoot .brandLogo { height: 60px; }
+.brand .brandLogo { height: 40px; margin: 0 auto; }
+@media (min-width: 900px) { .V-brand .brandLogo { height: 50px; } }

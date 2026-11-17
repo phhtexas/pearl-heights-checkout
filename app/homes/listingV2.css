@@ -195,12 +195,14 @@ button.V-room { display: block; padding: 0; background: none; text-align: left; 
 .V-dots { bottom: 36px; }
 .V-count { bottom: 34px; }
 
-/* Nov 16: Apple-style blue accent, used sparingly: main buttons, text links, and a few icon groups.
+/* Nov 17 (Oscar): accent is now the All Homes teal #127A5E (was Apple blue #0071e3). Variable names kept.
+   #127A5E on white = 5.4:1; white text on #127A5E = 5.4:1.
+   Nov 16: Apple-style blue accent, used sparingly: main buttons, text links, and a few icon groups.
    Everything else stays ink/grey. #0071e3 on white text = 4.6:1; #0066cc links on white = 5.6:1. */
-.V-page { --V-blue: #0071e3; --V-link: #0066cc; --V-blueSoft: #e8f1fc; }
+.V-page { --V-blue: #127A5E; --V-link: #127A5E; --V-blueSoft: #e7f2ee; }
 .V-cta { background: var(--V-blue); border-radius: 12px; }
-.V-cta:hover { background: #0077ed; }
-.V-tourCta .V-cta { box-shadow: 0 6px 18px rgba(0, 113, 227, .28); }
+.V-cta:hover { background: #0f6a51; }
+.V-tourCta .V-cta { box-shadow: 0 6px 18px rgba(18, 122, 94, .28); }
 .V-page .btn:not(:disabled):not(.ghost) { background: var(--V-blue); }
 .V-page .day.sel { background: var(--V-blue); }
 .V-page .day.in { background: var(--V-blueSoft); }
@@ -316,3 +318,5 @@ button.V-room { display: flex; flex-direction: column; justify-content: flex-sta
 .V-social { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; }
 .V-social a { width: 40px; height: 40px; border-radius: 20px; justify-content: center; color: #17191b; border: 1px solid #dcdcd8; background: #fff; }
 .V-social a:hover { text-decoration: none; border-color: #17191b; }
+/* Nov 17: the sticky phone hero was drawing over the footer; keep the footer above it like the sheet */
+.V-footer { position: relative; z-index: 1; }

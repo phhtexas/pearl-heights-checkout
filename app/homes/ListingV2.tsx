@@ -259,7 +259,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
       <div className="V-test">Test site · nothing is booked or charged</div>
       <header className="V-top">
         <span aria-hidden="true" className="V-topSide" />
-        <a href="https://pearlheightshomes.com" className="V-brand">Pearl Heights <span>HOMES</span></a>
+        <a href="https://pearlheightshomes.com" className="V-brand"><img className="brandLogo" src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} /></a>
         <div className="V-acts">
           <button className="V-round" onClick={share} aria-label="Share this home"><Icon name="share" size={18} /></button>
           <button className={"V-round" + (saved ? " V-saved" : "")} onClick={toggleSave} aria-pressed={saved} aria-label={saved ? "Saved" : "Save this home"}><Icon name="heart" size={18} /></button>
@@ -411,7 +411,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
         <div className="V-footIn">
           <div className="V-footBrand">
             <div className="V-footLogoRow">
-              <span className="V-brand">Pearl Heights <span>HOMES</span></span>
+              <span className="V-brand V-brandFoot"><img className="brandLogo" src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} /></span>
               <ul className="V-social" aria-label="Pearl Heights Homes on social media">
                 {SOCIAL.map((s) => <li key={s.name}><a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={`Pearl Heights Homes on ${s.name} (opens in a new tab)`}><Icon name={s.icon} size={20} /></a></li>)}
               </ul>

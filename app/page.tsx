@@ -282,7 +282,7 @@ export default function Checkout() {
   if (!ready || !revealed) return (
     <div className="ck" aria-busy="true">
       <div className="testbar"><span>Test checkout · no real charges</span></div>
-      <header className="top"><span className="hdrSide" /><span className="brand">Pearl Heights <span>HOMES</span></span><span className="hdrSide" /></header>
+      <header className="top"><span className="hdrSide" /><span className="brand"><img className="brandLogo" src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} /></span><span className="hdrSide" /></header>
       <main className="layout" aria-label="Loading your stay">
         <p className="sr" role="status">Loading your stay…</p>
         <div className="flow" aria-hidden="true">
@@ -307,7 +307,7 @@ export default function Checkout() {
       <header className="top">
         <span className="mobileOnly hdrSide">{(step === "details" || step === "pay") &&
           <button className="back" aria-label="Back" onClick={() => go(step === "pay" ? "details" : "review")}>‹</button>}</span>
-        <div className="brand">Pearl Heights <span>HOMES</span></div>
+        <div className="brand"><img className="brandLogo" src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} /></div>
         <span className="mobileOnly hdrSide stepOf">{step !== "done" ? `${stepIdx + 1} of 3` : ""}</span>
         {step !== "done" && <ol className="progress desktopOnlyFlex" aria-label="Checkout steps">
           {STEPS.map(([k, label], i) => <li key={k} className={i < stepIdx ? "past" : i === stepIdx ? "now" : ""} aria-current={i === stepIdx ? "step" : undefined}><span>{i + 1}</span>{label}</li>)}
