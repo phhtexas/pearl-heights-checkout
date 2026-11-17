@@ -27,3 +27,4 @@
   .S-go { grid-column: auto; margin: 8px; border-radius: 999px; padding: 0 22px; }
   .S-pop { left: auto; width: 340px; }
 }
+.S-ic { vertical-align: -2px; margin-right: 6px; color: var(--muted, #6a6a6a); }

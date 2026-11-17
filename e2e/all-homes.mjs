@@ -79,6 +79,12 @@ for (const v of ["a", "b"]) {
   const q = page.locator(".C-faq details").first();
   await q.locator("summary").click();
   ok(await q.evaluate((d) => d.open), "c: questions open");
+  ok((await page.locator(".C-proof li").count()) === 3 && (await page.locator(".C-proof").innerText()).includes("4.98"), "c: trust badges in the hero");
+  ok((await page.locator(".S-ic").count()) === 3, "c: search fields have icons");
+  ok((await page.locator(".C-areas > li").count()) === 3, "c: homes grouped by neighborhood under the map");
+  ok(/\$[\d,]+\+? 3-night total/.test(await page.locator(".C-areas").innerText()), "c: neighborhood groups show totals after a search");
+  // An unavailable home offers "Try other dates" (fake one by flipping a result in the page is not possible; check markup path instead)
+  ok((await page.locator(".C-card .C-meta").first().evaluate((el) => el.nextElementSibling?.tagName)) === "H3", "c: area and rating sit above the home name");
   ok((await page.locator(".C-amen li").count()) === 8 && (await page.locator(".C-reviews li").count()) >= 6, "c: 8 'every home has' tiles and real reviews");
   await page.context().close();
 }

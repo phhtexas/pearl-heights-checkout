@@ -42,9 +42,14 @@ export function HomesC({ homes, hero, points, reasons }: {
           <p className="C-eyebrow">San Antonio, Texas</p>
           <h1>Find your San Antonio stay</h1>
           <p>Five family-friendly homes hosted by Oscar &amp; Fernanda.</p>
+          <ul className="C-proof" aria-label="Why guests trust us">
+            <li><span aria-hidden="true">★</span> 4.98 average</li>
+            <li>463 Airbnb guest reviews</li>
+            <li>Replies in about an hour</li>
+          </ul>
         </div>
       </section>
-      <div className="C-searchWrap" ref={searchRef}><SearchBar s={s} cls="C-search" /></div>
+      <div className="C-searchWrap" ref={searchRef}><SearchBar s={s} cls="C-search" icons /></div>
 
       {reasons}
 
@@ -68,8 +73,8 @@ export function HomesC({ homes, hero, points, reasons }: {
                 </div>
                 <div className="C-info">
                   <p className="C-fit">{h.bestFit}</p>
-                  <h3><a href={s.href(h.slug)}>{h.title}</a></h3>
                   <p className="C-meta">{h.area} · {h.rating ? <span>★ {h.rating.value} <span className="C-dim">({h.rating.count} Airbnb guest reviews)</span></span> : <b>New home</b>}</p>
+                  <h3><a href={s.href(h.slug)}>{h.title}</a></h3>
                   <p className="C-dim">{h.guests} guests · {h.bedrooms} bedrooms · {h.beds} beds · {h.baths} bath{h.baths === 1 ? "" : "s"}</p>
                   <ul className="C-points">{h.points.map((p) => <li key={p}>{p}</li>)}</ul>
                   <div className="C-buy">
@@ -77,7 +82,7 @@ export function HomesC({ homes, hero, points, reasons }: {
                       {s.state === "loading" ? <span className="C-dim">Checking these dates…</span>
                         : !searched || !r ? <span className="C-dim">Add dates for the total</span>
                         : r.ok ? <><b>{money(r.total!)}</b><span>total for {nights} night{nights === 1 ? "" : "s"}, taxes included</span></>
-                        : <span className="C-dim">{r.reason}</span>}
+                        : <><span className="C-dim">{r.reason}</span>{r.reason !== `Sleeps ${h.guests}` && <button type="button" className="C-retry" onClick={toSearch}>Try other dates</button>}</>}
                     </p>
                     <a className="C-cta" href={s.href(h.slug)} aria-label={`View ${h.title}`}>View home</a>
                   </div>
@@ -94,6 +99,22 @@ export function HomesC({ homes, hero, points, reasons }: {
           <p>Near the Pearl, downtown and in Alamo Heights. Tap a pin to see the home.</p>
         </div>
         <PinMap pins={homes.map((h) => ({ ...points.find((p) => p.key === h.key)!, label: pinLabel(h), title: h.title, off: !!(searched && s.results[h.key] && !s.results[h.key]!.ok) }))} />
+        <ul className="C-areas">
+          {[...new Set(homes.map((h) => h.area))].map((area) => {
+            const list = homes.filter((h) => h.area === area);
+            const totals = list.map((h) => s.results[h.key]).filter((r) => searched && r?.ok).map((r) => r!.total!);
+            return (
+              <li key={area}>
+                <div className="C-areaHead">
+                  <h3>{area}</h3>
+                  <p>{totals.length ? <><b>{money(Math.min(...totals))}{totals.length > 1 ? "+" : ""}</b> {nights}-night total{totals.length > 1 ? "s" : ""}</>
+                    : searched ? <span className="C-dim">Not available these dates</span> : <span className="C-dim">{list.length} home{list.length > 1 ? "s" : ""}</span>}</p>
+                </div>
+                <ul>{list.map((h) => <li key={h.key}><a href={`#home-${h.key}`}>{h.title}</a><span className="C-dim">sleeps {h.guests}</span></li>)}</ul>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <div className={`C-sticky${sticky ? " is-on" : ""}`} aria-hidden={!sticky}>

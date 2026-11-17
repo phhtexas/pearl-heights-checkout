@@ -148,3 +148,19 @@
   .C-foot { padding-bottom: 44px; }
 }
 .C-whyPhoto { border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 16px; }
+
+/* From mockup D review (Oscar, Nov 16) */
+.C-proof { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.C-proof li { background: rgba(255,255,255,.92); color: var(--ink); border-radius: 999px; padding: 6px 12px; font-size: 13.5px; font-weight: 500; text-shadow: none; }
+.C-proof li span { color: var(--acc); }
+.C-meta { margin: 0 0 4px !important; font-size: 14.5px !important; }
+.C-retry { display: block; margin-top: 6px; padding: 0; border: 0; background: none; font: inherit; font-size: 14.5px; font-weight: 600; color: var(--acc); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; text-align: left; }
+.C-areas { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; }
+.C-areas > li { background: var(--soft); border-radius: 20px; padding: 18px 20px; }
+.C-areaHead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.C-areaHead h3 { font-size: 17px; } .C-areaHead p { margin: 0; font-size: 14.5px; }
+.C-areas ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.C-areas ul li { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+.C-areas ul a { color: var(--ink); text-underline-offset: 3px; }
+.C-areas ul span { flex: none; font-size: 14px; }
+@media (min-width: 900px) { .C-areas { grid-template-columns: repeat(3, 1fr); } }
