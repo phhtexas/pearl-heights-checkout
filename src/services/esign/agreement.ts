@@ -81,12 +81,12 @@ export function agreementHtml(i: AgreementInput): string {
     }
     if (b.t === "table") {
       if (section === "Signatures") {
-        // Oscar, Nov 17: bigger fields, one per line. Field size follows the tag's size (font + spaces); the name
-        // field also sets width/height (SignWell options 7 and 8). The date fills itself in when the guest signs.
+        // Oscar, Nov 17: bigger fields, one per line. Sizes are set with SignWell options 7 and 8 (width,
+        // height in px); spaces don't work because HTML collapses them. The date fills itself in when the guest signs.
         html.push(`<div class="sigBox"><p class="sigHead">Reservation holder</p>
 <p class="sigLbl">Full legal name (as on your ID)</p><p class="sigF">${tag(esc(legalNameTag(i.holder.name)))}</p>
-<p class="sigLbl">Signature</p><p class="sigF">${tag("{{s:1:y}}" + " ".repeat(44), true)}</p>
-<p class="sigLbl">Date signed (filled in automatically)</p><p class="sigF">${tag("{{af_d_s:1}}" + " ".repeat(20))}</p></div>
+<p class="sigLbl">Signature</p><p class="sigF">${tag("{{s:1:y:::signature:340:64}}", true)}</p>
+<p class="sigLbl">Date signed (filled in automatically)</p><p class="sigF">${tag("{{af_d_s:1:y:::date_signed:200:40}}")}</p></div>
 <div class="sigBox"><p class="sigHead">Pearl Heights Homes</p><p>${esc(OPERATOR)}<br>Accepted electronically when this agreement is completed.</p></div>`);
         continue;
       }

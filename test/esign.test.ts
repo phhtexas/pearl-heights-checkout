@@ -12,7 +12,7 @@ describe("rental agreement HTML for SignWell", () => {
   it("test mode fills every merge field and adds the signing tags", () => {
     const html = agreementHtml({ ...base, testMode: true });
     expect(html).not.toMatch(/\[[^\]]{2,60}\]/);                 // no [placeholders] left
-    expect(html).toContain("{{s:1:y}}");                           // signature
+    expect(html).toContain("{{s:1:y:::signature:340:64}}");                           // signature
     expect(html).toContain("{{t:1:y:Full legal name:" + base.holder.name + ":legal_name:340:40}}"); // editable name, prefilled
     expect(html).toContain("{{af_d_s:1}}");                        // date signed
     expect(html).not.toContain("{{c:");                            // no checkboxes (Oscar: confirmed by signing)
