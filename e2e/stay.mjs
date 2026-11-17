@@ -24,15 +24,19 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   await page.fill(".ST-field input", "Oscar Pena"); ok(!(await page.locator('.ST-panel button:has-text("Review & sign")').isDisabled()), `${tag}: enabled right after a name is entered`);
   await page.click("text=Not now"); await page.click("text=Review & sign");
   ok((await page.locator(".ST-field input").inputValue()) === "Oscar Pena", `${tag}: Not now keeps the entered name`);
-  // SignWell path (mocked here): opens in a NEW TAB, then this page confirms with the server when the guest comes back
+  // SignWell path (mocked here): the agreement opens INSIDE the portal; when SignWell reports "completed" the page
+  // confirms with the server, then shows the signed state.
   await page.route("**/api/stay/demo/agreement", (r) => r.request().method() === "POST"
-    ? r.fulfill({ json: { documentId: "a692e1ce-9929-4541-adc7-61932bab39d3", url: "https://example.org/sign-test", testMode: true } }) : r.continue());
-  await page.route("**/api/stay/demo/agreement?doc=*", (r) => r.fulfill({ json: { completed: true, status: "Completed", signedAt: "2026-11-17T22:30:00Z" } }));
-  await page.context().route("https://example.org/**", (r) => r.fulfill({ body: "<p>signwell test</p>", contentType: "text/html" }));
-  const [popup] = await Promise.all([page.context().waitForEvent("page"), page.click('.ST-panel button:has-text("Review & sign")')]);
-  await popup.waitForURL(/example\.org/, { timeout: 8000 }).catch(() => {});
-  ok(/example\.org\/sign-test/.test(popup.url()), `${tag}: Review & sign opens SignWell in a new tab (${popup.url()})`);
-  await popup.close(); await page.bringToFront(); await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+    ? r.fulfill({ json: { documentId: "a692e1ce-9929-4541-adc7-61932bab39d3", url: "https://www.signwell.com/docs/test/", testMode: true } }) : r.continue());
+  let swSigned = false; // SignWell reports "Created" until the guest finishes
+  await page.route("**/api/stay/demo/agreement?doc=*", (r) => r.fulfill({ json: swSigned ? { completed: true, status: "Completed", signedAt: "2026-11-17T22:30:00Z" } : { completed: false, status: "Created" } }));
+  await page.route("https://static.signwell.com/assets/embedded.js", (r) => r.fulfill({ contentType: "text/javascript", body:
+    "window.SignWellEmbed=function(o){this.open=function(){var c=document.getElementById(o.containerId);var f=document.createElement('iframe');f.title='SignWell';f.setAttribute('data-url',o.url);c.appendChild(f);window.__swDone=function(){o.events.completed({id:'x'})};};};" }));
+  const before = page.url();
+  await page.click('.ST-panel button:has-text("Review & sign")');
+  await page.waitForSelector("#st-sign-frame.is-open iframe", { state: "attached", timeout: 8000 }).catch(() => {});
+  ok(page.url() === before && (await page.locator("#st-sign-frame iframe").getAttribute("data-url")) === "https://www.signwell.com/docs/test/" && page.context().pages().length === 1, `${tag}: Review & sign opens the agreement inside the portal (no new tab)`);
+  swSigned = true; await page.evaluate(() => window.__swDone());
   await page.waitForSelector(".ST-signed", { timeout: 8000 });
   ok((await page.locator(".ST-signedLine").innerText()) === "Agreement signed — November 17, 2026" && (await page.locator(".ST-task").first().evaluate((e) => e.classList.contains("is-done"))), `${tag}: confirmation with green check and the signed date`);
   ok((await page.locator(".ST-dl").getAttribute("href")) === "/api/stay/demo/agreement/pdf?doc=a692e1ce-9929-4541-adc7-61932bab39d3" && (await page.locator(".ST-dl").innerText()) === "Download a copy (PDF)", `${tag}: Download a copy (PDF) link`);

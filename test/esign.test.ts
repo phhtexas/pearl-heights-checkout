@@ -14,7 +14,8 @@ describe("rental agreement HTML for SignWell", () => {
     expect(html).not.toMatch(/\[[^\]]{2,60}\]/);                 // no [placeholders] left
     expect(html).toContain("{{s:1:y}}");                           // signature
     expect(html).toContain("{{af_d_s:1}}");                        // date signed
-    expect((html.match(/\{\{c:1:y\}\}/g) ?? []).length).toBe(6);   // 6 guest acknowledgments
+    expect(html).not.toContain("{{c:");                            // no checkboxes (Oscar: confirmed by signing)
+    expect(html).toContain("By signing below, I confirm that:");
     expect(html).toContain("TEST DOCUMENT");
     expect(html).toContain("Test Guest");
     expect(html).toContain("Scheduled balance $500.00 on Dec 13, 2026");

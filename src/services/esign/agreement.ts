@@ -7,7 +7,7 @@ import { SCHEDULE_FIELDS, agreementSchedule, draftSchedule, scheduleGaps, type P
 /**
  * The Rental Agreement (V1.2, src/content/legal/rental-agreement.md) rendered as one HTML file for SignWell, with the
  * reservation merge fields and the home's Property Schedule filled in, and SignWell text tags for the guest's
- * acknowledgment checkboxes, signature and signing date (SignWell docs: Adding Text Tags / Text Tag Options).
+ * signature and signing date only (the section 24 acknowledgments are confirmed by signing; Oscar, Nov 17) (SignWell docs: Adding Text Tags / Text Tag Options).
  *
  * STRICT (real bookings): agreementSchedule() must pass, so an agreement is never produced with a gap.
  * TEST (testMode): gaps are filled with a visible "TEST: not yet provided" so the flow can be tried end to end.
@@ -70,7 +70,8 @@ export function agreementHtml(i: AgreementInput): string {
     if (b.t === "p") { html.push(`<p>${esc(fill(b.text))}</p>`); continue; }
     if (b.t === "ul") {
       if (section === "Guest acknowledgments") {
-        html.push(`<table class="ack">${b.items.map((x) => `<tr><td class="box">${tag("{{c:1:y}}")}</td><td>${esc(x)}</td></tr>`).join("")}</table>`);
+        // Oscar, Nov 17: no checkbox per line (too many taps); the guest confirms them all by signing.
+        html.push(`<p><b>By signing below, I confirm that:</b></p><ul>${b.items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`);
       } else html.push(`<ul>${b.items.map((x) => `<li>${esc(fill(x))}</li>`).join("")}</ul>`);
       continue;
     }

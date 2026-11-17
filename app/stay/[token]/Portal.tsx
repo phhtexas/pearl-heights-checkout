@@ -57,15 +57,14 @@ export function Portal({ stay }: { stay: StayData }) {
   // SignWell: the server creates the agreement; it opens in a NEW TAB (Oscar, Nov 17) so this page stays open. We then
   // confirm completion with the server (never trusting the browser alone) when the guest comes back to this tab,
   // or when SignWell redirects the new tab back here with ?signed=1.
-  const [esign, setEsign] = useState<"idle" | "loading" | "waiting" | "checking" | "fallback" | "error">("idle");
+  const [esign, setEsign] = useState<"idle" | "loading" | "open" | "checking" | "fallback" | "error">("idle");
   const [esignMsg, setEsignMsg] = useState("");
-  const [manualUrl, setManualUrl] = useState("");
   const checkSigned = async (doc: string, who: string, tries = 1): Promise<boolean> => {
     for (let i = 0; i < tries; i++) {
       const r = await fetch(`/api/stay/${stay.token}/agreement?doc=${doc}`, { cache: "no-store" }).then((x) => x.json()).catch(() => null);
       if (r?.completed) {
         save({ ...sRef.current, signedAt: nowText(), signedOn: r.signedAt ?? new Date().toISOString(), signedName: who, signDoc: doc, pendingDoc: undefined });
-        setSigning(false); setEsign("idle"); setManualUrl(""); return true;
+        setSigning(false); setEsign("idle"); return true;
       }
       if (i < tries - 1) await new Promise((w) => setTimeout(w, 1500));
     }
@@ -85,19 +84,28 @@ export function Portal({ stay }: { stay: StayData }) {
     return () => { document.removeEventListener("visibilitychange", onBack); window.removeEventListener("focus", onBack); clearInterval(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, s.pendingDoc?.id]);
+  // Oscar, Nov 17 (later): SignWell opens INSIDE the portal again (preferred over a new tab), with the new copy.
+  const loadScript = () => new Promise<void>((res, rej) => {
+    if ((window as any).SignWellEmbed) return res();
+    const el = document.createElement("script"); el.src = "https://static.signwell.com/assets/embedded.js"; el.async = true;
+    el.onload = () => res(); el.onerror = () => rej(new Error("script")); document.head.appendChild(el);
+  });
   const openAgreement = async () => {
     const who = name.trim(); if (!who) return;
-    // Open the tab synchronously (inside the click) so pop-up blockers allow it, then point it at SignWell.
-    const tab = window.open("", "_blank");
-    if (tab) { try { tab.opener = null; tab.document.title = "Opening your agreement…"; tab.document.body.innerHTML = "<p style=\"font-family:system-ui;padding:24px\">Opening your agreement…</p>"; } catch { /* ignore */ } }
-    setEsign("loading"); setEsignMsg(""); setManualUrl("");
+    setEsign("loading"); setEsignMsg("");
     const r = await fetch(`/api/stay/${stay.token}/agreement`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: who }) });
     const j = await r.json().catch(() => ({}));
-    if (r.status === 503 && j.fallback) { tab?.close(); setEsign("fallback"); return; }
-    if (!r.ok || !j.url) { tab?.close(); setEsign("error"); setEsignMsg(j.error ?? "We couldn't open the agreement."); return; }
+    if (r.status === 503 && j.fallback) { setEsign("fallback"); return; }
+    if (!r.ok || !j.url) { setEsign("error"); setEsignMsg(j.error ?? "We couldn't open the agreement."); return; }
     save({ ...sRef.current, pendingDoc: { id: j.documentId }, pendingName: who });
-    if (tab && !tab.closed) tab.location.href = j.url; else setManualUrl(j.url); // blocked: show a link instead
-    setEsign("waiting");
+    try { await loadScript(); } catch { setEsign("error"); setEsignMsg("The signing window couldn't load. Please try again."); return; }
+    setEsign("open");
+    const Embed = (window as any).SignWellEmbed;
+    new Embed({ url: j.url, containerId: "st-sign-frame", allowDecline: false, allowRedirect: false, showHeader: false, signatureDefaultName: true, events: {
+      completed: () => { setEsign("checking"); void checkSigned(j.documentId, who, 10).then((okd) => { if (!okd) { setEsign("error"); setEsignMsg("We couldn't confirm your signature yet. Please refresh in a minute."); } }); },
+      closed: () => setEsign((x) => (x === "open" ? "idle" : x)),
+      error: () => { setEsign("error"); setEsignMsg("Something went wrong in the signing window."); },
+    } }).open();
   };
   const send = () => { const t = draft.trim(); if (!t) return; save({ ...s, messages: [...s.messages, { from: "guest", text: t, at: nowText() }] }); setDraft(""); };
 
@@ -165,15 +173,14 @@ export function Portal({ stay }: { stay: StayData }) {
                   <label className="ST-field">Full legal name — exactly as it appears on your ID<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
                   <p className="ST-hint">From your reservation. Fix it here if it's misspelled.</p>
                   <div className="ST-row">
-                    <button className="ST-btn" type="button" onClick={openAgreement} disabled={!name.trim() || esign === "loading" || esign === "checking"}>
+                    <button className="ST-btn" type="button" onClick={openAgreement} disabled={!name.trim() || esign === "loading" || esign === "open" || esign === "checking"}>
                       {esign === "loading" ? "Opening…" : esign === "checking" ? "Confirming…" : "Review & sign"}
                     </button>
-                    <button className="ST-link" type="button" onClick={() => { setSigning(false); if (esign !== "waiting") setEsign("idle"); }}>Not now</button>
+                    <button className="ST-link" type="button" onClick={() => { setSigning(false); setEsign("idle"); }}>Not now</button>
                   </div>
-                  {esign === "waiting" && <p className="ST-hint" role="status">The agreement opened in a new tab. When you've signed, come back here; this page updates on its own.</p>}
-                  {manualUrl && <p className="ST-hint">Your browser blocked the new tab. <a href={manualUrl} target="_blank" rel="noopener">Open the agreement</a></p>}
                   {esignMsg && <p className="ST-err" role="alert">{esignMsg}</p>}
                   {SANDBOX && <p className="ST-testLine">Sandbox mode — this test document isn&apos;t legally binding.</p>}
+                  <div id="st-sign-frame" className={`ST-frame${esign === "open" ? " is-open" : ""}`} />
                 </div>
               )}
               {!signed && signing && esign === "fallback" && (
