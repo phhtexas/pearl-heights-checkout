@@ -10,7 +10,7 @@ const BASE = "https://www.signwell.com/api/v1";
 export class ESignUnavailable extends Error { name = "ESignUnavailable"; }
 
 export interface SigningDoc { documentId: string; embeddedSigningUrl: string }
-export interface DocStatus { id: string; status: string; completed: boolean; testMode: boolean; signedAt?: string; metadata: Record<string, string> }
+export interface DocStatus { id: string; status: string; completed: boolean; testMode: boolean; signedAt?: string; metadata: Record<string, string>; legalName?: string }
 
 function key(env: Record<string, string | undefined>): string {
   const k = env.SIGNWELL_API_KEY?.trim();
@@ -54,7 +54,22 @@ export async function getDocumentStatus(id: string, env: Record<string, string |
   if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Bad document id");
   const d = await call(`/documents/${id}`, { method: "GET" }, env, fetchFn);
   const status = String(d?.status ?? "");
-  return { id: String(d?.id ?? id), status, completed: /^complet/i.test(status), testMode: !!d?.test_mode, signedAt: d?.updated_at ?? undefined, metadata: (d?.metadata ?? {}) as Record<string, string> };
+  const legalName = fieldValue(d?.fields, "legal_name");
+  return { id: String(d?.id ?? id), status, completed: /^complet/i.test(status), testMode: !!d?.test_mode, signedAt: d?.updated_at ?? undefined, metadata: (d?.metadata ?? {}) as Record<string, string>, ...(legalName ? { legalName } : {}) };
+}
+
+/** A filled field's value by api_id. SignWell nests fields per file (arrays of arrays), so search the whole tree. */
+export function fieldValue(fields: unknown, apiId: string): string | undefined {
+  const stack: unknown[] = [fields];
+  while (stack.length) {
+    const x = stack.pop();
+    if (Array.isArray(x)) { stack.push(...x); continue; }
+    if (x && typeof x === "object") {
+      const f = x as Record<string, unknown>;
+      if (f.api_id === apiId && typeof f.value === "string" && f.value.trim()) return f.value.trim().slice(0, 120);
+    }
+  }
+  return undefined;
 }
 
 /** The signed PDF (with SignWell's audit page). Only for completed documents. */

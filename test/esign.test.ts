@@ -13,6 +13,7 @@ describe("rental agreement HTML for SignWell", () => {
     const html = agreementHtml({ ...base, testMode: true });
     expect(html).not.toMatch(/\[[^\]]{2,60}\]/);                 // no [placeholders] left
     expect(html).toContain("{{s:1:y}}");                           // signature
+    expect(html).toContain("{{t:1:y:Full legal name:" + base.holder.name + ":legal_name}}"); // editable name, prefilled
     expect(html).toContain("{{af_d_s:1}}");                        // date signed
     expect(html).not.toContain("{{c:");                            // no checkboxes (Oscar: confirmed by signing)
     expect(html).toContain("By signing below, I confirm that:");
@@ -28,6 +29,10 @@ describe("rental agreement HTML for SignWell", () => {
       expect(html).not.toMatch(/\[[^\]]{2,60}\]/);
       expect(html).not.toContain("TEST");
     }
+  });
+  it("keeps the name tag intact (no colons or braces from the name)", async () => {
+    const { legalNameTag } = await import("@/services/esign/agreement");
+    expect(legalNameTag("Ana: {Ruiz}").trim()).toBe("{{t:1:y:Full legal name:Ana Ruiz:legal_name}}");
   });
   it("escapes the guest's name", () => {
     expect(agreementHtml({ ...base, holder: { name: "A <b>B</b>", email: "x@example.com" }, testMode: true })).toContain("A &lt;b&gt;B&lt;/b&gt;");
@@ -53,6 +58,8 @@ describe("SignWell client", () => {
     const f = vi.fn(async () => new Response(JSON.stringify({ id: "a692e1ce-9929-4541-adc7-61932bab39d3", status: "Completed", test_mode: true, metadata: { token: "demo" } })));
     const s = await getDocumentStatus("a692e1ce-9929-4541-adc7-61932bab39d3", { SIGNWELL_API_KEY: "k" }, f as any);
     expect(s).toMatchObject({ completed: true, testMode: true, metadata: { token: "demo" } });
+    const g = vi.fn(async () => new Response(JSON.stringify({ id: "a692e1ce-9929-4541-adc7-61932bab39d3", status: "Completed", test_mode: true, metadata: {}, fields: [[{ api_id: "sig", type: "signature" }, { api_id: "legal_name", type: "text", value: " Oscar Peña " }]] })));
+    expect((await getDocumentStatus("a692e1ce-9929-4541-adc7-61932bab39d3", { SIGNWELL_API_KEY: "k" }, g as any)).legalName).toBe("Oscar Peña");
     await expect(getDocumentStatus("../x", { SIGNWELL_API_KEY: "k" }, f as any)).rejects.toThrow();
   });
 });

@@ -37,7 +37,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
       checkIn: stay.checkIn, checkOut: stay.checkOut, guests: { adults: stay.guests.adults, children: stay.guests.children, infants: 0 },
       price: { total: "TEST $0.00", paidNow: "TEST $0.00" }, testMode: true,
     });
-    const doc = await createSigningDocument({ name: `TEST Rental Agreement ${stay.code}`, html, signer: { name, email: "test-guest@example.com" }, testMode: true, redirectUrl: `${new URL(req.url).origin}/stay/${token}?signed=1`, metadata: { token, booking: stay.code, holder_name_match: name.toLowerCase().replace(/\s+/g, " ") === stay.holder.toLowerCase() ? "yes" : "edited" } });
+    const doc = await createSigningDocument({ name: `TEST Rental Agreement ${stay.code}`, html, signer: { name, email: "test-guest@example.com" }, testMode: true, redirectUrl: `${new URL(req.url).origin}/stay/${token}?signed=1`, metadata: { token, booking: stay.code, holder: stay.holder } });
     return NextResponse.json({ documentId: doc.documentId, url: doc.embeddedSigningUrl, testMode: true }, { headers: noStore });
   } catch (e) {
     if (e instanceof ESignUnavailable) return NextResponse.json({ error: "Signing isn't set up yet.", fallback: true }, { status: 503, headers: noStore });
@@ -53,7 +53,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ token: s
   try {
     const s = await getDocumentStatus(doc);
     if (s.metadata?.token !== token || !s.testMode) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
-    return NextResponse.json({ completed: s.completed, status: s.status, signedAt: s.completed ? s.signedAt : undefined }, { headers: noStore });
+    // The name the guest typed in the agreement's "Full legal name" field; nameEdited flags a change from the booking.
+    const legalName = s.completed ? s.legalName : undefined;
+    const nameEdited = !!legalName && !!s.metadata?.holder && legalName.toLowerCase() !== String(s.metadata.holder).trim().toLowerCase();
+    return NextResponse.json({ completed: s.completed, status: s.status, signedAt: s.completed ? s.signedAt : undefined, legalName, nameEdited }, { headers: noStore });
   } catch (e) {
     if (e instanceof ESignUnavailable) return NextResponse.json({ error: "Signing isn't set up yet.", fallback: true }, { status: 503, headers: noStore });
     console.error("[stay/agreement] status failed", (e as Error).message);

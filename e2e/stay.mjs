@@ -14,31 +14,28 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok((await page.locator(".ST-steps .is-now").innerText()).includes("Confirm your reservation"), `${tag}: current step is Confirm your reservation`);
   const body = () => page.evaluate(() => document.body.innerText);
   ok(!/Test address/.test(await body()) && (await page.locator(".ST-lockNote").count()) === 1, `${tag}: arrival details locked before signing and verifying`);
-  // sign (Oscar option 1): one tap; name field hidden unless "Name misspelled? Fix it"
+  // sign: one tap; the name is edited inside the agreement, so no name field or "Fix it" link on the page
   const flow = await page.locator(".ST-signFlow").innerText();
-  ok(/covers your reservation details, house rules, and cancellation terms/.test(flow) && !/Preview the full agreement/.test(flow) && (await page.locator(".ST-signFlow .ST-field").count()) === 0, `${tag}: one-tap step, no name field shown`);
+  ok(/covers your reservation details, house rules, and cancellation terms/.test(flow) && !/Preview the full agreement/.test(flow) && (await page.locator(".ST-signFlow .ST-field").count()) === 0 && !/Fix it/.test(flow), `${tag}: one-tap step, no name field or Fix it link`);
   ok(/Sandbox mode — this test document isn't legally binding\./.test(flow), `${tag}: sandbox callout shows in a sandbox build`);
-  await page.click("text=Name misspelled? Fix it");
-  ok((await page.locator(".ST-signFlow .ST-field input").inputValue()) === "Test Guest", `${tag}: Fix it shows the name, prefilled from the reservation`);
-  await page.fill(".ST-signFlow .ST-field input", "   "); ok(await page.locator('.ST-signFlow button:has-text("Review & sign")').isDisabled(), `${tag}: Review & sign disabled with a blank name`);
-  await page.fill(".ST-signFlow .ST-field input", "Oscar Pena"); ok(!(await page.locator('.ST-signFlow button:has-text("Review & sign")').isDisabled()), `${tag}: enabled right after a name is entered`);
   // SignWell path (mocked here): the agreement opens INSIDE the portal; when SignWell reports "completed" the page
   // confirms with the server, then shows the signed state.
   await page.route("**/api/stay/demo/agreement", (r) => r.request().method() === "POST"
     ? r.fulfill({ json: { documentId: "a692e1ce-9929-4541-adc7-61932bab39d3", url: "https://www.signwell.com/docs/test/", testMode: true } }) : r.continue());
   let swSigned = false; // SignWell reports "Created" until the guest finishes
-  await page.route("**/api/stay/demo/agreement?doc=*", (r) => r.fulfill({ json: swSigned ? { completed: true, status: "Completed", signedAt: "2026-11-17T22:30:00Z" } : { completed: false, status: "Created" } }));
+  await page.route("**/api/stay/demo/agreement?doc=*", (r) => r.fulfill({ json: swSigned ? { completed: true, status: "Completed", signedAt: "2026-11-17T22:30:00Z", legalName: "Oscar Pena", nameEdited: true } : { completed: false, status: "Created" } }));
   await page.route("https://static.signwell.com/assets/embedded.js", (r) => r.fulfill({ contentType: "text/javascript", body:
     "window.SignWellEmbed=function(o){this.open=function(){var c=document.getElementById(o.containerId);var f=document.createElement('iframe');f.title='SignWell';f.setAttribute('data-url',o.url);c.appendChild(f);window.__swDone=function(){o.events.completed({id:'x'})};};};" }));
   const before = page.url();
   await page.click('.ST-signFlow button:has-text("Review & sign")');
   await page.waitForSelector("#st-sign-frame.is-open iframe", { state: "attached", timeout: 8000 }).catch(() => {});
   ok(page.url() === before && (await page.locator("#st-sign-frame iframe").getAttribute("data-url")) === "https://www.signwell.com/docs/test/" && page.context().pages().length === 1, `${tag}: one tap opens the agreement inside the portal (no new tab)`);
-  ok(/Signing as Oscar Pena/.test(await page.locator(".ST-signFlow").innerText()), `${tag}: shows who is signing`);
+  ok(/Check your name in the agreement, then sign\./.test(await page.locator(".ST-signFlow").innerText()), `${tag}: tells the guest to check their name in the agreement`);
   swSigned = true; await page.evaluate(() => window.__swDone());
   await page.waitForSelector(".ST-signed", { timeout: 8000 });
   ok((await page.locator(".ST-signedLine").innerText()) === "Agreement signed — November 17, 2026" && (await page.locator(".ST-task").first().evaluate((e) => e.classList.contains("is-done"))), `${tag}: confirmation with green check and the signed date`);
   ok((await page.locator(".ST-dl").getAttribute("href")) === "/api/stay/demo/agreement/pdf?doc=a692e1ce-9929-4541-adc7-61932bab39d3" && (await page.locator(".ST-dl").innerText()) === "Download a copy (PDF)", `${tag}: Download a copy (PDF) link`);
+  ok(await page.evaluate(() => { const v = JSON.parse(localStorage.getItem("ph-stay-demo") || "{}"); return v.signedName === "Oscar Pena" && v.nameEdited === true; }), `${tag}: saves the name typed in the agreement and flags the change`);
   ok(/1 of 2 done/.test(await page.locator(".ST-steps").innerText()), `${tag}: step indicator advances (1 of 2 done)`);
   await page.unroute("**/api/stay/demo/agreement"); await page.unroute("**/api/stay/demo/agreement?doc=*");
   // verify

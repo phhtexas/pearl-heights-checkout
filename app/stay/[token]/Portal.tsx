@@ -9,7 +9,7 @@ import type { StayData } from "@/content/stayDemo";
  *  ->  4 Enjoy your stay (house rules, messages).
  * In this test version the state lives in this browser only (localStorage), and nothing is sent or charged.
  */
-type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; verifiedAt?: string; messages: { from: "guest" | "note"; text: string; at: string }[] };
+type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; messages: { from: "guest" | "note"; text: string; at: string }[] };
 const fresh = (): State => ({ messages: [] });
 const KEY = (t: string) => `ph-stay-${t}`;
 /** Sandbox labels render only when NEXT_PUBLIC_SANDBOX=true (inlined at build); never in a production build without it. */
@@ -44,7 +44,6 @@ export function Portal({ stay }: { stay: StayData }) {
   const [agree, setAgree] = useState(false);
   // Oscar, Nov 17 (option 2): prefilled with the reservation holder's name from the booking; editable to fix a typo.
   const [name, setName] = useState(stay.holder);
-  const [fixName, setFixName] = useState(false);
   const [draft, setDraft] = useState("");
   useEffect(() => { try { const raw = localStorage.getItem(KEY(stay.token)); if (raw) setS({ ...fresh(), ...JSON.parse(raw) }); } catch { /* private mode */ } setReady(true); }, [stay.token]);
   const save = (n: State) => { setS(n); try { localStorage.setItem(KEY(stay.token), JSON.stringify(n)); } catch { /* ignore */ } };
@@ -64,7 +63,8 @@ export function Portal({ stay }: { stay: StayData }) {
     for (let i = 0; i < tries; i++) {
       const r = await fetch(`/api/stay/${stay.token}/agreement?doc=${doc}`, { cache: "no-store" }).then((x) => x.json()).catch(() => null);
       if (r?.completed) {
-        save({ ...sRef.current, signedAt: nowText(), signedOn: r.signedAt ?? new Date().toISOString(), signedName: who, signDoc: doc, pendingDoc: undefined });
+        // signedName = what the guest typed in the agreement's "Full legal name" field (falls back to the booking name).
+        save({ ...sRef.current, signedAt: nowText(), signedOn: r.signedAt ?? new Date().toISOString(), signedName: r.legalName || who, nameEdited: !!r.nameEdited, signDoc: doc, pendingDoc: undefined });
         setSigning(false); setEsign("idle"); return true;
       }
       if (i < tries - 1) await new Promise((w) => setTimeout(w, 1500));
@@ -166,25 +166,21 @@ export function Portal({ stay }: { stay: StayData }) {
               ) : (
                 <p className="ST-dim">Sign online — takes about 2 minutes.</p>
               )}
-              {/* Oscar, Nov 17 (option 1): one tap. "Review & sign" opens SignWell right away with the reservation name;
-                  the name field only appears if the guest taps "Name misspelled? Fix it". */}
+              {/* Oscar, Nov 17: one tap. "Review & sign" opens SignWell right away; the guest's full legal name is an
+                  editable field inside the agreement, prefilled from the reservation (no name field on this page). */}
               {!signed && esign !== "fallback" && (
                 <div className="ST-signFlow">
                   <p className="ST-copy">The agreement covers your reservation details, house rules, and cancellation terms. When you tap the button, it opens in a secure window from SignWell, our e-signature partner — no printing or downloads needed.</p>
-                  {fixName && (
-                    <label className="ST-field">Full legal name — exactly as it appears on your ID<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
-                  )}
                   {esign !== "open" && esign !== "checking" && (
                     <div className="ST-row">
                       <button className="ST-btn" type="button" onClick={() => { setSigning(true); void openAgreement(); }} disabled={!ready || !name.trim() || esign === "loading"}>
                         {esign === "loading" ? "Opening…" : "Review & sign"}
                       </button>
-                      {!fixName && <button className="ST-link" type="button" onClick={() => setFixName(true)}>Name misspelled? Fix it</button>}
                     </div>
                   )}
                   {(esign === "open" || esign === "checking") && (
                     <div className="ST-row">
-                      <span className="ST-hint" role="status">{esign === "checking" ? "Confirming your signature…" : `Signing as ${name.trim()}`}</span>
+                      <span className="ST-hint" role="status">{esign === "checking" ? "Confirming your signature…" : "Check your name in the agreement, then sign."}</span>
                       <button className="ST-link" type="button" onClick={() => { setSigning(false); setEsign("idle"); }}>Not now</button>
                     </div>
                   )}

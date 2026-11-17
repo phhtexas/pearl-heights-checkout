@@ -24,6 +24,10 @@ export interface AgreementInput {
   testMode: boolean;
 }
 
+/** Oscar, Nov 17 (option 1): the guest's name is an editable field INSIDE the agreement, prefilled from the reservation.
+ * SignWell text tag options (docs, read Nov 17): t:signer:required:label:prefill:api_id. Colons and braces would break
+ * the tag, so they're stripped from the prefill. Spaces inside the tag set the field's width. */
+export const legalNameTag = (name: string) => `{{t:1:y:Full legal name:${name.replace(/[:{}\\]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80)}:legal_name}}` + " ".repeat(24);
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const day = (iso: string) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 const TEST_GAP = "TEST: not yet provided";
@@ -78,7 +82,7 @@ export function agreementHtml(i: AgreementInput): string {
     if (b.t === "table") {
       if (section === "Signatures") {
         html.push(`<table class="sig"><tr><th>Reservation holder</th><th>Pearl Heights Homes</th></tr><tr>
-<td>Name: ${esc(i.holder.name)}<br>Signature: ${tag("{{s:1:y}}                              ")}<br>Signed: ${tag("{{af_d_s:1}}            ")}</td>
+<td>Full legal name: ${tag(esc(legalNameTag(i.holder.name)))}<br>Signature: ${tag("{{s:1:y}}                              ")}<br>Signed: ${tag("{{af_d_s:1}}            ")}</td>
 <td>${esc(OPERATOR)}<br>Accepted electronically when this agreement is completed.</td></tr></table>`);
         continue;
       }
