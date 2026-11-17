@@ -11,6 +11,8 @@ export interface HomeCard {
   rating?: { value: number; count: number };
   photos: { src: string; alt: string }[];
   points: string[]; bestFit: string; parking: string; reviewQuote?: { name: string; text: string };
+  /** Filter tags for mockup E chips, derived from the listing (see homeTags). */
+  tags: string[];
 }
 
 /** One honest "best fit" label per home (Oscar's brief; PROPOSED, needs his OK). */
@@ -32,6 +34,20 @@ const PARKING: Record<string, string> = {
 /** Order on the page: biggest first, then by location story. */
 const ORDER = ["736", "752", "indianola", "edgewood", "claywell"];
 
+/** Filter tags from listing facts: highlights, amenities and area (nothing hand-typed). */
+export function homeTags(key: string): string[] {
+  const h = HOMES[key]!;
+  const hl = h.highlights.map((x) => x.title);
+  const items = [...h.amenityGroups.flatMap((g) => g.items), ...h.topAmenities];
+  const t: string[] = [];
+  if (hl.includes("Walk to the Pearl")) t.push("pearl");
+  if (hl.includes("Walk downtown")) t.push("downtown");
+  if (h.neighborhood === "Alamo Heights") t.push("alamo");
+  if (items.some((i) => /^single-level home, no stairs$/i.test(i))) t.push("level");
+  if (hl.includes("Ready for little ones")) t.push("kids");
+  return t;
+}
+
 const short = (t: string, n = 150) => (t.length <= n ? t : t.slice(0, t.lastIndexOf(" ", n)).replace(/[\s.,;:!—-]+$/, "") + "…");
 
 export function homeCards(): HomeCard[] {
@@ -47,6 +63,7 @@ export function homeCards(): HomeCard[] {
       points: h.highlights.slice(0, 3).map((x) => x.title),
       bestFit: BEST_FIT[key]!, parking: PARKING[key]!,
       reviewQuote: best ? { name: best.name, text: short(best.text) } : undefined,
+      tags: homeTags(key),
     };
   });
 }

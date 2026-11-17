@@ -88,5 +88,58 @@ for (const v of ["a", "b"]) {
   ok((await page.locator(".C-amen li").count()) === 8 && (await page.locator(".C-reviews li").count()) >= 6, "c: 8 'every home has' tiles and real reviews");
   await page.context().close();
 }
+// Mockup E (functional): cover photo, fonts, padding, live search, filters, sort, map, card link, FAQ.
+for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 } }]) {
+  const w = dev.viewport.width, tag = `e@${w}`;
+  const page = await (await browser.newContext(dev)).newPage();
+  const errors = []; page.on("pageerror", (e) => errors.push(e.message));
+  const res = await page.goto(`${BASE}/all-homes/e`);
+  ok(res.status() === 200, `${tag}: loads`);
+  ok(/noindex/.test(await page.getAttribute('meta[name="robots"]', "content")), `${tag}: noindex`);
+  ok((await page.locator(".E-cover img").count()) === 1, `${tag}: cover photo on top`);
+  const f = await page.evaluate(() => ({ h1: getComputedStyle(document.querySelector("h1")).fontFamily, w: getComputedStyle(document.querySelector("h1")).fontWeight, logo: getComputedStyle(document.querySelector(".E-logo")).fontFamily, pad: getComputedStyle(document.querySelector("#homes")).paddingLeft }));
+  ok(f.h1.startsWith("Inter") && f.w === "600" && f.logo.startsWith("Marcellus"), `${tag}: our fonts (Inter 600 headings, Marcellus logo) ${JSON.stringify(f)}`);
+  ok(w === 390 ? f.pad === "24px" : f.pad === "40px", `${tag}: side padding ${f.pad}`);
+  ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${tag}: no sideways scroll`);
+  ok((await page.locator(".E-card").count()) === 5, `${tag}: five homes`);
+  ok((await page.locator(".E-card .E-price b", { hasText: "Add dates" }).count()) === 5, `${tag}: no dates -> 'Add dates' on every card`);
+  const t0 = await page.evaluate(() => document.body.innerText);
+  ok(!/Free cancellation|Pet policies|flexible cancellation|Fast wifi|since the beginning|no fees|best rate/i.test(t0), `${tag}: no wrong or banned claims`);
+  // filters
+  await page.click('.E-chip:has-text("Downtown")');
+  ok((await page.locator(".E-card").count()) === 1 && (await page.locator("#home-indianola").count()) === 1, `${tag}: Downtown filter -> Indianola only`);
+  await page.click('.E-chip:has-text("Single level")');
+  ok((await page.locator(".E-card").count()) === 3 && (await page.locator("#home-indianola").count()) === 0, `${tag}: Single level -> 736, 752, Edgewood`);
+  await page.click('.E-chip:has-text("Any home")');
+  // live search
+  await page.fill('input[aria-label="Check-in date"]', iso(a)); await page.fill('input[aria-label="Check-out date"]', iso(b)); await page.click(".S-go");
+  await page.waitForFunction(() => /total · 3 nights/.test(document.body.innerText), null, { timeout: 15000 }).catch(() => {});
+  ok((await page.locator(".E-card .E-price", { hasText: "total · 3 nights" }).count()) >= 1, `${tag}: search shows live totals`);
+  ok(/Stays for your dates/.test(await page.locator("#homes h2").innerText()), `${tag}: heading switches to your dates`);
+  await page.selectOption('select[aria-label="Sort homes"]', "total");
+  const totals = await page.$$eval(".E-card .E-price b", (bs) => bs.map((b) => Number((b.textContent ?? "").replace(/[^\d]/g, ""))).filter((n) => n > 0));
+  ok(totals.length >= 2 && totals.every((v, i) => i === 0 || v >= totals[i - 1]), `${tag}: sort by lowest total works`);
+  const href = await page.locator("#home-752 a.E-stretch").getAttribute("href");
+  ok(href === `/homes/752-myrtle?checkIn=${iso(a)}&checkOut=${iso(b)}&adults=2&children=0`, `${tag}: card opens the listing with the dates (${href})`);
+  ok(/from \$[\d,]+/.test(await page.locator(".E-hoods").innerText()), `${tag}: neighborhoods show live 'from' totals`);
+  await page.locator("#locations").scrollIntoViewIfNeeded(); await page.waitForTimeout(600);
+  ok((await page.locator(".C-pin").count()) === 5 && (await page.locator(".C-pin").allInnerTexts()).some((x) => /^\$/.test(x)), `${tag}: real map with five priced pins`);
+  const q = page.locator(".E-qa").nth(3); await q.locator("summary").click();
+  ok(await q.evaluate((d) => d.open) && /non-refundable/.test(await q.innerText()), `${tag}: FAQ opens; cancellation answer is the real policy`);
+  ok((await page.locator(".E-rev").count()) >= 6, `${tag}: real guest reviews`);
+  ok(errors.length === 0, `${tag}: no page errors ${errors.join(" | ")}`);
+  if (w === 390) {
+    await page.goto(`${BASE}${href}`);
+    await page.waitForFunction(() => /total/i.test(document.querySelector(".V-bar")?.textContent ?? ""), null, { timeout: 15000 }).catch(() => {});
+    ok(/total/i.test(await page.locator(".V-bar").innerText()), "e: the listing opened from a card is already priced for those dates");
+  }
+  await page.context().close();
+}
+{
+  const page = await (await browser.newContext()).newPage();
+  const r = await page.goto(`${BASE}/all-homes/archive/e-static`);
+  ok(r.status() === 200 && /mockup e/i.test(await page.locator(".mockbar").innerText()), "e: original static file kept at /all-homes/archive/e-static");
+  await page.context().close();
+}
 await browser.close();
 if (!process.exitCode) console.log("ALL HOMES E2E PASSED");

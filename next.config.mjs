@@ -3,9 +3,9 @@ export default {
   // Put CSS in the page itself so the first paint doesn't wait on separate style files (note 150 item 4, slow-4G LCP).
   experimental: { inlineCss: true },
   // Mockups A and B were archived (Oscar, Nov 16); old links still work.
-  // Mockup E (Oscar's static file, Nov 16): served as-is from public/mockups/e, with factual fixes only.
+  // Mockup E's original static file (Nov 16, factual fixes only), kept for reference; the live E is app/all-homes/e.
   async rewrites() {
-    return [{ source: "/all-homes/e", destination: "/mockups/e/index.html" }];
+    return [{ source: "/all-homes/archive/e-static", destination: "/mockups/e/index.html" }];
   },
   async headers() {
     return [{ source: "/mockups/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }];
