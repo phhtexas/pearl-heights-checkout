@@ -220,9 +220,12 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   ok((await page.locator('#home-752 .F-photo').evaluateAll((els) => els.every((e) => e.tagName === "A" && e.getAttribute("href").startsWith("/homes/752-myrtle")))), `${tag}: home photos link to the home's page`);
   if (w <= 760) {
     const box = await page.locator("#home-752 .F-photos").boundingBox();
-    await page.locator("#home-752 .F-photos").evaluate((el) => el.scrollTo({ left: el.clientWidth * 0.88 + 4 }));
+    ok(await page.locator("#home-752 .F-photos").evaluate((el) => Math.abs(el.firstElementChild.getBoundingClientRect().width - el.clientWidth) < 1), `${tag}: one full-width photo at a time (no peek)`);
+    ok((await page.locator("#home-752 .F-count").innerText()) === "1 / 4" && (await page.locator("#home-752 .F-dots span").count()) === 4, `${tag}: dots + 1 / 4 counter like the listing page`);
+    await page.locator("#home-752 .F-photos").evaluate((el) => el.scrollTo({ left: el.clientWidth }));
     await page.waitForTimeout(700);
     ok(box && await page.locator("#home-752 .F-photos").evaluate((el) => el.scrollLeft > 50), `${tag}: photos scroll sideways to the next one`);
+    ok((await page.locator("#home-752 .F-count").innerText()) === "2 / 4" && (await page.locator("#home-752 .F-dots span.on").count()) === 1, `${tag}: counter and dots follow the swipe`);
     ok(await page.evaluate(() => getComputedStyle(document.querySelector("#home-752")).transform === "none"), `${tag}: no hover lift on touch (no stuck swipe)`);
   }
   if (w > 760) { // desktop: wheel/trackpad over a photo scrolls the page (never caught by the strip); arrows change the photo

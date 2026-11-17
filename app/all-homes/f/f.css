@@ -422,3 +422,11 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
   .F-page .F-arrow:hover { transform: scale(1.06); }
 }
 @media (min-width: 900px) { .F-page .F-photoWrap { display: flex; } .F-page .F-photoWrap > .F-photos { flex: 1; min-width: 0; } }
+
+/* Oscar, Nov 17: phone photos like the listing page: full width (no peek of the next photo), dots + "1 / 4" counter */
+.F-page .F-photos { gap: 0; }
+.F-page .F-photo { width: 100%; }
+.F-page .F-dots { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center; gap: 5px; pointer-events: none; z-index: 1; }
+.F-page .F-dots span { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.55); box-shadow: 0 0 2px rgba(0,0,0,.25); transition: background .3s ease; }
+.F-page .F-dots span.on { background: #fff; }
+.F-page .F-count { position: absolute; right: 12px; bottom: 10px; z-index: 1; background: rgba(23,25,27,.72); color: #fff; font-size: 12.5px; font-weight: 600; padding: 4px 10px; border-radius: 8px; font-variant-numeric: tabular-nums; pointer-events: none; }

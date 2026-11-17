@@ -12,6 +12,40 @@ import { SearchBarF, type SearchBarFHandle } from "./SearchBarF";
  */
 const AREA_NOTE: Record<string, string> = { "Tobin Hill": "walk to the Pearl", Lavaca: "walk downtown" };
 
+/**
+ * A home's photos (Oscar, Nov 17): on phones the same treatment as the listing page: one full-width photo at a time,
+ * swipe for the next, dots + "1 / 4" counter. With a mouse/trackpad the strip isn't a scroll area (so the page always
+ * scrolls) and arrows change the photo on hover. Tapping/clicking a photo opens the home.
+ */
+const MAX_PHOTOS = 4; // the cards carry 4 photos per home (homeCards)
+function Photos({ h, href, first }: { h: HomeCard; href: string; first: boolean }) {
+  const photos = h.photos.slice(0, MAX_PHOTOS);
+  const [at, setAt] = useState(0);
+  const strip = useRef<HTMLDivElement>(null);
+  const go = (n: number) => {
+    const el = strip.current; if (!el) return;
+    const k = (n + photos.length) % photos.length;
+    el.scrollTo({ left: k * el.clientWidth, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    setAt(k);
+  };
+  return (
+    <div className="F-photoWrap">
+      <div className="F-photos" ref={strip} onScroll={(e) => setAt(Math.round(e.currentTarget.scrollLeft / Math.max(1, e.currentTarget.clientWidth)))}>
+        {photos.map((p, j) => (
+          <a className="F-photo" key={p.src} href={href} draggable={false} tabIndex={j === 0 ? 0 : -1}
+            aria-label={j === 0 ? `${h.title}: view home` : undefined} aria-hidden={j === 0 ? undefined : true}>
+            {Math.abs(j - at) <= 1 && <Image src={p.src} alt={j === 0 ? "" : p.alt} fill sizes="(min-width: 900px) 500px, 100vw" priority={first && j === 0} draggable={false} />}
+          </a>
+        ))}
+      </div>
+      <button type="button" className="F-arrow F-arrowPrev" aria-label={`Previous photo of ${h.title}`} onClick={() => go(at - 1)}>‹</button>
+      <button type="button" className="F-arrow F-arrowNext" aria-label={`Next photo of ${h.title}`} onClick={() => go(at + 1)}>›</button>
+      <div className="F-dots" aria-hidden="true">{photos.map((p, j) => <span key={p.src} className={j === at ? "on" : ""} />)}</div>
+      <span className="F-count" aria-hidden="true">{at + 1} / {photos.length}</span>
+    </div>
+  );
+}
+
 export function HomesF({ homes, hero, points, reasons }: {
   homes: HomeCard[]; hero: { src: string; alt: string }; points: { key: string; lat: number; lon: number }[]; reasons: React.ReactNode;
 }) {
@@ -39,32 +73,12 @@ export function HomesF({ homes, hero, points, reasons }: {
     return h.rating ? `★ ${h.rating.value}` : "New";
   };
   const areas = [...new Set(homes.map((h) => h.area))];
-  const slide = (e: React.MouseEvent<HTMLButtonElement>, dir: 1 | -1) => {
-    const strip = e.currentTarget.parentElement?.querySelector<HTMLElement>(".F-photos");
-    if (!strip) return;
-    const w = strip.clientWidth, n = strip.children.length;
-    const at = Math.round(strip.scrollLeft / w);
-    strip.scrollTo({ left: ((at + dir + n) % n) * w, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-  };
   const card = (h: HomeCard, i: number) => {
     const r = s.results[h.key];
     const off = searched && r && !r.ok;
     return (
       <li key={h.key} id={`home-${h.key}`} className={`F-card${off ? " is-off" : ""}`} data-reveal>
-        {/* Oscar: tapping a photo opens that home's page; swipe sideways for more photos (phones). On desktop the strip is
-            not a scroll area (a trackpad swipe got caught in it and the page stopped scrolling), so arrows change the photo. */}
-        <div className="F-photoWrap">
-        <button type="button" className="F-arrow F-arrowPrev" aria-label={`Previous photo of ${h.title}`} onClick={(e) => slide(e, -1)}>‹</button>
-        <button type="button" className="F-arrow F-arrowNext" aria-label={`Next photo of ${h.title}`} onClick={(e) => slide(e, 1)}>›</button>
-        <div className="F-photos">
-          {h.photos.slice(0, 3).map((p, j) => (
-            <a className="F-photo" key={p.src} href={s.href(h.slug)} draggable={false} tabIndex={j === 0 ? 0 : -1}
-              aria-label={j === 0 ? `${h.title}: view home` : undefined} aria-hidden={j === 0 ? undefined : true}>
-              <Image src={p.src} alt={j === 0 ? "" : p.alt} fill sizes="(min-width: 900px) 460px, 88vw" priority={i === 0 && j === 0} draggable={false} />
-            </a>
-          ))}
-        </div>
-        </div>
+        <Photos h={h} href={s.href(h.slug)} first={i === 0} />
         <div className="F-info">
           <p className="F-fit">{h.bestFit}</p>
           <p className="F-meta">{h.area} · {h.rating ? <span>★ {h.rating.value} <span className="F-dim">({h.rating.count} Airbnb guest reviews)</span></span> : <b>New home</b>}</p>
