@@ -538,3 +538,11 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 /* review initial circles */
 .F-page .F-who { display: flex; align-items: center; gap: 10px; }
 .F-page .F-av { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--av); color: #1d1a17; display: grid; place-items: center; font-weight: 600; font-size: 15px; }
+/* Oscar, Nov 17: desktop steps centered under the heading: each step centered, rail runs marker to marker */
+@media (min-width: 900px) {
+  .F-page .F-tl { max-width: 1120px; gap: 0 32px; }
+  .F-page .F-tl li { align-items: center; text-align: center; padding: 0 6px; }
+  .F-page .F-tlTrack { position: relative; width: 100%; justify-content: center; }
+  .F-page .F-tlRail { position: absolute; top: 50%; left: calc(50% + 14px); width: calc(100% + 32px - 28px); margin: 0; }
+  .F-page .F-tl li > p:not(.F-tlWhen) { max-width: 260px; }
+}
