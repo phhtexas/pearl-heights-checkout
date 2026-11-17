@@ -454,3 +454,32 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 .F-page .F-inc p { margin: -8px 40px 20px 0; font-size: 15px; line-height: 1.55; color: var(--muted); animation: F-incIn .35s ease both; }
 @keyframes F-incIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .F-page .F-inc p { animation: none; } }
+
+/* Oscar, Nov 17: neighborhood -> one translucent sage circle on the map (pins stay on top and clickable) */
+.F-page .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: -1px; padding: 0; border: 0; }
+.F-page .F-hoodBtn { all: unset; cursor: pointer; border-radius: 6px; font: inherit; color: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 5px; text-decoration-thickness: 1.5px; }
+@media (hover: hover) { .F-page .F-hoodBtn:hover { text-decoration-color: var(--acc); } }
+.F-page .F-hoodBtn:focus-visible { outline: 3px solid var(--acc); outline-offset: 3px; }
+.F-page .F-hood { transition: background .3s ease; border-radius: 14px; }
+.F-page .F-hood.is-sel { background: #eef3ee; box-shadow: inset 3px 0 0 #7d9b84; }
+.F-page .F-hood.is-sel .F-hoodBtn { text-decoration-color: #7d9b84; }
+.F-page .F-area { position: absolute; z-index: 1; transform: translate(-50%, -50%); border-radius: 50%; background: rgba(125, 155, 132, .26); border: 2px solid rgba(98, 130, 106, .55); pointer-events: none; animation: F-areaIn .45s ease both; }
+@keyframes F-areaIn { from { opacity: 0; transform: translate(-50%, -50%) scale(.85); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+.F-page .F-map .C-pin, .F-page .F-map .C-tiles img, .F-page .F-area { transition: left .5s cubic-bezier(.2,.7,.2,1), top .5s cubic-bezier(.2,.7,.2,1); }
+.F-page .F-map .C-pin { z-index: 2; }
+.F-page .F-map .C-pin.is-area { box-shadow: 0 0 0 2px #7d9b84, 0 2px 10px rgba(0,0,0,.22); }
+@media (prefers-reduced-motion: reduce) { .F-page .F-area { animation: none; } .F-page .F-map .C-pin, .F-page .F-map .C-tiles img, .F-page .F-area { transition: none; } }
+.F-page .F-hood { padding-left: 12px; padding-right: 12px; }
+
+/* Oscar, Nov 17: includes rows: first open, chevron shows rows expand, open row softly tinted */
+.F-page .F-incIcons { display: flex; align-items: center; gap: 10px; flex: none; }
+.F-page .F-incChev { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--soft); color: var(--muted); font-style: normal; transition: transform .3s ease, background .3s ease, color .3s ease; }
+.F-page .F-incChev svg { width: 16px; height: 16px; }
+.F-page .F-inc[open] .F-incChev { transform: rotate(180deg); background: #e7f2ee; color: var(--acc); }
+.F-page .F-checks li:has(.F-inc[open]) { background: #f4f8f5; margin: 0 -24px; padding: 0 24px; border-radius: 14px; }
+.F-page .F-inc[open] summary span:first-child { font-weight: 600; }
+.F-page .F-inc p { margin-right: 76px; }
+@media (max-width: 760px) { .F-page .F-inc p { margin-right: 0; } }
+@media (prefers-reduced-motion: reduce) { .F-page .F-incChev { transition: none; } }
+@media (max-width: 760px) { .F-page .F-map .C-mapNote { font-size: 11.5px; padding: 5px 10px; left: 8px; top: 8px; white-space: nowrap; max-width: calc(100% - 16px); } }
+@media (max-width: 760px) { .F-page .F-mapCard { aspect-ratio: auto; height: 440px; } } /* room for the note above the top pins */

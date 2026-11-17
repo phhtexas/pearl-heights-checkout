@@ -247,10 +247,9 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   else ok(await page.evaluate(() => { const h = document.querySelector(".F-stripHost").getBoundingClientRect(), u = document.querySelector(".F-strip ul").getBoundingClientRect(), s = document.querySelector(".F-search").getBoundingClientRect(); return u.left > h.right && h.left >= s.left - 1 && u.right <= s.right + 1 && Math.abs((h.left - s.left) - (s.right - u.right)) < 40; }), `${tag}: desktop strip = host left, facts right, centered under the search bar`);
   { // 'Every booking includes': closed rows look the same; tapping one shows its explanation
     const rows = page.locator(".F-checks .F-inc");
-    ok((await rows.count()) === 5 && !(await page.locator(".F-checks .F-inc p").first().isVisible()), `${tag}: includes rows start closed`);
-    await rows.nth(2).locator("summary").scrollIntoViewIfNeeded(); await rows.nth(2).locator("summary").click();
-    ok(/Stripe's secure payment form/.test(await rows.nth(2).locator("p").innerText()), `${tag}: tapping 'Secure payment through Stripe' shows its explanation`);
-    await rows.nth(2).locator("summary").click();
+    ok((await rows.count()) === 5 && (await rows.nth(0).locator("p").isVisible()) && !(await rows.nth(1).locator("p").isVisible()) && (await page.locator(".F-checks .F-incChev").count()) === 5, `${tag}: first includes row open, the rest closed with a chevron`);
+    await rows.nth(2).locator("summary").scrollIntoViewIfNeeded(); await rows.nth(2).locator("summary").click(); await page.waitForTimeout(200);
+    ok(/Stripe's secure payment form/.test(await rows.nth(2).locator("p").innerText()) && !(await rows.nth(0).locator("p").isVisible()), `${tag}: opening 'Secure payment through Stripe' shows it and closes the first`);
   }
   ok((await page.locator(".F-stats .F-statIc svg").count()) === 3, `${tag}: review stats have icons`);
   ok(await page.evaluate(() => [...document.querySelectorAll(".F-stats li")].every((li) => { const r = li.getBoundingClientRect(), i = li.querySelector(".F-statIc").getBoundingClientRect(); return Math.abs((i.left + i.width / 2) - (r.left + r.width / 2)) < 2 && getComputedStyle(li).textAlign === "center"; })), `${tag}: stat icons and text centered`);
@@ -267,6 +266,39 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   await page.locator("#locations").scrollIntoViewIfNeeded(); await page.waitForTimeout(1200);
   ok((await page.locator(".C-pin").count()) === 5 && (await page.locator(".F-hood").count()) === 3, `${tag}: map with 5 pins + neighborhood list`);
   if (w > 760) ok(await page.evaluate(() => { const l = document.querySelector(".F-hoods").getBoundingClientRect(), m = document.querySelector(".F-mapCard").getBoundingClientRect(); return l.right <= m.left; }), `${tag}: list left, map right`);
+  { // neighborhoods -> one sage circle on the map (Oscar, Nov 17)
+    const circles = () => page.locator(".F-area").count();
+    await page.locator(".F-mapCard").scrollIntoViewIfNeeded(); await page.waitForTimeout(700);
+    ok((await circles()) === 0 && (await page.locator(".C-mapNote").innerText()) === "Circles show approximate areas, not exact addresses.", `${tag}: no circle on load; new map note`);
+    ok(await page.evaluate(() => { const n = document.querySelector(".C-mapNote").getBoundingClientRect(); return [...document.querySelectorAll(".F-map .C-pin")].every((p) => { const r = p.getBoundingClientRect(); return r.top >= n.bottom || r.bottom <= n.top || r.right <= n.left || r.left >= n.right; }); }), `${tag}: map note doesn't cover any pin`);
+    const inCircle = (keys) => page.evaluate((keys) => {
+      const c = document.querySelector(".F-area").getBoundingClientRect(); const cx = c.left + c.width / 2, cy = c.top + c.height / 2, r = c.width / 2;
+      const m = document.querySelector(".F-map").getBoundingClientRect();
+      const fits = c.left >= m.left + 8 && c.right <= m.right - 8 && c.top >= m.top + 8 && c.bottom <= m.bottom - 8;
+      return fits && keys.every((k) => { const p = document.querySelector(`.C-pin[data-key="${k}"]`).getBoundingClientRect();
+        const corners = [[p.left, p.top], [p.right, p.top], [p.left, p.bottom], [p.right, p.bottom]];
+        const inside = corners.every(([x, y]) => Math.hypot(x - cx, y - cy) <= r + 0.5);
+        const top = document.elementFromPoint(p.left + p.width / 2, p.top + p.height / 2);
+        return inside && top && top.closest(".C-pin")?.dataset.key === k; });
+    }, keys);
+    // Tobin Hill by keyboard
+    await page.locator('.F-hoodBtn', { hasText: "Tobin Hill" }).focus(); await page.keyboard.press("Enter"); await page.waitForTimeout(800);
+    ok((await circles()) === 1 && (await page.locator(".F-area").getAttribute("data-area")) === "Tobin Hill" && await inCircle(["736", "752"]), `${tag}: Tobin Hill -> one circle containing both pins, pins on top and clickable`);
+    ok((await page.locator('.F-hoodBtn', { hasText: "Tobin Hill" }).getAttribute("aria-pressed")) === "true", `${tag}: Tobin Hill marked selected`);
+    const rTobin = await page.locator(".F-area").evaluate((e) => e.getBoundingClientRect().width);
+    // Lavaca by click/tap -> replaces, small circle
+    await page.locator('.F-hoodBtn', { hasText: "Lavaca" }).click(); await page.waitForTimeout(800);
+    const rLav = await page.locator(".F-area").evaluate((e) => e.getBoundingClientRect().width);
+    ok((await circles()) === 1 && (await page.locator(".F-area").getAttribute("data-area")) === "Lavaca" && await inCircle(["indianola"]) && rLav < rTobin, `${tag}: Lavaca replaces the circle with a small one`);
+    await page.locator('.F-hoodBtn', { hasText: "Alamo Heights" }).click(); await page.waitForTimeout(800);
+    ok((await circles()) === 1 && await inCircle(["edgewood", "claywell"]), `${tag}: Alamo Heights -> one circle around its two pins`);
+    // pins still go to their home
+    await page.locator('.C-pin[data-key="claywell"]').click(); await page.waitForTimeout(900);
+    ok(await page.evaluate(() => { const r = document.getElementById("home-claywell").getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; }), `${tag}: pin inside the circle still opens its home`);
+    await page.locator(".F-mapCard").scrollIntoViewIfNeeded();
+    await page.locator('.F-hoodBtn', { hasText: "Alamo Heights" }).click(); await page.waitForTimeout(500);
+    ok((await circles()) === 0, `${tag}: selecting the same neighborhood again clears the circle`);
+  }
   await page.locator("#reviews").scrollIntoViewIfNeeded(); await page.waitForTimeout(1200);
   ok(await page.evaluate(() => getComputedStyle(document.querySelector(".F-loopTrack")).animationName === "F-marquee"), `${tag}: reviews glide in a loop`);
   ok((await page.locator('.F-loopTrack li:not([aria-hidden="true"])').count()) >= 6, `${tag}: real reviews (loop copies hidden from screen readers)`);

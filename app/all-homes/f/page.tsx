@@ -105,10 +105,11 @@ export default function Page() {
           <ul className="F-checks" data-reveal>
             {/* Oscar, Nov 17: same rows; tapping one opens a short explanation. Each explanation repeats what the site
                 already says elsewhere (waiver note, booking-day and stay steps, Stripe Payment Element, reply time). */}
-            {INCLUDES.map(([t, more]) => (
+            {/* Oscar, Nov 17: first row open on load; one open at a time; a chevron shows each row opens */}
+            {INCLUDES.map(([t, more], i) => (
               <li key={t}>
-                <details className="F-inc">
-                  <summary><span>{t}</span><Ico name="check" /></summary>
+                <details className="F-inc" name="includes" open={i === 0}>
+                  <summary><span>{t}</span><span className="F-incIcons"><Ico name="check" /><i className="F-incChev" aria-hidden="true"><Ico name="chev" /></i></span></summary>
                   <p>{more}</p>
                 </details>
               </li>

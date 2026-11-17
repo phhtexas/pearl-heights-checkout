@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { HomeCard } from "@/content/allHomes";
 import { money, shortDate, useStays } from "../useStays";
-import { PinMapF as PinMap } from "./PinMapF";
+import { PinMapF as PinMap, type Area } from "./PinMapF";
 import { SearchBarF, type SearchBarFHandle } from "./SearchBarF";
 
 /**
@@ -73,6 +73,19 @@ export function HomesF({ homes, hero, points, reasons }: {
     return h.rating ? `★ ${h.rating.value}` : "New";
   };
   const areas = [...new Set(homes.map((h) => h.area))];
+  // Oscar, Nov 17: pick a neighborhood -> one circle around its homes on the map (none on load; picking another replaces it).
+  const [selected, setArea] = useState<Area>(null);
+  const selArea = selected?.name;
+  const mapRef = useRef<HTMLDivElement>(null);
+  const pickArea = (name: string) => {
+    setArea((cur) => (cur?.name === name ? null : { name, keys: homes.filter((h) => h.area === name).map((h) => h.key) }));
+    // Phones: the map sits under the list, so bring it into view.
+    const m = mapRef.current;
+    if (m && matchMedia("(max-width: 899px)").matches) {
+      const r = m.getBoundingClientRect();
+      if (r.top < 70 || r.bottom > innerHeight) m.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+    }
+  };
   const card = (h: HomeCard, i: number) => {
     const r = s.results[h.key];
     const off = searched && r && !r.ok;
@@ -136,15 +149,18 @@ export function HomesF({ homes, hero, points, reasons }: {
         <div className="F-mapGrid">
           <div data-reveal>
             <h2 id="map-h">Where the homes are</h2>
-            <p className="F-lead">Near the Pearl, downtown and in Alamo Heights. Tap a pin or a home to jump to it.</p>
+            <p className="F-lead">Near the Pearl, downtown and in Alamo Heights. Select a neighborhood to circle it on the map, or tap a pin to jump to a home.</p>
             <div className="F-hoods">
               {areas.map((area) => {
+                const sel = selArea;
                 const list = homes.filter((h) => h.area === area);
                 const totals = list.map((h) => s.results[h.key]).filter((r) => searched && r?.ok).map((r) => r!.total!);
                 return (
-                  <div className="F-hood" key={area}>
+                  <div className={`F-hood${area === sel ? " is-sel" : ""}`} key={area}>
                     <div>
-                      <h3>{area}</h3>
+                      <h3><button type="button" className="F-hoodBtn" aria-pressed={area === sel} onClick={() => pickArea(area)}>
+                        {area}<span className="sr-only">: show on map</span>
+                      </button></h3>
                       <p className="F-dim">{list.length} home{list.length > 1 ? "s" : ""}{AREA_NOTE[area] ? ` · ${AREA_NOTE[area]}` : ""}</p>
                       <ul>{list.map((h) => <li key={h.key}><a href={`#home-${h.key}`}>{h.title}</a></li>)}</ul>
                     </div>
@@ -154,8 +170,8 @@ export function HomesF({ homes, hero, points, reasons }: {
               })}
             </div>
           </div>
-          <div className="F-mapCard" data-reveal style={{ ["--d" as string]: "120ms" }}>
-            <PinMap pins={homes.map((h) => ({ ...points.find((p) => p.key === h.key)!, label: pinLabel(h), title: h.title, off: !!(searched && s.results[h.key] && !s.results[h.key]!.ok) }))} />
+          <div className="F-mapCard" ref={mapRef} data-reveal style={{ ["--d" as string]: "120ms" }}>
+            <PinMap area={selected} pins={homes.map((h) => ({ ...points.find((p) => p.key === h.key)!, label: pinLabel(h), title: h.title, off: !!(searched && s.results[h.key] && !s.results[h.key]!.ok) }))} />
           </div>
         </div>
       </section>
