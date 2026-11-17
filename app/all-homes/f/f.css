@@ -442,3 +442,5 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
   .F-page .F-stripHost { grid-column: 1; grid-row: 1; }
   .F-page .F-strip ul { grid-column: 3; grid-row: 1; flex-direction: column; flex-wrap: nowrap; align-items: flex-start; gap: 10px; }
 }
+/* Oscar, Nov 17: stat cards centered (icon, number and text) */
+.F-page .F-stats li { align-items: center; text-align: center; }
