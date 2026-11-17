@@ -105,7 +105,27 @@ export function mapPoints(): { key: string; lat: number; lon: number }[] {
 }
 
 /** Real 5-star guest reviews, two per reviewed home, newest first in each home's list. */
-export function guestReviews(): { name: string; when: string; text: string; home: string; key: string }[] {
+/**
+ * Trip snippets for the reviews shown on All Homes (Oscar, Nov 17: "Group trip", "Stayed with kids", "Stayed one week").
+ * Source: each review's Hospitable reservation (nights, and guest counts only). Rules: any children or infants -> "Stayed
+ * with kids"; otherwise 4+ adults -> "Group trip"; plus the exact number of nights. Checked Nov 17, 2026.
+ */
+const TRIP: Record<string, { nights: number; party?: "kids" | "group" }> = {
+  "736|Tia": { nights: 3, party: "kids" },
+  "736|Rebecca": { nights: 2, party: "kids" },
+  "752|Connie": { nights: 6, party: "kids" },
+  "752|Jodie": { nights: 4, party: "group" },
+  "indianola|Sandra": { nights: 4, party: "kids" },
+  "indianola|Xiaoshan": { nights: 3 },
+  "edgewood|Mark": { nights: 2, party: "kids" },
+  "edgewood|Patti": { nights: 4 },
+};
+export const tripTags = (t?: { nights: number; party?: "kids" | "group" }): string[] => !t ? [] : [
+  ...(t.party === "kids" ? ["Stayed with kids"] : t.party === "group" ? ["Group trip"] : []),
+  t.nights >= 7 && t.nights < 14 ? "Stayed one week" : t.nights >= 14 ? `Stayed ${Math.round(t.nights / 7)} weeks` : `Stayed ${t.nights} night${t.nights === 1 ? "" : "s"}`,
+];
+
+export function guestReviews(): { name: string; when: string; text: string; home: string; key: string; tags: string[] }[] {
   return ORDER.flatMap((key) => HOMES[key]!.reviews.filter((r) => (r.rating ?? 5) === 5 && r.text.length > 90).slice(0, 2)
-    .map((r) => ({ name: r.name, when: r.when, text: short(r.text, 230), home: HOMES[key]!.title, key })));
+    .map((r) => ({ name: r.name, when: r.when, text: short(r.text, 230), home: HOMES[key]!.title, key, tags: tripTags(TRIP[`${key}|${r.name}`]) })));
 }

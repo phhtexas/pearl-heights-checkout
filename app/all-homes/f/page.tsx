@@ -143,6 +143,7 @@ export default function Page() {
                 {[...reviews, ...reviews].map((r, i) => (
                   <li key={`${i}-${r.key}-${r.name}`} aria-hidden={i >= reviews.length ? true : undefined}>
                     <p className="F-stars" aria-label="5 out of 5 stars">★★★★★</p>
+                    {r.tags.length > 0 && <p className="F-revTags">{r.tags.map((t) => <span key={t}>{t}</span>)}</p>}
                     <blockquote>“{r.text}”</blockquote>
                     <p className="F-who"><b>{r.name}</b> · {r.when}</p>
                     <a className="F-revHome" href={`#home-${r.key}`} tabIndex={i >= reviews.length ? -1 : undefined}>{r.home}</a>
