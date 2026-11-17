@@ -102,7 +102,7 @@ export function Portal({ stay }: { stay: StayData }) {
     try { await loadScript(); } catch { setEsign("error"); setEsignMsg("The signing window couldn't load. Please try again."); return; }
     setEsign("open");
     const Embed = (window as any).SignWellEmbed;
-    new Embed({ url: j.url, containerId: "st-sign-frame", allowDecline: false, allowRedirect: false, showHeader: false, signatureDefaultName: true, events: {
+    new Embed({ url: j.url, containerId: "st-sign-frame", allowDecline: false, allowRedirect: false, showHeader: true, signatureDefaultName: true, events: {
       completed: () => { setEsign("checking"); void checkSigned(j.documentId, who, 10).then((okd) => { if (!okd) { setEsign("error"); setEsignMsg("We couldn't confirm your signature yet. Please refresh in a minute."); } }); },
       closed: () => setEsign((x) => (x === "open" ? "idle" : x)),
       error: () => { setEsign("error"); setEsignMsg("Something went wrong in the signing window."); },

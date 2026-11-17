@@ -27,7 +27,7 @@ export interface AgreementInput {
 /** Oscar, Nov 17 (option 1): the guest's name is an editable field INSIDE the agreement, prefilled from the reservation.
  * SignWell text tag options (docs, read Nov 17): t:signer:required:label:prefill:api_id. Colons and braces would break
  * the tag, so they're stripped from the prefill. Spaces inside the tag set the field's width. */
-export const legalNameTag = (name: string) => `{{t:1:y:Full legal name:${name.replace(/[:{}\\]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80)}:legal_name}}` + " ".repeat(24);
+export const legalNameTag = (name: string) => `{{t:1:y:Full legal name:${name.replace(/[:{}\\]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80)}:legal_name:340:40}}` + " ".repeat(30);
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const day = (iso: string) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 const TEST_GAP = "TEST: not yet provided";
@@ -65,7 +65,7 @@ export function agreementHtml(i: AgreementInput): string {
   const fill = (t: string) => Object.entries(merge).reduce((acc, [k, v]) => acc.split(k).join(v), t);
   const blocks = parseLegal("ra", src).filter((b) => !(b.t === "note") && !(b.t === "p" && /^This agreement is generated/.test(b.text)));
   // Hidden text tags: SignWell keeps tag text in the document, so it is written in white (their recommendation).
-  const tag = (t: string) => `<span style="color:#ffffff;font-size:11px">${t}</span>`;
+  const tag = (t: string, tall = false) => `<span style="color:#ffffff;font-size:${tall ? 34 : 20}px;line-height:1.4">${t}</span>`;
   const html: string[] = [];
   let section = "";
   for (const b of blocks as Block[]) {
@@ -81,9 +81,13 @@ export function agreementHtml(i: AgreementInput): string {
     }
     if (b.t === "table") {
       if (section === "Signatures") {
-        html.push(`<table class="sig"><tr><th>Reservation holder</th><th>Pearl Heights Homes</th></tr><tr>
-<td>Full legal name: ${tag(esc(legalNameTag(i.holder.name)))}<br>Signature: ${tag("{{s:1:y}}                              ")}<br>Signed: ${tag("{{af_d_s:1}}            ")}</td>
-<td>${esc(OPERATOR)}<br>Accepted electronically when this agreement is completed.</td></tr></table>`);
+        // Oscar, Nov 17: bigger fields, one per line. Field size follows the tag's size (font + spaces); the name
+        // field also sets width/height (SignWell options 7 and 8). The date fills itself in when the guest signs.
+        html.push(`<div class="sigBox"><p class="sigHead">Reservation holder</p>
+<p class="sigLbl">Full legal name (as on your ID)</p><p class="sigF">${tag(esc(legalNameTag(i.holder.name)))}</p>
+<p class="sigLbl">Signature</p><p class="sigF">${tag("{{s:1:y}}" + " ".repeat(44), true)}</p>
+<p class="sigLbl">Date signed (filled in automatically)</p><p class="sigF">${tag("{{af_d_s:1}}" + " ".repeat(20))}</p></div>
+<div class="sigBox"><p class="sigHead">Pearl Heights Homes</p><p>${esc(OPERATOR)}<br>Accepted electronically when this agreement is completed.</p></div>`);
         continue;
       }
       html.push(`<table><tr>${b.head.map((h) => `<th>${esc(fill(h))}</th>`).join("")}</tr>${b.rows.map((r) => `<tr>${r.map((c) => `<td>${esc(fill(c))}</td>`).join("")}</tr>`).join("")}</table>`);
@@ -98,7 +102,7 @@ export function agreementHtml(i: AgreementInput): string {
 body{font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#1d1a17;margin:36px}
 h1{font-size:20px;margin:0 0 4px}h2{font-size:14px;margin:20px 0 6px}h3{font-size:12.5px;margin:14px 0 4px}
 table{border-collapse:collapse;width:100%;margin:6px 0}th,td{border:1px solid #d8d1c6;padding:6px 8px;text-align:left;vertical-align:top}
-th{background:#f3efe9}.ack td{border:0;padding:4px 6px}.ack td.box{width:28px}.sig td{height:90px}
+th{background:#f3efe9}.ack td{border:0;padding:4px 6px}.ack td.box{width:28px}.sigBox{border:1px solid #e6dfd5;border-radius:8px;padding:12px 16px;margin:12px 0}.sigHead{font-weight:bold;font-size:13px;margin:0 0 8px}.sigLbl{margin:12px 0 2px;font-size:12px;color:#6b635a}.sigF{margin:0;border-bottom:1px solid #cfc6b9;padding:2px 0 6px}
 .test{background:#fff3cd;border:1px solid #e0b84f;padding:8px;margin:0 0 12px}
 </style></head><body>
 ${i.testMode ? `<p class="test"><b>TEST DOCUMENT</b>: sample reservation for testing only. Not a real booking and not binding.</p>` : ""}
