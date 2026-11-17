@@ -2,9 +2,9 @@ import Image from "next/image";
 import { EVERY_HOME, guestReviews, homeCards, mapPoints, sharedFaq } from "@/content/allHomes";
 import { HOMES } from "@/content/homes";
 import { policyOverview } from "@/domain/policy";
-import { Footer, HOST, STEPS, mockMeta } from "../shared";
+import { Footer, HOST, STEPS, mockMeta } from "../../shared";
 import { HomesC } from "./HomesC";
-import "../search.css";
+import "../../search.css";
 import "./c.css";
 
 /**
@@ -58,9 +58,9 @@ export default function Page() {
 
   return (
     <div className="C-page">
-      <aside className="C-mock" aria-label="Prototype label">Mockup C · prototype, not linked from the site</aside>
+      <aside className="C-mock" aria-label="Archived mockup">Archived · Mockup C · kept for reference · <a href="/all-homes/f" style={{ color: "#fff" }}>Current version: Mockup F</a></aside>
       <header className="C-top">
-        <a className="C-brand" href="/all-homes/c">Pearl Heights <span>HOMES</span></a>
+        <a className="C-brand" href="/all-homes/archive/c">Pearl Heights <span>HOMES</span></a>
         <a className="C-ask" href="mailto:bookings@thepearlheightshomes.com">Ask a question</a>
       </header>
       <main>

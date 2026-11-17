@@ -2,8 +2,8 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { HomeCard } from "@/content/allHomes";
-import { SearchBar } from "../SearchBar";
-import { money, shortDate, useStays } from "../useStays";
+import { SearchBar } from "../../SearchBar";
+import { money, shortDate, useStays } from "../../useStays";
 import { PinMap } from "./PinMap";
 
 /** Mockup C: B's photo-led hero and cards, airier spacing, a five-pin map and a sticky search button on phones. */

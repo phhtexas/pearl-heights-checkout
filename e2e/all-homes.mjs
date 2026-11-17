@@ -48,19 +48,19 @@ for (const v of ["c"]) for (const dev of [devices["iPhone 13"], { viewport: { wi
   }
   await page.context().close();
 }
-// Archived A and B: still load, labeled, and the old links redirect.
-for (const v of ["a", "b"]) {
+// Archived A, B, C and E (C/E archived Nov 17): still load, labeled, point to F, and the old links redirect.
+for (const v of ["a", "b", "c", "e"]) {
   const page = await (await browser.newContext()).newPage();
   const res = await page.goto(`${BASE}/all-homes/${v}`);
   ok(res.status() === 200 && page.url().endsWith(`/all-homes/archive/${v}`), `archived ${v}: old link redirects to the archive`);
-  ok((await page.locator("aside").innerText()).startsWith("Archived"), `archived ${v}: labeled as archived, links to C`);
+  ok((await page.locator("aside").first().innerText()).startsWith("Archived") && (await page.locator('aside a[href="/all-homes/f"]').count()) === 1, `archived ${v}: labeled as archived, links to F`);
   await page.context().close();
 }
 // Mockup C extras: lazy map with five pins (totals after a search), pin -> card, sticky phone button, FAQ.
 {
   const page = await (await browser.newContext(devices["iPhone 13"])).newPage();
   const tileReqs = []; page.on("request", (r) => { if (r.url().includes("tile.openstreetmap.org")) tileReqs.push(r.url()); });
-  await page.goto(`${BASE}/all-homes/c`);
+  await page.goto(`${BASE}/all-homes/archive/c`);
   await page.waitForTimeout(800);
   ok(tileReqs.length === 0, "c: map tiles don't load until the map scrolls near (speed)");
   ok((await page.locator(".C-pin").count()) === 5, "c: five pins");
@@ -93,7 +93,7 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   const w = dev.viewport.width, tag = `e@${w}`;
   const page = await (await browser.newContext(dev)).newPage();
   const errors = []; page.on("pageerror", (e) => errors.push(e.message));
-  const res = await page.goto(`${BASE}/all-homes/e`);
+  const res = await page.goto(`${BASE}/all-homes/archive/e`);
   ok(res.status() === 200, `${tag}: loads`);
   ok(/noindex/.test(await page.getAttribute('meta[name="robots"]', "content")), `${tag}: noindex`);
   ok((await page.locator(".E-cover img").count()) === 1, `${tag}: cover photo on top`);
@@ -248,6 +248,7 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   { // 'Every booking includes': closed rows look the same; tapping one shows its explanation
     const rows = page.locator(".F-checks .F-inc");
     ok((await rows.count()) === 5 && (await rows.nth(0).locator("p").isVisible()) && !(await rows.nth(1).locator("p").isVisible()) && (await page.locator(".F-checks .F-incChev").count()) === 5, `${tag}: first includes row open, the rest closed with a chevron`);
+    ok(await page.evaluate(() => { const card = document.querySelector(".F-checks").getBoundingClientRect(), row = document.querySelector(".F-checks li").getBoundingClientRect(); const cs = getComputedStyle(document.querySelector(".F-checks li")); return Math.abs(row.top - card.top) < 1 && Math.abs(row.left - card.left) < 1 && Math.abs(row.right - card.right) < 1 && cs.boxShadow === "none"; }), `${tag}: open row's green fills the card top and sides, no dark edge`);
     await rows.nth(2).locator("summary").scrollIntoViewIfNeeded(); await rows.nth(2).locator("summary").click(); await page.waitForTimeout(200);
     ok(/Stripe's secure payment form/.test(await rows.nth(2).locator("p").innerText()) && !(await rows.nth(0).locator("p").isVisible()), `${tag}: opening 'Secure payment through Stripe' shows it and closes the first`);
   }
@@ -321,9 +322,9 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
 }
 {
   const page = await (await browser.newContext()).newPage();
-  await page.goto(`${BASE}/all-homes/c`); const c = await page.evaluate(() => document.body.innerText);
+  await page.goto(`${BASE}/all-homes/archive/c`); const c = await page.evaluate(() => document.body.innerText);
   ok(c.includes("You book with us") && (await page.locator(".F-strip").count()) === 0, "c: unchanged (still has its own trust block)");
-  await page.goto(`${BASE}/all-homes/e`);
+  await page.goto(`${BASE}/all-homes/archive/e`);
   ok((await page.locator(".E-chip").count()) === 6, "e: unchanged (still has its filters)");
   await page.context().close();
 }

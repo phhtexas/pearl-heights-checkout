@@ -2,8 +2,8 @@
 import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 import type { HomeCard } from "@/content/allHomes";
-import { SearchBar } from "../SearchBar";
-import { money, shortDate, useStays } from "../useStays";
+import { SearchBar } from "../../SearchBar";
+import { money, shortDate, useStays } from "../../useStays";
 import { PinMap } from "../c/PinMap";
 
 /**

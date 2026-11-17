@@ -28,7 +28,7 @@ export default function Page() {
   );
   return (
     <div className="B-page">
-      <aside className="B-mock" aria-label="Archived mockup">Archived · Mockup B (Editorial) · kept for reference · <a href="/all-homes/c" style={{ color: "#fff" }}>Current version: Mockup C</a></aside>
+      <aside className="B-mock" aria-label="Archived mockup">Archived · Mockup B (Editorial) · kept for reference · <a href="/all-homes/f" style={{ color: "#fff" }}>Current version: Mockup F</a></aside>
       <header className="B-top">
         <a className="B-brand" href="/all-homes/archive/b">Pearl Heights <span>HOMES</span></a>
         <a className="B-ask" href="mailto:bookings@thepearlheightshomes.com">Ask a question</a>

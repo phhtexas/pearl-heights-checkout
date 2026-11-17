@@ -13,7 +13,7 @@ export default function Page() {
   const homes = homeCards();
   return (
     <div className="A-page">
-      <aside className="A-mock" aria-label="Archived mockup">Archived · Mockup A (Classic search) · kept for reference · <a href="/all-homes/c" style={{ color: "#fff" }}>Current version: Mockup C</a></aside>
+      <aside className="A-mock" aria-label="Archived mockup">Archived · Mockup A (Classic search) · kept for reference · <a href="/all-homes/f" style={{ color: "#fff" }}>Current version: Mockup F</a></aside>
       <header className="A-top">
         <a className="A-brand" href="/all-homes/archive/a">Pearl Heights <span>HOMES</span></a>
         <a className="A-ask" href="mailto:bookings@thepearlheightshomes.com">Ask a question</a>

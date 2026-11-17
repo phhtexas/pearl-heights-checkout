@@ -2,10 +2,10 @@ import Image from "next/image";
 import { EVERY_HOME, guestReviews, homeCards, mapPoints, sharedFaq } from "@/content/allHomes";
 import { HOMES } from "@/content/homes";
 import { policyOverview } from "@/domain/policy";
-import { HOST, STEPS, mockMeta } from "../shared";
+import { HOST, STEPS, mockMeta } from "../../shared";
 import { Header, Reviews } from "./Bits";
 import { HomesE } from "./HomesE";
-import "../search.css";
+import "../../search.css";
 import "./e.css";
 
 /**
@@ -42,7 +42,7 @@ export default function Page() {
   const faq = sharedFaq(policyOverview());
   return (
     <div className="E">
-      <aside className="E-mockbar" aria-label="Prototype label"><b>Mockup E</b> · prototype, not linked from the site</aside>
+      <aside className="E-mockbar" aria-label="Archived mockup"><b>Archived · Mockup E</b> · kept for reference · <a href="/all-homes/f" style={{ color: "#fff" }}>Current version: Mockup F</a></aside>
       <Header>
         <div className="E-wrap E-nav">
           <a className="E-brand" href="#top" aria-label="Pearl Heights Homes, top of page"><span className="E-logo">Pearl Heights <span>HOMES</span></span></a>
