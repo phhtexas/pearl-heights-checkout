@@ -76,7 +76,7 @@ export default function Page() {
   // Oscar's own wording, Nov 17 (replaces the 5-step version). Guest portal messaging per Oscar.
   const TIMELINE = [
     { when: "Step 1", title: "Book your home", text: "See your full price before you book. Pay in full or split your payment when check-in is more than 30 days away." },
-    { when: "Step 2", title: "Confirm your reservation", text: "Within 24 hours, sign the rental agreement and verify your ID online. Each takes about 3 minutes." },
+    { when: "Step 2", title: "Confirm your reservation", text: "Within 24 hours, sign the rental agreement and verify your ID online. Each takes about 2 minutes." },
     { when: "Step 3", title: "Get ready for arrival", text: "After verification, you\u2019ll have access to your personal guest portal, where you can find the address, entry instructions, and Wi-Fi\u2014and message us directly. Your door code arrives on check-in morning." },
     { when: "Step 4", title: "Enjoy your stay", text: "Check in after 4:00 p.m. and check out by 10:00 a.m. Questions? Message Oscar and Fernanda\u2014we usually reply within an hour." },
   ];

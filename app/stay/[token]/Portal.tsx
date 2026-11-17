@@ -140,7 +140,7 @@ export function Portal({ stay }: { stay: StayData }) {
             <h2 id="confirm-h">Confirm your reservation</h2>
             <p className={`ST-due${unlocked ? " is-ok" : ""}`}>{unlocked ? "All done" : <>Due by <b>{stay.deadlineText}</b></>}</p>
           </div>
-          <p className="ST-dim">The reservation holder signs the rental agreement and verifies their ID. Each takes about 3 minutes.</p>
+          <p className="ST-dim">The reservation holder signs the rental agreement and verifies their ID. Each takes about 2 minutes.</p>
 
           <div className={`ST-task${signed ? " is-done" : ""}`}>
             <span className="ST-taskIc"><Ico d={signed ? I.check : I.pen} /></span>
