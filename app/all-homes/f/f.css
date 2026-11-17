@@ -430,3 +430,15 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 .F-page .F-dots span { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.55); box-shadow: 0 0 2px rgba(0,0,0,.25); transition: background .3s ease; }
 .F-page .F-dots span.on { background: #fff; }
 .F-page .F-count { position: absolute; right: 12px; bottom: 10px; z-index: 1; background: rgba(23,25,27,.72); color: #fff; font-size: 12.5px; font-weight: 600; padding: 4px 10px; border-radius: 8px; font-variant-numeric: tabular-nums; pointer-events: none; }
+
+/* Oscar, Nov 17: icons on the review stats, same soft-teal circle as the amenity icons */
+.F-page .F-statIc { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #e7f2ee; color: var(--acc); margin-bottom: 12px; font-style: normal; }
+.F-page .F-statIc svg { width: 22px; height: 22px; }
+/* Oscar, Nov 17: desktop host strip lined up under the search bar (same width): host on the left, the three facts
+   stacked on the right, divided by a thin line. Phones keep the stacked, left-aligned version. */
+@media (min-width: 900px) {
+  .F-page .F-strip { display: grid; grid-template-columns: auto 1px auto; justify-content: center; align-items: center; column-gap: 44px; max-width: 920px; padding: 44px 24px 0; text-align: left; }
+  .F-page .F-strip::before { content: ""; grid-column: 2; grid-row: 1; align-self: stretch; background: var(--line); }
+  .F-page .F-stripHost { grid-column: 1; grid-row: 1; }
+  .F-page .F-strip ul { grid-column: 3; grid-row: 1; flex-direction: column; flex-wrap: nowrap; align-items: flex-start; gap: 10px; }
+}

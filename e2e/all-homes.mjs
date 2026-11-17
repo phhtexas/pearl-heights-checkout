@@ -243,7 +243,9 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
     ok((await card.locator(".F-photos").evaluate((el) => el.scrollLeft)) === 0, `${tag}: previous-photo arrow goes back`);
   }
   // strip left-aligned; footer logo + Instagram
-  ok(await page.evaluate(() => { const lis = [...document.querySelectorAll(".F-strip li")].map((l) => l.getBoundingClientRect().left); const h = document.querySelector(".F-stripHost").getBoundingClientRect().left; return Math.abs(lis[0] - h) < 2; }), `${tag}: '4.98' line lines up left with the host line`);
+  if (w <= 760) ok(await page.evaluate(() => { const lis = [...document.querySelectorAll(".F-strip li")].map((l) => l.getBoundingClientRect().left); const h = document.querySelector(".F-stripHost").getBoundingClientRect().left; return Math.abs(lis[0] - h) < 2; }), `${tag}: '4.98' line lines up left with the host line`);
+  else ok(await page.evaluate(() => { const h = document.querySelector(".F-stripHost").getBoundingClientRect(), u = document.querySelector(".F-strip ul").getBoundingClientRect(), s = document.querySelector(".F-search").getBoundingClientRect(); return u.left > h.right && h.left >= s.left - 1 && u.right <= s.right + 1 && Math.abs((h.left - s.left) - (s.right - u.right)) < 40; }), `${tag}: desktop strip = host left, facts right, centered under the search bar`);
+  ok((await page.locator(".F-stats .F-statIc svg").count()) === 3, `${tag}: review stats have icons`);
   ok((await page.locator('footer .F-footLogo[src="/brand/logo-dark.webp"]').count()) === 1 && (await page.locator('footer a[href="https://www.instagram.com/pearlheightshomes"]').count()) === 1, `${tag}: footer has our logo + Instagram`);
   // scroll: header turns solid, reveals, map layout, timeline, reviews
   await page.evaluate(() => window.scrollTo(0, 900)); await page.waitForTimeout(500);

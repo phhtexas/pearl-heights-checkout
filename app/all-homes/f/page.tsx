@@ -30,6 +30,8 @@ function Ico({ name }: { name: string }) {
     case "yard": return <svg {...p}><path d="M4 20V9l2-2 2 2v11M10 20V9l2-2 2 2v11M16 20V9l2-2 2 2v11M3 12.5h18M3 17h18" /></svg>;
     case "crib": return <svg {...p}><path d="M4 5v15M20 5v15M4 9h16M4 17h16M8 9v8M12 9v8M16 9v8" /></svg>;
     case "key": return <svg {...p}><rect x="6.5" y="3" width="11" height="18" rx="2" /><path d="M10 7h.5M13.5 7h.5M10 10.5h.5M13.5 10.5h.5M10 14h.5M13.5 14h.5" /></svg>;
+    case "star": return <svg {...p}><path d="m12 3.8 2.5 5.2 5.7.8-4.1 4 1 5.6L12 16.7l-5.1 2.7 1-5.6-4.1-4 5.7-.8z" /></svg>;
+    case "chat": return <svg {...p}><path d="M20 12a7.5 7.5 0 0 1-11 6.6L4 20l1.4-4.6A7.5 7.5 0 1 1 20 12z" /><path d="M8.5 12h.01M12 12h.01M15.5 12h.01" /></svg>;
     case "check": return <svg {...p} width={22} height={22} strokeWidth={2.2}><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>;
     case "chev": return <svg {...p} width={20} height={20} strokeWidth={2}><path d="m6 9 6 6 6-6" /></svg>;
     default: return null;
@@ -114,9 +116,10 @@ export default function Page() {
             <p>Reviews from Airbnb guests who stayed in our homes.</p>
           </div>
           <ul className="F-stats" data-reveal>
-            <li><b>4.98</b><span>average across 463 Airbnb guest reviews</span></li>
-            <li><b>5 homes</b><span>that sleep 8 to 10 guests</span></li>
-            <li><b>1 hour</b><span>usual reply time from Oscar &amp; Fernanda</span></li>
+            {/* Oscar, Nov 17: icons on the stats */}
+            <li><i className="F-statIc" aria-hidden="true"><Ico name="star" /></i><b>4.98</b><span>average across 463 Airbnb guest reviews</span></li>
+            <li><i className="F-statIc" aria-hidden="true"><Ico name="home" /></i><b>5 homes</b><span>that sleep 8 to 10 guests</span></li>
+            <li><i className="F-statIc" aria-hidden="true"><Ico name="chat" /></i><b>1 hour</b><span>usual reply time from Oscar &amp; Fernanda</span></li>
           </ul>
           <ReviewLoop>
             <div className="F-loopMask" data-reveal>
