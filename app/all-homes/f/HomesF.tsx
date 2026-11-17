@@ -66,11 +66,13 @@ export function HomesF({ homes, hero, points, reasons }: {
             const off = searched && r && !r.ok;
             return (
               <li key={h.key} id={`home-${h.key}`} className={`F-card${off ? " is-off" : ""}`} data-reveal>
-                <div className="F-photos" tabIndex={0} role="region" aria-label={`${h.title} photos, scroll sideways`}>
+                {/* Oscar: tapping a photo opens that home's page; swipe sideways for more photos */}
+                <div className="F-photos">
                   {h.photos.slice(0, 3).map((p, j) => (
-                    <div className="F-photo" key={p.src}>
-                      <Image src={p.src} alt={p.alt} fill sizes="(min-width: 900px) 460px, 88vw" priority={i === 0 && j === 0} />
-                    </div>
+                    <a className="F-photo" key={p.src} href={s.href(h.slug)} draggable={false} tabIndex={j === 0 ? 0 : -1}
+                      aria-label={j === 0 ? `${h.title}: view home` : undefined} aria-hidden={j === 0 ? undefined : true}>
+                      <Image src={p.src} alt={j === 0 ? "" : p.alt} fill sizes="(min-width: 900px) 460px, 88vw" priority={i === 0 && j === 0} draggable={false} />
+                    </a>
                   ))}
                 </div>
                 <div className="F-info">

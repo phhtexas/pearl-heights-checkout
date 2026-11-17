@@ -378,3 +378,28 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
   .F-page .F-card:hover, .F-page .F-amen li:hover { transform: none; }
 }
 .DR-portal { position: static; background: none; }
+
+/* Oscar, Nov 16: footer logo + Instagram; trust facts left-aligned with the host line (not centered) */
+.F-footF .F-footLogo { display: block; height: 64px; width: auto; margin: 0 auto 14px; }
+.F-footF .F-ig { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); color: var(--ink); margin-bottom: 14px; transition: background .25s ease, color .25s ease; }
+.F-footF .F-ig:hover, .F-footF .F-ig:focus-visible { background: var(--acc); color: #fff; border-color: var(--acc); }
+.F-page .F-strip { align-items: flex-start; text-align: left; }
+.F-page .F-strip ul { justify-content: flex-start; }
+@media (max-width: 760px) { .F-page .F-strip ul { align-items: flex-start; } }
+
+/* Oscar, Nov 16: 2-night minimum in the calendar */
+.F-page .DR-min { color: var(--acc); font-weight: 600; }
+.F-page .DR-day.is-short { color: #b9b2a9; cursor: not-allowed; }
+.F-page .DR-day.is-short:hover span { background: none; box-shadow: none; }
+/* Photo swipe fix: no hover lift/zoom on touch screens (a tap left it "stuck" mid-swipe); snap per photo */
+.F-page .F-photos { overscroll-behavior-x: contain; touch-action: pan-x pan-y; }
+.F-page .F-photo { display: block; cursor: pointer; -webkit-user-drag: none; user-select: none; }
+.F-page .F-photo img { -webkit-user-drag: none; }
+@media (hover: none), (pointer: coarse) {
+  .F-page .F-card, .F-page .F-card:hover { transform: none; transition: box-shadow .3s, opacity 1s cubic-bezier(.2,.7,.2,1); }
+  .F-page .F-card:hover .F-photo img, .F-page .F-photo img { transform: none; transition: none; }
+}
+@media (hover: none), (pointer: coarse) {
+  /* cards fade in without sliding on touch screens, so a swipe never starts on a moving card */
+  html.rv-ready .F-page .F-card[data-reveal]:not(.is-in) { transform: none; }
+}

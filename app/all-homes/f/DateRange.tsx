@@ -16,10 +16,11 @@ const addMonths = (m: string, n: number) => { const d = parse(m); d.setUTCMonth(
 const fmt = (s: string, o: Intl.DateTimeFormatOptions) => parse(s).toLocaleDateString("en-US", { ...o, timeZone: "UTC" });
 export const nightsBetween = (a: string, b: string) => Math.round((parse(b).getTime() - parse(a).getTime()) / 864e5);
 
-function Month({ m, ci, co, hover, min, onPick, onHover }: { m: string; ci: string; co: string; hover: string; min: string; onPick: (d: string) => void; onHover: (d: string) => void }) {
+function Month({ m, ci, co, hover, min, minNights, onPick, onHover }: { m: string; ci: string; co: string; hover: string; min: string; minNights: number; onPick: (d: string) => void; onHover: (d: string) => void }) {
   const first = parse(m); const lead = first.getUTCDay();
   const days = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
-  const end = co || (ci && hover > ci ? hover : "");
+  const firstOut = ci ? addDays(ci, minNights) : "";
+  const end = co || (ci && hover >= firstOut ? hover : "");
   const cells: (string | null)[] = [...Array(lead).fill(null), ...Array.from({ length: days }, (_, i) => addDays(m, i))];
   return (
     <div className="DR-month">
@@ -31,11 +32,12 @@ function Month({ m, ci, co, hover, min, onPick, onHover }: { m: string; ci: stri
           const past = d < min;
           const isStart = d === ci, isEnd = d === end && !!end;
           const inRange = !!ci && !!end && d > ci && d < end;
-          const cls = ["DR-day", past && "is-past", isStart && "is-start", isEnd && "is-end", inRange && "is-in", (isStart && end) && "has-end", !co && isEnd && "is-preview"].filter(Boolean).join(" ");
+          const tooShort = !!ci && !co && d > ci && d < firstOut; // inside the 2-night minimum
+          const cls = ["DR-day", past && "is-past", isStart && "is-start", isEnd && "is-end", inRange && "is-in", (isStart && end) && "has-end", !co && isEnd && "is-preview", tooShort && "is-short"].filter(Boolean).join(" ");
           return (
             <button key={d} type="button" className={cls} data-date={d} disabled={past} tabIndex={d === (ci || min) ? 0 : -1}
               aria-label={`${fmt(d, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}${isStart ? ", check-in" : ""}${isEnd && co ? ", check-out" : ""}`}
-              aria-pressed={isStart || (isEnd && !!co)}
+              aria-pressed={isStart || (isEnd && !!co)} aria-disabled={tooShort || undefined} title={tooShort ? `${minNights}-night minimum` : undefined}
               onClick={() => onPick(d)} onMouseEnter={() => onHover(d)} onFocus={() => onHover(d)}>
               <span>{parse(d).getUTCDate()}</span>
             </button>
@@ -46,8 +48,8 @@ function Month({ m, ci, co, hover, min, onPick, onHover }: { m: string; ci: stri
   );
 }
 
-export function DateRange({ ci, co, min, onChange, onClose, onDone }: {
-  ci: string; co: string; min: string; onChange: (ci: string, co: string) => void; onClose: () => void; onDone: () => void;
+export function DateRange({ ci, co, min, minNights = 2, onChange, onClose, onDone }: {
+  ci: string; co: string; min: string; minNights?: number; onChange: (ci: string, co: string) => void; onClose: () => void; onDone: () => void;
 }) {
   const [mobile, setMobile] = useState(false);
   const [view, setView] = useState(monthStart(ci || min));
@@ -74,12 +76,14 @@ export function DateRange({ ci, co, min, onChange, onClose, onDone }: {
 
   const pick = (d: string) => {
     if (!ci || co || d <= ci) onChange(d, "");
+    else if (nightsBetween(ci, d) < minNights) return; // all five homes have a 2-night minimum (Airbnb calendars)
     else onChange(ci, d);
   };
   const months = useMemo(() => (mobile ? Array.from({ length: 12 }, (_, i) => addMonths(monthStart(min), i)) : [view, addMonths(view, 1)]), [mobile, view, min]);
   const n = ci && co ? nightsBetween(ci, co) : 0;
   const heading = n ? `${n} night${n === 1 ? "" : "s"}` : ci ? "Select check-out date" : "Select check-in date";
   const sub = ci && co ? `${fmt(ci, { month: "short", day: "numeric", year: "numeric" })} – ${fmt(co, { month: "short", day: "numeric", year: "numeric" })}` : ci ? `Check-in ${fmt(ci, { month: "short", day: "numeric" })}` : "Add your travel dates for exact totals";
+  const minNote = `${minNights}-night minimum`;
 
   // Arrow keys move one day (left/right) or one week (up/down); moves into the next month when needed.
   const onKey = (e: React.KeyboardEvent) => {
@@ -96,7 +100,7 @@ export function DateRange({ ci, co, min, onChange, onClose, onDone }: {
     <div className={`DR ${mobile ? "DR-sheet" : "DR-pop"}`} ref={box} role="dialog" aria-modal={mobile} aria-label="Choose your dates" onKeyDown={onKey} onMouseLeave={() => setHover("")}>
       <div className="DR-head">
         {mobile && <button type="button" className="DR-x" aria-label="Close" onClick={onClose}>×</button>}
-        <div><p className="DR-h">{heading}</p><p className="DR-sub">{sub}</p></div>
+        <div><p className="DR-h">{heading}</p><p className="DR-sub">{sub}{ci && !co ? <> · <b className="DR-min" role="status">{minNote}</b></> : !ci ? <> · {minNote}</> : null}</p></div>
       </div>
       {mobile && <div className="DR-dowRow" aria-hidden="true">{DOW.map((d) => <span key={d}>{d}</span>)}</div>}
       <div className="DR-body">
@@ -107,7 +111,7 @@ export function DateRange({ ci, co, min, onChange, onClose, onDone }: {
           </>
         )}
         <div className="DR-months">
-          {months.map((m) => <Month key={m} m={m} ci={ci} co={co} hover={hover} min={min} onPick={pick} onHover={setHover} />)}
+          {months.map((m) => <Month key={m} m={m} ci={ci} co={co} hover={hover} min={min} minNights={minNights} onPick={pick} onHover={setHover} />)}
         </div>
       </div>
       <div className="DR-foot">

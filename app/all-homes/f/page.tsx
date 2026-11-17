@@ -2,7 +2,7 @@ import Image from "next/image";
 import { EVERY_HOME, guestReviews, homeCards, mapPoints, sharedFaq } from "@/content/allHomes";
 import { HOMES } from "@/content/homes";
 import { policyOverview } from "@/domain/policy";
-import { Footer, HOST, mockMeta } from "../shared";
+import { HOST, mockMeta } from "../shared";
 import { HomesF } from "./HomesF";
 import { Reveal, ReviewLoop, SiteHeader } from "./Motion";
 import "../search.css";
@@ -165,7 +165,16 @@ export default function Page() {
           <a className="F-dark" href="mailto:bookings@thepearlheightshomes.com">Ask Oscar &amp; Fernanda</a>
         </section>
       </main>
-      <Footer cls="F-foot" />
+      {/* Oscar, Nov 16: our logo + Instagram in F's footer (C and E keep the shared footer). Instagram link as on pearlheightshomes.com. */}
+      <footer className="F-foot F-footF">
+        <img className="F-footLogo" src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} loading="lazy" />
+        <a className="F-ig" href="https://www.instagram.com/pearlheightshomes" target="_blank" rel="noopener noreferrer" aria-label="Pearl Heights Homes on Instagram">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><path d="M17.5 6.5h.01" /></svg>
+        </a>
+        <p>Hosted by Oscar &amp; Fernanda · San Antonio, Texas · <a href="mailto:bookings@thepearlheightshomes.com">bookings@thepearlheightshomes.com</a></p>
+        <p className="F-legal">Terms of service (coming soon) · Privacy policy (coming soon)</p>
+        <p className="F-note">Ratings and reviews are from Airbnb guests who stayed in our homes.</p>
+      </footer>
     </div>
   );
 }

@@ -180,6 +180,17 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   if (await page.locator(`.DR-day[data-date="${yesterday}"]`).count()) ok(await page.locator(`.DR-day[data-date="${yesterday}"]`).isDisabled(), `${tag}: past days disabled`);
   await page.keyboard.press("Escape");
   ok((await page.locator(".DR").count()) === 0, `${tag}: Escape closes the calendar`);
+  { // 2-night minimum: after picking check-in, the next day can't be check-out and the calendar says so
+    await page.click('button[aria-label^="Check-in date"]'); await page.waitForSelector(".DR");
+    ok(/2-night minimum/.test(await page.locator(".DR-sub").innerText()), `${tag}: calendar mentions the 2-night minimum`);
+    for (let k = 0; k < 14 && !(await page.locator(`.DR-day[data-date="${iso(a)}"]`).count()); k++) await page.click(".DR-next");
+    await page.locator(`.DR-day[data-date="${iso(a)}"]`).scrollIntoViewIfNeeded(); await page.click(`.DR-day[data-date="${iso(a)}"]`);
+    const next = new Date(Date.parse(iso(a)) + 864e5).toISOString().slice(0, 10);
+    ok((await page.locator(".DR-min").innerText()) === "2-night minimum" && (await page.locator(`.DR-day[data-date="${next}"]`).getAttribute("aria-disabled")) === "true", `${tag}: after check-in, '2-night minimum' shown and the next day is blocked`);
+    await page.locator(`.DR-day[data-date="${next}"]`).click({ force: true });
+    ok((await page.locator(".DR-h").innerText()) === "Select check-out date", `${tag}: a 1-night pick is refused`);
+    await page.keyboard.press("Escape");
+  }
   await pickDates(page, iso(a), iso(b));
   ok((await page.locator(".DR-day.is-in").count()) === 2 && (await page.locator(".DR-h").innerText()) === "3 nights", `${tag}: range shaded, '3 nights'`);
   await page.click(".DR-done");
@@ -187,6 +198,18 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   ok(/total for 3 nights/.test(await page.evaluate(() => document.body.innerText)), `${tag}: 'Show totals' runs the search -> live totals`);
   const href = await page.locator('#home-752 a[href^="/homes/"]').first().getAttribute("href");
   ok(href === `/homes/752-myrtle?checkIn=${iso(a)}&checkOut=${iso(b)}&adults=2&children=0`, `${tag}: View home carries the dates`);
+  // photos: each one opens the home's page; swiping moves to the next photo
+  ok((await page.locator('#home-752 .F-photo').evaluateAll((els) => els.every((e) => e.tagName === "A" && e.getAttribute("href").startsWith("/homes/752-myrtle")))), `${tag}: home photos link to the home's page`);
+  if (w <= 760) {
+    const box = await page.locator("#home-752 .F-photos").boundingBox();
+    await page.locator("#home-752 .F-photos").evaluate((el) => el.scrollTo({ left: el.clientWidth * 0.88 + 4 }));
+    await page.waitForTimeout(700);
+    ok(box && await page.locator("#home-752 .F-photos").evaluate((el) => el.scrollLeft > 50), `${tag}: photos scroll sideways to the next one`);
+    ok(await page.evaluate(() => getComputedStyle(document.querySelector("#home-752")).transform === "none"), `${tag}: no hover lift on touch (no stuck swipe)`);
+  }
+  // strip left-aligned; footer logo + Instagram
+  ok(await page.evaluate(() => { const lis = [...document.querySelectorAll(".F-strip li")].map((l) => l.getBoundingClientRect().left); const h = document.querySelector(".F-stripHost").getBoundingClientRect().left; return Math.abs(lis[0] - h) < 2; }), `${tag}: '4.98' line lines up left with the host line`);
+  ok((await page.locator('footer .F-footLogo[src="/brand/logo-dark.webp"]').count()) === 1 && (await page.locator('footer a[href="https://www.instagram.com/pearlheightshomes"]').count()) === 1, `${tag}: footer has our logo + Instagram`);
   // scroll: header turns solid, reveals, map layout, timeline, reviews
   await page.evaluate(() => window.scrollTo(0, 900)); await page.waitForTimeout(500);
   ok((await page.locator("header.F-top").getAttribute("class")).includes("is-solid"), `${tag}: header turns solid on scroll`);
