@@ -1,0 +1,29 @@
+/* Shared search bar (both mockups). Colors come from the page: --acc (CTA accent), --ink, --line. */
+.S-bar { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 0; background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 6px 24px rgba(23, 25, 27, .10); text-align: left; }
+.S-field { display: flex; flex-direction: column; gap: 2px; padding: 10px 16px; min-width: 0; border-bottom: 1px solid var(--line); }
+.S-field:first-child { border-right: 1px solid var(--line); }
+.S-field > span { font-size: 12px; font-weight: 600; color: var(--ink); }
+.S-field input, .S-guests > button { font: inherit; font-size: 15px; color: var(--ink); border: 0; padding: 2px 0; background: transparent; min-height: 28px; width: 100%; text-align: left; cursor: pointer; }
+.S-field input:focus-visible, .S-guests > button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
+.S-guests { grid-column: 1 / -1; position: relative; }
+.S-go { grid-column: 1 / -1; margin: 10px; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 12px; background: var(--acc); color: #fff; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+.S-go:hover { filter: brightness(1.06); }
+.S-go:disabled { opacity: .7; cursor: progress; }
+.S-go:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.S-err { grid-column: 1 / -1; margin: 0 14px 12px; color: #b3261e; font-size: 14px; }
+.S-pop { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.16); padding: 8px 18px 14px; }
+.S-step { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.S-step b { display: block; font-size: 15px; } .S-step small { color: #6a6a6a; font-size: 13px; }
+.S-stepper { display: flex; align-items: center; gap: 14px; }
+.S-stepper button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #b0b0b0; background: #fff; font-size: 18px; line-height: 1; cursor: pointer; color: var(--ink); }
+.S-stepper button:disabled { opacity: .3; cursor: not-allowed; }
+.S-stepper span { min-width: 18px; text-align: center; font-variant-numeric: tabular-nums; }
+.S-popNote { font-size: 13px; color: #6a6a6a; margin: 10px 0; }
+.S-done { border: 0; background: var(--ink); color: #fff; border-radius: 10px; padding: 10px 18px; font: inherit; font-weight: 600; cursor: pointer; float: right; }
+@media (min-width: 760px) {
+  .S-bar { grid-template-columns: 1fr 1fr 1fr auto; align-items: center; border-radius: 999px; }
+  .S-field { border-bottom: 0; border-right: 1px solid var(--line); padding: 10px 22px; }
+  .S-guests { grid-column: auto; border-right: 0; }
+  .S-go { grid-column: auto; margin: 8px; border-radius: 999px; padding: 0 22px; }
+  .S-pop { left: auto; width: 340px; }
+}

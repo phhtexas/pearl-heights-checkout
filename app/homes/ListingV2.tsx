@@ -120,6 +120,14 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
       .catch(() => setCalErr("Availability is temporarily unavailable. Please try again."));
   }, [prop.key]);
   const byDate = useMemo(() => Object.fromEntries(days.map((d) => [d.date, d])), [days]);
+  // Dates and guests handed over from the All Homes page (?checkIn=&checkOut=&adults=&children=): prefill, then quote.
+  useEffect(() => {
+    const q = new URLSearchParams(location.search);
+    const a = q.get("checkIn"), b = q.get("checkOut"), iso = /^\d{4}-\d{2}-\d{2}$/;
+    const ad = Number(q.get("adults")), ch = Number(q.get("children"));
+    if (ad >= 1 && ad + Math.max(0, ch || 0) <= prop.maxGuests) { setAdults(ad); setChildren(Math.max(0, ch || 0)); }
+    if (a && b && iso.test(a) && iso.test(b) && b > a) { setCi(a); setCo(b); setMonth(a.slice(0, 7)); }
+  }, [prop.maxGuests]);
 
   // Quote whenever dates/guests change; never show a stale price.
   useEffect(() => {
