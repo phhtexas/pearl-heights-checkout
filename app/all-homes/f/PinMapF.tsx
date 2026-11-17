@@ -12,6 +12,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
  * (and only if that can't work, zooms out one step) to show the circle and its pins with padding.
  */
 const TILE = 256;
+// Oscar, Nov 17: Airbnb-like light map. CARTO Voyager when a (free) CARTO basemaps key is set in Vercel as
+// NEXT_PUBLIC_CARTO_KEY (CARTO serves raster tiles only with a key since Sep 2026; free up to 1M tiles/month).
+// Until then: OpenStreetMap tiles, lightened and softened in CSS (.F-map.is-osm) instead of the old grayscale.
+const CARTO_KEY = process.env.NEXT_PUBLIC_CARTO_KEY ?? "";
+const tileUrl = (z: number, x: number, y: number) =>
+  CARTO_KEY ? `https://basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}.png?key=${encodeURIComponent(CARTO_KEY)}` : `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
 const PAD = 16;           // keep the circle this far inside the map edge
 const RING = 18;          // space between a pin's label and the circle edge
 const project = (lat: number, lon: number, z: number) => {
@@ -90,12 +96,12 @@ export function PinMapF({ pins, zoom: baseZoom = 12, area = null, hot = null }: 
   const at = (x: number, y: number) => ({ left: `calc(50% + ${x + pan.x}px)`, top: `calc(50% + ${y + pan.y}px)` });
 
   return (
-    <div className="C-map F-map" ref={box} data-pan={`${Math.round(pan.x)},${Math.round(pan.y)}`} data-zoom={zoom}>
+    <div className={`C-map F-map ${CARTO_KEY ? "is-carto" : "is-osm"}`} ref={box} data-pan={`${Math.round(pan.x)},${Math.round(pan.y)}`} data-zoom={zoom}>
       {show && (
         <div className="C-tiles" aria-hidden="true">
           {tiles.map((t) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={`${zoom}-${t.x}-${t.y}`} alt="" draggable={false} decoding="async" src={`https://tile.openstreetmap.org/${zoom}/${t.x}/${t.y}.png`}
+            <img key={`${zoom}-${t.x}-${t.y}`} alt="" draggable={false} decoding="async" src={tileUrl(zoom, t.x, t.y)}
               style={at(t.left, t.top)} />
           ))}
         </div>
@@ -111,7 +117,7 @@ export function PinMapF({ pins, zoom: baseZoom = 12, area = null, hot = null }: 
       ))}
       <p className="sr-only" aria-live="polite">{area ? `${area.name}: ${area.keys.length} home${area.keys.length > 1 ? "s" : ""} circled on the map.` : ""}</p>
       <p className="C-mapNote">Circles show approximate areas, not exact addresses.</p>
-      <a className="C-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>
+      <span className="C-credit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>{CARTO_KEY && <> · <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">© CARTO</a></>}</span>
     </div>
   );
 }

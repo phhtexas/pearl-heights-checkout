@@ -515,3 +515,18 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 .F-page .F-checks li:has(.F-inc[open]) + li { border-top: 0; }
 /* Oscar, Nov 17: selected neighborhood like the includes row: no dark edge, same light green */
 .F-page .F-hood.is-sel { box-shadow: none; background: #e3f0ea; }
+
+/* Oscar, Nov 17: each neighborhood is a full clickable box; the selected one is light green */
+.F-page .F-hoods { display: grid; gap: 14px; }
+.F-page .F-hood, .F-page .F-hood:first-child { border: 1px solid var(--line); border-radius: 18px; padding: 20px; background: #fff; cursor: pointer; transition: background .3s ease, border-color .3s ease, box-shadow .3s ease; }
+@media (hover: hover) { .F-page .F-hood:not(.is-sel):hover { border-color: #b9cfc1; box-shadow: 0 4px 14px rgba(0,0,0,.05); } }
+.F-page .F-hood.is-sel { background: #e3f0ea; border-color: #c9ddd1; box-shadow: none; }
+.F-page .F-hood:has(.F-hoodBtn:focus-visible) { outline: 3px solid var(--acc); outline-offset: 2px; }
+.F-page .F-hoodBtn:focus-visible { outline: none; }
+.F-page .F-hoodBtn { text-decoration: none; }
+
+/* Oscar, Nov 17: lighter, Airbnb-like map instead of the gray one */
+.F-page .F-map .C-tiles { filter: none; }
+.F-page .F-map.is-osm .C-tiles { filter: saturate(.55) brightness(1.07) contrast(.9); }
+.F-page .F-map { background: #f2f1ee; }
+.F-page .F-map .C-credit a { color: inherit; text-decoration: none; }

@@ -296,7 +296,9 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
     await page.locator('.F-hoodBtn', { hasText: "Lavaca" }).click(); await page.waitForTimeout(800);
     const rLav = await page.locator(".F-area").evaluate((e) => e.getBoundingClientRect().width);
     ok((await circles()) === 1 && (await page.locator(".F-area").getAttribute("data-area")) === "Lavaca" && await inCircle(["indianola"]) && rLav < rTobin, `${tag}: Lavaca replaces the circle with a small one`);
-    await page.locator('.F-hoodBtn', { hasText: "Alamo Heights" }).click(); await page.waitForTimeout(800);
+    // click the empty part of the Alamo Heights box (not the title) -> selects it
+    { await page.locator(".F-hood", { hasText: "Alamo Heights" }).scrollIntoViewIfNeeded(); await page.waitForTimeout(300); const box = await page.locator(".F-hood", { hasText: "Alamo Heights" }).boundingBox(); await page.mouse.click(box.x + box.width - 30, box.y + 52); await page.waitForTimeout(800); }
+    ok((await page.locator(".F-area").getAttribute("data-area")) === "Alamo Heights", `${tag}: clicking anywhere in a neighborhood box selects it`);
     ok((await circles()) === 1 && await inCircle(["edgewood", "claywell"]), `${tag}: Alamo Heights -> one circle around its two pins`);
     // pins still go to their home
     await page.locator('.C-pin[data-key="claywell"]').click(); await page.waitForTimeout(900);

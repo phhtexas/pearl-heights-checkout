@@ -159,7 +159,10 @@ export function HomesF({ homes, hero, points, reasons }: {
                 const list = homes.filter((h) => h.area === area);
                 const totals = list.map((h) => s.results[h.key]).filter((r) => searched && r?.ok).map((r) => r!.total!);
                 return (
-                  <div className={`F-hood${area === sel ? " is-sel" : ""}`} key={area}>
+                  // Oscar, Nov 17: the whole box selects the neighborhood (the title button stays for keyboard/screen readers;
+                  // the home links inside still jump to their cards).
+                  <div className={`F-hood${area === sel ? " is-sel" : ""}`} key={area}
+                    onClick={(e) => { if (!(e.target as HTMLElement).closest("a, button")) pickArea(area); }}>
                     <div>
                       <h3><button type="button" className="F-hoodBtn" aria-pressed={area === sel} onClick={() => pickArea(area)}>
                         {area}<span className="sr-only">: show on map</span>
