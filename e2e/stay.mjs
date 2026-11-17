@@ -14,16 +14,14 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok((await page.locator(".ST-steps .is-now").innerText()).includes("Confirm your reservation"), `${tag}: current step is Confirm your reservation`);
   const body = () => page.evaluate(() => document.body.innerText);
   ok(!/Test address/.test(await body()) && (await page.locator(".ST-lockNote").count()) === 1, `${tag}: arrival details locked before signing and verifying`);
-  // sign: copy, name prefilled, button disabled until a name, "Not now" keeps the name
-  await page.click("text=Review & sign");
-  const panel = await page.locator(".ST-panel").innerText();
-  ok(/covers your reservation details, house rules, and cancellation terms/.test(panel) && /Full legal name — exactly as it appears on your ID/.test(panel) && !/Preview the full agreement/.test(panel), `${tag}: new agreement copy (no preview link)`);
-  ok(/Sandbox mode — this test document isn't legally binding\./.test(panel), `${tag}: sandbox callout shows in a sandbox build`);
-  ok((await page.locator(".ST-field input").inputValue()) === "Test Guest", `${tag}: name prefilled from the reservation`);
-  await page.fill(".ST-field input", "   "); ok(await page.locator('.ST-panel button:has-text("Review & sign")').isDisabled(), `${tag}: Review & sign disabled with a blank name`);
-  await page.fill(".ST-field input", "Oscar Pena"); ok(!(await page.locator('.ST-panel button:has-text("Review & sign")').isDisabled()), `${tag}: enabled right after a name is entered`);
-  await page.click("text=Not now"); await page.click("text=Review & sign");
-  ok((await page.locator(".ST-field input").inputValue()) === "Oscar Pena", `${tag}: Not now keeps the entered name`);
+  // sign (Oscar option 1): one tap; name field hidden unless "Name misspelled? Fix it"
+  const flow = await page.locator(".ST-signFlow").innerText();
+  ok(/covers your reservation details, house rules, and cancellation terms/.test(flow) && !/Preview the full agreement/.test(flow) && (await page.locator(".ST-signFlow .ST-field").count()) === 0, `${tag}: one-tap step, no name field shown`);
+  ok(/Sandbox mode — this test document isn't legally binding\./.test(flow), `${tag}: sandbox callout shows in a sandbox build`);
+  await page.click("text=Name misspelled? Fix it");
+  ok((await page.locator(".ST-signFlow .ST-field input").inputValue()) === "Test Guest", `${tag}: Fix it shows the name, prefilled from the reservation`);
+  await page.fill(".ST-signFlow .ST-field input", "   "); ok(await page.locator('.ST-signFlow button:has-text("Review & sign")').isDisabled(), `${tag}: Review & sign disabled with a blank name`);
+  await page.fill(".ST-signFlow .ST-field input", "Oscar Pena"); ok(!(await page.locator('.ST-signFlow button:has-text("Review & sign")').isDisabled()), `${tag}: enabled right after a name is entered`);
   // SignWell path (mocked here): the agreement opens INSIDE the portal; when SignWell reports "completed" the page
   // confirms with the server, then shows the signed state.
   await page.route("**/api/stay/demo/agreement", (r) => r.request().method() === "POST"
@@ -33,9 +31,10 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   await page.route("https://static.signwell.com/assets/embedded.js", (r) => r.fulfill({ contentType: "text/javascript", body:
     "window.SignWellEmbed=function(o){this.open=function(){var c=document.getElementById(o.containerId);var f=document.createElement('iframe');f.title='SignWell';f.setAttribute('data-url',o.url);c.appendChild(f);window.__swDone=function(){o.events.completed({id:'x'})};};};" }));
   const before = page.url();
-  await page.click('.ST-panel button:has-text("Review & sign")');
+  await page.click('.ST-signFlow button:has-text("Review & sign")');
   await page.waitForSelector("#st-sign-frame.is-open iframe", { state: "attached", timeout: 8000 }).catch(() => {});
-  ok(page.url() === before && (await page.locator("#st-sign-frame iframe").getAttribute("data-url")) === "https://www.signwell.com/docs/test/" && page.context().pages().length === 1, `${tag}: Review & sign opens the agreement inside the portal (no new tab)`);
+  ok(page.url() === before && (await page.locator("#st-sign-frame iframe").getAttribute("data-url")) === "https://www.signwell.com/docs/test/" && page.context().pages().length === 1, `${tag}: one tap opens the agreement inside the portal (no new tab)`);
+  ok(/Signing as Oscar Pena/.test(await page.locator(".ST-signFlow").innerText()), `${tag}: shows who is signing`);
   swSigned = true; await page.evaluate(() => window.__swDone());
   await page.waitForSelector(".ST-signed", { timeout: 8000 });
   ok((await page.locator(".ST-signedLine").innerText()) === "Agreement signed — November 17, 2026" && (await page.locator(".ST-task").first().evaluate((e) => e.classList.contains("is-done"))), `${tag}: confirmation with green check and the signed date`);

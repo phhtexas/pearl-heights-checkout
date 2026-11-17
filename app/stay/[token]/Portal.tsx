@@ -44,6 +44,7 @@ export function Portal({ stay }: { stay: StayData }) {
   const [agree, setAgree] = useState(false);
   // Oscar, Nov 17 (option 2): prefilled with the reservation holder's name from the booking; editable to fix a typo.
   const [name, setName] = useState(stay.holder);
+  const [fixName, setFixName] = useState(false);
   const [draft, setDraft] = useState("");
   useEffect(() => { try { const raw = localStorage.getItem(KEY(stay.token)); if (raw) setS({ ...fresh(), ...JSON.parse(raw) }); } catch { /* private mode */ } setReady(true); }, [stay.token]);
   const save = (n: State) => { setS(n); try { localStorage.setItem(KEY(stay.token), JSON.stringify(n)); } catch { /* ignore */ } };
@@ -165,21 +166,31 @@ export function Portal({ stay }: { stay: StayData }) {
               ) : (
                 <p className="ST-dim">Sign online — takes about 2 minutes.</p>
               )}
-              {!signed && !signing && <button className="ST-btn" type="button" onClick={() => setSigning(true)} disabled={!ready}>Review &amp; sign</button>}
-              {!signed && signing && esign !== "fallback" && (
-                <div className="ST-panel">
-                  <p>The agreement covers your reservation details, house rules, and cancellation terms. When you tap the button, it opens in a secure window from SignWell, our e-signature partner — no printing or downloads needed.</p>
-                  <label className="ST-field">Full legal name — exactly as it appears on your ID<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
-                  <p className="ST-hint">From your reservation. Fix it here if it's misspelled.</p>
-                  <div className="ST-row">
-                    <button className="ST-btn" type="button" onClick={openAgreement} disabled={!name.trim() || esign === "loading" || esign === "open" || esign === "checking"}>
-                      {esign === "loading" ? "Opening…" : esign === "checking" ? "Confirming…" : "Review & sign"}
-                    </button>
-                    <button className="ST-link" type="button" onClick={() => { setSigning(false); setEsign("idle"); }}>Not now</button>
-                  </div>
+              {/* Oscar, Nov 17 (option 1): one tap. "Review & sign" opens SignWell right away with the reservation name;
+                  the name field only appears if the guest taps "Name misspelled? Fix it". */}
+              {!signed && esign !== "fallback" && (
+                <div className="ST-signFlow">
+                  <p className="ST-copy">The agreement covers your reservation details, house rules, and cancellation terms. When you tap the button, it opens in a secure window from SignWell, our e-signature partner — no printing or downloads needed.</p>
+                  {fixName && (
+                    <label className="ST-field">Full legal name — exactly as it appears on your ID<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
+                  )}
+                  {esign !== "open" && esign !== "checking" && (
+                    <div className="ST-row">
+                      <button className="ST-btn" type="button" onClick={() => { setSigning(true); void openAgreement(); }} disabled={!ready || !name.trim() || esign === "loading"}>
+                        {esign === "loading" ? "Opening…" : "Review & sign"}
+                      </button>
+                      {!fixName && <button className="ST-link" type="button" onClick={() => setFixName(true)}>Name misspelled? Fix it</button>}
+                    </div>
+                  )}
+                  {(esign === "open" || esign === "checking") && (
+                    <div className="ST-row">
+                      <span className="ST-hint" role="status">{esign === "checking" ? "Confirming your signature…" : `Signing as ${name.trim()}`}</span>
+                      <button className="ST-link" type="button" onClick={() => { setSigning(false); setEsign("idle"); }}>Not now</button>
+                    </div>
+                  )}
                   {esignMsg && <p className="ST-err" role="alert">{esignMsg}</p>}
                   {SANDBOX && <p className="ST-testLine">Sandbox mode — this test document isn&apos;t legally binding.</p>}
-                  <div id="st-sign-frame" className={`ST-frame${esign === "open" ? " is-open" : ""}`} />
+                  <div id="st-sign-frame" className={`ST-frame${esign === "open" && signing ? " is-open" : ""}`} />
                 </div>
               )}
               {!signed && signing && esign === "fallback" && (
