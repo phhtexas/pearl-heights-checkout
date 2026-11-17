@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pearl Heights Homes — Find your San Antonio stay</title>
+<meta name="description" content="Five family-friendly homes in San Antonio, hosted by Oscar & Fernanda. Book direct: full totals up front, pay in two parts, damage waiver included." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23e21c5a'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='%23fff' font-family='Georgia,serif'%3EP%3C/text%3E%3C/svg%3E" />
+<style>
+@font-face{font-family:'Jost';font-style:normal;font-weight:400;font-display:swap;src:url('/mockups/e/assets/fonts/jost-400.woff2') format('woff2')}
+@font-face{font-family:'Jost';font-style:normal;font-weight:500;font-display:swap;src:url('/mockups/e/assets/fonts/jost-500.woff2') format('woff2')}
+@font-face{font-family:'Jost';font-style:normal;font-weight:600;font-display:swap;src:url('/mockups/e/assets/fonts/jost-600.woff2') format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url('/mockups/e/assets/fonts/inter-400.woff2') format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url('/mockups/e/assets/fonts/inter-500.woff2') format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url('/mockups/e/assets/fonts/inter-600.woff2') format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url('/mockups/e/assets/fonts/inter-700.woff2') format('woff2')}
+
+:root{
+  --ink:#222222; --muted:#717171; --line:#dddddd; --soft:#f7f7f7;
+  --brand:#006ce4; --brand-deep:#0052a6;
+  --blue:#006ce4;
+  --sans:'Inter','Jost',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --shadow-card:0 6px 16px rgba(0,0,0,.08);
+  --radius:12px;
+  --ease:cubic-bezier(.25,.46,.45,.94);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:#fff;color:var(--ink);font:16px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+h1,h2,h3{margin:0;font-weight:700}
+button{font:inherit;cursor:pointer;background:none;border:none;color:inherit;padding:0}
+.wrap{max-width:1280px;margin:0 auto;padding:0 80px}
+
+/* ---------- mockup banner ---------- */
+.mockbar{background:#111315;color:#cfc9bd;text-align:center;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:9px 16px}
+.mockbar b{color:#f3efe6;font-weight:500}
+
+/* ---------- header ---------- */
+header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid transparent;transition:border-color .25s,box-shadow .25s}
+header.scrolled{border-bottom-color:var(--line);box-shadow:0 1px 12px rgba(0,0,0,.04)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:80px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .name{font-family:var(--sans);font-size:20px;font-weight:700;letter-spacing:-.01em}
+.brand .name span{color:var(--brand)}
+.navlinks{display:flex;gap:28px}
+.navlinks a{font-size:14px;font-weight:500;color:var(--muted);position:relative;padding:6px 0}
+.navlinks a:hover{color:var(--ink)}
+.navlinks a::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:#222;border-radius:2px;transform:scaleX(0);transition:transform .2s}
+.navlinks a:hover::after{transform:scaleX(1)}
+.nav-cta{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#fff;background:#222;border-radius:8px;padding:12px 20px;transition:background .2s,transform .2s var(--ease)}
+.nav-cta:hover{background:#000;transform:translateY(-1px)}
+
+/* ---------- hero ---------- */
+.hero{padding:88px 0 72px;background:var(--soft)}
+.hero h1{font-size:clamp(34px,4.2vw,54px);line-height:1.1;letter-spacing:-.015em;max-width:18ch}
+.hero h1 em{font-style:normal;color:var(--brand)}
+.hero p.sub{margin-top:20px;font-size:18px;color:var(--muted);max-width:52ch;line-height:1.55}
+.hero .stats{display:flex;gap:40px;margin-top:44px}
+.hstat{display:flex;flex-direction:column}
+.hstat .n{font-size:26px;font-weight:700;letter-spacing:-.01em}
+.hstat .n small{font-size:15px;font-weight:500;color:var(--muted)}
+.hstat .l{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* ---------- search ---------- */
+.search-sec{background:var(--soft);padding-bottom:64px}
+.search{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-card);padding:8px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;max-width:900px}
+.search .field{display:flex;flex-direction:column;gap:3px;padding:14px 22px;border-radius:10px;cursor:pointer;transition:background .15s}
+.search .field:hover{background:var(--soft)}
+.search .field+.field{border-left:1px solid var(--line)}
+.search label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#333}
+.search .val{font-size:15px;font-weight:500;color:var(--muted)}
+.search .btn{display:flex;align-items:center;gap:10px;background:#0057b8;color:#fff;font-weight:600;font-size:15px;border-radius:10px;padding:0 26px;transition:background .2s,transform .2s var(--ease)}
+.search .btn:hover{background:#006ce4;transform:translateY(-1px)}
+
+/* ---------- filter chips ---------- */
+.chips{display:flex;gap:10px;flex-wrap:wrap;padding:36px 0 8px}
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:#333;border:1px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;transition:border-color .15s,background .15s}
+.chip:hover{border-color:#222;background:#fff}
+.chip.on{border-color:#222;background:#f0f0ef}
+.chip svg{flex:none}
+
+/* ---------- section head ---------- */
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:24px;padding:64px 0 32px}
+.sec-head h2{font-size:28px;letter-spacing:-.01em}
+.sec-head p{font-size:15px;color:var(--muted);margin-top:6px}
+.sec-head .right{font-size:15px;font-weight:600;color:#333}
+
+/* ---------- listing cards ---------- */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:44px 40px;padding-bottom:40px}
+.card.hide{display:none}
+.card-help{border:1.5px dashed #c8c8c8;border-radius:var(--radius);background:#fafafa;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:14px;padding:36px;min-height:100%}
+.card-help .ic{width:52px;height:52px;border-radius:50%;background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:var(--brand)}
+.card-help h3{font-size:19px}
+.card-help p{font-size:15px;color:var(--muted);line-height:1.55;max-width:34ch}
+.card-help a{display:inline-flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;color:var(--brand);border-bottom:1.5px solid currentColor;padding-bottom:2px;transition:color .15s}
+.card-help a:hover{color:var(--brand-deep)}
+.card{display:flex;flex-direction:column;gap:0;cursor:pointer}
+.card .ph{position:relative;border-radius:var(--radius);overflow:hidden;aspect-ratio:3/2.1;background:#eee}
+.card .ph img{width:100%;height:100%;object-fit:cover;transition:transform .45s var(--ease)}
+.card:hover .ph img{transform:scale(1.04)}
+.card .badge{position:absolute;left:12px;top:12px;background:#fff;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:6px 12px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.card .info{padding:14px 2px 0}
+.card .info .top{display:flex;justify-content:space-between;gap:12px}
+.card h3{font-size:16px;font-weight:600;letter-spacing:-.005em;line-height:1.35}
+.card .rating{display:inline-flex;align-items:center;gap:4px;font-size:13.5px;font-weight:600;flex:none;padding-top:1px}
+.card .rating svg{flex:none}
+.card .meta{font-size:14.5px;color:var(--muted);margin-top:4px}
+.card .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.card .tags span{font-size:12.5px;font-weight:500;color:#484848;background:var(--soft);border-radius:999px;padding:5px 11px}
+.card .foot{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px}
+.card .foot .loc{font-size:13px;color:var(--muted)}
+.card .foot .price{text-align:right}
+.card .foot .price b{font-size:16.5px;font-weight:600}
+.card .foot .price small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.card.unavailable .ph img{filter:grayscale(.9);opacity:.8}
+.card.unavailable h3,.card.unavailable .meta{color:var(--muted)}
+.card .unavail{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.96);display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#333;border-radius:8px;padding:8px 12px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+
+/* ---------- map band ---------- */
+.mapsec{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:96px 0}
+.mapsec .inner{display:grid;grid-template-columns:.9fr 1.1fr;gap:64px;align-items:center}
+.mapsec h2{font-size:28px;letter-spacing:-.01em}
+.mapsec h2 em{font-style:normal;color:var(--brand)}
+.mapsec p.lead{margin-top:18px;font-size:17px;color:var(--muted);max-width:44ch;line-height:1.6}
+.hoods{margin-top:36px}
+.hood{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:20px 2px;border-bottom:1px solid var(--line)}
+.hood:first-child{border-top:1px solid var(--line)}
+.hood .nm{font-size:17px;font-weight:600}
+.hood .ct{font-size:13.5px;color:var(--muted)}
+.hood .pr{font-size:15px;font-weight:600;color:#333}
+.mapcard{position:relative;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-card);aspect-ratio:1/1.05;background:linear-gradient(160deg,#eef1f4 0%,#e4e9ee 45%,#dfe5ea 100%)}
+.mapcard .pin{position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px}
+.mapcard .pin .bubble{background:#fff;border:1px solid var(--line);border-radius:999px;box-shadow:0 3px 10px rgba(0,0,0,.12);font-size:13.5px;font-weight:700;padding:7px 13px}
+.mapcard .pin .bubble.off{color:var(--muted);font-weight:500}
+.mapcard .attn{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.96);font-size:12.5px;color:#333;border-radius:8px;padding:8px 12px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+
+/* ---------- trust strip ---------- */
+.trust{padding:104px 0}
+.trust .cols{display:grid;grid-template-columns:1fr 1fr;gap:96px;align-items:start}
+.trust h2{font-size:28px;letter-spacing:-.01em;max-width:14ch;line-height:1.25}
+.trust h2 em{font-style:normal;color:var(--brand)}
+.trust .lead{margin-top:20px;font-size:17px;color:var(--muted);line-height:1.65;max-width:42ch}
+.trow{display:flex;gap:20px;padding:28px 0;border-bottom:1px solid var(--line)}
+.trow:first-child{border-top:1px solid var(--line)}
+.trow .ic{flex:none;width:48px;height:48px;border-radius:10px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:#222}
+.trow h3{font-size:16.5px;font-weight:600}
+.trow p{margin-top:6px;font-size:15px;color:var(--muted);line-height:1.55}
+
+/* ---------- amenities ---------- */
+.amensec{background:var(--soft);padding:104px 0}
+.amen-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.amen{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:26px 22px;display:flex;flex-direction:column;gap:12px;transition:transform .25s var(--ease),box-shadow .25s}
+.amen:hover{transform:translateY(-3px);box-shadow:var(--shadow-card)}
+.amen svg{color:#222}
+.amen span{font-size:15px;font-weight:500}
+
+/* ---------- reviews ---------- */
+.revsec{padding:104px 0}
+.revstats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px}
+.rstat{border:1px solid var(--line);border-radius:var(--radius);padding:28px 26px}
+.rstat .n{font-size:38px;font-weight:700;letter-spacing:-.02em}
+.rstat .n sup{font-size:16px;color:var(--brand)}
+.rstat .l{font-size:14px;color:var(--muted);margin-top:8px}
+.revs{display:flex;gap:16px;margin-top:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 4px 16px;scrollbar-width:none;-ms-overflow-style:none}
+.revs::-webkit-scrollbar{display:none}
+.rev{flex:none;width:min(430px,86vw);scroll-snap-align:start;background:var(--soft);border-radius:var(--radius);padding:28px}
+.rev .stars{color:#222;display:flex;gap:2px}
+.rev .stars svg{flex:none}
+.rev blockquote{margin:16px 0 0;font-size:15px;line-height:1.6;color:#333}
+.rev .who{margin-top:20px;display:flex;align-items:center;gap:12px}
+.rev .who .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#006ce4,#0057b8);color:#fff;font-size:14px;font-weight:600;display:grid;place-items:center;flex:none}
+.rev .who b{font-size:14.5px;font-weight:600;display:block}
+.rev .who span{font-size:13px;color:var(--muted);display:block;margin-top:2px}
+.rev .who .home{margin-left:auto;font-size:13px;font-weight:600;color:#333;border-bottom:1px solid #222}
+
+/* ---------- steps ---------- */
+.stepssec{background:var(--soft);padding:104px 0}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;counter-reset:st}
+.step{padding-top:28px;border-top:2px solid #222;position:relative}
+.step h3{font-size:19px;font-weight:600;display:flex;align-items:center;gap:12px}
+.step h3::before{counter-increment:st;content:counter(st);font-size:14px;font-weight:700;color:#fff;background:#222;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none}
+.step p{margin-top:12px;font-size:15.5px;color:var(--muted);line-height:1.6}
+
+/* ---------- FAQ ---------- */
+.faqsec{padding:104px 0}
+.faq{max-width:820px}
+.qa{border-top:1px solid var(--line)}
+.qa:last-child{border-bottom:1px solid var(--line)}
+.qa .q{width:100%;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:26px 2px;text-align:left;font-size:17px;font-weight:600}
+.qa .q:hover{color:var(--brand)}
+.qa .q svg{flex:none;transition:transform .3s var(--ease)}
+.qa.open .q svg{transform:rotate(45deg)}
+.qa .a{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease)}
+.qa.open .a{grid-template-rows:1fr}
+.qa .a>div{overflow:hidden}
+.qa .a p{padding:0 2px 28px;max-width:60ch;font-size:15.5px;color:var(--muted);line-height:1.65}
+
+/* ---------- host ---------- */
+.hostsec{background:var(--soft);padding:120px 0}
+.hostinner{max-width:680px;margin:0 auto;text-align:center}
+.hostinner .ph{width:120px;height:120px;border-radius:50%;object-fit:cover;margin:0 auto;box-shadow:0 0 0 4px #fff}
+.hostinner h2{font-size:28px;margin-top:32px}
+.hostinner .bio{margin-top:20px;font-size:16px;color:#333;line-height:1.7}
+.hostinner .tags{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:28px}
+.hostinner .tags span{font-size:13.5px;font-weight:500;background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:#333}
+.hostinner .btn{display:inline-flex;align-items:center;gap:10px;margin-top:40px;background:#fff;border:1px solid #222;border-radius:8px;padding:14px 24px;font-size:15px;font-weight:600;transition:background .2s,color .2s}
+.hostinner .btn:hover{background:#222;color:#fff}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);padding:72px 0 48px;background:#fff}
+.fgrid{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:64px}
+.fgrid h4{font-size:14px;font-weight:700;margin:0 0 16px}
+.fgrid a.fl{display:block;font-size:14px;color:var(--muted);padding:7px 0;transition:color .15s,text-decoration .15s}
+.fgrid a.fl:hover{color:var(--ink);text-decoration:underline}
+.fgrid .brandline{font-size:19px;font-weight:700}
+.fgrid .brandline span{color:var(--brand)}
+.fgrid .note{font-size:13.5px;color:var(--muted);margin-top:14px;line-height:1.6;max-width:34ch}
+.fbottom{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-top:56px;padding-top:24px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted)}
+
+/* ---------- reveal ---------- */
+.rv{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s var(--ease)}
+.rv.in{opacity:1;transform:none}
+
+/* ---------- review nav ---------- */
+.revnav{display:flex;gap:8px}
+.revnav .arrow{width:38px;height:38px;border-radius:50%;border:1px solid #b0b0b0;display:grid;place-items:center;color:#333;transition:border-color .15s,background .15s,opacity .15s}
+.revnav .arrow:hover{border-color:#222}
+.revnav .arrow[disabled]{opacity:.35;cursor:default}
+
+/* ---------- anchors ---------- */
+section[id]{scroll-margin-top:84px}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){
+  .amen-grid{grid-template-columns:repeat(2,1fr)}
+  .trust .cols{grid-template-columns:1fr;gap:48px}
+  .revstats{grid-template-columns:1fr 1fr}
+  .revs .rev{width:82vw}
+  .mapsec .inner{grid-template-columns:1fr;gap:48px}
+  .steps{grid-template-columns:1fr;gap:44px;max-width:480px}
+  .wrap{padding:0 40px}
+}
+@media (max-width:760px){
+  .wrap{padding:0 20px}
+  .navlinks{display:none}
+  .nav{height:60px}
+  .brand .name{font-size:17px;white-space:nowrap;letter-spacing:0}
+  .nav-cta{padding:9px 14px;font-size:13px}
+  .hero{padding:56px 0 48px}
+  .search{grid-template-columns:1fr;max-width:none}
+  .search .field+.field{border-left:none;border-top:1px solid var(--line)}
+  .search .btn{justify-content:center;padding:14px 24px}
+  .grid{grid-template-columns:1fr;gap:36px}
+  .amen-grid{grid-template-columns:1fr 1fr;gap:12px}
+  .revstats{grid-template-columns:1fr}
+  .fgrid{grid-template-columns:1fr;gap:40px}
+  .sec-head{flex-direction:column;align-items:flex-start;gap:8px;padding:48px 0 24px}
+  .chips{padding:24px 0 4px}
+  .trust,.amensec,.revsec,.stepssec,.faqsec,.hostsec{padding:64px 0}
+  .mapsec{padding:64px 0}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .rv{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<div class="mockbar"><b>Mockup E</b> · Airbnb-inspired · clean & spacious · prototype, not linked from the site</div>
+
+<header id="hdr">
+  <div class="wrap nav">
+    <a class="brand" href="#top"><span class="name">Pearl Heights <span>Homes</span></span></a>
+    <nav class="navlinks" aria-label="Sections">
+      <a href="#homes">Homes</a>
+      <a href="#locations">Locations</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="nav-cta" href="#host">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 01-9 8.4 8.6 8.6 0 01-3.2-.6L3 21l1.7-4.6A8.4 8.4 0 1121 11.5z"/></svg>
+      Ask a question
+    </a>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="wrap">
+    <h1>Find your San Antonio <em>stay</em></h1>
+    <p class="sub">Five family-friendly homes hosted by Oscar & Fernanda — near the Pearl, downtown and Alamo Heights. Book directly with the hosts, with your full total up front.</p>
+    <div class="stats">
+      <div class="hstat"><div class="n">4.98 <small>★</small></div><div class="l">average across 463 Airbnb reviews</div></div>
+      <div class="hstat"><div class="n">5</div><div class="l">homes that sleep 8 to 10 guests</div></div>
+      <div class="hstat"><div class="n">~1 <small>hr</small></div><div class="l">usual reply time</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEARCH ================= -->
+<section class="search-sec" aria-label="Search homes">
+  <div class="wrap">
+    <div class="search" role="search">
+      <div class="field">
+        <label>Check-in</label>
+        <div class="val">01/15/2027</div>
+      </div>
+      <div class="field">
+        <label>Check-out</label>
+        <div class="val">01/18/2027</div>
+      </div>
+      <div class="field">
+        <label>Guests</label>
+        <div class="val">6 guests</div>
+      </div>
+      <a class="btn" href="#homes">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        Search
+      </a>
+    </div>
+    <div class="chips" role="group" aria-label="Filter homes">
+      <button class="chip on" data-f="all">Any home</button>
+      <button class="chip" data-f="pearl">Walk to the Pearl</button>
+      <button class="chip" data-f="downtown">Downtown</button>
+      <button class="chip" data-f="alamo">Alamo Heights</button>
+      <button class="chip" data-f="level">Single level</button>
+      <button class="chip" data-f="kids">Ready for little ones</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOMES ================= -->
+<section id="homes" class="wrap">
+  <div class="sec-head">
+    <div>
+      <h2>Stays for your dates</h2>
+      <p id="avail-line">Jan 15 – Jan 18 · 6 guests · 4 of 5 homes available · totals include taxes and fees</p>
+    </div>
+    <div class="right">Sort: Recommended</div>
+  </div>
+
+  <div class="grid" id="homegrid">
+    <article class="card rv" data-tags="pearl level kids">
+      <div class="ph">
+        <img src="/mockups/e/assets/home-pearl.jpg" alt="Large Family House Next to the Pearl — kitchen" loading="lazy">
+        <span class="badge">Best for large families</span>
+      </div>
+      <div class="info">
+        <div class="top">
+          <h3>Large Family House Next to the Pearl</h3>
+          <span class="rating"><svg width="14" height="14" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg>4.97</span>
+        </div>
+        <div class="meta">Tobin Hill · 10 guests · 5 bedrooms · 5 beds · 3.5 baths</div>
+        <div class="tags"><span>Walk to the Pearl</span><span>One level, no stairs</span><span>Ready for little ones</span></div>
+        <div class="foot">
+          <div class="price"><b>$2,414</b><small>total · 3 nights, taxes included</small></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card rv" data-tags="pearl level kids">
+      <div class="ph">
+        <img src="/mockups/e/assets/home-riverwalk.jpg" alt="5-Star Family-Friendly 3BR — playroom nook" loading="lazy">
+        <span class="badge">Best for young kids</span>
+      </div>
+      <div class="info">
+        <div class="top">
+          <h3>5-Star Family-Friendly 3BR Walk to Pearl Riverwalk</h3>
+          <span class="rating"><svg width="14" height="14" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg>4.99</span>
+        </div>
+        <div class="meta">Tobin Hill · 8 guests · 3 bedrooms · 3 beds · 2 baths</div>
+        <div class="tags"><span>Walk to the Pearl</span><span>One level, no stairs</span><span>Ready for little ones</span></div>
+        <div class="foot">
+          <div class="price"><b>$1,974</b><small>total · 3 nights, taxes included</small></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card rv" data-tags="downtown">
+      <div class="ph">
+        <img src="/mockups/e/assets/home-downtown.jpg" alt="Downtown SA House exterior at dusk" loading="lazy">
+        <span class="badge">Best for downtown events</span>
+      </div>
+      <div class="info">
+        <div class="top">
+          <h3>Downtown SA House: Walk to Tower & Alamodome</h3>
+          <span class="rating"><svg width="14" height="14" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg>4.8</span>
+        </div>
+        <div class="meta">Lavaca · 8 guests · 3 bedrooms · 3 beds · 2 baths</div>
+        <div class="tags"><span>Walk downtown</span><span>A king bed in every bedroom</span><span>Deck, patio and backyard</span></div>
+        <div class="foot">
+          <div class="price"><b>$1,977</b><small>total · 3 nights, taxes included</small></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card rv" data-tags="alamo level kids">
+      <div class="ph">
+        <img src="/mockups/e/assets/home-alamo.jpg" alt="Charming Alamo Heights home — living room" loading="lazy">
+        <span class="badge">Single-level home</span>
+      </div>
+      <div class="info">
+        <div class="top">
+          <h3>Stylish, Charming Home In The Heart of San Antonio</h3>
+          <span class="rating"><svg width="14" height="14" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg>4.99</span>
+        </div>
+        <div class="meta">Alamo Heights · 8 guests · 2 bedrooms · 3 beds · 1 bath</div>
+        <div class="tags"><span>In Alamo Heights</span><span>Parking for 4 cars</span><span>Ready for little ones</span></div>
+        <div class="foot">
+          <div class="price"><b>$1,322</b><small>total · 3 nights, taxes included</small></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card unavailable rv" data-tags="alamo kids">
+      <div class="ph">
+        <img src="/mockups/e/assets/home-heights.jpg" alt="Large Family Home in Alamo Heights — bedroom" loading="lazy">
+        <span class="badge">Best for Alamo Heights</span>
+        <span class="unavail">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#717171" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16.5v.5"/></svg>
+          No check-in on that day
+        </span>
+      </div>
+      <div class="info">
+        <div class="top">
+          <h3>Large Family Home in the Heart of Alamo Heights</h3>
+          <span class="rating" style="color:var(--muted)">New</span>
+        </div>
+        <div class="meta">Alamo Heights · 8 guests · 3 bedrooms · 5 beds · 2 baths</div>
+        <div class="tags"><span>In Alamo Heights</span><span>Fenced backyard with fire pit</span><span>Ready for little ones</span></div>
+        <div class="foot">
+          <div class="loc">Try other dates</div>
+          <div class="price"><b style="color:var(--muted)">—</b><small>dates unavailable</small></div>
+        </div>
+      </div>
+    </article>
+
+    <div class="card-help rv" data-utility="1">
+      <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-9 8.4 8.6 8.6 0 01-3.2-.6L3 21l1.7-4.6A8.4 8.4 0 1121 11.5z"/></svg></div>
+      <h3>Not sure which home fits?</h3>
+      <p>Tell us your dates and your group — we'll point you to the right home, honestly. We usually reply within the hour.</p>
+      <a href="#host">Ask Oscar & Fernanda
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LOCATIONS ================= -->
+<section class="mapsec" id="locations">
+  <div class="wrap inner">
+    <div>
+      <h2>Where the homes <em>are</em></h2>
+      <p class="lead">Near the Pearl, downtown and in Alamo Heights — all within a few minutes of each other.</p>
+      <div class="hoods">
+        <div class="hood"><div><div class="nm">Tobin Hill</div><div class="ct">2 homes · walk to the Pearl</div></div><div class="pr">from $1,974</div></div>
+        <div class="hood"><div><div class="nm">Lavaca</div><div class="ct">1 home · walk to downtown & the River Walk</div></div><div class="pr">from $1,977</div></div>
+        <div class="hood"><div><div class="nm">Alamo Heights</div><div class="ct">2 homes · quiet, leafy, close to everything</div></div><div class="pr">from $1,322</div></div>
+      </div>
+    </div>
+    <div class="mapcard rv" role="img" aria-label="Approximate map of San Antonio neighborhoods with the homes">
+      <span class="pin" style="left:26%;top:22%"><span class="bubble">$2,414</span><span class="bubble">$1,974</span></span>
+      <span class="pin" style="left:47%;top:47%"><span class="bubble">$1,977</span></span>
+      <span class="pin" style="left:64%;top:56%"><span class="bubble">$1,322</span><span class="bubble off">Unavailable</span></span>
+      <span class="attn">Approximate locations — your exact address arrives with your stay page.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TRUST ================= -->
+<section class="trust wrap">
+  <div class="cols">
+    <div class="rv">
+      <h2>Book directly with <em>local hosts</em></h2>
+      <p class="lead">Airbnb Superhosts with a 4.98 average across 463 Airbnb guest reviews.</p>
+    </div>
+    <div>
+      <div class="trow rv">
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-9 8.4 8.6 8.6 0 01-3.2-.6L3 21l1.7-4.6A8.4 8.4 0 1121 11.5z"/></svg></div>
+        <div><h3>You book with us</h3><p>Questions go straight to Oscar and Fernanda, and we usually reply within an hour.</p></div>
+      </div>
+      <div class="trow rv">
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg></div>
+        <div><h3>Your full total, first</h3><p>Taxes and the damage waiver are in the total you see before you pay. Pay in full, or half now when check-in is more than 30 days away.</p></div>
+      </div>
+      <div class="trow rv">
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div><h3>You're covered</h3><p>Every stay includes a damage waiver with $5,000 coverage, and you pay securely through Stripe.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= AMENITIES ================= -->
+<section class="amensec">
+  <div class="wrap">
+    <div class="sec-head" style="padding-top:0">
+      <div>
+        <h2>Every home has</h2>
+        <p>Checked against each home's amenity list.</p>
+      </div>
+    </div>
+    <div class="amen-grid">
+      <div class="amen rv"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M7 4v5M7 13h3M7 17h3"/></svg><span>Full kitchen</span></div>
+      <div class="amen rv"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 13a10 10 0 0114 0M8.5 16.5a5.5 5.5 0 017 0"/><circle cx="12" cy="19" r="1.4" fill="currentColor" stroke="none"/></svg><span>Wifi</span></div>
+      <div class="amen rv"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="13" height="11" rx="2"/><path d="M16 9h3.5a1.5 1.5 0 011.5 1.5V15a2 2 0 01-2 2h-1M5 21h8"/></svg><span>Free parking</span></div>
+      <div class="amen rv"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/><circle cx="12" cy="12" r="2.2"/></svg><span>Central air</span></div>
+      <div class="amen rv"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="13" r="4.5"/><path d="M8 3h8M4 8h2M18 8h2"/></svg><span>Washer and dryer</span></div>
+      <div class="amen rv"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6a3 3 0 016 0v6"/></svg><span>Fenced backyard</span></div>
+      <div class="amen rv"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="8" width="10" height="12" rx="2"/><path d="M4 12h10M14 11h3l3 3v4a1 1 0 01-1 1h-5M6 8V5.5A1.5 1.5 0 017.5 4h3A1.5 1.5 0 0112 5.5V8"/></svg><span>Crib and high chair</span></div>
+      <div class="amen rv"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="14" r="5.5"/><path d="M9 8.5V14h5.5M14 3.5c2 0 4.5 1.5 4.5 4.5"/></svg><span>Self check-in</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= REVIEWS ================= -->
+<section class="revsec wrap" id="reviews">
+  <div class="sec-head" style="padding-top:0">
+    <div>
+      <h2>What guests say</h2>
+      <p>Reviews from Airbnb guests who stayed in our homes.</p>
+    </div>
+    <div class="revnav">
+      <button class="arrow" id="revPrev" aria-label="Previous reviews">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button class="arrow" id="revNext" aria-label="Next reviews">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="revstats">
+    <div class="rstat rv"><div class="n">4.98</div><div class="l">average across 463 Airbnb guest reviews</div></div>
+    <div class="rstat rv"><div class="n">5</div><div class="l">homes that sleep 8 to 10 guests</div></div>
+    <div class="rstat rv"><div class="n">1 <sup>hr</sup></div><div class="l">usual reply time from Oscar & Fernanda</div></div>
+  </div>
+  <div class="revs" id="revs">
+    <figure class="rev rv">
+      <div class="stars" aria-label="5 out of 5 stars"><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg></div>
+      <blockquote>"This Airbnb is amazing! It has everything you could need — plus it's super kid friendly. Every part of the house was thoughtful, inside and outside. Plenty of space too, many areas to just hang out and relax. The location can't be…"</blockquote>
+      <figcaption class="who"><span class="av">T</span><div><b>Tia</b><span>November 2026</span></div><span class="home">Pearl house</span></figcaption>
+    </figure>
+    <figure class="rev rv">
+      <div class="stars" aria-label="5 out of 5 stars"><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg></div>
+      <blockquote>"We enjoyed staying at this beautiful home so close to the Pearl! The house was stocked with everything we needed to feel right at home. Very easy walk to the Pearl, even with children. We loved the backyard and playroom set up…"</blockquote>
+      <figcaption class="who"><span class="av">R</span><div><b>Rebecca</b><span>October 2026</span></div><span class="home">Pearl house</span></figcaption>
+    </figure>
+    <figure class="rev rv">
+      <div class="stars" aria-label="5 out of 5 stars"><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#222"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8L2.2 9.1l6.9-.8z"/></svg></div>
+      <blockquote>"Oscar and Fernanda's Pearl House was in the perfect location to enjoy Halloween and all of the activities nearby. There were many great restaurants to choose from. The house is cleverly designed. The playroom was used by my…"</blockquote>
+      <figcaption class="who"><span class="av">C</span><div><b>Connie</b><span>November 2026</span></div><span class="home">Riverwalk 3BR</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= STEPS ================= -->
+<section class="stepssec">
+  <div class="wrap">
+    <div class="sec-head" style="padding-top:0">
+      <div>
+        <h2>Booking directly is simple</h2>
+        <p>Three steps, all online.</p>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step rv"><h3>Choose your home and pay securely</h3><p>See your exact total first — taxes and the damage waiver included. Pay in full, or half now when your stay is more than 30 days away.</p></div>
+      <div class="step rv"><h3>Sign the agreement and verify</h3><p>The reservation holder signs the rental agreement and verifies their ID online — a few minutes, all from your phone.</p></div>
+      <div class="step rv"><h3>Get your guest portal</h3><p>Your address and check-in steps appear in your stay page once you&#39;ve signed and verified. Door codes arrive the morning of check-in day.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="faqsec wrap" id="faq">
+  <div class="sec-head" style="padding-top:0">
+    <div>
+      <h2>Your questions, answered</h2>
+    </div>
+  </div>
+  <div class="faq">
+    <div class="qa">
+      <button class="q" aria-expanded="false">Why book direct?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+      <div class="a"><div><p>You get the same homes and the same Superhost care, with the hosts one message away. Your full total — taxes, damage waiver and all — is shown before you pay, and questions go straight to Oscar and Fernanda, who usually reply within an hour.</p></div></div>
+    </div>
+    <div class="qa">
+      <button class="q" aria-expanded="false">What happens after I book?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+      <div class="a"><div><p>You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 3 minutes each). The address, entry steps and WiFi appear in your private stay page once both are done; door codes arrive the morning of check-in day.</p></div></div>
+    </div>
+    <div class="qa">
+      <button class="q" aria-expanded="false">What are check-in and check-out times?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+      <div class="a"><div><p>Check-in is after 4:00 PM and check-out is before 10:00 AM at every home, with self check-in.</p></div></div>
+    </div>
+    <div class="qa">
+      <button class="q" aria-expanded="false">Can I cancel?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+      <div class="a"><div><p>Booked more than 7 days before check-in: cancel within 24 hours after booking for everything back, no fee. After that: 30 days or more before check-in, everything back minus a 5% processing fee; 14 to 29 days before, 50% of the stay plus the damage waiver; less than 14 days before, the damage waiver only (until the day before check-in). Booked 7 days or less before check-in: paid in full and non-refundable. Your exact dates and amounts are shown before you pay.</p></div></div>
+    </div>
+    <div class="qa">
+      <button class="q" aria-expanded="false">Is there a damage waiver?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+      <div class="a"><div><p>Yes — every booking includes a damage waiver with $5,000 of coverage for accidental damage during your stay, subject to the provider's terms. It isn't a security deposit: nothing is held on your card.</p></div></div>
+    </div>
+    <div class="qa">
+      <button class="q" aria-expanded="false">Can I pay in two parts?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+      <div class="a"><div><p>Paying in full is the default. When check-in is more than 30 days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost.</p></div></div>
+    </div>
+    <div class="qa">
+      <button class="q" aria-expanded="false">Are pets allowed?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+      <div class="a"><div><p>No pets at any of our homes.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOST ================= -->
+<section class="hostsec" id="host">
+  <div class="wrap hostinner">
+    <img class="ph" src="/mockups/e/assets/host.jpg" alt="Oscar, Fernanda and family" loading="lazy">
+    <h2>Meet your hosts</h2>
+    <p class="bio">Hello! We're a family of four who love to travel and experience new places and cultures. With a 5-year-old girl and a 2-year-old boy, we know the importance of comfort and hospitality. As both guests and hosts, we value cleanliness, thoughtful touches, and creating a welcoming space. We set up our homes to feel like places we'd want our own family to stay in — cozy, well-equipped, and inviting. Our goal is to ensure every stay feels like home!</p>
+    <div class="tags">
+      <span>Local San Antonio hosts</span>
+      <span>Airbnb Superhosts</span>
+      <span>4.98 average · 463 reviews</span>
+      <span>Speak English and Spanish</span>
+      <span>Usually reply within an hour</span>
+    </div>
+    <a class="btn" href="mailto:bookings@thepearlheightshomes.com">Ask us a question
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <div class="brandline">Pearl Heights <span>Homes</span></div>
+        <p class="note">Hosted by Oscar & Fernanda · San Antonio, Texas<br>bookings@thepearlheightshomes.com</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <a class="fl" href="#homes">All homes</a>
+        <a class="fl" href="#locations">Locations</a>
+        <a class="fl" href="#reviews">Reviews</a>
+        <a class="fl" href="#faq">FAQ</a>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <a class="fl" href="#host">Ask a question</a>
+        <a class="fl" href="#top">Terms of service</a>
+        <a class="fl" href="#top">Privacy policy</a>
+      </div>
+    </div>
+    <div class="fbottom">
+      <span>Ratings and reviews are from Airbnb guests who stayed in our homes.</span>
+      <span>© 2026 Pearl Heights Homes</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var hdr = document.getElementById('hdr');
+  var onScroll = function(){ hdr.classList.toggle('scrolled', window.scrollY > 8); };
+  window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, {threshold:0.1, rootMargin:'0px 0px -4% 0px'});
+  document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
+
+  var qas = Array.prototype.slice.call(document.querySelectorAll('.qa'));
+  qas.forEach(function(qa){
+    var btn = qa.querySelector('.q');
+    btn.addEventListener('click', function(){
+      var open = qa.classList.contains('open');
+      qas.forEach(function(o){ o.classList.remove('open'); o.querySelector('.q').setAttribute('aria-expanded','false'); });
+      if(!open){ qa.classList.add('open'); btn.setAttribute('aria-expanded','true'); }
+    });
+  });
+
+  // ---- home filters ----
+  var cards = Array.prototype.slice.call(document.querySelectorAll('#homegrid .card'));
+  var availLine = document.getElementById('avail-line');
+  var BASE = 'Jan 15 – Jan 18 · 6 guests · ';
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.chips .chip'));
+  function applyFilter(f){
+    var shown = 0, avail = 0;
+    cards.forEach(function(c){
+      var match = f === 'all' || (c.dataset.tags || '').split(' ').indexOf(f) > -1;
+      c.classList.toggle('hide', !match);
+      if(match){
+        shown++;
+        if(!c.classList.contains('unavailable')) avail++;
+      }
+    });
+    if(availLine){
+      availLine.textContent = BASE + (f === 'all'
+        ? shown + ' of ' + cards.length + ' homes · ' + avail + ' available · totals include taxes and fees'
+        : shown + ' of ' + cards.length + ' homes match · ' + avail + ' available for your dates · totals include taxes and fees');
+    }
+  }
+  chips.forEach(function(ch){
+    ch.addEventListener('click', function(){
+      chips.forEach(function(o){ o.classList.remove('on'); });
+      ch.classList.add('on');
+      applyFilter(ch.dataset.f);
+    });
+  });
+
+  // ---- review carousel arrows ----
+  var revs = document.getElementById('revs');
+  var prev = document.getElementById('revPrev');
+  var next = document.getElementById('revNext');
+  if(revs && prev && next){
+    var step = function(){ var c = revs.querySelector('.rev'); return c ? c.getBoundingClientRect().width + 16 : 400; };
+    prev.addEventListener('click', function(){ revs.scrollBy({ left: -step(), behavior: 'smooth' }); });
+    next.addEventListener('click', function(){ revs.scrollBy({ left: step(), behavior: 'smooth' }); });
+    var updateArrows = function(){
+      prev.disabled = revs.scrollLeft <= 4;
+      next.disabled = revs.scrollLeft + revs.clientWidth >= revs.scrollWidth - 4;
+    };
+    revs.addEventListener('scroll', updateArrows, { passive: true });
+    window.addEventListener('resize', updateArrows);
+    updateArrows();
+  }
+})();
+</script>
+</body>
+</html>
