@@ -1,11 +1,11 @@
 /* Mockup B: Editorial. Warm sand neutrals, serif display type, one terracotta accent for Search / View home. */
 .B-page { position: relative; --acc: #b4532a; --ink: #1d1a17; --line: #e6dfd5; --sand: #f6f1ea; --muted: #6b635a;
   font-family: "Inter", system-ui, -apple-system, sans-serif; color: var(--ink); background: #fffdfa; font-size: 15px; line-height: 1.5; }
-.B-page h1, .B-page h2, .B-page h3 { margin: 0; }
-.B-page h2 { font-family: "Marcellus", Georgia, serif; font-weight: 400; font-size: 28px; line-height: 1.2; letter-spacing: 0; }
+.B-page h1, .B-page h2, .B-page h3 { margin: 0; font-family: inherit; letter-spacing: -0.01em; }
+.B-page h2 { font-weight: 600; font-size: 24px; line-height: 1.2; }
 .B-mock { margin: 0; background: var(--ink); color: #fff; font-size: 12px; text-align: center; padding: 6px 16px; }
 .B-top { position: absolute; z-index: 3; top: 26px; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; max-width: 1180px; margin: 0 auto; }
-.B-brand { font-family: "Marcellus", Georgia, serif; font-size: 21px; color: #fff; text-decoration: none; white-space: nowrap; }
+.B-brand { font-family: "Marcellus", Georgia, serif; font-size: 20px; color: #fff; text-decoration: none; white-space: nowrap; }
 .B-brand span { font-family: "Inter", sans-serif; font-size: 9px; letter-spacing: .18em; margin-left: 6px; vertical-align: 3px; font-weight: 500; }
 .B-ask { color: #fff; font-size: 14px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
 
@@ -14,7 +14,7 @@
 .B-heroShade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,.05) 35%, rgba(0,0,0,.55) 100%); }
 .B-heroText { position: relative; padding: 0 16px 76px; max-width: 1180px; margin: 0 auto; width: 100%; box-sizing: border-box; }
 .B-eyebrow { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 8px; opacity: .9; }
-.B-hero h1 { font-family: "Marcellus", Georgia, serif; font-weight: 400; font-size: 38px; line-height: 1.1; text-shadow: 0 2px 16px rgba(0,0,0,.3); }
+.B-hero h1 { font-weight: 600; font-size: 32px; line-height: 1.1; text-shadow: 0 2px 16px rgba(0,0,0,.3); }
 .B-heroText > p:last-child { margin: 10px 0 0; font-size: 17px; text-shadow: 0 1px 8px rgba(0,0,0,.35); }
 .B-searchWrap { position: relative; z-index: 4; max-width: 920px; margin: -52px auto 0; padding: 0 16px; }
 
@@ -39,8 +39,8 @@
 .B-photo:only-child { width: 100%; }
 .B-photo img { object-fit: cover; }
 .B-info { padding: 18px 18px 20px; }
-.B-fit { margin: 0 0 4px; color: var(--acc); font-size: 13px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; }
-.B-info h3 { font-family: "Marcellus", Georgia, serif; font-weight: 400; font-size: 23px; line-height: 1.25; }
+.B-fit { margin: 0 0 4px; color: var(--acc); font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.B-info h3 { font-weight: 600; font-size: 19px; line-height: 1.3; }
 .B-info h3 a { color: inherit; text-decoration: none; } .B-info h3 a:hover { text-decoration: underline; }
 .B-meta { margin: 6px 0 0; font-size: 14.5px; } .B-star span { color: var(--muted); } .B-new { font-weight: 600; }
 .B-specs { margin: 2px 0 0; color: var(--muted); font-size: 14.5px; }
@@ -69,8 +69,8 @@
 .B-steps { max-width: 1180px; margin: 0 auto; padding: 44px 16px 8px; }
 .B-steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; counter-reset: s; }
 .B-steps li { position: relative; padding-left: 52px; }
-.B-num { position: absolute; left: 0; top: 0; width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--acc); color: var(--acc); display: grid; place-items: center; font-weight: 700; }
-.B-steps h3 { font-size: 16.5px; font-weight: 650; } .B-steps p { margin: 4px 0 0; color: var(--muted); font-size: 14.5px; }
+.B-num { position: absolute; left: 0; top: 0; width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--acc); color: var(--acc); display: grid; place-items: center; font-weight: 600; }
+.B-steps h3 { font-size: 16.5px; font-weight: 600; } .B-steps p { margin: 4px 0 0; color: var(--muted); font-size: 14.5px; }
 
 .B-host { padding: 44px 16px 0; }
 .B-hostIn { max-width: 1148px; margin: 0 auto; background: var(--ink); color: #f3ede5; border-radius: 22px; padding: 28px 22px; }
@@ -85,14 +85,14 @@
 .B-foot .F-brand span { font-family: "Inter", sans-serif; font-size: 8px; letter-spacing: .18em; margin-left: 5px; vertical-align: 3px; }
 
 @media (min-width: 900px) {
-  .B-hero { min-height: 560px; } .B-hero h1 { font-size: 60px; } .B-heroText { padding: 0 24px 96px; }
+  .B-hero { min-height: 560px; } .B-hero h1 { font-size: 48px; } .B-heroText { padding: 0 24px 96px; }
   .B-top { padding: 18px 24px; }
   .B-searchWrap { margin-top: -40px; }
   .B-trust { padding-top: 44px; }
   .B-trustIn { grid-template-columns: 1.1fr 1fr; align-items: center; padding: 28px 32px; gap: 28px; }
   .B-trust ul { grid-template-columns: 1fr 1fr; clear: none; }
   .B-homes, .B-compare, .B-steps { padding-left: 24px; padding-right: 24px; }
-  .B-page h2 { font-size: 34px; }
+  .B-page h2 { font-size: 28px; }
   .B-card { display: grid; grid-template-columns: 46% 1fr; }
   .B-photos { height: 100%; }
   .B-photo { width: 100%; aspect-ratio: auto; min-height: 340px; }
