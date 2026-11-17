@@ -16,7 +16,11 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok(!/Test address/.test(await body()) && (await page.locator(".ST-lockNote").count()) === 1, `${tag}: arrival details locked before signing and verifying`);
   // sign
   await page.click("text=Review and sign");
-  ok(await page.locator('button:has-text("Sign agreement")').isDisabled(), `${tag}: can't sign without agreeing and typing a name`);
+  ok(await page.locator('button:has-text("Open agreement")').isDisabled(), `${tag}: agreement won't open without a full name`);
+  await page.fill(".ST-field input", "Test Guest"); await page.click('button:has-text("Open agreement")');
+  // No SignWell key on this local server -> the test-only fallback signing appears
+  await page.waitForSelector(".ST-check input", { timeout: 8000 });
+  ok(await page.locator('button:has-text("Sign agreement")').isDisabled(), `${tag}: (no SignWell key) fallback can't sign without agreeing`);
   await page.check(".ST-check input"); await page.fill(".ST-field input", "Test Guest");
   await page.click('button:has-text("Sign agreement")');
   ok(/Signed by Test Guest/.test(await body()) && !/Test address/.test(await body()), `${tag}: signed, still locked until ID check`);

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { StayData } from "@/content/stayDemo";
 
 /**
@@ -9,7 +9,7 @@ import type { StayData } from "@/content/stayDemo";
  *  ->  4 Enjoy your stay (house rules, messages).
  * In this test version the state lives in this browser only (localStorage), and nothing is sent or charged.
  */
-type State = { signedAt?: string; signedName?: string; verifiedAt?: string; messages: { from: "guest" | "note"; text: string; at: string }[] };
+type State = { signedAt?: string; signedName?: string; signDoc?: string; verifiedAt?: string; messages: { from: "guest" | "note"; text: string; at: string }[] };
 const fresh = (): State => ({ messages: [] });
 const KEY = (t: string) => `ph-stay-${t}`;
 const fmtDay = (iso: string, o: Intl.DateTimeFormatOptions) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { ...o, timeZone: "UTC" });
@@ -34,6 +34,7 @@ const I = {
 
 export function Portal({ stay }: { stay: StayData }) {
   const [s, setS] = useState<State>(fresh);
+  const sRef = useRef(s); sRef.current = s;
   const [ready, setReady] = useState(false);
   const [signing, setSigning] = useState(false);
   const [idOpen, setIdOpen] = useState(false);
@@ -49,6 +50,39 @@ export function Portal({ stay }: { stay: StayData }) {
   const co = fmtDay(stay.checkOut, { weekday: "short", month: "short", day: "numeric" });
   const ciMorning = fmtDay(stay.checkIn, { weekday: "long", month: "long", day: "numeric" });
   const sign = () => { if (!agree || name.trim().length < 3) return; save({ ...s, signedAt: nowText(), signedName: name.trim() }); setSigning(false); };
+  // SignWell (test mode): create the agreement on the server, show it embedded here, then confirm completion with the server.
+  const [esign, setEsign] = useState<"idle" | "loading" | "open" | "checking" | "fallback" | "error">("idle");
+  const [esignMsg, setEsignMsg] = useState("");
+  const loadScript = () => new Promise<void>((res, rej) => {
+    if ((window as any).SignWellEmbed) return res();
+    const el = document.createElement("script"); el.src = "https://static.signwell.com/assets/embedded.js"; el.async = true;
+    el.onload = () => res(); el.onerror = () => rej(new Error("script")); document.head.appendChild(el);
+  });
+  const confirmSigned = async (doc: string, who: string) => {
+    setEsign("checking");
+    for (let i = 0; i < 10; i++) {
+      const r = await fetch(`/api/stay/${stay.token}/agreement?doc=${doc}`, { cache: "no-store" }).then((x) => x.json()).catch(() => null);
+      if (r?.completed) { save({ ...sRef.current, signedAt: nowText(), signedName: who, signDoc: doc }); setSigning(false); setEsign("idle"); return; }
+      await new Promise((w) => setTimeout(w, 1500));
+    }
+    setEsign("error"); setEsignMsg("We couldn't confirm your signature yet. Please refresh in a minute.");
+  };
+  const openAgreement = async () => {
+    const who = name.trim(); if (who.length < 3) return;
+    setEsign("loading"); setEsignMsg("");
+    const r = await fetch(`/api/stay/${stay.token}/agreement`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: who }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 503 && j.fallback) { setEsign("fallback"); return; }
+    if (!r.ok || !j.url) { setEsign("error"); setEsignMsg(j.error ?? "We couldn't open the agreement."); return; }
+    try { await loadScript(); } catch { setEsign("error"); setEsignMsg("The signing window couldn't load. Please try again."); return; }
+    setEsign("open");
+    const Embed = (window as any).SignWellEmbed;
+    new Embed({ url: j.url, containerId: "st-sign-frame", allowDecline: false, showHeader: false, events: {
+      completed: () => { void confirmSigned(j.documentId, who); },
+      closed: () => setEsign((x) => (x === "open" ? "idle" : x)),
+      error: () => { setEsign("error"); setEsignMsg("Something went wrong in the signing window."); },
+    } }).open();
+  };
   const send = () => { const t = draft.trim(); if (!t) return; save({ ...s, messages: [...s.messages, { from: "guest", text: t, at: nowText() }] }); setDraft(""); };
 
   return (
@@ -95,9 +129,24 @@ export function Portal({ stay }: { stay: StayData }) {
             <span className="ST-taskIc"><Ico d={signed ? I.check : I.pen} /></span>
             <div className="ST-taskBody">
               <h3>Rental agreement</h3>
-              <p className="ST-dim">{signed ? `Signed by ${s.signedName} · ${s.signedAt}` : "Review the agreement and sign online."}</p>
+              <p className="ST-dim">{signed ? `Signed by ${s.signedName} · ${s.signedAt}${s.signDoc ? " · SignWell test document" : ""}` : "Review the agreement and sign online."}</p>
               {!signed && !signing && <button className="ST-btn" type="button" onClick={() => setSigning(true)} disabled={!ready}>Review and sign</button>}
-              {!signed && signing && (
+              {!signed && signing && esign !== "fallback" && (
+                <div className="ST-panel">
+                  <p>You'll review and sign the agreement right here. It includes your reservation details and this home's rules. <a href="/rental-agreement" target="_blank" rel="noopener">Read the full agreement first</a> if you'd like.</p>
+                  <p className="ST-note">Test portal: this opens a SignWell <b>test document</b>, which isn't binding.</p>
+                  <label className="ST-field">Your full name (as on your ID)<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
+                  <div className="ST-row">
+                    <button className="ST-btn" type="button" onClick={openAgreement} disabled={name.trim().length < 3 || esign === "loading" || esign === "open" || esign === "checking"}>
+                      {esign === "loading" ? "Opening…" : esign === "checking" ? "Confirming…" : "Open agreement"}
+                    </button>
+                    <button className="ST-link" type="button" onClick={() => { setSigning(false); setEsign("idle"); }}>Cancel</button>
+                  </div>
+                  {esignMsg && <p className="ST-err" role="alert">{esignMsg}</p>}
+                  <div id="st-sign-frame" className={`ST-frame${esign === "open" ? " is-open" : ""}`} />
+                </div>
+              )}
+              {!signed && signing && esign === "fallback" && (
                 <div className="ST-panel">
                   <p>Read the full <a href="/rental-agreement" target="_blank" rel="noopener">rental agreement</a> (opens in a new tab). In the real portal, signing happens with our e-signature service; this test only records it in your browser.</p>
                   <label className="ST-check"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> I have read and agree to the rental agreement.</label>
