@@ -322,10 +322,10 @@
 .F-tl.is-in .F-tlMark, html:not(.rv-ready) .F-tlMark { transform: scale(1); }
 .F-tl.is-in .F-tlRail, html:not(.rv-ready) .F-tlRail { transform: none; }
 @media (min-width: 900px) {
-  .F-tl { grid-template-columns: repeat(5, 1fr); gap: 0 24px; }
+  .F-tl { grid-template-columns: repeat(4, 1fr); gap: 0 32px; }
   .F-tl li { display: flex; flex-direction: column; }
   .F-tlTrack { flex-direction: row; height: 28px; padding: 0; }
-  .F-tlRail { height: 1.5px; width: auto; margin: 0 -24px 0 8px; transform: scaleX(0); transform-origin: left; }
+  .F-tlRail { height: 1.5px; width: auto; margin: 0 -32px 0 8px; transform: scaleX(0); transform-origin: left; }
   .F-tl.is-in .F-tlRail, html:not(.rv-ready) .F-tlRail { transform: none; }
   .F-tl h3 { margin-top: 4px; }
 }

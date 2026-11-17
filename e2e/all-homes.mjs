@@ -261,8 +261,9 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   const hidden = await page.evaluate(() => { const el = document.querySelector(".F-tl"); return getComputedStyle(el).opacity; });
   ok(hidden === "0", `${tag}: timeline waits below the fold (reveal on scroll)`);
   await page.locator(".F-tl").scrollIntoViewIfNeeded(); await page.waitForTimeout(2600);
+  ok(JSON.stringify(await page.locator(".F-tl h3").allInnerTexts()) === JSON.stringify(["Book your home", "Confirm your reservation", "Get ready for arrival", "Enjoy your stay"]), `${tag}: Oscar's 4 booking steps`);
   ok(await page.evaluate(() => getComputedStyle(document.querySelector(".F-tl")).opacity === "1" && getComputedStyle(document.querySelector(".F-tl li:last-child .F-tlMark")).transform !== "matrix(0, 0, 0, 0, 0, 0)"), `${tag}: timeline revealed, markers popped in`);
-  ok((await page.locator(".F-tlWhen").allInnerTexts()).join("|").toLowerCase() === "booking day|within 24 hours|once you're verified|check-in morning|during your stay", `${tag}: timeline steps`);
+  ok((await page.locator(".F-tlWhen").allInnerTexts()).join("|").toLowerCase() === "step 1|step 2|step 3|step 4", `${tag}: timeline steps`);
   await page.locator("#locations").scrollIntoViewIfNeeded(); await page.waitForTimeout(1200);
   ok((await page.locator(".C-pin").count()) === 5 && (await page.locator(".F-hood").count()) === 3, `${tag}: map with 5 pins + neighborhood list`);
   if (w > 760) ok(await page.evaluate(() => { const l = document.querySelector(".F-hoods").getBoundingClientRect(), m = document.querySelector(".F-mapCard").getBoundingClientRect(); return l.right <= m.left; }), `${tag}: list left, map right`);
