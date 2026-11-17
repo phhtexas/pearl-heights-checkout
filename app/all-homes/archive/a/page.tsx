@@ -1,21 +1,21 @@
 import Image from "next/image";
 import { homeCards } from "@/content/allHomes";
-import { Compare, Footer, HOST, Icon, STEPS, TRUST, mockMeta } from "../shared";
+import { Compare, Footer, HOST, Icon, STEPS, TRUST, mockMeta } from "../../shared";
 import { HomesA } from "./HomesA";
-import "../search.css";
+import "../../search.css";
 import "./a.css";
 
-/** All Homes, mockup A ("Classic search"): Airbnb-familiar layout. Prototype: noindex, labeled. */
-export const metadata = mockMeta("A");
+/** ARCHIVED (Oscar, Nov 16: keep working on C). All Homes, mockup A ("Classic search"): Airbnb-familiar layout. Prototype: noindex, labeled. */
+export const metadata = { ...mockMeta("A"), title: `Archived mockup A | Pearl Heights Homes` };
 export const dynamic = "force-static";
 
 export default function Page() {
   const homes = homeCards();
   return (
     <div className="A-page">
-      <aside className="A-mock" aria-label="Prototype label">Mockup A · Classic search · prototype, not linked from the site</aside>
+      <aside className="A-mock" aria-label="Archived mockup">Archived · Mockup A (Classic search) · kept for reference · <a href="/all-homes/c" style={{ color: "#fff" }}>Current version: Mockup C</a></aside>
       <header className="A-top">
-        <a className="A-brand" href="/all-homes/a">Pearl Heights <span>HOMES</span></a>
+        <a className="A-brand" href="/all-homes/archive/a">Pearl Heights <span>HOMES</span></a>
         <a className="A-ask" href="mailto:bookings@thepearlheightshomes.com">Ask a question</a>
       </header>
       <main>

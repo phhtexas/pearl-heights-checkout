@@ -1,8 +1,8 @@
 "use client";
 import Image from "next/image";
 import type { HomeCard } from "@/content/allHomes";
-import { SearchBar } from "../SearchBar";
-import { money, shortDate, useStays } from "../useStays";
+import { SearchBar } from "../../SearchBar";
+import { money, shortDate, useStays } from "../../useStays";
 
 const specs = (h: HomeCard) => `${h.guests} guests · ${h.bedrooms} bedrooms · ${h.beds} beds · ${h.baths} bath${h.baths === 1 ? "" : "s"}`;
 

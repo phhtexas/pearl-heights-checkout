@@ -1,13 +1,13 @@
 import Image from "next/image";
 import { homeCards } from "@/content/allHomes";
 import { HOMES } from "@/content/homes";
-import { Compare, Footer, HOST, Icon, STEPS, TRUST, mockMeta } from "../shared";
+import { Compare, Footer, HOST, Icon, STEPS, TRUST, mockMeta } from "../../shared";
 import { HomesB } from "./HomesB";
-import "../search.css";
+import "../../search.css";
 import "./b.css";
 
-/** All Homes, mockup B ("Editorial"): photo-led, host-forward, warm accent. Prototype: noindex, labeled. */
-export const metadata = mockMeta("B");
+/** ARCHIVED (Oscar, Nov 16: keep working on C). All Homes, mockup B ("Editorial"): photo-led, host-forward, warm accent. Prototype: noindex, labeled. */
+export const metadata = { ...mockMeta("B"), title: `Archived mockup B | Pearl Heights Homes` };
 export const dynamic = "force-static";
 
 export default function Page() {
@@ -28,9 +28,9 @@ export default function Page() {
   );
   return (
     <div className="B-page">
-      <aside className="B-mock" aria-label="Prototype label">Mockup B · Editorial · prototype, not linked from the site</aside>
+      <aside className="B-mock" aria-label="Archived mockup">Archived · Mockup B (Editorial) · kept for reference · <a href="/all-homes/c" style={{ color: "#fff" }}>Current version: Mockup C</a></aside>
       <header className="B-top">
-        <a className="B-brand" href="/all-homes/b">Pearl Heights <span>HOMES</span></a>
+        <a className="B-brand" href="/all-homes/archive/b">Pearl Heights <span>HOMES</span></a>
         <a className="B-ask" href="mailto:bookings@thepearlheightshomes.com">Ask a question</a>
       </header>
       <main>

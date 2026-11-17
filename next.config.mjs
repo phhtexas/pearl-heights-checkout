@@ -2,6 +2,13 @@
 export default {
   // Put CSS in the page itself so the first paint doesn't wait on separate style files (note 150 item 4, slow-4G LCP).
   experimental: { inlineCss: true },
+  // Mockups A and B were archived (Oscar, Nov 16); old links still work.
+  async redirects() {
+    return [
+      { source: "/all-homes/a", destination: "/all-homes/archive/a", permanent: false },
+      { source: "/all-homes/b", destination: "/all-homes/archive/b", permanent: false },
+    ];
+  },
   images: {
     // Listing photos come from the home's Hospitable direct-booking gallery.
     // Host photo is self-hosted in /public (note 155), so no Airbnb CDN.

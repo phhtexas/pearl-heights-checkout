@@ -1,8 +1,8 @@
 "use client";
 import Image from "next/image";
 import type { HomeCard } from "@/content/allHomes";
-import { SearchBar } from "../SearchBar";
-import { money, shortDate, useStays } from "../useStays";
+import { SearchBar } from "../../SearchBar";
+import { money, shortDate, useStays } from "../../useStays";
 
 /** Mockup B: photo-led hero with a floating search card, "pick by what matters" chips, wide editorial cards. */
 export function HomesB({ homes, hero, trust }: { homes: HomeCard[]; hero: { src: string; alt: string }; trust: React.ReactNode }) {

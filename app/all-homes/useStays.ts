@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/** Shared by mockups A and B: dates + guests, one read-only price check for all five homes, links that carry the search. */
+/** Shared by the All Homes mockups (C current; A and B archived): dates + guests, one read-only price check for all five homes, links that carry the search. */
 export type Result = { key: string; ok: boolean; total?: number; nights?: number; reason?: string };
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
