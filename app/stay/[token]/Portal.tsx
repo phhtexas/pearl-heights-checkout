@@ -39,7 +39,8 @@ export function Portal({ stay }: { stay: StayData }) {
   const [signing, setSigning] = useState(false);
   const [idOpen, setIdOpen] = useState(false);
   const [agree, setAgree] = useState(false);
-  const [name, setName] = useState("");
+  // Oscar, Nov 17 (option 2): prefilled with the reservation holder's name from the booking; editable to fix a typo.
+  const [name, setName] = useState(stay.holder);
   const [draft, setDraft] = useState("");
   useEffect(() => { try { const raw = localStorage.getItem(KEY(stay.token)); if (raw) setS({ ...fresh(), ...JSON.parse(raw) }); } catch { /* private mode */ } setReady(true); }, [stay.token]);
   const save = (n: State) => { setS(n); try { localStorage.setItem(KEY(stay.token), JSON.stringify(n)); } catch { /* ignore */ } };
@@ -133,9 +134,9 @@ export function Portal({ stay }: { stay: StayData }) {
               {!signed && !signing && <button className="ST-btn" type="button" onClick={() => setSigning(true)} disabled={!ready}>Review and sign</button>}
               {!signed && signing && esign !== "fallback" && (
                 <div className="ST-panel">
-                  <p>You'll review and sign the agreement right here. It includes your reservation details and this home's rules. <a href="/rental-agreement" target="_blank" rel="noopener">Read the full agreement first</a> if you'd like.</p>
-                  <p className="ST-note">Test portal: this opens a SignWell <b>test document</b>, which isn't binding.</p>
-                  <label className="ST-field">Your full name (as on your ID)<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
+                  <p>The agreement opens right here with your reservation details and this home's rules. You'll check 6 boxes and sign.</p>
+                  <label className="ST-field">Reservation holder<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
+                  <p className="ST-hint">From your reservation. Fix it here if it's misspelled; it should match your ID.</p>
                   <div className="ST-row">
                     <button className="ST-btn" type="button" onClick={openAgreement} disabled={name.trim().length < 3 || esign === "loading" || esign === "open" || esign === "checking"}>
                       {esign === "loading" ? "Opening…" : esign === "checking" ? "Confirming…" : "Open agreement"}
@@ -143,6 +144,7 @@ export function Portal({ stay }: { stay: StayData }) {
                     <button className="ST-link" type="button" onClick={() => { setSigning(false); setEsign("idle"); }}>Cancel</button>
                   </div>
                   {esignMsg && <p className="ST-err" role="alert">{esignMsg}</p>}
+                  <p className="ST-testLine">Test portal: opens a SignWell test document (not binding).</p>
                   <div id="st-sign-frame" className={`ST-frame${esign === "open" ? " is-open" : ""}`} />
                 </div>
               )}

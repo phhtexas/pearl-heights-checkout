@@ -16,7 +16,8 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok(!/Test address/.test(await body()) && (await page.locator(".ST-lockNote").count()) === 1, `${tag}: arrival details locked before signing and verifying`);
   // sign
   await page.click("text=Review and sign");
-  ok(await page.locator('button:has-text("Open agreement")').isDisabled(), `${tag}: agreement won't open without a full name`);
+  ok((await page.locator(".ST-field input").inputValue()) === "Test Guest", `${tag}: name prefilled from the reservation`);
+  await page.fill(".ST-field input", ""); ok(await page.locator('button:has-text("Open agreement")').isDisabled(), `${tag}: agreement won't open without a full name`);
   await page.fill(".ST-field input", "Test Guest"); await page.click('button:has-text("Open agreement")');
   // No SignWell key on this local server -> the test-only fallback signing appears
   await page.waitForSelector(".ST-check input", { timeout: 8000 });

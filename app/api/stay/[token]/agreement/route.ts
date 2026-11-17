@@ -36,7 +36,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
       checkIn: stay.checkIn, checkOut: stay.checkOut, guests: { adults: stay.guests.adults, children: stay.guests.children, infants: 0 },
       price: { total: "TEST $0.00", paidNow: "TEST $0.00" }, testMode: true,
     });
-    const doc = await createSigningDocument({ name: `TEST Rental Agreement ${stay.code}`, html, signer: { name, email: "test-guest@example.com" }, testMode: true, metadata: { token, booking: stay.code } });
+    const doc = await createSigningDocument({ name: `TEST Rental Agreement ${stay.code}`, html, signer: { name, email: "test-guest@example.com" }, testMode: true, metadata: { token, booking: stay.code, holder_name_match: name.toLowerCase().replace(/\s+/g, " ") === stay.holder.toLowerCase() ? "yes" : "edited" } });
     return NextResponse.json({ documentId: doc.documentId, url: doc.embeddedSigningUrl, testMode: true }, { headers: noStore });
   } catch (e) {
     if (e instanceof ESignUnavailable) return NextResponse.json({ error: "Signing isn't set up yet.", fallback: true }, { status: 503, headers: noStore });
