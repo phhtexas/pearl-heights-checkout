@@ -11,6 +11,7 @@ import { ESignUnavailable, createSigningDocument, getDocumentStatus } from "@/se
  * GET ?doc=<id> -> asks SignWell whether that document is completed (the browser's "completed" event isn't trusted).
  */
 export const dynamic = "force-dynamic";
+const SANDBOX = () => process.env.NEXT_PUBLIC_SANDBOX === "true";
 const noStore = { "Cache-Control": "no-store" };
 
 // Best-effort throttle per server instance (test documents aren't billed, but keep the demo from being abused).
@@ -24,11 +25,11 @@ function throttled(req: Request): boolean {
 
 export async function POST(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  if (token !== "demo") return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
+  if (token !== "demo" || !SANDBOX()) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
   if (throttled(req)) return NextResponse.json({ error: "Too many tries. Please wait a few minutes." }, { status: 429, headers: noStore });
   let name = "";
   try { name = String((await req.json())?.name ?? "").trim(); } catch { /* bad body */ }
-  if (name.length < 3 || name.length > 80 || /[<>{}\[\]]/.test(name)) return NextResponse.json({ error: "Please enter your full name." }, { status: 400, headers: noStore });
+  if (name.length < 1 || name.length > 80 || /[<>{}\[\]]/.test(name)) return NextResponse.json({ error: "Please enter your full name." }, { status: 400, headers: noStore });
   const stay = demoStay();
   try {
     const html = agreementHtml({
@@ -36,7 +37,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
       checkIn: stay.checkIn, checkOut: stay.checkOut, guests: { adults: stay.guests.adults, children: stay.guests.children, infants: 0 },
       price: { total: "TEST $0.00", paidNow: "TEST $0.00" }, testMode: true,
     });
-    const doc = await createSigningDocument({ name: `TEST Rental Agreement ${stay.code}`, html, signer: { name, email: "test-guest@example.com" }, testMode: true, metadata: { token, booking: stay.code, holder_name_match: name.toLowerCase().replace(/\s+/g, " ") === stay.holder.toLowerCase() ? "yes" : "edited" } });
+    const doc = await createSigningDocument({ name: `TEST Rental Agreement ${stay.code}`, html, signer: { name, email: "test-guest@example.com" }, testMode: true, redirectUrl: `${new URL(req.url).origin}/stay/${token}?signed=1`, metadata: { token, booking: stay.code, holder_name_match: name.toLowerCase().replace(/\s+/g, " ") === stay.holder.toLowerCase() ? "yes" : "edited" } });
     return NextResponse.json({ documentId: doc.documentId, url: doc.embeddedSigningUrl, testMode: true }, { headers: noStore });
   } catch (e) {
     if (e instanceof ESignUnavailable) return NextResponse.json({ error: "Signing isn't set up yet.", fallback: true }, { status: 503, headers: noStore });
@@ -48,11 +49,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
 export async function GET(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const doc = new URL(req.url).searchParams.get("doc") ?? "";
-  if (token !== "demo" || !/^[0-9a-f-]{36}$/i.test(doc)) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
+  if (token !== "demo" || !SANDBOX() || !/^[0-9a-f-]{36}$/i.test(doc)) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
   try {
     const s = await getDocumentStatus(doc);
     if (s.metadata?.token !== token || !s.testMode) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
-    return NextResponse.json({ completed: s.completed, status: s.status }, { headers: noStore });
+    return NextResponse.json({ completed: s.completed, status: s.status, signedAt: s.completed ? s.signedAt : undefined }, { headers: noStore });
   } catch (e) {
     if (e instanceof ESignUnavailable) return NextResponse.json({ error: "Signing isn't set up yet.", fallback: true }, { status: 503, headers: noStore });
     console.error("[stay/agreement] status failed", (e as Error).message);

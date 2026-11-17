@@ -98,3 +98,9 @@
 
 .ST-hint { margin: 6px 0 0; font-size: 13.5px; color: var(--muted); }
 .ST-testLine { margin: 10px 0 0; font-size: 12.5px; color: #8a4b12; }
+/* signed confirmation + step progress */
+.ST-signed { margin-top: 4px; }
+.ST-signedLine { margin: 0; font-weight: 600; color: #0f5f49; }
+.ST-dl { display: inline-block; margin-top: 6px; font-weight: 600; }
+.ST-sub { display: block; font-size: 11.5px; color: var(--acc); font-weight: 600; }
+.ST-steps li.is-half:not(:last-child)::after { background: linear-gradient(90deg, var(--acc) 50%, var(--line) 50%); }

@@ -27,7 +27,7 @@ async function call(path: string, init: RequestInit, env: Record<string, string 
 }
 
 export async function createSigningDocument(o: {
-  name: string; html: string; signer: { name: string; email: string }; testMode: boolean; metadata: Record<string, string>;
+  name: string; html: string; signer: { name: string; email: string }; testMode: boolean; metadata: Record<string, string>; redirectUrl?: string;
 }, env: Record<string, string | undefined> = process.env, fetchFn: typeof fetch = fetch): Promise<SigningDoc> {
   const body = {
     test_mode: o.testMode,
@@ -42,6 +42,7 @@ export async function createSigningDocument(o: {
     with_signature_page: false,
     custom_requester_name: "Pearl Heights Homes",
     metadata: o.metadata,
+    ...(o.redirectUrl ? { redirect_url: o.redirectUrl } : {}),
   };
   const doc = await call("/documents", { method: "POST", body: JSON.stringify(body) }, env, fetchFn);
   const url = doc?.recipients?.[0]?.embedded_signing_url;
@@ -54,4 +55,12 @@ export async function getDocumentStatus(id: string, env: Record<string, string |
   const d = await call(`/documents/${id}`, { method: "GET" }, env, fetchFn);
   const status = String(d?.status ?? "");
   return { id: String(d?.id ?? id), status, completed: /^complet/i.test(status), testMode: !!d?.test_mode, signedAt: d?.updated_at ?? undefined, metadata: (d?.metadata ?? {}) as Record<string, string> };
+}
+
+/** The signed PDF (with SignWell's audit page). Only for completed documents. */
+export async function getCompletedPdf(id: string, env: Record<string, string | undefined> = process.env, fetchFn: typeof fetch = fetch): Promise<ArrayBuffer> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Bad document id");
+  const res = await fetchFn(`${BASE}/documents/${id}/completed_pdf?audit_page=true`, { headers: { "X-Api-Key": key(env), Accept: "application/pdf" }, cache: "no-store" });
+  if (!res.ok) throw new Error(`SignWell completed_pdf failed: ${res.status}`);
+  return res.arrayBuffer();
 }

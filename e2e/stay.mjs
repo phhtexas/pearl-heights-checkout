@@ -9,22 +9,35 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   const res = await page.goto(`${BASE}/stay/demo`);
   ok(res.status() === 200, `${tag}: /stay/demo loads`);
   ok(/noindex/.test(await page.locator('meta[name="robots"]').getAttribute("content") ?? ""), `${tag}: portal is noindex`);
-  ok(/Test portal/.test(await page.locator(".ST-test").innerText()), `${tag}: labeled as a test portal`);
+  ok(/Sandbox mode/.test(await page.locator(".ST-test").innerText()), `${tag}: labeled as sandbox`);
   ok(/Due by/.test(await page.locator(".ST-due").innerText()), `${tag}: shows the sign-and-verify deadline`);
   ok((await page.locator(".ST-steps .is-now").innerText()).includes("Confirm your reservation"), `${tag}: current step is Confirm your reservation`);
   const body = () => page.evaluate(() => document.body.innerText);
   ok(!/Test address/.test(await body()) && (await page.locator(".ST-lockNote").count()) === 1, `${tag}: arrival details locked before signing and verifying`);
-  // sign
-  await page.click("text=Review and sign");
+  // sign: copy, name prefilled, button disabled until a name, "Not now" keeps the name
+  await page.click("text=Review & sign");
+  const panel = await page.locator(".ST-panel").innerText();
+  ok(/covers your reservation details, house rules, and cancellation terms/.test(panel) && /Full legal name — exactly as it appears on your ID/.test(panel) && /Preview the full agreement/.test(panel), `${tag}: new agreement copy`);
+  ok(/Sandbox mode — this test document isn't legally binding\./.test(panel), `${tag}: sandbox callout shows in a sandbox build`);
   ok((await page.locator(".ST-field input").inputValue()) === "Test Guest", `${tag}: name prefilled from the reservation`);
-  await page.fill(".ST-field input", ""); ok(await page.locator('button:has-text("Open agreement")').isDisabled(), `${tag}: agreement won't open without a full name`);
-  await page.fill(".ST-field input", "Test Guest"); await page.click('button:has-text("Open agreement")');
-  // No SignWell key on this local server -> the test-only fallback signing appears
-  await page.waitForSelector(".ST-check input", { timeout: 8000 });
-  ok(await page.locator('button:has-text("Sign agreement")').isDisabled(), `${tag}: (no SignWell key) fallback can't sign without agreeing`);
-  await page.check(".ST-check input"); await page.fill(".ST-field input", "Test Guest");
-  await page.click('button:has-text("Sign agreement")');
-  ok(/Signed by Test Guest/.test(await body()) && !/Test address/.test(await body()), `${tag}: signed, still locked until ID check`);
+  await page.fill(".ST-field input", "   "); ok(await page.locator('.ST-panel button:has-text("Review & sign")').isDisabled(), `${tag}: Review & sign disabled with a blank name`);
+  await page.fill(".ST-field input", "Oscar Pena"); ok(!(await page.locator('.ST-panel button:has-text("Review & sign")').isDisabled()), `${tag}: enabled right after a name is entered`);
+  await page.click("text=Not now"); await page.click("text=Review & sign");
+  ok((await page.locator(".ST-field input").inputValue()) === "Oscar Pena", `${tag}: Not now keeps the entered name`);
+  // SignWell path (mocked here): opens in a NEW TAB, then this page confirms with the server when the guest comes back
+  await page.route("**/api/stay/demo/agreement", (r) => r.request().method() === "POST"
+    ? r.fulfill({ json: { documentId: "a692e1ce-9929-4541-adc7-61932bab39d3", url: "https://example.org/sign-test", testMode: true } }) : r.continue());
+  await page.route("**/api/stay/demo/agreement?doc=*", (r) => r.fulfill({ json: { completed: true, status: "Completed", signedAt: "2026-11-17T22:30:00Z" } }));
+  await page.context().route("https://example.org/**", (r) => r.fulfill({ body: "<p>signwell test</p>", contentType: "text/html" }));
+  const [popup] = await Promise.all([page.context().waitForEvent("page"), page.click('.ST-panel button:has-text("Review & sign")')]);
+  await popup.waitForURL(/example\.org/, { timeout: 8000 }).catch(() => {});
+  ok(/example\.org\/sign-test/.test(popup.url()), `${tag}: Review & sign opens SignWell in a new tab (${popup.url()})`);
+  await popup.close(); await page.bringToFront(); await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await page.waitForSelector(".ST-signed", { timeout: 8000 });
+  ok((await page.locator(".ST-signedLine").innerText()) === "Agreement signed — November 17, 2026" && (await page.locator(".ST-task").first().evaluate((e) => e.classList.contains("is-done"))), `${tag}: confirmation with green check and the signed date`);
+  ok((await page.locator(".ST-dl").getAttribute("href")) === "/api/stay/demo/agreement/pdf?doc=a692e1ce-9929-4541-adc7-61932bab39d3" && (await page.locator(".ST-dl").innerText()) === "Download a copy (PDF)", `${tag}: Download a copy (PDF) link`);
+  ok(/1 of 2 done/.test(await page.locator(".ST-steps").innerText()), `${tag}: step indicator advances (1 of 2 done)`);
+  await page.unroute("**/api/stay/demo/agreement"); await page.unroute("**/api/stay/demo/agreement?doc=*");
   // verify
   await page.click("text=Verify my ID"); await page.click("text=Simulate a successful check");
   ok(/Test address/.test(await body()) && /Arrives on check-in morning/.test(await body()) && (await page.locator(".ST-due").innerText()) === "All done", `${tag}: both done -> arrival details unlock; door code says check-in morning`);
@@ -34,10 +47,10 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok(/Test address/.test(await body()), `${tag}: progress kept on reload (this browser)`);
   // messages
   await page.fill("#st-msg", "What time is check-in?"); await page.click('.ST-send button');
-  ok(/What time is check-in\?/.test(await page.locator(".ST-thread").innerText()) && /test, not sent/.test(await page.locator(".ST-thread").innerText()), `${tag}: message shows in the thread, marked test`);
+  ok(/What time is check-in\?/.test(await page.locator(".ST-thread").innerText()) && /sandbox, not sent/.test(await page.locator(".ST-thread").innerText()), `${tag}: message shows in the thread, marked test`);
   ok((await page.locator(".ST-know").count()) >= 2 && /Quiet hours/.test(await page.locator(".ST-know").allTextContents().then((t) => t.join(" "))), `${tag}: house rules from the listing`);
   // reset
-  await page.click("text=Reset test portal");
+  await page.click("text=Reset sandbox");
   ok(!/Test address/.test(await body()), `${tag}: reset locks it again`);
   ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${tag}: no sideways scroll`);
   if (process.env.AXE_PATH) {

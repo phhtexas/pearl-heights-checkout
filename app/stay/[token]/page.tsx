@@ -14,6 +14,8 @@ export const dynamic = "force-dynamic";
 
 export default async function StayPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  if (token !== "demo") notFound(); // real reservations come later (database + unguessable token)
+  // The sample reservation exists only in sandbox builds (NEXT_PUBLIC_SANDBOX=true); real reservations come later
+  // (database + unguessable token). Without the flag, /stay/demo is a 404.
+  if (token !== "demo" || process.env.NEXT_PUBLIC_SANDBOX !== "true") notFound();
   return <Portal stay={demoStay()} />;
 }

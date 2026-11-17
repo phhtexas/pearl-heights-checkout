@@ -9,9 +9,12 @@ import type { StayData } from "@/content/stayDemo";
  *  ->  4 Enjoy your stay (house rules, messages).
  * In this test version the state lives in this browser only (localStorage), and nothing is sent or charged.
  */
-type State = { signedAt?: string; signedName?: string; signDoc?: string; verifiedAt?: string; messages: { from: "guest" | "note"; text: string; at: string }[] };
+type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; verifiedAt?: string; messages: { from: "guest" | "note"; text: string; at: string }[] };
 const fresh = (): State => ({ messages: [] });
 const KEY = (t: string) => `ph-stay-${t}`;
+/** Sandbox labels render only when NEXT_PUBLIC_SANDBOX=true (inlined at build); never in a production build without it. */
+const SANDBOX = process.env.NEXT_PUBLIC_SANDBOX === "true";
+const signedDate = (iso?: string) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "long", day: "numeric", year: "numeric" }).format(iso ? new Date(iso) : new Date());
 const fmtDay = (iso: string, o: Intl.DateTimeFormatOptions) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { ...o, timeZone: "UTC" });
 const nowText = () => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date());
 
@@ -50,45 +53,57 @@ export function Portal({ stay }: { stay: StayData }) {
   const ci = fmtDay(stay.checkIn, { weekday: "short", month: "short", day: "numeric" });
   const co = fmtDay(stay.checkOut, { weekday: "short", month: "short", day: "numeric" });
   const ciMorning = fmtDay(stay.checkIn, { weekday: "long", month: "long", day: "numeric" });
-  const sign = () => { if (!agree || name.trim().length < 3) return; save({ ...s, signedAt: nowText(), signedName: name.trim() }); setSigning(false); };
-  // SignWell (test mode): create the agreement on the server, show it embedded here, then confirm completion with the server.
-  const [esign, setEsign] = useState<"idle" | "loading" | "open" | "checking" | "fallback" | "error">("idle");
+  const sign = () => { if (!agree || !name.trim()) return; save({ ...s, signedAt: nowText(), signedOn: new Date().toISOString(), signedName: name.trim() }); setSigning(false); };
+  // SignWell: the server creates the agreement; it opens in a NEW TAB (Oscar, Nov 17) so this page stays open. We then
+  // confirm completion with the server (never trusting the browser alone) when the guest comes back to this tab,
+  // or when SignWell redirects the new tab back here with ?signed=1.
+  const [esign, setEsign] = useState<"idle" | "loading" | "waiting" | "checking" | "fallback" | "error">("idle");
   const [esignMsg, setEsignMsg] = useState("");
-  const loadScript = () => new Promise<void>((res, rej) => {
-    if ((window as any).SignWellEmbed) return res();
-    const el = document.createElement("script"); el.src = "https://static.signwell.com/assets/embedded.js"; el.async = true;
-    el.onload = () => res(); el.onerror = () => rej(new Error("script")); document.head.appendChild(el);
-  });
-  const confirmSigned = async (doc: string, who: string) => {
-    setEsign("checking");
-    for (let i = 0; i < 10; i++) {
+  const [manualUrl, setManualUrl] = useState("");
+  const checkSigned = async (doc: string, who: string, tries = 1): Promise<boolean> => {
+    for (let i = 0; i < tries; i++) {
       const r = await fetch(`/api/stay/${stay.token}/agreement?doc=${doc}`, { cache: "no-store" }).then((x) => x.json()).catch(() => null);
-      if (r?.completed) { save({ ...sRef.current, signedAt: nowText(), signedName: who, signDoc: doc }); setSigning(false); setEsign("idle"); return; }
-      await new Promise((w) => setTimeout(w, 1500));
+      if (r?.completed) {
+        save({ ...sRef.current, signedAt: nowText(), signedOn: r.signedAt ?? new Date().toISOString(), signedName: who, signDoc: doc, pendingDoc: undefined });
+        setSigning(false); setEsign("idle"); setManualUrl(""); return true;
+      }
+      if (i < tries - 1) await new Promise((w) => setTimeout(w, 1500));
     }
-    setEsign("error"); setEsignMsg("We couldn't confirm your signature yet. Please refresh in a minute.");
+    return false;
   };
+  // Back on this tab (or reloaded after the redirect): check the pending document.
+  useEffect(() => {
+    if (!ready) return;
+    const pend = sRef.current.pendingDoc;
+    if (!pend || sRef.current.signedAt) return;
+    const who = sRef.current.pendingName ?? name;
+    const fromRedirect = new URLSearchParams(location.search).get("signed") === "1";
+    void checkSigned(pend.id, who, fromRedirect ? 6 : 1);
+    const onBack = () => { if (document.visibilityState === "visible" && sRef.current.pendingDoc && !sRef.current.signedAt) void checkSigned(sRef.current.pendingDoc.id, who, 3); };
+    document.addEventListener("visibilitychange", onBack); window.addEventListener("focus", onBack);
+    const t = setInterval(onBack, 5000);
+    return () => { document.removeEventListener("visibilitychange", onBack); window.removeEventListener("focus", onBack); clearInterval(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, s.pendingDoc?.id]);
   const openAgreement = async () => {
-    const who = name.trim(); if (who.length < 3) return;
-    setEsign("loading"); setEsignMsg("");
+    const who = name.trim(); if (!who) return;
+    // Open the tab synchronously (inside the click) so pop-up blockers allow it, then point it at SignWell.
+    const tab = window.open("", "_blank");
+    if (tab) { try { tab.opener = null; tab.document.title = "Opening your agreement…"; tab.document.body.innerHTML = "<p style=\"font-family:system-ui;padding:24px\">Opening your agreement…</p>"; } catch { /* ignore */ } }
+    setEsign("loading"); setEsignMsg(""); setManualUrl("");
     const r = await fetch(`/api/stay/${stay.token}/agreement`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: who }) });
     const j = await r.json().catch(() => ({}));
-    if (r.status === 503 && j.fallback) { setEsign("fallback"); return; }
-    if (!r.ok || !j.url) { setEsign("error"); setEsignMsg(j.error ?? "We couldn't open the agreement."); return; }
-    try { await loadScript(); } catch { setEsign("error"); setEsignMsg("The signing window couldn't load. Please try again."); return; }
-    setEsign("open");
-    const Embed = (window as any).SignWellEmbed;
-    new Embed({ url: j.url, containerId: "st-sign-frame", allowDecline: false, showHeader: false, events: {
-      completed: () => { void confirmSigned(j.documentId, who); },
-      closed: () => setEsign((x) => (x === "open" ? "idle" : x)),
-      error: () => { setEsign("error"); setEsignMsg("Something went wrong in the signing window."); },
-    } }).open();
+    if (r.status === 503 && j.fallback) { tab?.close(); setEsign("fallback"); return; }
+    if (!r.ok || !j.url) { tab?.close(); setEsign("error"); setEsignMsg(j.error ?? "We couldn't open the agreement."); return; }
+    save({ ...sRef.current, pendingDoc: { id: j.documentId }, pendingName: who });
+    if (tab && !tab.closed) tab.location.href = j.url; else setManualUrl(j.url); // blocked: show a link instead
+    setEsign("waiting");
   };
   const send = () => { const t = draft.trim(); if (!t) return; save({ ...s, messages: [...s.messages, { from: "guest", text: t, at: nowText() }] }); setDraft(""); };
 
   return (
     <div className="ST">
-      <p className="ST-test" role="note"><b>Test portal</b> · sample reservation · nothing here is real, sent or charged</p>
+      {SANDBOX && <p className="ST-test" role="note"><b>Sandbox mode</b> · sample reservation · nothing here is real, sent or charged</p>}
       <header className="ST-top">
         <a href="/all-homes/f" className="ST-brand"><img src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} /></a>
         <a className="ST-ask" href="#messages">Message us</a>
@@ -114,7 +129,8 @@ export function Portal({ stay }: { stay: StayData }) {
         <ol className="ST-steps" aria-label="Your booking steps">
           {["Book your home", "Confirm your reservation", "Get ready for arrival", "Enjoy your stay"].map((t, i) => {
             const n = i + 1, done = n < step || (n === 1), now = n === step && !done;
-            return <li key={t} className={done ? "is-done" : now ? "is-now" : ""} aria-current={now ? "step" : undefined}><span className="ST-dot">{done ? <Ico d={I.check} size={14} /> : n}</span><span>{t}</span></li>;
+            const sub = n === 2 && !unlocked && (signed || verified) ? "1 of 2 done" : "";
+            return <li key={t} className={`${done ? "is-done" : now ? "is-now" : ""}${sub ? " is-half" : ""}`} aria-current={now ? "step" : undefined}><span className="ST-dot">{done ? <Ico d={I.check} size={14} /> : n}</span><span>{t}{sub && <small className="ST-sub">{sub}</small>}</span></li>;
           })}
         </ol>
 
@@ -130,30 +146,42 @@ export function Portal({ stay }: { stay: StayData }) {
             <span className="ST-taskIc"><Ico d={signed ? I.check : I.pen} /></span>
             <div className="ST-taskBody">
               <h3>Rental agreement</h3>
-              <p className="ST-dim">{signed ? `Signed by ${s.signedName} · ${s.signedAt}${s.signDoc ? " · SignWell test document" : ""}` : "Review the agreement and sign online."}</p>
-              {!signed && !signing && <button className="ST-btn" type="button" onClick={() => setSigning(true)} disabled={!ready}>Review and sign</button>}
+              {signed ? (
+                // Confirmation state (Oscar, Nov 17): check, signed date, download link.
+                <div className="ST-signed" role="status">
+                  <p className="ST-signedLine">Agreement signed — {signedDate(s.signedOn)}</p>
+                  {s.signDoc
+                    ? <a className="ST-dl" href={`/api/stay/${stay.token}/agreement/pdf?doc=${s.signDoc}`} target="_blank" rel="noopener">Download a copy (PDF)</a>
+                    : <p className="ST-dim">Signed by {s.signedName}</p>}
+                </div>
+              ) : (
+                <p className="ST-dim">Sign online — takes about 2 minutes.</p>
+              )}
+              {!signed && !signing && <button className="ST-btn" type="button" onClick={() => setSigning(true)} disabled={!ready}>Review &amp; sign</button>}
               {!signed && signing && esign !== "fallback" && (
                 <div className="ST-panel">
-                  <p>The agreement opens right here with your reservation details and this home's rules. You'll check 6 boxes and sign.</p>
-                  <label className="ST-field">Reservation holder<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
-                  <p className="ST-hint">From your reservation. Fix it here if it's misspelled; it should match your ID.</p>
+                  <p>The agreement covers your reservation details, house rules, and cancellation terms. When you tap the button, it opens in a secure window from SignWell, our e-signature partner — no printing or downloads needed.</p>
+                  <p><a href="/rental-agreement" target="_blank" rel="noopener">Preview the full agreement</a></p>
+                  <label className="ST-field">Full legal name — exactly as it appears on your ID<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
+                  <p className="ST-hint">From your reservation. Fix it here if it's misspelled.</p>
                   <div className="ST-row">
-                    <button className="ST-btn" type="button" onClick={openAgreement} disabled={name.trim().length < 3 || esign === "loading" || esign === "open" || esign === "checking"}>
-                      {esign === "loading" ? "Opening…" : esign === "checking" ? "Confirming…" : "Open agreement"}
+                    <button className="ST-btn" type="button" onClick={openAgreement} disabled={!name.trim() || esign === "loading" || esign === "checking"}>
+                      {esign === "loading" ? "Opening…" : esign === "checking" ? "Confirming…" : "Review & sign"}
                     </button>
-                    <button className="ST-link" type="button" onClick={() => { setSigning(false); setEsign("idle"); }}>Cancel</button>
+                    <button className="ST-link" type="button" onClick={() => { setSigning(false); if (esign !== "waiting") setEsign("idle"); }}>Not now</button>
                   </div>
+                  {esign === "waiting" && <p className="ST-hint" role="status">The agreement opened in a new tab. When you've signed, come back here; this page updates on its own.</p>}
+                  {manualUrl && <p className="ST-hint">Your browser blocked the new tab. <a href={manualUrl} target="_blank" rel="noopener">Open the agreement</a></p>}
                   {esignMsg && <p className="ST-err" role="alert">{esignMsg}</p>}
-                  <p className="ST-testLine">Test portal: opens a SignWell test document (not binding).</p>
-                  <div id="st-sign-frame" className={`ST-frame${esign === "open" ? " is-open" : ""}`} />
+                  {SANDBOX && <p className="ST-testLine">Sandbox mode — this test document isn&apos;t legally binding.</p>}
                 </div>
               )}
               {!signed && signing && esign === "fallback" && (
                 <div className="ST-panel">
-                  <p>Read the full <a href="/rental-agreement" target="_blank" rel="noopener">rental agreement</a> (opens in a new tab). In the real portal, signing happens with our e-signature service; this test only records it in your browser.</p>
+                  <p>Read the full <a href="/rental-agreement" target="_blank" rel="noopener">rental agreement</a> (opens in a new tab). Signing isn&apos;t connected here, so this only records it in your browser.</p>
                   <label className="ST-check"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> I have read and agree to the rental agreement.</label>
-                  <label className="ST-field">Type your full name to sign<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" placeholder="Full name" /></label>
-                  <div className="ST-row"><button className="ST-btn" type="button" onClick={sign} disabled={!agree || name.trim().length < 3}>Sign agreement</button><button className="ST-link" type="button" onClick={() => setSigning(false)}>Cancel</button></div>
+                  <label className="ST-field">Full legal name — exactly as it appears on your ID<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
+                  <div className="ST-row"><button className="ST-btn" type="button" onClick={sign} disabled={!agree || !name.trim()}>Sign agreement</button><button className="ST-link" type="button" onClick={() => setSigning(false)}>Not now</button></div>
                 </div>
               )}
             </div>
@@ -216,7 +244,7 @@ export function Portal({ stay }: { stay: StayData }) {
           <p className="ST-dim">Questions go straight to Oscar and Fernanda. We usually reply within an hour. For an emergency, call 911.</p>
           <ul className="ST-thread" aria-live="polite">
             {s.messages.length === 0 && <li className="ST-empty">No messages yet.</li>}
-            {s.messages.map((m, i) => <li key={i} className="ST-msg"><p>{m.text}</p><span>{m.at} · test, not sent</span></li>)}
+            {s.messages.map((m, i) => <li key={i} className="ST-msg"><p>{m.text}</p><span>{m.at}{SANDBOX ? " · sandbox, not sent" : ""}</span></li>)}
           </ul>
           <form className="ST-send" onSubmit={(e) => { e.preventDefault(); send(); }}>
             <label className="sr-only" htmlFor="st-msg">Message</label>
@@ -225,7 +253,7 @@ export function Portal({ stay }: { stay: StayData }) {
           </form>
         </section>
 
-        <p className="ST-reset"><button className="ST-link" type="button" onClick={() => { save(fresh()); setAgree(false); setName(""); }}>Reset test portal</button></p>
+        {SANDBOX && <p className="ST-reset"><button className="ST-link" type="button" onClick={() => { save(fresh()); setAgree(false); setName(stay.holder); setEsign("idle"); }}>Reset sandbox</button></p>}
       </main>
     </div>
   );
