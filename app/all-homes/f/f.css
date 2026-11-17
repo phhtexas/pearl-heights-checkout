@@ -1,0 +1,197 @@
+/* Mockup C: B's warm editorial look with Airbnb-style rhythm: big centered section heads, generous space between
+   sections (64px phone / 96px desktop), 24px side margins, icon tiles, divider rows, soft rounded cards.
+   Type matches the listing pages: Inter, 600 headings, -0.01em; Marcellus only on the logo. One accent: green (#127A5E, Oscar Nov 16). */
+.F-page { position: relative; --acc: #127A5E; --ink: #1d1a17; --line: #e6dfd5; --sand: #f6f1ea; --soft: #f3f1ee; --muted: #6b635a;
+  font-family: "Inter", system-ui, -apple-system, sans-serif; color: var(--ink); background: #fff; font-size: 16px; line-height: 1.5; }
+.F-page h1, .F-page h2, .F-page h3 { margin: 0; font-family: inherit; letter-spacing: -0.01em; font-weight: 600; }
+.F-mock { margin: 0; background: var(--ink); color: #fff; font-size: 12px; text-align: center; padding: 6px 16px; }
+.F-top { position: absolute; z-index: 3; top: 26px; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; max-width: 1180px; margin: 0 auto; }
+.F-brand { font-family: "Marcellus", Georgia, serif; font-size: 20px; color: #fff; text-decoration: none; white-space: nowrap; }
+.F-brand span { font-family: "Inter", sans-serif; font-size: 9px; letter-spacing: .18em; margin-left: 6px; vertical-align: 3px; font-weight: 500; }
+.F-ask { color: #fff; font-size: 14px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Hero + search */
+.F-hero { position: relative; min-height: 460px; display: flex; align-items: flex-end; color: #fff; overflow: hidden; }
+.F-heroImg { object-fit: cover; }
+.F-heroShade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,.05) 35%, rgba(0,0,0,.55) 100%); }
+.F-heroText { position: relative; padding: 0 24px 84px; max-width: 1180px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+.F-eyebrow { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 8px; opacity: .9; }
+.F-hero h1 { font-size: 34px; line-height: 1.1; text-shadow: 0 2px 16px rgba(0,0,0,.3); }
+.F-heroText > p:last-child { margin: 10px 0 0; font-size: 17px; text-shadow: 0 1px 8px rgba(0,0,0,.35); }
+.F-searchWrap { position: relative; z-index: 4; max-width: 920px; margin: -56px auto 0; padding: 0 24px; scroll-margin: 90px; }
+
+/* Section rhythm */
+.F-sec { max-width: 1132px; margin: 0 auto; padding: 64px 24px 0; }
+.F-band { max-width: none; background: var(--soft); padding: 64px 24px; margin-top: 64px; }
+.F-band + .F-sec { padding-top: 64px; }
+.F-band > * { max-width: 1084px; margin-left: auto; margin-right: auto; }
+.F-head { text-align: center; max-width: 640px; margin: 0 auto 32px; }
+.F-head h2 { font-size: 30px; line-height: 1.15; }
+.F-head p { margin: 10px 0 0; color: var(--muted); font-size: 17px; }
+.F-dim { color: var(--muted); }
+
+/* Three reasons: icon tile + text rows with dividers */
+.F-rows { list-style: none; margin: 0 auto; padding: 0; max-width: 640px; }
+.F-rows li { display: flex; gap: 20px; align-items: flex-start; padding: 24px 0; border-bottom: 1px solid var(--line); }
+.F-rows li:first-child { padding-top: 0; } .F-rows li:last-child { border-bottom: 0; }
+.F-tile { flex: none; width: 64px; height: 64px; border-radius: 18px; background: var(--soft); display: grid; place-items: center; color: var(--ink); }
+.F-rows h3 { font-size: 19px; } .F-rows p { margin: 6px 0 0; color: var(--muted); }
+
+/* Home cards */
+.F-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 32px; }
+.F-card { background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.07); scroll-margin-top: 24px; transition: box-shadow .3s; }
+.F-card.is-flash { box-shadow: 0 0 0 3px var(--acc), 0 10px 30px rgba(0,0,0,.1); }
+.F-photos { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 4px; scrollbar-width: none; }
+.F-photos:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; }
+.F-photo { position: relative; flex: none; width: 88%; aspect-ratio: 4 / 3; scroll-snap-align: start; background: #eee; }
+.F-photo img { object-fit: cover; }
+.F-info { padding: 20px 20px 22px; }
+.F-fit { margin: 0 0 6px; color: var(--acc); font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.F-info h3 { font-size: 20px; line-height: 1.3; }
+.F-info h3 a { color: inherit; text-decoration: none; } .F-info h3 a:hover { text-decoration: underline; }
+.F-meta { margin: 8px 0 2px; font-size: 15px; } .F-info > .F-dim { margin: 0; font-size: 15px; }
+.F-points { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.F-points li { background: var(--sand); border-radius: 8px; padding: 5px 10px; font-size: 14px; }
+.F-buy { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+.F-price { margin: 0; display: flex; flex-direction: column; } .F-price b { font-size: 22px; } .F-price span { font-size: 14px; color: var(--muted); }
+.F-cta { flex: none; display: inline-block; background: var(--acc); color: #fff; font-weight: 600; font-size: 16px; padding: 13px 22px; border-radius: 12px; text-decoration: none; }
+.F-cta:hover { filter: brightness(1.07); } .F-cta:focus-visible, .F-dark:focus-visible, .C-pin:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.is-off .F-photos { filter: grayscale(.6); opacity: .75; }
+.is-off .F-cta { background: #fff; color: var(--ink); border: 1px solid var(--ink); }
+
+/* Map */
+.F-page .C-map { position: relative; height: 420px; border-radius: 24px; overflow: hidden; background: #eceae6; box-shadow: 0 2px 6px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.07); }
+.F-page .C-tiles { position: absolute; inset: 0; filter: grayscale(.9) contrast(.9) brightness(1.07); }
+.F-page .C-tiles img { position: absolute; width: 256px; height: 256px; user-select: none; pointer-events: none; }
+.F-page .C-pin { position: absolute; transform: translate(-50%, -50%); z-index: 2; border: 0; background: #fff; color: var(--ink); font: inherit; font-size: 15px; font-weight: 600; padding: 7px 13px; border-radius: 999px; box-shadow: 0 2px 10px rgba(0,0,0,.22); cursor: pointer; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.F-page .C-pin:hover { background: var(--ink); color: #fff; z-index: 3; }
+.F-page .C-pin.is-off { color: var(--muted); font-weight: 500; }
+.F-page .C-mapNote { position: absolute; left: 12px; top: 12px; margin: 0; background: #fff; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.F-page .C-credit { position: absolute; right: 8px; bottom: 6px; font-size: 10px; color: #55595d; background: rgba(255,255,255,.85); padding: 2px 6px; border-radius: 4px; text-decoration: none; }
+
+/* Every booking includes: checklist rows */
+.F-checks { list-style: none; padding: 0; margin: 0 auto; max-width: 640px !important; background: #fff; border-radius: 24px; padding: 4px 24px; }
+.F-checks li { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--line); font-size: 17px; }
+.F-checks li:last-child { border-bottom: 0; }
+.F-checks svg { flex: none; color: var(--acc); }
+.F-fine { max-width: 560px !important; text-align: center; color: var(--muted); font-size: 13.5px; margin-top: 18px !important; }
+
+/* Every home has: amenity tiles */
+.F-amen { list-style: none; margin: 0 auto; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 760px; }
+.F-amen li { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; min-height: 128px; padding: 18px 12px; border-radius: 22px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.04), 0 6px 20px rgba(0,0,0,.07); font-size: 16px; font-weight: 600; }
+.F-amen svg { width: 34px; height: 34px; color: var(--acc); }
+
+/* Stats + reviews */
+.F-stats { list-style: none; margin: 0 auto 28px; padding: 0; display: grid; gap: 14px; max-width: 760px !important; }
+.F-stats li { background: #fff; border-radius: 22px; padding: 22px 24px; display: flex; flex-direction: column; gap: 2px; }
+.F-stats b { font-size: 26px; letter-spacing: -0.01em; } .F-stats span { color: var(--muted); }
+.F-revScroll { margin: 0 -24px !important; padding: 0 24px 8px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 24px; scrollbar-width: none; max-width: none !important; }
+.F-revScroll:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.F-reviews { list-style: none; margin: 0; padding: 0; display: flex; gap: 14px; width: max-content; }
+.F-reviews li { flex: none; width: min(84vw, 340px); scroll-snap-align: start; background: #fff; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; }
+.F-stars { margin: 0 0 8px; color: var(--ink); letter-spacing: 2px; font-size: 14px; }
+.F-reviews blockquote { margin: 0; font-size: 15.5px; line-height: 1.55; flex: 1; }
+.F-who { margin: 14px 0 2px; font-size: 14px; color: var(--muted); } .F-who b { color: var(--ink); }
+.F-revHome { font-size: 13.5px; color: var(--muted); }
+
+/* Steps */
+.F-steps { list-style: none; margin: 0 auto; padding: 0; max-width: 640px; }
+.F-steps li { display: flex; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+.F-steps li:first-child { padding-top: 0; } .F-steps li:last-child { border-bottom: 0; }
+.F-num { flex: none; width: 44px; height: 44px; border-radius: 14px; background: var(--soft); display: grid; place-items: center; font-weight: 600; font-size: 17px; }
+.F-steps h3 { font-size: 18px; } .F-steps p { margin: 6px 0 0; color: var(--muted); }
+
+/* FAQ accordion */
+.F-faq { max-width: 720px !important; }
+.F-faq details { border-bottom: 1px solid #ddd8d0; }
+.F-faq summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 22px 0; font-size: 18px; cursor: pointer; }
+.F-faq summary::-webkit-details-marker { display: none; }
+.F-faq summary svg { flex: none; transition: transform .2s; }
+.F-faq details[open] summary svg { transform: rotate(180deg); }
+.F-faq summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 4px; }
+.F-faq details p { margin: -6px 0 22px; color: #3e3832; }
+
+/* Hosts */
+.F-hostSec { text-align: center; max-width: 640px; padding-bottom: 8px; }
+.F-hostPhoto { border-radius: 50%; object-fit: cover; margin: 0 auto 18px; display: block; }
+.F-hostSec h2 { font-size: 28px; } .F-hostSec > p { color: var(--muted); margin: 12px 0 18px; }
+.F-chips { list-style: none; padding: 0; margin: 0 0 26px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.F-chips li { background: var(--soft); border-radius: 999px; padding: 6px 13px; font-size: 14px; }
+.F-dark { display: block; background: var(--ink); color: #fff; text-decoration: none; font-weight: 600; padding: 15px 24px; border-radius: 999px; max-width: 360px; margin: 0 auto; }
+
+.F-foot { margin-top: 72px; border-top: 1px solid var(--line); padding: 32px 24px 112px; text-align: center; font-size: 13.5px; color: var(--muted); }
+.F-foot p { margin: 4px 0; } .F-foot a { color: inherit; }
+.F-foot .F-brand { font-family: "Marcellus", Georgia, serif; font-size: 19px; color: var(--ink); }
+.F-foot .F-brand span { font-family: "Inter", sans-serif; font-size: 8px; letter-spacing: .18em; margin-left: 5px; vertical-align: 3px; }
+
+/* Sticky search button (phones only), like the bottom bar in Airbnb's app pages */
+.F-sticky { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; padding: 12px 24px calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, rgba(255,255,255,0), #fff 30%); transform: translateY(110%); transition: transform .25s ease; pointer-events: none; }
+.F-sticky.is-on { transform: none; pointer-events: auto; }
+.F-stickyBtn { width: 100%; min-height: 52px; border: 0; border-radius: 999px; background: var(--acc); color: #fff; font: inherit; font-size: 17px; font-weight: 600; cursor: pointer; box-shadow: 0 6px 18px rgba(18,122,94,.3); }
+@media (prefers-reduced-motion: reduce) { .F-sticky { transition: none; } }
+
+@media (min-width: 900px) {
+  .F-hero { min-height: 580px; } .F-hero h1 { font-size: 52px; } .F-heroText { padding-bottom: 104px; }
+  .F-searchWrap { margin-top: -42px; }
+  .F-sec { padding-top: 96px; } .F-band { padding: 96px 24px; margin-top: 96px; } .F-band + .F-sec { padding-top: 96px; }
+  .F-head { margin-bottom: 44px; } .F-head h2 { font-size: 40px; }
+  .F-card { display: grid; grid-template-columns: 46% 1fr; }
+  .F-photo { width: 100%; aspect-ratio: auto; min-height: 360px; }
+  .F-info { padding: 30px 32px; display: flex; flex-direction: column; }
+  .F-buy { margin-top: auto; padding-top: 20px; }
+  .C-map { height: 520px; }
+  .F-amen { grid-template-columns: repeat(4, 1fr); }
+  .F-stats { grid-template-columns: repeat(3, 1fr); }
+  .F-revScroll { margin: 0 auto !important; padding: 0 0 8px; max-width: 1084px !important; }
+  .F-reviews li { width: 340px; }
+  .F-sticky { display: none; }
+  .F-foot { padding-bottom: 44px; }
+}
+.F-whyPhoto { border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 16px; }
+
+/* From mockup D review (Oscar, Nov 16) */
+.F-proof { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.F-proof li { background: rgba(255,255,255,.92); color: var(--ink); border-radius: 999px; padding: 6px 12px; font-size: 13.5px; font-weight: 500; text-shadow: none; }
+.F-proof li span { color: var(--acc); }
+.F-meta { margin: 0 0 4px !important; font-size: 14.5px !important; }
+.F-retry { display: block; margin-top: 6px; padding: 0; border: 0; background: none; font: inherit; font-size: 14.5px; font-weight: 600; color: var(--acc); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; text-align: left; }
+.F-areas { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; }
+.F-areas > li { background: var(--soft); border-radius: 20px; padding: 18px 20px; }
+.F-areaHead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.F-areaHead h3 { font-size: 17px; } .F-areaHead p { margin: 0; font-size: 14.5px; }
+.F-areas ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.F-areas ul li { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+.F-areas ul a { color: var(--ink); text-underline-offset: 3px; }
+.F-areas ul span { flex: none; font-size: 14px; }
+@media (min-width: 900px) { .F-areas { grid-template-columns: repeat(3, 1fr); } }
+
+/* ===== Version F (note 176): E's conventional header, compact trust strip ===== */
+.F-page .F-top { position: sticky; top: 0; z-index: 40; left: auto; right: auto; max-width: none; margin: 0; padding: 0; background: #fff; border-bottom: 1px solid var(--line); display: block; }
+.F-topIn { max-width: 1180px; margin: 0 auto; padding: 0 24px; height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.F-page .F-brand { color: var(--ink); }
+.F-nav { display: flex; gap: 28px; }
+.F-nav a { font-size: 14.5px; font-weight: 500; color: var(--muted); text-decoration: none; padding: 6px 0; }
+.F-nav a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 6px; }
+.F-page .F-ask { flex: none; color: #fff; background: var(--ink); text-decoration: none; font-weight: 600; font-size: 14px; padding: 11px 18px; border-radius: 8px; }
+.F-page .F-ask:hover { background: #000; }
+.F-page .F-ask:focus-visible, .F-nav a:focus-visible, .F-page .F-brand:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+.F-page .F-heroText { padding-top: 64px; }
+.F-page section[id] { scroll-margin-top: 88px; }
+@media (max-width: 760px) {
+  .F-nav { display: none; }
+  .F-topIn { height: 60px; }
+  .F-page .F-brand { font-size: 18px; }
+  .F-page .F-ask { padding: 9px 14px; font-size: 13.5px; }
+}
+
+.F-strip { max-width: 1132px; margin: 0 auto; padding: 28px 24px 0; }
+.F-stripIn { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; border: 1px solid var(--line); border-radius: 20px; padding: 16px 22px; background: #fff; }
+.F-stripHost { display: flex; align-items: center; gap: 12px; }
+.F-stripPhoto { border-radius: 50%; object-fit: cover; flex: none; }
+.F-stripHost b { font-size: 16px; font-weight: 600; }
+.F-strip ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 24px; }
+.F-strip li { display: flex; align-items: center; gap: 8px; font-size: 14.5px; color: #3e3832; }
+.F-stripIc { flex: none; width: 28px; height: 28px; border-radius: 9px; background: var(--soft); color: var(--acc); display: grid; place-items: center; font-size: 13px; }
+.F-strip + .F-homes { padding-top: 48px; }
+@media (min-width: 1000px) { .F-stripIn { flex-wrap: nowrap; justify-content: space-between; } .F-strip ul { flex-wrap: nowrap; } }
+@media (max-width: 760px) { .F-strip ul { flex-direction: column; } .F-strip li { font-size: 14px; } }

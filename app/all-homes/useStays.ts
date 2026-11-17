@@ -9,7 +9,7 @@ const todayCT = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chic
 export const money = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 export const shortDate = (iso: string) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 
-export function useStays(variant: "a" | "b" | "c" | "e") {
+export function useStays(variant: "a" | "b" | "c" | "e" | "f") {
   const [ci, setCi] = useState(""), [co, setCo] = useState("");
   const [adults, setAdults] = useState(2), [children, setChildren] = useState(0);
   const [results, setResults] = useState<Record<string, Result>>({});

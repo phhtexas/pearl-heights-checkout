@@ -141,5 +141,39 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   ok(r.status() === 200 && /mockup e/i.test(await page.locator(".mockbar").innerText()), "e: original static file kept at /all-homes/archive/e-static");
   await page.context().close();
 }
+// Version F (note 176): C as the base + E's header/nav, compact trust strip, no filters/sort, C's accent. C and E unchanged.
+for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 } }]) {
+  const w = dev.viewport.width, tag = `f@${w}`;
+  const page = await (await browser.newContext(dev)).newPage();
+  const errors = []; page.on("pageerror", (e) => errors.push(e.message));
+  const res = await page.goto(`${BASE}/all-homes/f`);
+  ok(res.status() === 200 && /noindex/.test(await page.getAttribute('meta[name="robots"]', "content")), `${tag}: loads, noindex`);
+  ok((await page.locator("header.F-top .F-ask").count()) === 1, `${tag}: header with 'Ask a question'`);
+  if (w > 760) ok((await page.locator(".F-nav a").allInnerTexts()).join(",") === "Homes,Locations,Reviews,FAQ", `${tag}: nav Homes, Locations, Reviews, FAQ`);
+  for (const id of ["homes", "locations", "reviews", "faq"]) ok((await page.locator(`#${id}`).count()) === 1, `${tag}: nav target #${id}`);
+  ok((await page.locator(".E-chip, .chip, select[aria-label='Sort homes']").count()) === 0, `${tag}: no filters or sort`);
+  const t = await page.evaluate(() => document.body.innerText);
+  ok(t.includes("Hosted directly by Oscar & Fernanda") && t.includes("4.98 average across 463 Airbnb guest reviews") && t.includes("Secure payment through Stripe") && t.includes("Usually reply within an hour"), `${tag}: compact trust strip`);
+  ok(t.indexOf("Hosted directly by Oscar") < t.indexOf("Choose your home") && t.indexOf("Choose your home") < t.indexOf("Large Family House Next to the Pearl"), `${tag}: search -> strip -> homes`);
+  ok(!t.includes("You book with us"), `${tag}: big 'Book directly' block removed`);
+  ok(await page.evaluate(() => getComputedStyle(document.querySelector(".S-go")).backgroundColor === "rgb(18, 122, 94)"), `${tag}: C's accent kept`);
+  ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${tag}: no sideways scroll`);
+  await page.fill('input[aria-label="Check-in date"]', iso(a)); await page.fill('input[aria-label="Check-out date"]', iso(b)); await page.click(".S-go");
+  await page.waitForFunction(() => /total for 3 nights/.test(document.body.innerText), null, { timeout: 15000 }).catch(() => {});
+  ok(/total for 3 nights/.test(await page.evaluate(() => document.body.innerText)), `${tag}: live totals`);
+  const href = await page.locator('#home-752 a[href^="/homes/"]').first().getAttribute("href");
+  ok(href === `/homes/752-myrtle?checkIn=${iso(a)}&checkOut=${iso(b)}&adults=2&children=0`, `${tag}: View home carries the dates`);
+  if (w > 760) { await page.click('.F-nav a[href="#faq"]'); await page.waitForTimeout(700); ok(await page.evaluate(() => { const r = document.getElementById("faq").getBoundingClientRect(); return r.top >= 0 && r.top < 200; }), `${tag}: nav link jumps to FAQ below the sticky header`); }
+  ok(errors.length === 0, `${tag}: no page errors ${errors.join(" | ")}`);
+  await page.context().close();
+}
+{
+  const page = await (await browser.newContext()).newPage();
+  await page.goto(`${BASE}/all-homes/c`); const c = await page.evaluate(() => document.body.innerText);
+  ok(c.includes("You book with us") && (await page.locator(".F-strip").count()) === 0, "c: unchanged (still has its own trust block)");
+  await page.goto(`${BASE}/all-homes/e`);
+  ok((await page.locator(".E-chip").count()) === 6, "e: unchanged (still has its filters)");
+  await page.context().close();
+}
 await browser.close();
 if (!process.exitCode) console.log("ALL HOMES E2E PASSED");
