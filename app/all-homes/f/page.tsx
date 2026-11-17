@@ -16,6 +16,14 @@ import "./f.css";
 export const metadata = mockMeta("F");
 export const dynamic = "force-static";
 
+const INCLUDES: [string, string][] = [
+  ["Damage waiver — $5,000 coverage", "Covers accidental damage during your stay, up to $5,000, subject to the provider's terms and exclusions. It isn't a security deposit."],
+  ["Your full total, taxes included, before you pay", "You see the exact total, with taxes and the damage waiver, before you pay. Pay in full, or half now when check-in is more than 30 days away."],
+  ["Secure payment through Stripe", "You enter your card in Stripe's secure payment form, and the card details go straight to Stripe. We never see your full card number."],
+  ["A private stay page with your check-in steps", "Once you've signed and verified, your address, entry steps and WiFi appear on your own stay page. Door codes arrive on check-in morning."],
+  ["Hosts who usually reply within an hour", "Questions go straight to Oscar and Fernanda, not a call center. We usually reply within an hour."],
+];
+
 function Ico({ name }: { name: string }) {
   const p = { viewBox: "0 0 24 24", width: 26, height: 26, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
   switch (name) {
@@ -95,8 +103,15 @@ export default function Page() {
             <p>The same at all five homes.</p>
           </div>
           <ul className="F-checks" data-reveal>
-            {["Damage waiver — $5,000 coverage", "Your full total, taxes included, before you pay", "Secure payment through Stripe", "A private stay page with your check-in steps", "Hosts who usually reply within an hour"].map((t) => (
-              <li key={t}><span>{t}</span><Ico name="check" /></li>
+            {/* Oscar, Nov 17: same rows; tapping one opens a short explanation. Each explanation repeats what the site
+                already says elsewhere (waiver note, booking-day and stay steps, Stripe Payment Element, reply time). */}
+            {INCLUDES.map(([t, more]) => (
+              <li key={t}>
+                <details className="F-inc">
+                  <summary><span>{t}</span><Ico name="check" /></summary>
+                  <p>{more}</p>
+                </details>
+              </li>
             ))}
           </ul>
           <p className="F-fine">The damage waiver covers accidental damage during your stay, up to $5,000, subject to the provider&apos;s terms and exclusions. It isn&apos;t a security deposit.</p>

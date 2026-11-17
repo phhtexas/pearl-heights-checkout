@@ -195,7 +195,7 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   ok((await page.locator(".DR-day.is-in").count()) === 2 && (await page.locator(".DR-h").innerText()) === "3 nights", `${tag}: range shaded, '3 nights'`);
   await page.click(".DR-done");
   await page.waitForFunction(() => /total for 3 nights/.test(document.body.innerText), null, { timeout: 15000 }).catch(() => {});
-  ok(/total for 3 nights/.test(await page.evaluate(() => document.body.innerText)), `${tag}: 'Show totals' runs the search -> live totals`);
+  ok(/total for 3 nights/.test(await page.evaluate(() => document.body.innerText)), `${tag}: 'Select dates' runs the search -> live totals`);
   const href = await page.locator('#home-752 a[href^="/homes/"]').first().getAttribute("href");
   ok(href === `/homes/752-myrtle?checkIn=${iso(a)}&checkOut=${iso(b)}&adults=2&children=0`, `${tag}: View home carries the dates`);
   { // available homes first, unavailable below a divider (all still shown)
@@ -245,6 +245,13 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   // strip left-aligned; footer logo + Instagram
   if (w <= 760) ok(await page.evaluate(() => { const lis = [...document.querySelectorAll(".F-strip li")].map((l) => l.getBoundingClientRect().left); const h = document.querySelector(".F-stripHost").getBoundingClientRect().left; return Math.abs(lis[0] - h) < 2; }), `${tag}: '4.98' line lines up left with the host line`);
   else ok(await page.evaluate(() => { const h = document.querySelector(".F-stripHost").getBoundingClientRect(), u = document.querySelector(".F-strip ul").getBoundingClientRect(), s = document.querySelector(".F-search").getBoundingClientRect(); return u.left > h.right && h.left >= s.left - 1 && u.right <= s.right + 1 && Math.abs((h.left - s.left) - (s.right - u.right)) < 40; }), `${tag}: desktop strip = host left, facts right, centered under the search bar`);
+  { // 'Every booking includes': closed rows look the same; tapping one shows its explanation
+    const rows = page.locator(".F-checks .F-inc");
+    ok((await rows.count()) === 5 && !(await page.locator(".F-checks .F-inc p").first().isVisible()), `${tag}: includes rows start closed`);
+    await rows.nth(2).locator("summary").scrollIntoViewIfNeeded(); await rows.nth(2).locator("summary").click();
+    ok(/Stripe's secure payment form/.test(await rows.nth(2).locator("p").innerText()), `${tag}: tapping 'Secure payment through Stripe' shows its explanation`);
+    await rows.nth(2).locator("summary").click();
+  }
   ok((await page.locator(".F-stats .F-statIc svg").count()) === 3, `${tag}: review stats have icons`);
   ok(await page.evaluate(() => [...document.querySelectorAll(".F-stats li")].every((li) => { const r = li.getBoundingClientRect(), i = li.querySelector(".F-statIc").getBoundingClientRect(); return Math.abs((i.left + i.width / 2) - (r.left + r.width / 2)) < 2 && getComputedStyle(li).textAlign === "center"; })), `${tag}: stat icons and text centered`);
   ok((await page.locator('footer .F-footLogo[src="/brand/logo-dark.webp"]').count()) === 1 && (await page.locator('footer a[href="https://www.instagram.com/pearlheightshomes"]').count()) === 1, `${tag}: footer has our logo + Instagram`);

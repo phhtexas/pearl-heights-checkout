@@ -444,3 +444,13 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 }
 /* Oscar, Nov 17: stat cards centered (icon, number and text) */
 .F-page .F-stats li { align-items: center; text-align: center; }
+
+/* Oscar, Nov 17: 'Every booking includes' rows open a short explanation on tap/click (look unchanged when closed) */
+.F-page .F-checks li { display: block; padding: 0; }
+.F-page .F-inc summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 0; cursor: pointer; list-style: none; border-radius: 8px; }
+.F-page .F-inc summary::-webkit-details-marker { display: none; }
+@media (hover: hover) { .F-page .F-inc summary:hover span { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 5px; } }
+.F-page .F-inc summary:focus-visible { outline: 3px solid var(--acc); outline-offset: 4px; }
+.F-page .F-inc p { margin: -8px 40px 20px 0; font-size: 15px; line-height: 1.55; color: var(--muted); animation: F-incIn .35s ease both; }
+@keyframes F-incIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .F-page .F-inc p { animation: none; } }

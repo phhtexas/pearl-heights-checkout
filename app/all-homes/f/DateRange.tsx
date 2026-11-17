@@ -116,7 +116,7 @@ export function DateRange({ ci, co, min, minNights = 2, onChange, onClose, onDon
       </div>
       <div className="DR-foot">
         <button type="button" className="DR-clear" disabled={!ci} onClick={() => onChange("", "")}>Clear dates</button>
-        <button type="button" className="DR-done" onClick={onDone}>{ci && co ? "Show totals" : "Close"}</button>
+        <button type="button" className="DR-done" onClick={onDone}>{ci && co ? "Select dates" : "Close"}</button>
       </div>
     </div>
   );
