@@ -169,7 +169,6 @@ export function Portal({ stay }: { stay: StayData }) {
               {!signed && signing && esign !== "fallback" && (
                 <div className="ST-panel">
                   <p>The agreement covers your reservation details, house rules, and cancellation terms. When you tap the button, it opens in a secure window from SignWell, our e-signature partner — no printing or downloads needed.</p>
-                  <p><a href="/rental-agreement" target="_blank" rel="noopener">Preview the full agreement</a></p>
                   <label className="ST-field">Full legal name — exactly as it appears on your ID<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
                   <p className="ST-hint">From your reservation. Fix it here if it's misspelled.</p>
                   <div className="ST-row">

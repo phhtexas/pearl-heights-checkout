@@ -17,7 +17,7 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   // sign: copy, name prefilled, button disabled until a name, "Not now" keeps the name
   await page.click("text=Review & sign");
   const panel = await page.locator(".ST-panel").innerText();
-  ok(/covers your reservation details, house rules, and cancellation terms/.test(panel) && /Full legal name — exactly as it appears on your ID/.test(panel) && /Preview the full agreement/.test(panel), `${tag}: new agreement copy`);
+  ok(/covers your reservation details, house rules, and cancellation terms/.test(panel) && /Full legal name — exactly as it appears on your ID/.test(panel) && !/Preview the full agreement/.test(panel), `${tag}: new agreement copy (no preview link)`);
   ok(/Sandbox mode — this test document isn't legally binding\./.test(panel), `${tag}: sandbox callout shows in a sandbox build`);
   ok((await page.locator(".ST-field input").inputValue()) === "Test Guest", `${tag}: name prefilled from the reservation`);
   await page.fill(".ST-field input", "   "); ok(await page.locator('.ST-panel button:has-text("Review & sign")').isDisabled(), `${tag}: Review & sign disabled with a blank name`);
