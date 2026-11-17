@@ -55,7 +55,13 @@ export function DateRange({ ci, co, min, onChange, onClose, onDone }: {
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => { const mq = matchMedia("(max-width: 759px)"); const on = () => setMobile(mq.matches); on(); mq.addEventListener("change", on); return () => mq.removeEventListener("change", on); }, []);
   useEffect(() => {
-    const t = setTimeout(() => box.current?.querySelector<HTMLButtonElement>(`.DR-day[data-date="${ci || ""}"], .DR-day:not(:disabled)`)?.focus({ preventScroll: !mobile }), 30);
+    const t = setTimeout(() => {
+      // Desktop: if the popover opens below the fold, bring all of it into view (as Airbnb does).
+      if (!mobile && box.current && box.current.getBoundingClientRect().bottom > innerHeight) {
+        box.current.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      }
+      box.current?.querySelector<HTMLButtonElement>(`.DR-day[data-date="${ci || ""}"], .DR-day:not(:disabled)`)?.focus({ preventScroll: !mobile });
+    }, 30);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mobile]);
