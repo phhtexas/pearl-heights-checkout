@@ -1,7 +1,7 @@
 /* Mockup C: B's warm editorial look with Airbnb-style rhythm: big centered section heads, generous space between
    sections (64px phone / 96px desktop), 24px side margins, icon tiles, divider rows, soft rounded cards.
-   Type matches the listing pages: Inter, 600 headings, -0.01em; Marcellus only on the logo. One accent: terracotta. */
-.C-page { position: relative; --acc: #b4532a; --ink: #1d1a17; --line: #e6dfd5; --sand: #f6f1ea; --soft: #f3f1ee; --muted: #6b635a;
+   Type matches the listing pages: Inter, 600 headings, -0.01em; Marcellus only on the logo. One accent: green (#127A5E, Oscar Nov 16). */
+.C-page { position: relative; --acc: #127A5E; --ink: #1d1a17; --line: #e6dfd5; --sand: #f6f1ea; --soft: #f3f1ee; --muted: #6b635a;
   font-family: "Inter", system-ui, -apple-system, sans-serif; color: var(--ink); background: #fff; font-size: 16px; line-height: 1.5; }
 .C-page h1, .C-page h2, .C-page h3 { margin: 0; font-family: inherit; letter-spacing: -0.01em; font-weight: 600; }
 .C-mock { margin: 0; background: var(--ink); color: #fff; font-size: 12px; text-align: center; padding: 6px 16px; }
@@ -73,7 +73,7 @@
 .C-checks { list-style: none; padding: 0; margin: 0 auto; max-width: 640px !important; background: #fff; border-radius: 24px; padding: 4px 24px; }
 .C-checks li { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--line); font-size: 17px; }
 .C-checks li:last-child { border-bottom: 0; }
-.C-checks svg { flex: none; color: #2e7d32; }
+.C-checks svg { flex: none; color: var(--acc); }
 .C-fine { max-width: 560px !important; text-align: center; color: var(--muted); font-size: 13.5px; margin-top: 18px !important; }
 
 /* Every home has: amenity tiles */
@@ -127,7 +127,7 @@
 /* Sticky search button (phones only), like the bottom bar in Airbnb's app pages */
 .C-sticky { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; padding: 12px 24px calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, rgba(255,255,255,0), #fff 30%); transform: translateY(110%); transition: transform .25s ease; pointer-events: none; }
 .C-sticky.is-on { transform: none; pointer-events: auto; }
-.C-stickyBtn { width: 100%; min-height: 52px; border: 0; border-radius: 999px; background: var(--acc); color: #fff; font: inherit; font-size: 17px; font-weight: 600; cursor: pointer; box-shadow: 0 6px 18px rgba(180,83,42,.3); }
+.C-stickyBtn { width: 100%; min-height: 52px; border: 0; border-radius: 999px; background: var(--acc); color: #fff; font: inherit; font-size: 17px; font-weight: 600; cursor: pointer; box-shadow: 0 6px 18px rgba(18,122,94,.3); }
 @media (prefers-reduced-motion: reduce) { .C-sticky { transition: none; } }
 
 @media (min-width: 900px) {
