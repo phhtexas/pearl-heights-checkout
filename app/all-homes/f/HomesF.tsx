@@ -39,6 +39,39 @@ export function HomesF({ homes, hero, points, reasons }: {
     return h.rating ? `★ ${h.rating.value}` : "New";
   };
   const areas = [...new Set(homes.map((h) => h.area))];
+  const card = (h: HomeCard, i: number) => {
+    const r = s.results[h.key];
+    const off = searched && r && !r.ok;
+    return (
+      <li key={h.key} id={`home-${h.key}`} className={`F-card${off ? " is-off" : ""}`} data-reveal>
+        {/* Oscar: tapping a photo opens that home's page; swipe sideways for more photos */}
+        <div className="F-photos">
+          {h.photos.slice(0, 3).map((p, j) => (
+            <a className="F-photo" key={p.src} href={s.href(h.slug)} draggable={false} tabIndex={j === 0 ? 0 : -1}
+              aria-label={j === 0 ? `${h.title}: view home` : undefined} aria-hidden={j === 0 ? undefined : true}>
+              <Image src={p.src} alt={j === 0 ? "" : p.alt} fill sizes="(min-width: 900px) 460px, 88vw" priority={i === 0 && j === 0} draggable={false} />
+            </a>
+          ))}
+        </div>
+        <div className="F-info">
+          <p className="F-fit">{h.bestFit}</p>
+          <p className="F-meta">{h.area} · {h.rating ? <span>★ {h.rating.value} <span className="F-dim">({h.rating.count} Airbnb guest reviews)</span></span> : <b>New home</b>}</p>
+          <h3><a href={s.href(h.slug)}>{h.title}</a></h3>
+          <p className="F-dim">{h.guests} guests · {h.bedrooms} bedrooms · {h.beds} beds · {h.baths} bath{h.baths === 1 ? "" : "s"}</p>
+          <ul className="F-points">{h.points.map((p) => <li key={p}>{p}</li>)}</ul>
+          <div className="F-buy">
+            <p className="F-price">
+              {s.state === "loading" ? <span className="F-dim">Checking these dates…</span>
+                : !searched || !r ? <span className="F-dim">Add dates for the total</span>
+                : r.ok ? <><b>{money(r.total!)}</b><span>total for {nights} night{nights === 1 ? "" : "s"}, taxes included</span></>
+                : <><span className="F-dim">{r.reason}</span>{r.reason !== `Sleeps ${h.guests}` && <button type="button" className="F-retry" onClick={toSearch}>Try other dates</button>}</>}
+            </p>
+            <a className="F-cta" href={s.href(h.slug)} aria-label={`View ${h.title}`}>View home</a>
+          </div>
+        </div>
+      </li>
+    );
+  };
 
   return (
     <>
@@ -61,38 +94,13 @@ export function HomesF({ homes, hero, points, reasons }: {
           <p aria-live="polite">{searched ? `${available} of 5 homes available ${shortDate(s.ci)} – ${shortDate(s.co)} for ${s.adults + s.children} guests. Totals include taxes and fees.` : "Add dates to see each home's exact total, taxes included."}</p>
         </div>
         <ul className="F-list">
-          {homes.map((h, i) => {
-            const r = s.results[h.key];
-            const off = searched && r && !r.ok;
-            return (
-              <li key={h.key} id={`home-${h.key}`} className={`F-card${off ? " is-off" : ""}`} data-reveal>
-                {/* Oscar: tapping a photo opens that home's page; swipe sideways for more photos */}
-                <div className="F-photos">
-                  {h.photos.slice(0, 3).map((p, j) => (
-                    <a className="F-photo" key={p.src} href={s.href(h.slug)} draggable={false} tabIndex={j === 0 ? 0 : -1}
-                      aria-label={j === 0 ? `${h.title}: view home` : undefined} aria-hidden={j === 0 ? undefined : true}>
-                      <Image src={p.src} alt={j === 0 ? "" : p.alt} fill sizes="(min-width: 900px) 460px, 88vw" priority={i === 0 && j === 0} draggable={false} />
-                    </a>
-                  ))}
-                </div>
-                <div className="F-info">
-                  <p className="F-fit">{h.bestFit}</p>
-                  <p className="F-meta">{h.area} · {h.rating ? <span>★ {h.rating.value} <span className="F-dim">({h.rating.count} Airbnb guest reviews)</span></span> : <b>New home</b>}</p>
-                  <h3><a href={s.href(h.slug)}>{h.title}</a></h3>
-                  <p className="F-dim">{h.guests} guests · {h.bedrooms} bedrooms · {h.beds} beds · {h.baths} bath{h.baths === 1 ? "" : "s"}</p>
-                  <ul className="F-points">{h.points.map((p) => <li key={p}>{p}</li>)}</ul>
-                  <div className="F-buy">
-                    <p className="F-price">
-                      {s.state === "loading" ? <span className="F-dim">Checking these dates…</span>
-                        : !searched || !r ? <span className="F-dim">Add dates for the total</span>
-                        : r.ok ? <><b>{money(r.total!)}</b><span>total for {nights} night{nights === 1 ? "" : "s"}, taxes included</span></>
-                        : <><span className="F-dim">{r.reason}</span>{r.reason !== `Sleeps ${h.guests}` && <button type="button" className="F-retry" onClick={toSearch}>Try other dates</button>}</>}
-                    </p>
-                    <a className="F-cta" href={s.href(h.slug)} aria-label={`View ${h.title}`}>View home</a>
-                  </div>
-                </div>
-              </li>
-            );
+          {/* Oscar, Nov 17: after a search, homes that fit the dates and guests move to the top (original order kept within
+              each group); the rest stay visible, greyed, below a small divider. */}
+          {(searched ? [...homes].sort((x, y) => Number(!s.results[x.key]?.ok) - Number(!s.results[y.key]?.ok)) : homes).flatMap((h, i, list) => {
+            const offAt = (k: HomeCard) => searched && !!s.results[k.key] && !s.results[k.key]!.ok;
+            // divider only between the two groups (not when every home is unavailable)
+            const divider = i > 0 && offAt(h) && !offAt(list[i - 1]!) ? [<li key="off-divider" className="F-offHead">Not available for these dates or guests</li>] : [];
+            return [...divider, card(h, homes.indexOf(h))];
           })}
         </ul>
       </section>

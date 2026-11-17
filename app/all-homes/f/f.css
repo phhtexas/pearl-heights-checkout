@@ -403,3 +403,7 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
   /* cards fade in without sliding on touch screens, so a swipe never starts on a moving card */
   html.rv-ready .F-page .F-card[data-reveal]:not(.is-in) { transform: none; }
 }
+
+/* Oscar, Nov 17: available homes first after a search; a quiet divider above the unavailable ones */
+.F-page .F-offHead { list-style: none; display: flex; align-items: center; gap: 14px; margin: 8px 0 -4px; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.F-page .F-offHead::after { content: ""; flex: 1; height: 1px; background: var(--line); }

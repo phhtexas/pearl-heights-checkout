@@ -198,6 +198,24 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   ok(/total for 3 nights/.test(await page.evaluate(() => document.body.innerText)), `${tag}: 'Show totals' runs the search -> live totals`);
   const href = await page.locator('#home-752 a[href^="/homes/"]').first().getAttribute("href");
   ok(href === `/homes/752-myrtle?checkIn=${iso(a)}&checkOut=${iso(b)}&adults=2&children=0`, `${tag}: View home carries the dates`);
+  { // available homes first, unavailable below a divider (all still shown)
+    const order = await page.evaluate(() => [...document.querySelectorAll(".F-list > li")].map((li) => li.classList.contains("F-offHead") ? "divider" : li.classList.contains("is-off") ? "off" : "on"));
+    const firstOff = order.indexOf("off");
+    ok(order.filter((x) => x !== "divider").length === 5 && (firstOff === -1 || (order.slice(firstOff).every((x) => x !== "on") && (firstOff === 0 || order[firstOff - 1] === "divider"))), `${tag}: available homes on top, unavailable below a divider (${order.join(",")})`);
+  }
+  { // 9 guests: only the 10-guest home fits -> it moves to the top, the others drop below the divider
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.click(".S-guests > button");
+    for (let k = 0; k < 7; k++) await page.click('button[aria-label="More adults"]');
+    await page.click(".S-done"); await page.click(".S-go");
+    await page.waitForFunction(() => /Sleeps 8/.test(document.body.innerText), null, { timeout: 15000 }).catch(() => {});
+    const order = await page.evaluate(() => [...document.querySelectorAll(".F-list > li")].map((li) => li.classList.contains("F-offHead") ? "divider" : li.id));
+    ok(order[0] === "home-736" && order[1] === "divider" && order.length === 6, `${tag}: 9 guests -> 736 first, the others below (${order.join(",")})`);
+    await page.click(".S-guests > button");
+    for (let k = 0; k < 7; k++) await page.click('button[aria-label="Fewer adults"]');
+    await page.click(".S-done"); await page.click(".S-go");
+    await page.waitForFunction(() => !/Sleeps 8/.test(document.body.innerText), null, { timeout: 15000 }).catch(() => {});
+  }
   // photos: each one opens the home's page; swiping moves to the next photo
   ok((await page.locator('#home-752 .F-photo').evaluateAll((els) => els.every((e) => e.tagName === "A" && e.getAttribute("href").startsWith("/homes/752-myrtle")))), `${tag}: home photos link to the home's page`);
   if (w <= 760) {
