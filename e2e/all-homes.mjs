@@ -225,6 +225,20 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
     ok(box && await page.locator("#home-752 .F-photos").evaluate((el) => el.scrollLeft > 50), `${tag}: photos scroll sideways to the next one`);
     ok(await page.evaluate(() => getComputedStyle(document.querySelector("#home-752")).transform === "none"), `${tag}: no hover lift on touch (no stuck swipe)`);
   }
+  if (w > 760) { // desktop: wheel/trackpad over a photo scrolls the page (never caught by the strip); arrows change the photo
+    const card = page.locator("#home-752");
+    await card.scrollIntoViewIfNeeded(); await page.waitForTimeout(600);
+    const box = await card.locator(".F-photos").boundingBox();
+    const y0 = await page.evaluate(() => scrollY);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(30, 400); await page.waitForTimeout(600); // a slightly diagonal trackpad-like swipe
+    ok((await page.evaluate(() => scrollY)) > y0 + 200 && (await card.locator(".F-photos").evaluate((el) => el.scrollLeft)) === 0, `${tag}: scrolling over a home's photo scrolls the page`);
+    await card.scrollIntoViewIfNeeded(); await card.hover(); await page.waitForTimeout(300);
+    await card.locator(".F-arrowNext").click(); await page.waitForTimeout(900);
+    ok((await card.locator(".F-photos").evaluate((el) => Math.round(el.scrollLeft / el.clientWidth))) === 1, `${tag}: next-photo arrow shows the second photo`);
+    await card.locator(".F-arrowPrev").click(); await page.waitForTimeout(900);
+    ok((await card.locator(".F-photos").evaluate((el) => el.scrollLeft)) === 0, `${tag}: previous-photo arrow goes back`);
+  }
   // strip left-aligned; footer logo + Instagram
   ok(await page.evaluate(() => { const lis = [...document.querySelectorAll(".F-strip li")].map((l) => l.getBoundingClientRect().left); const h = document.querySelector(".F-stripHost").getBoundingClientRect().left; return Math.abs(lis[0] - h) < 2; }), `${tag}: '4.98' line lines up left with the host line`);
   ok((await page.locator('footer .F-footLogo[src="/brand/logo-dark.webp"]').count()) === 1 && (await page.locator('footer a[href="https://www.instagram.com/pearlheightshomes"]').count()) === 1, `${tag}: footer has our logo + Instagram`);

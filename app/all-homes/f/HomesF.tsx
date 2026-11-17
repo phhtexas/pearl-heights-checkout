@@ -39,12 +39,23 @@ export function HomesF({ homes, hero, points, reasons }: {
     return h.rating ? `★ ${h.rating.value}` : "New";
   };
   const areas = [...new Set(homes.map((h) => h.area))];
+  const slide = (e: React.MouseEvent<HTMLButtonElement>, dir: 1 | -1) => {
+    const strip = e.currentTarget.parentElement?.querySelector<HTMLElement>(".F-photos");
+    if (!strip) return;
+    const w = strip.clientWidth, n = strip.children.length;
+    const at = Math.round(strip.scrollLeft / w);
+    strip.scrollTo({ left: ((at + dir + n) % n) * w, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  };
   const card = (h: HomeCard, i: number) => {
     const r = s.results[h.key];
     const off = searched && r && !r.ok;
     return (
       <li key={h.key} id={`home-${h.key}`} className={`F-card${off ? " is-off" : ""}`} data-reveal>
-        {/* Oscar: tapping a photo opens that home's page; swipe sideways for more photos */}
+        {/* Oscar: tapping a photo opens that home's page; swipe sideways for more photos (phones). On desktop the strip is
+            not a scroll area (a trackpad swipe got caught in it and the page stopped scrolling), so arrows change the photo. */}
+        <div className="F-photoWrap">
+        <button type="button" className="F-arrow F-arrowPrev" aria-label={`Previous photo of ${h.title}`} onClick={(e) => slide(e, -1)}>‹</button>
+        <button type="button" className="F-arrow F-arrowNext" aria-label={`Next photo of ${h.title}`} onClick={(e) => slide(e, 1)}>›</button>
         <div className="F-photos">
           {h.photos.slice(0, 3).map((p, j) => (
             <a className="F-photo" key={p.src} href={s.href(h.slug)} draggable={false} tabIndex={j === 0 ? 0 : -1}
@@ -52,6 +63,7 @@ export function HomesF({ homes, hero, points, reasons }: {
               <Image src={p.src} alt={j === 0 ? "" : p.alt} fill sizes="(min-width: 900px) 460px, 88vw" priority={i === 0 && j === 0} draggable={false} />
             </a>
           ))}
+        </div>
         </div>
         <div className="F-info">
           <p className="F-fit">{h.bestFit}</p>

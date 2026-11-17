@@ -407,3 +407,18 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 /* Oscar, Nov 17: available homes first after a search; a quiet divider above the unavailable ones */
 .F-page .F-offHead { list-style: none; display: flex; align-items: center; gap: 14px; margin: 8px 0 -4px; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .F-page .F-offHead::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+/* Oscar, Nov 17: desktop page scroll got stuck over the photos. The strip is only a swipe area on touch screens;
+   with a mouse/trackpad it is not scrollable (wheel and trackpad always scroll the page) and arrows change the photo. */
+.F-page .F-photos { overscroll-behavior-x: auto; touch-action: auto; }
+.F-page .F-photoWrap { position: relative; min-width: 0; }
+.F-page .F-arrow { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .F-page .F-photos { overflow-x: hidden; scroll-snap-type: none; }
+  .F-page .F-photo { width: 100%; }
+  .F-page .F-arrow { display: grid; place-items: center; position: absolute; top: 50%; z-index: 2; width: 36px; height: 36px; margin-top: -18px; border: 0; border-radius: 50%; background: rgba(255,255,255,.92); color: var(--ink); font-size: 22px; line-height: 1; padding-bottom: 3px; box-shadow: 0 2px 8px rgba(0,0,0,.15); cursor: pointer; opacity: 0; transition: opacity .25s ease, transform .25s ease; }
+  .F-page .F-arrowPrev { left: 12px; } .F-page .F-arrowNext { right: 12px; }
+  .F-page .F-card:hover .F-arrow, .F-page .F-arrow:focus-visible { opacity: 1; }
+  .F-page .F-arrow:hover { transform: scale(1.06); }
+}
+@media (min-width: 900px) { .F-page .F-photoWrap { display: flex; } .F-page .F-photoWrap > .F-photos { flex: 1; min-width: 0; } }
