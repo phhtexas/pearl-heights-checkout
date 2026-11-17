@@ -290,6 +290,7 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
     await page.locator('.F-hoodBtn', { hasText: "Tobin Hill" }).focus(); await page.keyboard.press("Enter"); await page.waitForTimeout(800);
     ok((await circles()) === 1 && (await page.locator(".F-area").getAttribute("data-area")) === "Tobin Hill" && await inCircle(["736", "752"]), `${tag}: Tobin Hill -> one circle containing both pins, pins on top and clickable`);
     ok((await page.locator('.F-hoodBtn', { hasText: "Tobin Hill" }).getAttribute("aria-pressed")) === "true", `${tag}: Tobin Hill marked selected`);
+    ok(await page.evaluate(() => { const cs = getComputedStyle(document.querySelector(".F-hood.is-sel")); return cs.boxShadow === "none" && cs.backgroundColor === "rgb(227, 240, 234)"; }), `${tag}: selected neighborhood is light green, no dark edge`);
     const rTobin = await page.locator(".F-area").evaluate((e) => e.getBoundingClientRect().width);
     // Lavaca by click/tap -> replaces, small circle
     await page.locator('.F-hoodBtn', { hasText: "Lavaca" }).click(); await page.waitForTimeout(800);

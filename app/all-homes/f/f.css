@@ -513,3 +513,5 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 .F-page .F-checks { overflow: hidden; padding-top: 0; padding-bottom: 0; }
 .F-page .F-checks li:has(.F-inc[open]) { box-shadow: none; border-radius: 0; margin: 0 -24px; padding: 0 24px; border-bottom-color: transparent; }
 .F-page .F-checks li:has(.F-inc[open]) + li { border-top: 0; }
+/* Oscar, Nov 17: selected neighborhood like the includes row: no dark edge, same light green */
+.F-page .F-hood.is-sel { box-shadow: none; background: #e3f0ea; }
