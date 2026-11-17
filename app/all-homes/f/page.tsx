@@ -16,6 +16,9 @@ import "./f.css";
 export const metadata = mockMeta("F");
 export const dynamic = "force-static";
 
+// Soft brand-family tones for the review initial circles (dark text on all of them passes contrast).
+const AV = ["#d9ebe3", "#efe3d3", "#e4e2f0", "#f3dcd6", "#dde8ef"];
+
 const INCLUDES: [string, string][] = [
   ["Damage waiver — $5,000 coverage", "Covers accidental damage during your stay, up to $5,000, subject to the provider's terms and exclusions. It isn't a security deposit."],
   ["Your full total, taxes included, before you pay", "You see the exact total, with taxes and the damage waiver, before you pay. Pay in full, or half now when check-in is more than 30 days away."],
@@ -145,7 +148,8 @@ export default function Page() {
                     <p className="F-stars" aria-label="5 out of 5 stars">★★★★★</p>
                     {r.tags.length > 0 && <p className="F-revTags">{r.tags.map((t) => <span key={t}>{t}</span>)}</p>}
                     <blockquote>“{r.text}”</blockquote>
-                    <p className="F-who"><b>{r.name}</b> · {r.when}</p>
+                    {/* Oscar, Nov 17: initial circles (no photos; real photos only with a guest's permission) */}
+                    <p className="F-who"><span className="F-av" aria-hidden="true" style={{ ["--av" as string]: AV[[...r.name].reduce((n, ch) => n + ch.charCodeAt(0), 0) % AV.length] }}>{r.name.charAt(0)}</span><span><b>{r.name}</b> · {r.when}</span></p>
                     <a className="F-revHome" href={`#home-${r.key}`} tabIndex={i >= reviews.length ? -1 : undefined}>{r.home}</a>
                   </li>
                 ))}

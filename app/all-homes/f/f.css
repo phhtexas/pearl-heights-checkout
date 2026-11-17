@@ -534,3 +534,7 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 /* Oscar, Nov 17: trip snippets on reviews (from each review's reservation) */
 .F-page .F-revTags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 10px; }
 .F-page .F-revTags span { font-size: 12.5px; font-weight: 600; color: #0f5f49; background: #e3f0ea; padding: 4px 10px; border-radius: 999px; }
+
+/* review initial circles */
+.F-page .F-who { display: flex; align-items: center; gap: 10px; }
+.F-page .F-av { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--av); color: #1d1a17; display: grid; place-items: center; font-weight: 600; font-size: 15px; }
