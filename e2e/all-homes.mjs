@@ -141,30 +141,76 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   ok(r.status() === 200 && /mockup e/i.test(await page.locator(".mockbar").innerText()), "e: original static file kept at /all-homes/archive/e-static");
   await page.context().close();
 }
-// Version F (note 176): C as the base + E's header/nav, compact trust strip, no filters/sort, C's accent. C and E unchanged.
+// Version F (note 176 + Oscar round 2): C base + E header/nav, see-through header with the site logo, centered hero,
+// host strip, Airbnb-style calendar, list-left/map-right, timeline, review loop, slow reveals. C and E unchanged.
+const pickDates = async (page, a1, b1) => {
+  await page.click('button[aria-label^="Check-in date"]');
+  await page.waitForSelector(".DR");
+  for (const d of [a1, b1]) {
+    for (let k = 0; k < 14 && !(await page.locator(`.DR-day[data-date="${d}"]`).count()); k++) await page.click(".DR-next");
+    await page.locator(`.DR-day[data-date="${d}"]`).scrollIntoViewIfNeeded();
+    await page.click(`.DR-day[data-date="${d}"]`);
+  }
+};
 for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 } }]) {
   const w = dev.viewport.width, tag = `f@${w}`;
   const page = await (await browser.newContext(dev)).newPage();
   const errors = []; page.on("pageerror", (e) => errors.push(e.message));
   const res = await page.goto(`${BASE}/all-homes/f`);
+  await page.waitForTimeout(400);
   ok(res.status() === 200 && /noindex/.test(await page.getAttribute('meta[name="robots"]', "content")), `${tag}: loads, noindex`);
-  ok((await page.locator("header.F-top .F-ask").count()) === 1, `${tag}: header with 'Ask a question'`);
+  ok(!(await page.locator("header.F-top").getAttribute("class")).includes("is-solid"), `${tag}: header see-through over the photo`);
+  ok((await page.locator('.F-logoWhite[src="/brand/logo-white.webp"]').count()) === 1 && (await page.locator('.F-logoDark[src="/brand/logo-dark.webp"]').count()) === 1, `${tag}: site logo (white over photo, dark when solid)`);
+  ok(await page.evaluate(() => getComputedStyle(document.querySelector(".F-heroText")).textAlign === "center"), `${tag}: hero text centered`);
   if (w > 760) ok((await page.locator(".F-nav a").allInnerTexts()).join(",") === "Homes,Locations,Reviews,FAQ", `${tag}: nav Homes, Locations, Reviews, FAQ`);
   for (const id of ["homes", "locations", "reviews", "faq"]) ok((await page.locator(`#${id}`).count()) === 1, `${tag}: nav target #${id}`);
   ok((await page.locator(".E-chip, .chip, select[aria-label='Sort homes']").count()) === 0, `${tag}: no filters or sort`);
   const t = await page.evaluate(() => document.body.innerText);
-  ok(t.includes("Hosted directly by Oscar & Fernanda") && t.includes("4.98 average across 463 Airbnb guest reviews") && t.includes("Secure payment through Stripe") && t.includes("Usually reply within an hour"), `${tag}: compact trust strip`);
-  ok(t.indexOf("Hosted directly by Oscar") < t.indexOf("Choose your home") && t.indexOf("Choose your home") < t.indexOf("Large Family House Next to the Pearl"), `${tag}: search -> strip -> homes`);
-  ok(!t.includes("You book with us"), `${tag}: big 'Book directly' block removed`);
+  ok(t.includes("Hosted directly by Oscar & Fernanda") && t.includes("4.98 average across 463 Airbnb guest reviews") && t.includes("Secure payment through Stripe") && t.includes("Usually reply within an hour"), `${tag}: host strip`);
+  ok(t.indexOf("Hosted directly by Oscar") < t.indexOf("Choose your home") && t.indexOf("Choose your home") < t.indexOf("Large Family House Next to the Pearl"), `${tag}: search -> host strip -> homes`);
   ok(await page.evaluate(() => getComputedStyle(document.querySelector(".S-go")).backgroundColor === "rgb(18, 122, 94)"), `${tag}: C's accent kept`);
   ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${tag}: no sideways scroll`);
-  await page.fill('input[aria-label="Check-in date"]', iso(a)); await page.fill('input[aria-label="Check-out date"]', iso(b)); await page.click(".S-go");
+  // calendar
+  await page.click('button[aria-label^="Check-in date"]');
+  await page.waitForSelector(".DR");
+  ok((await page.locator(w > 760 ? ".DR-pop .DR-month" : ".DR-sheet .DR-month").count()) === (w > 760 ? 2 : 12), `${tag}: calendar shows ${w > 760 ? "two months side by side" : "a full-screen sheet of months"}`);
+  if (w <= 760) { await page.waitForTimeout(500); const r = await page.locator(".DR-sheet").boundingBox(); const vh = await page.evaluate(() => innerHeight); ok(r && r.y === 0 && r.height >= vh - 1, `${tag}: phone calendar fills the screen`); }
+  const today = await page.evaluate(() => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date()));
+  const yesterday = new Date(Date.parse(today + "T12:00:00Z") - 864e5).toISOString().slice(0, 10);
+  if (await page.locator(`.DR-day[data-date="${yesterday}"]`).count()) ok(await page.locator(`.DR-day[data-date="${yesterday}"]`).isDisabled(), `${tag}: past days disabled`);
+  await page.keyboard.press("Escape");
+  ok((await page.locator(".DR").count()) === 0, `${tag}: Escape closes the calendar`);
+  await pickDates(page, iso(a), iso(b));
+  ok((await page.locator(".DR-day.is-in").count()) === 2 && (await page.locator(".DR-h").innerText()) === "3 nights", `${tag}: range shaded, '3 nights'`);
+  await page.click(".DR-done");
   await page.waitForFunction(() => /total for 3 nights/.test(document.body.innerText), null, { timeout: 15000 }).catch(() => {});
-  ok(/total for 3 nights/.test(await page.evaluate(() => document.body.innerText)), `${tag}: live totals`);
+  ok(/total for 3 nights/.test(await page.evaluate(() => document.body.innerText)), `${tag}: 'Show totals' runs the search -> live totals`);
   const href = await page.locator('#home-752 a[href^="/homes/"]').first().getAttribute("href");
   ok(href === `/homes/752-myrtle?checkIn=${iso(a)}&checkOut=${iso(b)}&adults=2&children=0`, `${tag}: View home carries the dates`);
-  if (w > 760) { await page.click('.F-nav a[href="#faq"]'); await page.waitForTimeout(700); ok(await page.evaluate(() => { const r = document.getElementById("faq").getBoundingClientRect(); return r.top >= 0 && r.top < 200; }), `${tag}: nav link jumps to FAQ below the sticky header`); }
+  // scroll: header turns solid, reveals, map layout, timeline, reviews
+  await page.evaluate(() => window.scrollTo(0, 900)); await page.waitForTimeout(500);
+  ok((await page.locator("header.F-top").getAttribute("class")).includes("is-solid"), `${tag}: header turns solid on scroll`);
+  const hidden = await page.evaluate(() => { const el = document.querySelector(".F-tl"); return getComputedStyle(el).opacity; });
+  ok(hidden === "0", `${tag}: timeline waits below the fold (reveal on scroll)`);
+  await page.locator(".F-tl").scrollIntoViewIfNeeded(); await page.waitForTimeout(2600);
+  ok(await page.evaluate(() => getComputedStyle(document.querySelector(".F-tl")).opacity === "1" && getComputedStyle(document.querySelector(".F-tl li:last-child .F-tlMark")).transform !== "matrix(0, 0, 0, 0, 0, 0)"), `${tag}: timeline revealed, markers popped in`);
+  ok((await page.locator(".F-tlWhen").allInnerTexts()).join("|").toLowerCase() === "booking day|within 24 hours|once you're verified|check-in morning|during your stay", `${tag}: timeline steps`);
+  await page.locator("#locations").scrollIntoViewIfNeeded(); await page.waitForTimeout(1200);
+  ok((await page.locator(".C-pin").count()) === 5 && (await page.locator(".F-hood").count()) === 3, `${tag}: map with 5 pins + neighborhood list`);
+  if (w > 760) ok(await page.evaluate(() => { const l = document.querySelector(".F-hoods").getBoundingClientRect(), m = document.querySelector(".F-mapCard").getBoundingClientRect(); return l.right <= m.left; }), `${tag}: list left, map right`);
+  await page.locator("#reviews").scrollIntoViewIfNeeded(); await page.waitForTimeout(1200);
+  ok(await page.evaluate(() => getComputedStyle(document.querySelector(".F-loopTrack")).animationName === "F-marquee"), `${tag}: reviews glide in a loop`);
+  ok((await page.locator('.F-loopTrack li:not([aria-hidden="true"])').count()) >= 6, `${tag}: real reviews (loop copies hidden from screen readers)`);
+  await page.click(".F-loopBtn");
+  ok(await page.evaluate(() => getComputedStyle(document.querySelector(".F-loopTrack")).animationPlayState === "paused"), `${tag}: reviews can be paused`);
+  if (w > 760) { await page.evaluate(() => window.scrollTo(0, 0)); await page.click('.F-nav a[href="#faq"]'); await page.waitForTimeout(900); ok(await page.evaluate(() => { const r = document.getElementById("faq").getBoundingClientRect(); return r.top >= 0 && r.top < 200; }), `${tag}: nav link jumps to FAQ`); }
   ok(errors.length === 0, `${tag}: no page errors ${errors.join(" | ")}`);
+  await page.context().close();
+}
+{ // reduced motion: nothing hidden, nothing moving
+  const page = await (await browser.newContext({ reducedMotion: "reduce" })).newPage();
+  await page.goto(`${BASE}/all-homes/f`); await page.waitForTimeout(500);
+  ok(await page.evaluate(() => getComputedStyle(document.querySelector(".F-tl")).opacity === "1" && getComputedStyle(document.querySelector(".F-loopTrack")).animationName === "none"), "f: reduced motion -> content visible, reviews still");
   await page.context().close();
 }
 {

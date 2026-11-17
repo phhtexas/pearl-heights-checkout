@@ -2,8 +2,9 @@ import Image from "next/image";
 import { EVERY_HOME, guestReviews, homeCards, mapPoints, sharedFaq } from "@/content/allHomes";
 import { HOMES } from "@/content/homes";
 import { policyOverview } from "@/domain/policy";
-import { Footer, HOST, STEPS, mockMeta } from "../shared";
+import { Footer, HOST, mockMeta } from "../shared";
 import { HomesF } from "./HomesF";
+import { Reveal, ReviewLoop, SiteHeader } from "./Motion";
 import "../search.css";
 import "./f.css";
 
@@ -43,42 +44,55 @@ export default function Page() {
   const faq = sharedFaq(policyOverview());
 
   // Oscar via note 176: C's big "Book directly" block compressed into one strip right under the search.
+  // Our profile right away (Oscar): one calm line under the search, no box, so it doesn't compete with the photo.
   const reasons = (
-    <section className="F-strip" aria-label="Book directly with local hosts">
-      <div className="F-stripIn">
-        <div className="F-stripHost">
-          {HOST.photo && <Image src={HOST.photo} alt="Oscar and Fernanda" width={48} height={48} className="F-stripPhoto" />}
-          <b>Hosted directly by Oscar &amp; Fernanda</b>
-        </div>
-        <ul>
-          <li><span className="F-stripIc" aria-hidden="true">★</span>4.98 average across 463 Airbnb guest reviews</li>
-          <li><span className="F-stripIc" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /></svg></span>Secure payment through Stripe</li>
-          <li><span className="F-stripIc" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 12a7.5 7.5 0 0 1-11 6.6L4 20l1.4-4.6A7.5 7.5 0 1 1 20 12z" /></svg></span>Usually reply within an hour</li>
-        </ul>
+    <section className="F-strip" aria-label="Book directly with local hosts" data-reveal>
+      <div className="F-stripHost">
+        {HOST.photo && <Image src={HOST.photo} alt="Oscar and Fernanda" width={56} height={56} className="F-stripPhoto" />}
+        <div><b>Hosted directly by Oscar &amp; Fernanda</b><span>Airbnb Superhosts · Local San Antonio hosts</span></div>
       </div>
+      <ul>
+        <li><span className="F-stripIc" aria-hidden="true">★</span>4.98 average across 463 Airbnb guest reviews</li>
+        <li><span className="F-stripIc" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /></svg></span>Secure payment through Stripe</li>
+        <li><span className="F-stripIc" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 12a7.5 7.5 0 0 1-11 6.6L4 20l1.4-4.6A7.5 7.5 0 1 1 20 12z" /></svg></span>Usually reply within an hour</li>
+      </ul>
     </section>
   );
+
+  // "Booking directly is simple" as a timeline (Oscar: RevWhisper's Day 0 -> Every day after line), with our real steps.
+  const TIMELINE = [
+    { when: "Booking day", title: "Choose your home and pay securely.", text: "See your exact total first, taxes and the damage waiver included. Pay in full, or half now when check-in is more than 30 days away." },
+    { when: "Within 24 hours", title: "Sign and verify.", text: "The reservation holder signs the rental agreement and verifies their ID online, about 3 minutes each. Sooner for last-minute stays." },
+    { when: "Once you're verified", title: "Your stay page opens.", text: "Your address, entry steps and WiFi appear in your private stay page." },
+    { when: "Check-in morning", title: "Door codes arrive.", text: "Self check-in after 4:00 PM. Check-out is before 10:00 AM." },
+    { when: "During your stay", title: "We're a message away.", text: "Questions go straight to Oscar and Fernanda, and we usually reply within an hour." },
+  ];
 
   return (
     <div className="F-page">
       <aside className="F-mock" aria-label="Prototype label">Mockup F · prototype, not linked from the site</aside>
       {/* E's conventional header (note 176): logo, section links, a clear "Ask a question" */}
-      <header className="F-top">
+      <Reveal />
+      <SiteHeader>
         <div className="F-topIn">
-          <a className="F-brand" href="#top" aria-label="Pearl Heights Homes, top of page">Pearl Heights <span>HOMES</span></a>
+          <a className="F-brand" href="#top" aria-label="Pearl Heights Homes, top of page">
+            {/* The logo from pearlheightshomes.com (white); the dark copy is the same artwork recolored for the solid header. */}
+            <img className="F-logo F-logoWhite" src="/brand/logo-white.webp" alt="" width={200} height={174} />
+            <img className="F-logo F-logoDark" src="/brand/logo-dark.webp" alt="" width={200} height={174} />
+          </a>
           <nav className="F-nav" aria-label="Sections"><a href="#homes">Homes</a><a href="#locations">Locations</a><a href="#reviews">Reviews</a><a href="#faq">FAQ</a></nav>
           <a className="F-ask" href="mailto:bookings@thepearlheightshomes.com">Ask a question</a>
         </div>
-      </header>
+      </SiteHeader>
       <main id="top">
         <HomesF homes={homes} hero={hero} points={mapPoints()} reasons={reasons} />
 
         <section className="F-sec F-band" aria-labelledby="inc-h">
-          <div className="F-head">
+          <div className="F-head" data-reveal>
             <h2 id="inc-h">Every booking includes</h2>
             <p>The same at all five homes.</p>
           </div>
-          <ul className="F-checks">
+          <ul className="F-checks" data-reveal>
             {["Damage waiver — $5,000 coverage", "Your full total, taxes included, before you pay", "Secure payment through Stripe", "A private stay page with your check-in steps", "Hosts who usually reply within an hour"].map((t) => (
               <li key={t}><span>{t}</span><Ico name="check" /></li>
             ))}
@@ -87,52 +101,63 @@ export default function Page() {
         </section>
 
         <section className="F-sec" aria-labelledby="every-h">
-          <div className="F-head">
+          <div className="F-head" data-reveal>
             <h2 id="every-h">Every home has</h2>
             <p>Checked against each home&apos;s amenity list.</p>
           </div>
-          <ul className="F-amen">{EVERY_HOME.map((a) => <li key={a.label}><Ico name={a.icon} /><span>{a.label}</span></li>)}</ul>
+          <ul className="F-amen">{EVERY_HOME.map((a, i) => <li key={a.label} data-reveal style={{ ["--d" as string]: `${(i % 4) * 70}ms` }}><Ico name={a.icon} /><span>{a.label}</span></li>)}</ul>
         </section>
 
         <section className="F-sec F-band" id="reviews" aria-labelledby="love-h">
-          <div className="F-head">
+          <div className="F-head" data-reveal>
             <h2 id="love-h">What guests say</h2>
             <p>Reviews from Airbnb guests who stayed in our homes.</p>
           </div>
-          <ul className="F-stats">
+          <ul className="F-stats" data-reveal>
             <li><b>4.98</b><span>average across 463 Airbnb guest reviews</span></li>
             <li><b>5 homes</b><span>that sleep 8 to 10 guests</span></li>
             <li><b>1 hour</b><span>usual reply time from Oscar &amp; Fernanda</span></li>
           </ul>
-          <div className="F-revScroll" tabIndex={0} role="region" aria-label="Guest reviews, scroll sideways">
-          <ul className="F-reviews">
-            {reviews.map((r) => (
-              <li key={r.key + r.name}>
-                <p className="F-stars" aria-label="5 out of 5 stars">★★★★★</p>
-                <blockquote>“{r.text}”</blockquote>
-                <p className="F-who"><b>{r.name}</b> · {r.when}</p>
-                <a className="F-revHome" href={`#home-${r.key}`}>{r.home}</a>
-              </li>
-            ))}
-          </ul>
-          </div>
+          <ReviewLoop>
+            <div className="F-loopMask" data-reveal>
+              <ul className="F-loopTrack">
+                {[...reviews, ...reviews].map((r, i) => (
+                  <li key={`${i}-${r.key}-${r.name}`} aria-hidden={i >= reviews.length ? true : undefined}>
+                    <p className="F-stars" aria-label="5 out of 5 stars">★★★★★</p>
+                    <blockquote>“{r.text}”</blockquote>
+                    <p className="F-who"><b>{r.name}</b> · {r.when}</p>
+                    <a className="F-revHome" href={`#home-${r.key}`} tabIndex={i >= reviews.length ? -1 : undefined}>{r.home}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </ReviewLoop>
         </section>
 
         <section className="F-sec" aria-labelledby="steps-h">
-          <div className="F-head"><h2 id="steps-h">Booking directly is simple</h2></div>
-          <ol className="F-steps">{STEPS.map((st, i) => <li key={st.title}><span className="F-num">{i + 1}</span><div><h3>{st.title}</h3><p>{st.text}</p></div></li>)}</ol>
+          <div className="F-head" data-reveal><h2 id="steps-h">Booking directly is simple</h2><p>From the day you book to the day you leave.</p></div>
+          <ol className="F-tl" data-reveal>
+            {TIMELINE.map((st, i) => (
+              <li key={st.when} style={{ ["--i" as string]: i }}>
+                <p className="F-tlWhen">{st.when}</p>
+                <div className="F-tlTrack" aria-hidden="true"><span className="F-tlMark" /><span className="F-tlRail" /></div>
+                <h3>{st.title}</h3>
+                <p>{st.text}</p>
+              </li>
+            ))}
+          </ol>
         </section>
 
         <section className="F-sec F-band" id="faq" aria-labelledby="faq-h">
-          <div className="F-head"><h2 id="faq-h">Your questions, answered</h2></div>
-          <div className="F-faq">
+          <div className="F-head" data-reveal><h2 id="faq-h">Your questions, answered</h2></div>
+          <div className="F-faq" data-reveal>
             {faq.map((f) => (
               <details key={f.q}><summary><span>{f.q}</span><Ico name="chev" /></summary><p>{f.a}</p></details>
             ))}
           </div>
         </section>
 
-        <section className="F-sec F-hostSec" aria-labelledby="host-h">
+        <section className="F-sec F-hostSec" aria-labelledby="host-h" data-reveal>
           {HOST.photo && <Image src={HOST.photo} alt="Oscar and Fernanda" width={112} height={112} className="F-hostPhoto" />}
           <h2 id="host-h">Have questions before you book?</h2>
           <p>{HOST.bio}</p>
