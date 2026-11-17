@@ -5,6 +5,7 @@ import type { HomeContent } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
 import { track } from "@/client/track";
 import { Icon, iconFor } from "./icons";
+import { SiteNav } from "../SiteNav";
 import { TileMapV2 as TileMap } from "./TileMapV2";
 import "./listing.css";
 import "./listingV2.css";
@@ -257,14 +258,11 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
   return (
     <div className="V-page">
       <div className="V-test">Test site · nothing is booked or charged</div>
-      <header className="V-top">
-        <span aria-hidden="true" className="V-topSide" />
-        <a href="https://pearlheightshomes.com" className="V-brand"><img className="brandLogo" src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} /></a>
-        <div className="V-acts">
-          <button className="V-round" onClick={share} aria-label="Share this home"><Icon name="share" size={18} /></button>
-          <button className={"V-round" + (saved ? " V-saved" : "")} onClick={toggleSave} aria-pressed={saved} aria-label={saved ? "Saved" : "Save this home"}><Icon name="heart" size={18} /></button>
-        </div>
-      </header>
+      {/* Oscar, Nov 17: the All Homes F menu on every page; share/save stay next to "Ask a question" */}
+      <SiteNav sticky={false} extra={<>
+        <button className="V-round" onClick={share} aria-label="Share this home"><Icon name="share" size={18} /></button>
+        <button className={"V-round" + (saved ? " V-saved" : "")} onClick={toggleSave} aria-pressed={saved} aria-label={saved ? "Saved" : "Save this home"}><Icon name="heart" size={18} /></button>
+      </>} />
       {shared && <div className="V-toast" role="status">{shared}</div>}
 
       <section ref={heroRef} className="V-hero" aria-label="Photos">

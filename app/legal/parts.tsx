@@ -1,3 +1,4 @@
+import { SiteNav } from "../SiteNav";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { LEGAL_UPDATED, LEGAL_VERSION, OPERATOR, legalDoc, searchIndex, type Block } from "@/content/legal";
@@ -37,9 +38,7 @@ function BlockView({ b }: { b: Block }) {
 export function Shell({ crumbs, children }: { crumbs: { label: string; href?: string }[]; children: ReactNode }) {
   return (
     <div className="L-page">
-      <header className="L-top">
-        <a href="/homes/736-myrtle" className="L-brand"><img className="brandLogo" src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} /></a>
-      </header>
+      <SiteNav />
       <main className="L-main" id="top">
         <nav aria-label="Breadcrumb" className="L-crumbs">
           <ol>{crumbs.map((c) => <li key={c.label} aria-current={c.href ? undefined : "page"}>{c.href ? <a href={c.href}>{c.label}</a> : c.label}</li>)}</ol>

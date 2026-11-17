@@ -240,3 +240,24 @@ input.f.bad { border-color: var(--bad); }
 .V-brandFoot .brandLogo { height: 60px; }
 .brand .brandLogo { height: 40px; margin: 0 auto; }
 @media (min-width: 900px) { .V-brand .brandLogo { height: 50px; } }
+
+/* Nov 17 (Oscar): site menu matching All Homes F (app/SiteNav.tsx) */
+.SN { background: #fff; border-bottom: 1px solid #e6dfd5; font-family: "Inter", system-ui, sans-serif; }
+.SN-sticky { position: sticky; top: 0; z-index: 40; background: rgba(255,255,255,.97); -webkit-backdrop-filter: saturate(1.4) blur(8px); backdrop-filter: saturate(1.4) blur(8px); }
+.SN-in { max-width: 1180px; margin: 0 auto; padding: 0 24px; height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.SN-brand { display: block; flex: none; }
+.SN-brand img { display: block; height: 56px; width: auto; }
+.SN-nav { display: flex; gap: 28px; }
+.SN-nav a { font-size: 14.5px; font-weight: 500; color: #6b635a; text-decoration: none; padding: 6px 0; transition: color .3s ease; }
+.SN-nav a:hover { color: #1d1a17; text-decoration: underline; text-underline-offset: 6px; }
+.SN-right { display: flex; align-items: center; gap: 8px; flex: none; }
+.SN-ask { flex: none; color: #fff; background: #1d1a17; text-decoration: none; font-weight: 600; font-size: 14px; padding: 11px 18px; border-radius: 8px; transition: background .35s ease, transform .35s ease; }
+.SN-ask:hover { background: #000; transform: translateY(-1px); }
+.SN-ask:focus-visible, .SN-nav a:focus-visible, .SN-brand:focus-visible { outline: 3px solid #1d1a17; outline-offset: 3px; border-radius: 4px; }
+@media (max-width: 760px) {
+  .SN-nav { display: none; }
+  .SN-in { height: 64px; padding: 0 16px; }
+  .SN-brand img { height: 46px; }
+  .SN-ask { padding: 9px 14px; font-size: 13.5px; }
+}
+@media (prefers-reduced-motion: reduce) { .SN-ask, .SN-nav a { transition: none; } .SN-ask:hover { transform: none; } }

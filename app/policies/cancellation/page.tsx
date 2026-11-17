@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { policyOverview } from "@/domain/policy";
 import "./policy.css";
+import { SiteNav } from "../../SiteNav";
 
 /** Cancellation policy page (footer link, note 150). Text comes from the same policy engine the checkout uses. */
 export const metadata: Metadata = { title: "Cancellation policy | Pearl Heights Homes", robots: { index: false } };
@@ -9,7 +10,7 @@ export default function Page() {
   const lines = policyOverview();
   return (
     <div className="P-page">
-      <header className="P-top"><a href="/homes/736-myrtle" className="P-brand"><img className="brandLogo" src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} /></a></header>
+      <SiteNav />
       <main className="P-main">
         <h1>Cancellation policy</h1>
         <p className="P-lead">For stays booked directly with Pearl Heights Homes. Your exact dates and amounts are shown before you pay and in your confirmation.</p>
