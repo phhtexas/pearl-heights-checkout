@@ -55,7 +55,10 @@ export function hospitableReservations(token: string, propertyUuids: string[], f
         console.error("[hospitable] create rejected", res.status, detail.replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "[email]"));
         throw new AdapterError(`Hospitable rejected the reservation (${res.status})`, "rejected");
       }
-      if (res.status === 401 || res.status === 403) throw new AdapterError(`Hospitable reservation ${res.status} (token or scope)`, "rejected");
+      if (res.status === 401 || res.status === 403) {
+        console.error("[hospitable] create refused", res.status, "(token missing reservation:write?)", detail.slice(0, 200));
+        throw new AdapterError(`Hospitable reservation ${res.status} (token or scope)`, "rejected");
+      }
       throw new AdapterError(`Hospitable reservation ${res.status}`, "upstream_error");
     },
 
