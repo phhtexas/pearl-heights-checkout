@@ -6,6 +6,7 @@ import { HOMES } from "../src/content/homes";
 import { homeJsonLd, publicMeta, siteJsonLd, ldJson } from "../src/seo";
 import robots from "../app/robots";
 import sitemap from "../app/sitemap";
+import { GUIDES, guideQuote } from "../src/content/guides";
 
 const req = (url: string, host: string) => new NextRequest(new URL(url, `https://${host}`), { headers: { host } });
 afterEach(() => { delete process.env.SITE_INDEXING; });
@@ -42,5 +43,14 @@ describe("search and AI-search setup", () => {
     expect(middleware(req("/all-homes/c", "pearlheightshomes.com")).headers.get("x-robots-tag")).toBe("noindex, nofollow");
     expect(middleware(req("/homes/752-myrtle", "pearlheightshomes.com")).headers.get("x-robots-tag")).toBeNull();
     expect(middleware(req("/", "pearlheightshomes.com")).headers.get("x-robots-tag")).toBeNull();
+  });
+  it("guides: quotes are real reviews from the home content, and drafts stay out of the sitemap", () => {
+    for (const g of GUIDES) {
+      for (const q of g.quotes) expect(guideQuote(q).text.length).toBeGreaterThan(40);
+      for (const h of g.homes) expect(HOMES[h.key]).toBeDefined();
+      expect(JSON.stringify(g)).not.toMatch(/\d{2,5} (East |West )?[A-Z][a-z]+ (St|Street|Dr|Drive|Pl|Place|Ave)\b/);
+      process.env.SITE_INDEXING = "on";
+      expect(sitemap().some((x) => x.url.endsWith(`/guides/${g.slug}`))).toBe(g.approved);
+    }
   });
 });
