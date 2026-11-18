@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { StayData } from "@/content/stayDemo";
+import { loadStripe } from "@stripe/stripe-js";
 
 /**
  * Guest portal, phase 1 (test data). Flow, matching the "Booking directly is simple" steps on All Homes F:
@@ -9,7 +10,7 @@ import type { StayData } from "@/content/stayDemo";
  *  ->  4 Enjoy your stay (house rules, messages).
  * In this test version the state lives in this browser only (localStorage), and nothing is sent or charged.
  */
-type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; messages: { from: "guest" | "note"; text: string; at: string }[] };
+type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; idSession?: string; messages: { from: "guest" | "note"; text: string; at: string }[] };
 const fresh = (): State => ({ messages: [] });
 const KEY = (t: string) => `ph-stay-${t}`;
 /** Sandbox labels render only when NEXT_PUBLIC_SANDBOX=true (inlined at build); never in a production build without it. */
@@ -48,6 +49,55 @@ export function Portal({ stay }: { stay: StayData }) {
   useEffect(() => { try { const raw = localStorage.getItem(KEY(stay.token)); if (raw) setS({ ...fresh(), ...JSON.parse(raw) }); } catch { /* private mode */ } setReady(true); }, [stay.token]);
   const save = (n: State) => { setS(n); try { localStorage.setItem(KEY(stay.token), JSON.stringify(n)); } catch { /* ignore */ } };
 
+  // ID check through Stripe Identity (Oscar, Nov 17, option 1). Stripe's own window opens over this page; the result
+  // is then confirmed with the server (never the browser alone). Sandbox falls back to a simulated check if Stripe
+  // Identity isn't set up yet (503 fallback).
+  const [idState, setIdState] = useState<"idle" | "loading" | "checking" | "retry" | "fallback" | "error">("idle");
+  const [idMsg, setIdMsg] = useState("");
+  const checkId = async (vs: string, tries = 1): Promise<"verified" | "processing" | "requires_input" | "canceled" | "error"> => {
+    for (let i = 0; i < tries; i++) {
+      const r = await fetch(`/api/stay/${stay.token}/identity?vs=${vs}`, { cache: "no-store" }).then((x) => x.json()).catch(() => null);
+      const st = r?.status;
+      if (st === "verified") { save({ ...sRef.current, verifiedAt: nowText(), idSession: vs }); setIdState("idle"); setIdMsg(""); return st; }
+      if (st === "requires_input" || st === "canceled") { setIdState("retry"); setIdMsg(st === "canceled" ? "The ID check was canceled. Please try again." : "We couldn't verify your ID. Please try again with a clear photo."); return st; }
+      if (!st) { setIdState("error"); setIdMsg(r?.error ?? "We couldn't check your ID status."); return "error"; }
+      if (i < tries - 1) await new Promise((w) => setTimeout(w, 2000));
+    }
+    setIdState("checking"); setIdMsg("Stripe is still reviewing your ID. This usually takes a minute.");
+    return "processing";
+  };
+  const startId = async () => {
+    setIdState("loading"); setIdMsg("");
+    const r = await fetch(`/api/stay/${stay.token}/identity`, { method: "POST" });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 503 && j.fallback) { setIdState("fallback"); setIdOpen(true); return; }
+    if (!r.ok || !j.clientSecret) { setIdState("error"); setIdMsg(j.error ?? "We couldn't start the ID check."); return; }
+    save({ ...sRef.current, idSession: j.sessionId });
+    try {
+      const cfg = await fetch("/api/config").then((x) => x.json());
+      const stripe = cfg?.publishableKey ? await loadStripe(cfg.publishableKey) : null;
+      if (!stripe) throw new Error("no stripe");
+      const res = await stripe.verifyIdentity(j.clientSecret);
+      if (res.error && res.error.code === "session_cancelled") { setIdState("retry"); setIdMsg("The ID check was closed before it finished. Tap Verify my ID to continue."); return; }
+    } catch {
+      location.href = j.url; return; // Stripe's hosted page; it returns here with ?id=done
+    }
+    setIdState("checking");
+    void checkId(j.sessionId, 8);
+  };
+  // Came back from Stripe's hosted page, or reloaded mid-check: look up the saved session.
+  useEffect(() => {
+    if (!ready || sRef.current.verifiedAt || !sRef.current.idSession) return;
+    const vs = sRef.current.idSession;
+    void checkId(vs, new URLSearchParams(location.search).get("id") === "done" ? 6 : 1).then((st) => { if (st === "requires_input" && !new URLSearchParams(location.search).get("id")) { setIdState("idle"); setIdMsg(""); } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
+  useEffect(() => {
+    if (idState !== "checking" || !s.idSession) return;
+    const t = setInterval(() => { if (sRef.current.idSession) void checkId(sRef.current.idSession); }, 5000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idState, s.idSession]);
   const signed = !!s.signedAt, verified = !!s.verifiedAt, unlocked = signed && verified;
   const step = unlocked ? 3 : 2;
   const ci = fmtDay(stay.checkIn, { weekday: "short", month: "short", day: "numeric" });
@@ -205,11 +255,21 @@ export function Portal({ stay }: { stay: StayData }) {
             <div className="ST-taskBody">
               <h3>ID check</h3>
               <p className="ST-dim">{verified ? `Verified · ${s.verifiedAt}` : "A quick photo of your ID and a selfie, handled securely by Stripe Identity."}</p>
-              {!verified && !idOpen && <button className="ST-btn" type="button" onClick={() => setIdOpen(true)} disabled={!ready}>Verify my ID</button>}
-              {!verified && idOpen && (
+              {!verified && idState !== "fallback" && (
+                <>
+                  {idState !== "checking" && (
+                    <button className="ST-btn" type="button" onClick={() => void startId()} disabled={!ready || idState === "loading"}>
+                      {idState === "loading" ? "Opening…" : idState === "retry" ? "Try again" : "Verify my ID"}
+                    </button>
+                  )}
+                  {idMsg && <p className={idState === "checking" ? "ST-hint" : "ST-err"} role={idState === "checking" ? "status" : "alert"}>{idMsg}</p>}
+                  {SANDBOX && <p className="ST-testLine">Sandbox mode — Stripe test mode: no real ID needed, and you can choose the result.</p>}
+                </>
+              )}
+              {!verified && idState === "fallback" && idOpen && (
                 <div className="ST-panel">
-                  <p>In the real portal, Stripe Identity's secure check opens here. Your ID photos go to Stripe; we never store them on this site.</p>
-                  <div className="ST-row"><button className="ST-btn" type="button" onClick={() => { save({ ...s, verifiedAt: nowText() }); setIdOpen(false); }}>Simulate a successful check</button><button className="ST-link" type="button" onClick={() => setIdOpen(false)}>Cancel</button></div>
+                  <p>Stripe Identity isn&apos;t connected here yet, so this sandbox simulates the check. Your ID photos would go to Stripe; we never store them on this site.</p>
+                  <div className="ST-row"><button className="ST-btn" type="button" onClick={() => { save({ ...s, verifiedAt: nowText() }); setIdOpen(false); setIdState("idle"); }}>Simulate a successful check</button><button className="ST-link" type="button" onClick={() => { setIdOpen(false); setIdState("idle"); }}>Cancel</button></div>
                 </div>
               )}
             </div>
@@ -266,7 +326,7 @@ export function Portal({ stay }: { stay: StayData }) {
           </form>
         </section>
 
-        {SANDBOX && <p className="ST-reset"><button className="ST-link" type="button" onClick={() => { save(fresh()); setAgree(false); setName(stay.holder); setEsign("idle"); }}>Reset sandbox</button></p>}
+        {SANDBOX && <p className="ST-reset"><button className="ST-link" type="button" onClick={() => { save(fresh()); setAgree(false); setName(stay.holder); setEsign("idle"); setIdState("idle"); setIdMsg(""); }}>Reset sandbox</button></p>}
       </main>
     </div>
   );

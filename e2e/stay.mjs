@@ -38,8 +38,22 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok(await page.evaluate(() => { const v = JSON.parse(localStorage.getItem("ph-stay-demo") || "{}"); return v.signedName === "Oscar Pena" && v.nameEdited === true; }), `${tag}: saves the name typed in the agreement and flags the change`);
   ok(/1 of 2 done/.test(await page.locator(".ST-steps").innerText()), `${tag}: step indicator advances (1 of 2 done)`);
   await page.unroute("**/api/stay/demo/agreement"); await page.unroute("**/api/stay/demo/agreement?doc=*");
-  // verify
-  await page.click("text=Verify my ID"); await page.click("text=Simulate a successful check");
+  // verify (Stripe Identity, mocked): Stripe's window opens, then the page confirms with the server
+  let idDone = false;
+  await page.route("**/api/stay/demo/identity", (r) => r.request().method() === "POST" ? r.fulfill({ json: { sessionId: "vs_TEST1234567890", clientSecret: "vs_TEST_secret", url: "https://verify.stripe.com/start/test" } }) : r.continue());
+  await page.route("**/api/stay/demo/identity?vs=*", (r) => r.fulfill({ json: { status: idDone ? "verified" : "requires_input" } }));
+  await page.route("**/api/config", (r) => r.fulfill({ json: { mode: "test", publishableKey: "pk_test_x" } }));
+  await page.route("https://js.stripe.com/**", (r) => r.fulfill({ contentType: "text/javascript", body: "window.Stripe=function(){return{verifyIdentity:function(c){window.__idSecret=c;window.__idCalls=(window.__idCalls||0)+1;return Promise.resolve(window.__idResult||{})}}};" }));
+  ok(/Stripe test mode/.test(await page.locator(".ST-task").nth(1).innerText()), `${tag}: ID step labeled as Stripe test mode in the sandbox`);
+  await page.evaluate(() => { window.__idResult = { error: { code: "session_cancelled" } }; });
+  await page.click("text=Verify my ID");
+  await page.waitForSelector("text=Try again", { timeout: 8000 }).catch(() => {});
+  ok(await page.evaluate(() => window.__idSecret === "vs_TEST_secret") && (await page.locator("text=Try again").count()) === 1, `${tag}: closing Stripe's window early offers Try again`);
+  await page.evaluate(() => { window.__idResult = {}; }); idDone = true;
+  await page.click("text=Try again");
+  await page.waitForSelector(".ST-task.is-done >> nth=1", { timeout: 8000 }).catch(() => {});
+  ok((await page.locator(".ST-task.is-done").count()) === 2, `${tag}: verified by Stripe -> ID step done`);
+  await page.unroute("**/api/stay/demo/identity"); await page.unroute("**/api/stay/demo/identity?vs=*");
   ok(/Test address/.test(await body()) && /Arrives on check-in morning/.test(await body()) && (await page.locator(".ST-due").innerText()) === "All done", `${tag}: both done -> arrival details unlock; door code says check-in morning`);
   ok((await page.locator(".ST-steps .is-now").innerText()).includes("Get ready for arrival"), `${tag}: step moves to Get ready for arrival`);
   // persists on reload
