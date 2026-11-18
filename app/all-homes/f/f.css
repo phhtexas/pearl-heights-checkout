@@ -552,3 +552,8 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 .F-page .F-pills li { background: rgba(255,255,255,.88); color: #1d1a17; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; box-shadow: 0 1px 4px rgba(0,0,0,.12); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); white-space: nowrap; }
 .F-page .F-pills li:first-child { background: rgba(29,26,23,.62); color: #fff; }
 @media (max-width: 420px) { .F-page .F-pills li { font-size: 12px; padding: 5px 10px; } }
+
+/* Oscar, Nov 17: the photo strip must never scroll up/down (it nudged a few px before the page scrolled on desktop).
+   overflow-x: hidden/auto silently turns overflow-y into "auto", so lock it explicitly. */
+.F-page .F-photos { overflow-y: hidden; }
+@media (hover: hover) and (pointer: fine) { .F-page .F-photos { overflow: hidden; } }
