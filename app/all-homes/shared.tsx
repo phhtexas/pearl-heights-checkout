@@ -4,7 +4,8 @@ import { HOMES } from "@/content/homes";
 
 /** Pieces both All Homes mockups share. Server-rendered (no client JS). Facts come from the approved home content. */
 export const mockMeta = (v: string): Metadata => ({
-  title: `All homes — mockup ${v} | Pearl Heights Homes`,
+  // F is the home page on pearlheightshomes.com (Oscar, Nov 18), so it carries the brand title; the others stay labeled mockups.
+  title: v === "F" ? "Pearl Heights Homes | Family homes in San Antonio" : `All homes — mockup ${v} | Pearl Heights Homes`,
   description: "Five family-friendly San Antonio homes hosted by Oscar & Fernanda. Book directly; your total, upfront.",
   robots: { index: false, follow: false },
 });
