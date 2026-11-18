@@ -5,6 +5,8 @@ import { StripePayments, assertTestKeys } from "../adapters/stripe";
 import { getDb } from "../db/client";
 import { CalendarSource, hospitableCalendarSource } from "../adapters/hospitableCalendar";
 import { DbLedger, Ledger, MemoryLedger } from "../db/ledger";
+import { hospitableReservations } from "../adapters/hospitableReservations";
+import { PROPERTIES } from "../domain/properties";
 
 /**
  * Picks adapters by CHECKOUT_MODE. Only "mock" exists today; "test" (Stripe test mode + Hospitable)
@@ -66,7 +68,8 @@ export function getAdapters(failure: MockFailure = "none", env: NodeJS.ProcessEn
   set.pay.failure = failure;
   if (mode === "test") {
     g.__stripe ??= StripePayments.fromEnv(env); // refuses anything but test keys
-    return { hosp: set.hosp as HospitableAdapter, pay: g.__stripe as PaymentsAdapter, store: set.store, mode };
+    const real = realHospitable(env);
+    return { hosp: real ?? (set.hosp as HospitableAdapter), pay: g.__stripe as PaymentsAdapter, store: set.store, mode };
   }
   return { hosp: set.hosp as HospitableAdapter, pay: set.pay as PaymentsAdapter, store: set.store, mode };
 }
@@ -93,4 +96,17 @@ export function getLedger(env: NodeJS.ProcessEnv = process.env, session = "defau
 function liveCalendar(env: NodeJS.ProcessEnv = process.env): CalendarSource | undefined {
   if (!env.HOSPITABLE_API_TOKEN) return undefined;
   return (g.__cal ??= hospitableCalendarSource(env.HOSPITABLE_API_TOKEN));
+}
+
+/**
+ * Real Hospitable reservations (Oscar, Nov 18), OFF unless HOSPITABLE_WRITES=on and a token is set. While off, test
+ * checkout keeps the stand-in (real calendar, fake bookings). When on, every confirmed booking creates a real manual
+ * reservation (blocks the dates on every channel; Hospitable messages the guest), so it is turned on only for a
+ * supervised test or at launch.
+ */
+export function realHospitable(env: NodeJS.ProcessEnv = process.env): HospitableAdapter | null {
+  if (env.HOSPITABLE_WRITES !== "on" || !env.HOSPITABLE_API_TOKEN) return null;
+  const cal = liveCalendar(env)!;
+  const w = hospitableReservations(env.HOSPITABLE_API_TOKEN, PROPERTIES.map((p) => p.hospitableUuid));
+  return { getCalendar: (u, a, b, o) => cal(u, a, b, o), ...w };
 }
