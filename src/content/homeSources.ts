@@ -130,6 +130,7 @@ export const HOME_SOURCES: Record<string, { sources: { fact: string; source: str
       { fact: "Direct-site 25+ reservation-holder rule", source: "Oscar (chat, Nov 16, 2026): applies to all direct-booking homes" },
       { fact: "Titles without '#1'/'NEW' (Indianola, Claywell)", source: "Oscar (chat, Nov 16, 2026): drop the unsubstantiated '#1'/'NEW'" },
       { fact: "One exterior camera (front-door doorbell); self check-in with keypad; parking for 3 or more cars + street", source: "Oscar (chat, Nov 16, 2026)" },
+      { fact: "Parking on the property for 4 cars + street; no commercial photography or filming (also added for 613 Indianola)", source: "Oscar (chat, Nov 18, 2026)" },
       { fact: "FAQ 'no reviews yet' + host totals 4.98 / 463", source: "Airbnb listing and host profile, Nov 16, 2026" },
       { fact: "Area map (center ~0.3 mile from the home, never the house)", source: "OpenStreetMap tiles; same approach Oscar approved for 736" },
       { fact: "Cancellation summary", source: "Generated from the checkout's policy engine (src/domain/policy.ts)" },

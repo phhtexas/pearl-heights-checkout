@@ -568,7 +568,7 @@ export const HOMES: Record<string, HomeContent> = {
     host: HOSTS,
     thingsToKnow: [
       { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a door keypad"] },
-      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "Before you leave: dishes in the dishwasher, used towels on the bathroom floor, trash in the driveway bins, lights off, close all doors, windows and the car gate, and send us a quick message"] },
+      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, used towels on the bathroom floor, trash in the driveway bins, lights off, close all doors, windows and the car gate, and send us a quick message"] },
       { title: "Safety and property", items: ["Four exterior security cameras: the front doorbell, one at the driveway and two along the sides of the home facing the street. They cover exterior areas only and record audio.", "No cameras inside the home", "Smoke and carbon monoxide alarms", "Fire extinguisher and first aid kit"] },
     ],
     faq: [
@@ -661,7 +661,7 @@ export const HOMES: Record<string, HomeContent> = {
       { group: "Bathroom", items: ["Bathtub", "Shampoo, conditioner, body soap and shower gel", "Towels, soap and toilet paper", "Cleaning products", "Hot water"] },
       { group: "Entertainment and work", items: ["TV", "Sound system", "Arcade games", "Exercise equipment", "Books and board games", "Dedicated workspace", "WiFi"] },
       { group: "Heating and cooling", items: ["Central air conditioning", "Central heating", "Ceiling fans", "Indoor fireplace"] },
-      { group: "Outdoors, parking and access", items: ["Private, fully fenced backyard", "Fire pit", "Patio, outdoor furniture and outdoor dining area", "Free parking on the property for 3 or more cars", "Free street parking", "Lit path to the guest entrance", "Self check-in with keypad", "Long stays (28 nights or more) allowed"] },
+      { group: "Outdoors, parking and access", items: ["Private, fully fenced backyard", "Fire pit", "Patio, outdoor furniture and outdoor dining area", "Free parking on the property for 4 cars", "Free street parking", "Lit path to the guest entrance", "Self check-in with keypad", "Long stays (28 nights or more) allowed"] },
       { group: "Safety", items: ["Smoke and carbon monoxide alarms", "Fire extinguisher", "First aid kit", "One exterior camera: the front-door doorbell (records audio)", "No cameras inside the home"] },
     ],
     goodFit: ["Families with babies and young kids (playroom, playground, toddler bed and crib)", "Groups of up to 8 who want three bedrooms", "Guests who want a quiet residential street in Alamo Heights", "Remote workers (dedicated workspace)"],
@@ -676,7 +676,7 @@ export const HOMES: Record<string, HomeContent> = {
     host: HOSTS,
     thingsToKnow: [
       { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a door keypad"] },
-      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "Before you leave: dishes in the dishwasher, used towels on the bathroom floor, trash out, lights off, close all doors, windows and the car gate, and send us a quick message"] },
+      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, used towels on the bathroom floor, trash out, lights off, close all doors, windows and the car gate, and send us a quick message"] },
       { title: "Safety and property", items: ["One exterior security camera: the front-door doorbell. It records audio.", "No cameras inside the home", "Smoke and carbon monoxide alarms", "Fire extinguisher and first aid kit"] },
     ],
     faq: [
@@ -685,7 +685,7 @@ export const HOMES: Record<string, HomeContent> = {
       { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
       { q: "Can I pay in two parts?", a: "Paying in full is the default. When check-in is more than 30 days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost." },
       { q: "Is the home good for babies and toddlers?", a: "Yes: there's a children's playroom, an outdoor playground, a toddler bed and crib in the primary bedroom, children's dinnerware, outlet covers and corner guards. A high chair and baby bath are available on request." },
-      { q: "Is there parking?", a: "Yes: free parking on the property for 3 or more cars, plus free street parking." },
+      { q: "Is there parking?", a: "Yes: free parking on the property for 4 cars, plus free street parking." },
       { q: "Does the home have reviews yet?", a: "This home is new on Airbnb and has no reviews yet. Our other homes average 4.98 across 463 Airbnb reviews." },
     ],
   },
