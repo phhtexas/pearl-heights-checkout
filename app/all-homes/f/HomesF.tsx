@@ -42,9 +42,25 @@ function Photos({ h, href, first }: { h: HomeCard; href: string; first: boolean 
       <button type="button" className="F-arrow F-arrowNext" aria-label={`Next photo of ${h.title}`} onClick={() => go(at + 1)}>›</button>
       <div className="F-dots" aria-hidden="true">{photos.map((p, j) => <span key={p.src} className={j === at ? "on" : ""} />)}</div>
       <span className="F-count" aria-hidden="true">{at + 1} / {photos.length}</span>
+      {PILLS[h.key] && <ul className="F-pills" aria-label="Highlights">{PILLS[h.key]!.map((t) => <li key={t}>{t}</li>)}</ul>}
     </div>
   );
 }
+
+/**
+ * Photo pills (Oscar, Nov 17): two callouts per home, chosen from who books (Hospitable: 51% of stays bring kids,
+ * 41% are parties of 5+; reviews mention location 56%, kids/family 40%). Every pill is from that home's listing:
+ * 752/736 goodFit "walk to the Pearl and the River Walk" + Playroom amenity / 10 guests; Edgewood "a quiet street in
+ * Alamo Heights" + "children's playroom"; Claywell "tree-lined streets" + title "Large Family Home"; Indianola
+ * highlight "Walk downtown" (walk times in homeSources) + "a king bed in every bedroom".
+ */
+const PILLS: Record<string, string[]> = {
+  "752": ["Walk to the Pearl", "Kids' playroom"],
+  "736": ["Walk to the Pearl", "Sleeps 10"],
+  edgewood: ["Quiet Alamo Heights street", "Kids' playroom"],
+  claywell: ["Tree-lined Alamo Heights", "Large family home"],
+  indianola: ["Walk to downtown", "King bed in every room"],
+};
 
 export function HomesF({ homes, hero, points, reasons }: {
   homes: HomeCard[]; hero: { src: string; alt: string }; points: { key: string; lat: number; lon: number }[]; reasons: React.ReactNode;

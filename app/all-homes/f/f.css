@@ -546,3 +546,9 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
   .F-page .F-tlRail { position: absolute; top: 50%; left: calc(50% + 14px); width: calc(100% + 32px - 28px); margin: 0; }
   .F-page .F-tl li > p:not(.F-tlWhen) { max-width: 260px; }
 }
+
+/* Photo pills (Oscar, Nov 17): frosted pills top-left, like the reference */
+.F-page .F-pills { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+.F-page .F-pills li { background: rgba(255,255,255,.88); color: #1d1a17; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; box-shadow: 0 1px 4px rgba(0,0,0,.12); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); white-space: nowrap; }
+.F-page .F-pills li:first-child { background: rgba(29,26,23,.62); color: #fff; }
+@media (max-width: 420px) { .F-page .F-pills li { font-size: 12px; padding: 5px 10px; } }
