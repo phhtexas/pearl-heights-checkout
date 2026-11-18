@@ -52,7 +52,7 @@ export interface Guide {
   homes: { key: string; fit: string; points: string[] }[];
   sections: { heading: string; photo?: GuidePhoto; paragraphs?: string[]; bullets?: string[]; steps?: { when: string; text: string }[] }[];
   /** Where to eat: names and descriptions as the venue lists them (source in `sources`). */
-  eat?: { heading: string; intro: string; groups: { name: string; places: { name: string; what: string }[] }[]; note: string };
+  eat?: { heading: string; intro: string; groups: { name: string; places: { name: string; what: string; web?: string; map: string; pearl: string }[] }[]; note: string };
   /** Things to do: cards with distance from the homes. */
   todo?: { heading: string; items: { name: string; what: string; distance: string; photo?: GuidePhoto }[] };
   quotes: { home: string; reviewer: string }[]; // real guest reviews, looked up from homes.ts (never written for us)
@@ -160,33 +160,33 @@ export const GUIDES: Guide[] = [
       intro: "The Pearl has more than 30 places to eat and drink, all a few minutes' walk from both homes. A few by type of meal, with each place's own description:",
       groups: [
         { name: "Breakfast, coffee and bakeries", places: [
-          { name: "Bakery Lorraine", what: "Classic French pastries" },
-          { name: "Local Coffee Founders", what: "Coffee shop" },
-          { name: "Voila Café", what: "French casual bistro" },
-          { name: "Pullman Market", what: "Specialty grocer with quick eats and dine-in spots" },
+          { name: "Bakery Lorraine", what: "Classic French pastries", web: "https://bakerylorraine.com/", map: "https://maps.app.goo.gl/P2RCxY5vN7EeNbRL7", pearl: "https://atpearl.com/dine-and-drink/bakery-lorraine/" },
+          { name: "Local Coffee Founders", what: "Coffee shop", web: "https://www.localcoffee.com/", map: "https://maps.app.goo.gl/PBK955EbRy7tuBDk8", pearl: "https://atpearl.com/dine-and-drink/local-coffee-founders/" },
+          { name: "Voila Café", what: "French casual bistro", web: "https://voilacafes.com/", map: "https://maps.app.goo.gl/ZvxgJwWcFT9D46X16", pearl: "https://atpearl.com/dine-and-drink/voila-cafe/" },
+          { name: "Pullman Market", what: "Specialty grocer with quick eats and dine-in spots", web: "https://www.pullmanmarket.com/", map: "https://maps.app.goo.gl/NDv3uMrCJoDPNHm46", pearl: "https://atpearl.com/dine-and-drink/pullman-market/" },
         ] },
         { name: "Quick and casual", places: [
-          { name: "Henbit", what: "Smashburgers, shakes, fries" },
-          { name: "WonderSlice", what: "Neighborhood pizza joint" },
-          { name: "La Gloria", what: "Mexican street food" },
-          { name: "Freight Fried Chicken", what: "Fried chicken" },
-          { name: "Food Hall at Bottling Department", what: "Chef-driven food stands and a bar" },
+          { name: "Henbit", what: "Smashburgers, shakes, fries", web: "https://www.bottlingdepartment.com/henbit/", map: "https://maps.app.goo.gl/Z4XpKB5iRsMHhiVy8", pearl: "https://atpearl.com/dine-and-drink/henbit/" },
+          { name: "WonderSlice", what: "Neighborhood pizza joint", web: "https://www.wonderslicepizza.com/", map: "https://maps.app.goo.gl/7jnUvBxLaqiqUtKx9", pearl: "https://atpearl.com/dine-and-drink/wonderslice/" },
+          { name: "La Gloria", what: "Mexican street food", web: "https://chefjohnnyhernandez.com/la-gloria-pearl/", map: "https://maps.app.goo.gl/cbHfar3oysLXKiLR6", pearl: "https://atpearl.com/dine-and-drink/la-gloria/" },
+          { name: "Freight Fried Chicken", what: "Fried chicken", web: "https://www.bottlingdepartment.com/freight/", map: "https://maps.app.goo.gl/ykk7suGp3CvkYMtj6", pearl: "https://atpearl.com/dine-and-drink/freight-fried-chicken/" },
+          { name: "Food Hall at Bottling Department", what: "Chef-driven food stands and a bar", web: "https://www.bottlingdepartment.com/", map: "https://maps.app.goo.gl/JS7ooYDUBag93UWn7", pearl: "https://atpearl.com/dine-and-drink/food-hall-at-bottling-department/" },
         ] },
         { name: "Sit-down dinner", places: [
-          { name: "Fife & Farro", what: "Wood-fired pizza and fresh pasta" },
-          { name: "Southerleigh Fine Food & Brewery", what: "Texas cross-cultural cuisine and craft brewery" },
-          { name: "Boiler House", what: "Texas grill and wine garden" },
-          { name: "Mezquite", what: "The flavors of Sonora" },
-          { name: "Brasserie Mon Chou Chou", what: "French comfort food" },
-          { name: "Ladino", what: "Modern Mediterranean grill" },
-          { name: "Best Quality Daughter", what: "New Asian-American cuisine" },
+          { name: "Fife & Farro", what: "Wood-fired pizza and fresh pasta", web: "https://fifeandfarro.com/", map: "https://maps.app.goo.gl/5ifi2gnS4g2FWWhP9", pearl: "https://atpearl.com/dine-and-drink/fife-farro/" },
+          { name: "Southerleigh Fine Food & Brewery", what: "Texas cross-cultural cuisine and craft brewery", web: undefined, map: "https://maps.app.goo.gl/8h4oD5e1k2bP5Stf9", pearl: "https://atpearl.com/dine-and-drink/southerleigh-fine-food-brewery/" },
+          { name: "Boiler House", what: "Texas grill and wine garden", web: "https://boilerhousesa.com/", map: "https://maps.app.goo.gl/QEDfkGozaFVvZQRe6", pearl: "https://atpearl.com/dine-and-drink/boiler-house/" },
+          { name: "Mezquite", what: "The flavors of Sonora", web: "https://mezquitesatx.com/", map: "https://maps.app.goo.gl/qXRU52KUkao4Bh2m7", pearl: "https://atpearl.com/dine-and-drink/mezquite/" },
+          { name: "Brasserie Mon Chou Chou", what: "French comfort food", web: "https://www.brasseriemonchouchou.com/", map: "https://maps.app.goo.gl/rvvvGHz7vYS1xQRQA", pearl: "https://atpearl.com/dine-and-drink/brasserie-mon-chou-chou/" },
+          { name: "Ladino", what: "Modern Mediterranean grill", web: "https://ladinosatx.com/", map: "https://maps.app.goo.gl/mndoA55qMioKN8vT6", pearl: "https://atpearl.com/dine-and-drink/ladino/" },
+          { name: "Best Quality Daughter", what: "New Asian-American cuisine", web: "https://www.bestqualitydaughter.com/", map: "https://maps.app.goo.gl/JkuNLeHBcytnfdRx7", pearl: "https://atpearl.com/dine-and-drink/best-quality-daughter/" },
         ] },
         { name: "Treats", places: [
-          { name: "Lick Honest Ice Cream", what: "Ice cream made with local, seasonal ingredients" },
-          { name: "Nicosi", what: "Dessert bar" },
+          { name: "Lick Honest Ice Cream", what: "Ice cream made with local, seasonal ingredients", web: "https://www.ilikelick.com/", map: "https://maps.app.goo.gl/NLf53GhK5Wy8oFLw6", pearl: "https://atpearl.com/dine-and-drink/lick-honest-ice-cream/" },
+          { name: "Nicosi", what: "Dessert bar", web: "https://nicosisatx.com/", map: "https://maps.app.goo.gl/ZviAo4N3ahBsTYmx6", pearl: "https://atpearl.com/dine-and-drink/nicosi/" },
         ] },
       ],
-      note: "From Pearl's Dine & Drink list. Hours and menus change, so check each place before you go.",
+      note: "Descriptions, websites and map links come from each place's page on Pearl's website. Hours and menus change, so check before you go.",
     },
     todo: {
       heading: "Things to do nearby",

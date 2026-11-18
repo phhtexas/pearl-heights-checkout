@@ -15,7 +15,8 @@ const project = (lat: number, lon: number, z: number) => {
   return { x: ((lon + 180) / 360) * n * TILE, y: ((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * n * TILE };
 };
 
-export function TileMapV2({ lat, lon, zoom: z0, interactive = false, span = 2 }: { lat: number; lon: number; zoom: number; interactive?: boolean; span?: number }) {
+/** `place` swaps the house pin for a plain dot with a label (guides: a public place, never one of our homes). */
+export function TileMapV2({ lat, lon, zoom: z0, interactive = false, span = 2, place }: { lat: number; lon: number; zoom: number; interactive?: boolean; span?: number; place?: string }) {
   const [z, setZ] = useState(z0);
   const [off, setOff] = useState({ x: 0, y: 0 }); // pan offset in pixels at the current zoom
   const drag = useRef<{ x: number; y: number } | null>(null);
@@ -44,9 +45,11 @@ export function TileMapV2({ lat, lon, zoom: z0, interactive = false, span = 2 }:
             style={{ left: `calc(50% + ${t.left}px)`, top: `calc(50% + ${t.top}px)` }} />
         ))}
       </div>
-      <span className="V-pin TV-pin" style={{ left: `calc(50% + ${pin.left}px)`, top: `calc(50% + ${pin.top}px)` }} aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-5h-6v5H4z" fill="#fff" /></svg>
-      </span>
+      {place
+        ? <span className="TV-place" style={{ left: `calc(50% + ${pin.left}px)`, top: `calc(50% + ${pin.top}px)` }}><span className="TV-dot" aria-hidden="true" />{place}</span>
+        : <span className="V-pin TV-pin" style={{ left: `calc(50% + ${pin.left}px)`, top: `calc(50% + ${pin.top}px)` }} aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-5h-6v5H4z" fill="#fff" /></svg>
+          </span>}
       {interactive && (
         <div className="TV-zoom">
           <button onClick={() => zoomTo(1)} aria-label="Zoom in">+</button>

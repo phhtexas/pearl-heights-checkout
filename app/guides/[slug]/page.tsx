@@ -5,6 +5,8 @@ import { HOMES } from "@/content/homes";
 import { SITE, ldJson, publicMeta } from "@/seo";
 import { guideVisible } from "@/guidesAccess";
 import { SiteNav } from "../../SiteNav";
+import { TileMapV2 } from "../../homes/TileMapV2";
+import "../../homes/listingV2.css";
 import "../guides.css";
 
 export const dynamic = "force-dynamic";
@@ -89,17 +91,33 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         ))}
 
         {g.eat && (
-          <section>
+          <section id="eat">
             <h2>{g.eat.heading}</h2>
             <p>{g.eat.intro}</p>
-            <div className="G-eat">
-              {g.eat.groups.map((grp) => (
-                <div key={grp.name} className="G-eatGroup">
-                  <h3>{grp.name}</h3>
-                  <ul>{grp.places.map((pl) => <li key={pl.name}><strong>{pl.name}</strong><span>{pl.what}</span></li>)}</ul>
-                </div>
-              ))}
+            <div className="G-eatMap">
+              <TileMapV2 lat={29.44228} lon={-98.47995} zoom={16} interactive span={3} place="Pearl" />
+              <a className="G-btn" href="https://www.google.com/maps/search/?api=1&query=Pearl%2C%20San%20Antonio%2C%20TX" target="_blank" rel="noopener noreferrer" data-cta="guide_map_pearl">Directions to the Pearl</a>
             </div>
+            <nav className="G-chips" aria-label="Meal types">
+              {g.eat.groups.map((grp, i) => <a key={grp.name} href={`#eat-${i}`}>{grp.name}</a>)}
+            </nav>
+            {g.eat.groups.map((grp, i) => (
+              <div key={grp.name} id={`eat-${i}`} className="G-eatGroup">
+                <h3>{grp.name}</h3>
+                <ul className="G-places">
+                  {grp.places.map((pl) => (
+                    <li key={pl.name} className="G-place">
+                      <strong>{pl.name}</strong>
+                      <span>{pl.what}</span>
+                      <div className="G-placeLinks">
+                        <a href={pl.web ?? pl.pearl} target="_blank" rel="noopener noreferrer" data-cta="guide_eat_web">{pl.web ? "Website" : "Info"}</a>
+                        <a href={pl.map} target="_blank" rel="noopener noreferrer" data-cta="guide_eat_directions">Directions</a>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
             <p className="G-note">{g.eat.note}</p>
           </section>
         )}
