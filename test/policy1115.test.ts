@@ -20,10 +20,10 @@ const NOW = new Date("2026-11-15T17:00:00Z"); // Nov 15, 11 AM CT
 describe("payment plan choice", () => {
   it("defaults to pay in full and offers split as an option", () => {
     const q = quoteAt("2027-01-05", "2027-01-07", NOW);
-    expect(q.total).toBe(170080); // matches Checkout E mockup ($1,700.80)
+    expect(q.total).toBe(173140); // was $1,700.80 at 6%; 8% tax from the CPA (Nov 18)
     expect(q.plan.split).toBe(false);
     expect(q.plan.dueNow).toBe(q.total);
-    expect(q.splitPlan?.dueNow).toBe(85040);
+    expect(q.splitPlan?.dueNow).toBe(86570);
     expect(q.nonRefundable).toBe(false);
   });
 

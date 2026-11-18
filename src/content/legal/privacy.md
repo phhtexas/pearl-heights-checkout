@@ -74,6 +74,8 @@ Service providers may use information only under their agreements and applicable
 
 The cookie banner and settings panel must reflect the technologies actually active on the Site. Nonessential analytics and advertising tags will not be described as optional if they fire before the applicable choice is honored. You may change settings through the Site's privacy controls and may also use browser controls, though blocking essential storage can prevent checkout or portal functions.
 
+What the Site uses today: Google Analytics and the Meta Pixel. When you first visit, a banner asks you to accept or decline. Neither tool loads unless you select Accept. If you accept and then book, we also send Meta a booking event through its Conversions API with the booking value and your email address and phone number in hashed (one-way encoded) form, so Meta can measure our ads and match the event to the same visitor without receiving them in readable form. If you decline, these tools do not load and no booking event is sent to Meta. You can change your choice at any time with the "Cookie choices" link at the bottom of the Site.
+
 Where required, we recognize legally valid browser-based opt-out preference signals. We retain a record of privacy choices so we can apply them on later visits where technically feasible.
 
 ## 8 Targeted advertising and sale or sharing choices

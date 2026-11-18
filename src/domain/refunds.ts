@@ -5,8 +5,9 @@ import { checkInInstant, hoursBetween } from "./time";
 
 /**
  * Cancellation & refund policy (draft Terms, revision 3, decided by Oscar Nov 14, 2026).
- * Tax treatment of the processing fee is PENDING the accountant: this module returns
- * what Pearl Heights keeps before tax adjustments; the tax split is done elsewhere once confirmed.
+ * Tax (CPA, Nov 18): a cancellation charge is taxed only when it is within 30 days of the stay AND equals the full room
+ * rate (Texas Comptroller guidance, per the CPA; Texas Hotel & Lodging Association summary). So the 5% charge and the
+ * kept 50% are untaxed (all tax refunded); a full-rate cancellation under 14 days keeps the tax.
  */
 export type CancelReason =
   | "guest"                 // guest cancels
@@ -74,7 +75,8 @@ export function computeRefund(i: RefundInput): RefundResult {
   const totalExProtection = quote.total - quote.protection;
   // 30+ tier ends at the exact instant the second payment is charged (4:00 PM CT, 30 days out).
   if (i.cancelledAt.getTime() < flexibleCutoff(i.checkIn).getTime()) return result("30_plus", fee);
-  if (i.cancelledAt.getTime() < halfRefundCutoff(i.checkIn).getTime()) return result("14_to_29", Math.round(totalExProtection / 2));
+  // 14-29 days: keep 50% of nights + extra guests + cleaning, before tax; all tax and the waiver are refunded (CPA, Nov 18).
+  if (i.cancelledAt.getTime() < halfRefundCutoff(i.checkIn).getTime()) return result("14_to_29", Math.round(quote.taxableBase / 2));
   if (i.cancelledAt.getTime() >= checkInDayStart(i.checkIn).getTime()) return result("check_in_day", paidSoFar);
   return result("under_14", totalExProtection);
 }

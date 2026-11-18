@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { CookieChoices } from "../CookieChoices";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { HomeContent } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
@@ -427,6 +428,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
             <li><a href="/policies/cancellation">Cancellation policy</a></li>
             <li><span>Terms of service <em>(coming soon)</em></span></li>
             <li><span>Privacy policy <em>(coming soon)</em></span></li>
+            <li><CookieChoices /></li>
           </ul>
           <p className="V-footSmall">{home.registration && <>City short-term rental registration {home.registration} · </>}© {new Date().getFullYear()} Pearl Heights Homes</p>
         </div>

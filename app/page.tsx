@@ -65,7 +65,9 @@ export default function Checkout() {
   const [now, setNow] = useState(Date.now());
   const [guest, setGuest] = useState({ firstName: "", lastName: "", email: "", phone: "" });
   const [agreed, setAgreed] = useState(false);
-  const [mktEmail, setMktEmail] = useState(false); // optional, unchecked by default (Website Terms §7)
+  // Optional. Email is pre-checked and the guest can uncheck it (Oscar after the attorney call, Nov 18; CAN-SPAM is
+  // opt-out, every email carries an unsubscribe link). Texts stay unchecked: TCPA needs a clear written opt-in.
+  const [mktEmail, setMktEmail] = useState(true);
   const [mktSms, setMktSms] = useState(false);
   const [sim, setSim] = useState("none");
   const [err, setErr] = useState("");

@@ -92,8 +92,8 @@ An extension is a new or amended booking and is subject to availability, payment
 
 | Cancellation time | Refund |
 | Within 24 hours after booking | 100 percent of all amounts paid. No cancellation charge. |
-| After the first 24 hours and at least 30 days before check-in | Refund of amounts paid, less a cancellation charge equal to 5 percent of the nightly charges, extra-guest fees and cleaning charge. Associated taxes are adjusted. |
-| 14 through 29 days before check-in | Pearl Heights Homes retains 50 percent of the total booking charges other than the damage-waiver charge. Any remaining amounts paid and the unused damage-waiver charge are refunded, with associated taxes adjusted. |
+| After the first 24 hours and at least 30 days before check-in | Refund of amounts paid, less a cancellation charge equal to 5 percent of the nightly charges, extra-guest fees and cleaning charge. Taxes are refunded, and the cancellation charge is not taxed. |
+| 14 through 29 days before check-in | Pearl Heights Homes retains 50 percent of the nightly charges, extra-guest fees and cleaning charge, before taxes. All taxes, any remaining amounts paid and the unused damage-waiver charge are refunded. |
 | Fewer than 14 days before check-in but before 12:00 a.m. Central Time on the check-in date | All amounts are nonrefundable except the unused damage-waiver charge, with associated taxes adjusted. |
 | At or after 12:00 a.m. Central Time on the check-in date | No refund, including the damage-waiver charge, except as required by law or expressly approved because the property cannot lawfully or safely be provided. |
 

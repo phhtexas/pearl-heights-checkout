@@ -17,7 +17,8 @@ export interface ConsentRecord { id: string; text: string; versions: typeof POLI
 export const consentRecord = (acceptedAt: Date): ConsentRecord => ({ id: CONSENT_ID, text: CONSENT_TEXT, versions: POLICY_VERSIONS, acceptedAt });
 
 /**
- * Optional marketing consent (Website Terms V1.2 §7, Privacy Notice §9): two separate boxes, unchecked by default, never a
+ * Optional marketing consent (Website Terms V1.2 §7, Privacy Notice §9): two separate boxes, never a condition of booking.
+ * Email is pre-checked and can be unchecked; texts are unchecked (Oscar after the attorney call, Nov 18; TCPA opt-in). Never a
  * condition of booking. The saved wording names Pearl Heights Homes and the exact number (texts) or address (email).
  * Nothing is sent yet: guest messages stay off until that gate opens.
  */

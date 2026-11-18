@@ -48,7 +48,7 @@ By making a reservation and providing contact information, you authorize us and 
 
 ### Optional marketing email
 
-If you separately opt in to marketing email, Pearl Heights Homes may send property news, availability and offers. Marketing consent is optional and is not a condition of booking. You may unsubscribe through the link in an email or by contacting us. We may retain a limited suppression record so we do not add you back after you opt out.
+At checkout, an optional marketing email box is pre-selected; you may uncheck it, and booking does not depend on it. If you leave it selected, Pearl Heights Homes may send property news, availability and offers. Marketing consent is optional and is not a condition of booking. You may unsubscribe through the link in an email or by contacting us. We may retain a limited suppression record so we do not add you back after you opt out.
 
 ### Optional marketing text messages
 

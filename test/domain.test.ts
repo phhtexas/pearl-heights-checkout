@@ -30,8 +30,8 @@ describe("quote", () => {
       nightlyRates: { "2026-12-31": 45500, "2027-01-01": 46400, "2027-01-02": 45400 },
     });
     expect(q.lodging).toBe(137300);
-    expect(q.tax).toBe(9318); // 6% of 1,553.00
-    expect(q.total).toBe(172518);
+    expect(q.tax).toBe(12424); // 8% of 1,553.00 (Alamo Heights: 6% state + 2% county, CPA Nov 18)
+    expect(q.total).toBe(175624);
     expect(q.plan.split).toBe(true);
     expect(q.plan.dueNow + q.plan.scheduled!.amount).toBe(q.total);
     expect(q.plan.scheduled!.chargeAt.toISOString()).toBe("2026-12-01T22:00:00.000Z"); // Dec 1, 4 PM CST (Oscar, Nov 15)
@@ -81,10 +81,10 @@ describe("refunds (Terms revision 3)", () => {
     expect(r.cancelScheduledPayment).toBe(true);
     expect(r.refund).toBe(q.plan.dueNow - fee);
   });
-  it("14-29 days: keep 50% of the total excluding protection (protection refunded)", () => {
+  it("14-29 days: keep 50% of the pre-tax stay; all tax and protection refunded (CPA, Nov 18)", () => {
     const r = computeRefund({ quote: q, checkIn: "2027-03-01", bookedAt, cancelledAt: at("2027-02-10T18:00:00Z"), paidSoFar: q.total, reason: "guest" });
     expect(r.tier).toBe("14_to_29");
-    expect(r.retained).toBe(Math.round((q.total - q.protection) / 2));
+    expect(r.retained).toBe(Math.round(q.taxableBase / 2));
   });
   it("under 14 days: no refund except protection", () => {
     const r = computeRefund({ quote: q, checkIn: "2027-03-01", bookedAt, cancelledAt: at("2027-02-25T18:00:00Z"), paidSoFar: q.total, reason: "guest" });
