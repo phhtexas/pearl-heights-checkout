@@ -1,4 +1,5 @@
 "use client";
+import { track } from "@/client/track";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /** Shared by the All Homes mockups (C current; A and B archived): dates + guests, one read-only price check for all five homes, links that carry the search. */
@@ -33,7 +34,7 @@ export function useStays(variant: "a" | "b" | "c" | "e" | "f") {
       const u = new URL(location.href);
       for (const [k, v] of Object.entries({ checkIn: a, checkOut: b, adults: String(ad), children: String(ch) })) u.searchParams.set(k, v);
       history.replaceState(null, "", u);
-      try { (window as any).gtag?.("event", "all_homes_search", { variant, nights: (Date.parse(b) - Date.parse(a)) / 864e5, guests: ad + ch }); } catch { /* no analytics */ }
+      track("all_homes_search", { variant, nights: (Date.parse(b) - Date.parse(a)) / 864e5, guests: ad + ch, adults: ad, children: ch, check_in: a, check_out: b, available_homes: (j.homes as Result[]).filter((h) => (h as { available?: boolean }).available).length }, "ahs" + a + b + ad + "-" + ch);
     } catch {
       if (id === req.current) { setError("We couldn't reach our booking system. Please try again."); setState("error"); }
     }

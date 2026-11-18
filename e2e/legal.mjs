@@ -2,7 +2,7 @@
 // work, no sideways scroll on a phone, and the search box suggests sections as you type.
 // Run: BASE_URL=http://localhost:3401 node e2e/legal.mjs
 import { createRequire } from "node:module";
-const { chromium, devices } = createRequire(import.meta.url)("playwright");
+const { chromium, devices } = createRequire(import.meta.url)("./_noBanner.cjs")(createRequire(import.meta.url)("playwright"));
 const BASE = process.env.BASE_URL ?? "http://localhost:3401";
 const ok = (c, m) => { console.log((c ? "ok  - " : "FAIL- ") + m); if (!c) process.exitCode = 1; };
 const PAGES = [

@@ -2,7 +2,7 @@
 // confirmation. Double-clicking Pay must send exactly one checkout request.
 // Run: ALLOW_MOCK=true npx next start -p 3401 ; node e2e/full-flow.mjs http://localhost:3401
 import { createRequire } from "node:module";
-const { chromium } = createRequire(import.meta.url)("playwright");
+const { chromium } = createRequire(import.meta.url)("./_noBanner.cjs")(createRequire(import.meta.url)("playwright"));
 const base = process.argv[2] ?? process.env.BASE_URL ?? "http://localhost:3401";
 const ok = (c, m) => { console.log((c ? "ok  - " : "FAIL- ") + m); if (!c) process.exitCode = 1; };
 const browser = await chromium.launch();

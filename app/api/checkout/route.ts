@@ -9,6 +9,7 @@ import { readSession, withSession } from "@/server/session";
 import { DbLedger } from "@/db/ledger";
 import type { MockFailure } from "@/adapters/mock";
 import { consentRecord } from "@/domain/consent";
+import { sendPurchase } from "@/services/metaCapi";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -48,10 +49,38 @@ export async function POST(req: Request) {
       return outcome;
     });
     getAdapters("none", process.env, session.id); // reset simulated failure
+    if ((view as { ok?: boolean }).ok) await afterBooking(req, b, input, q.quote, (view as { bookingRef?: string }).bookingRef ?? bookingRef);
     return withSession(NextResponse.json({ mode, ...view }, { headers: noStore }), session);
   } catch (e) {
     if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400, headers: noStore });
     console.error("checkout error", redact(String((e as Error).message)));
     return NextResponse.json({ error: "Something went wrong. No charge was made." }, { status: 500, headers: noStore });
   }
+}
+
+/**
+ * Ad tracking after a confirmed booking (Oscar, Nov 18): saves first-party attribution (utm tags, click ids, landing
+ * page) on the booking, and, if the guest accepted cookies, sends the server-side Meta "Purchase" event with the booking
+ * value (before taxes) so Meta can report bookings and ROAS. Never blocks or fails the booking.
+ */
+async function afterBooking(req: Request, b: any, input: { property: string; checkIn: string; checkOut: string; adults: number; children: number; guest: { email: string; phone: string } }, quote: { total: number; tax: number; nights: number }, bookingRef: string) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  const a = b?.analytics ?? {};
+  const str = (v: unknown, n = 200) => (typeof v === "string" ? v.slice(0, n) : undefined);
+  const attrib = a.attribution && typeof a.attribution === "object"
+    ? Object.fromEntries(Object.entries(a.attribution as Record<string, unknown>).filter(([k]) => /^(utm_(source|medium|campaign|content|term)|fbclid|gclid|landing|referrer|at)$/.test(k)).map(([k, v]) => [k, str(v)]))
+    : null;
+  const db = getDb();
+  let sent: string = "skipped";
+  try {
+    if (a.consent === true) {
+      sent = await sendPurchase({
+        bookingRef, property: input.property, valueCents: quote.total - quote.tax, nights: quote.nights, adults: input.adults, children: input.children,
+        checkIn: input.checkIn, checkOut: input.checkOut, email: input.guest.email, phone: input.guest.phone,
+        clientIp: (req.headers.get("x-forwarded-for") ?? "").split(",")[0]!.trim() || undefined, userAgent: req.headers.get("user-agent") ?? undefined,
+        fbp: str(a.fbp), fbc: str(a.fbc), url: str(a.url, 500),
+      });
+    }
+    if (db) await db.query(`UPDATE bookings SET attribution = $2::jsonb, ad_events_sent_at = CASE WHEN $3 THEN now() ELSE ad_events_sent_at END WHERE booking_ref = $1`,
+      [bookingRef, attrib ? JSON.stringify(attrib) : null, sent === "sent"]);
+  } catch (e) { console.error("afterBooking", redact(String((e as Error).message))); }
 }

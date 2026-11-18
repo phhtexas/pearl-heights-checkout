@@ -11,6 +11,7 @@ import "@fontsource/jost/latin-600.css";
 import "@fontsource/jost/latin-700.css";
 import "@fontsource/marcellus/latin-400.css";
 import "./globals.css";
+import { ConsentBanner } from "./ConsentBanner";
 
 export const metadata = {
   title: "Book direct | Pearl Heights Homes",
@@ -20,7 +21,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>{children}<ConsentBanner /></body>
     </html>
   );
 }

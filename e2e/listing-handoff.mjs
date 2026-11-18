@@ -1,7 +1,7 @@
 // Note 144: the listing → Checkout E hand-off keeps adults, children and infants separately.
 // Run against a mock server: BASE_URL=http://localhost:3401 node e2e/listing-handoff.mjs
 import { createRequire } from "node:module";
-const { chromium, devices } = createRequire(import.meta.url)("playwright");
+const { chromium, devices } = createRequire(import.meta.url)("./_noBanner.cjs")(createRequire(import.meta.url)("playwright"));
 const BASE = process.env.BASE_URL ?? "http://localhost:3401";
 const ok = (c, m) => { console.log((c ? "ok  - " : "FAIL- ") + m); if (!c) process.exitCode = 1; };
 const browser = await chromium.launch();

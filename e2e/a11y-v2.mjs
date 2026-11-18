@@ -2,7 +2,7 @@
 // Run: AXE_PATH=/path/to/axe.min.js BASE_URL=http://localhost:3401 node e2e/a11y-v2.mjs
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
-const { chromium, devices } = createRequire(import.meta.url)("playwright");
+const { chromium, devices } = createRequire(import.meta.url)("./_noBanner.cjs")(createRequire(import.meta.url)("playwright"));
 const BASE = process.env.BASE_URL ?? "http://localhost:3401";
 const AXE = readFileSync(process.env.AXE_PATH, "utf8");
 const ok = (c, m) => { console.log((c ? "ok  - " : "FAIL- ") + m); if (!c) process.exitCode = 1; };

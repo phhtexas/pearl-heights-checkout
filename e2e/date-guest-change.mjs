@@ -3,7 +3,7 @@
 // Run against a mock server:  ALLOW_MOCK=true npx next start -p 3400  then  BASE_URL=http://localhost:3400 node e2e/date-guest-change.mjs
 // Playwright is not a project dependency (keeps Vercel installs small); use a globally installed copy or `npm i -D playwright`.
 import { createRequire } from "node:module";
-const { chromium, devices } = createRequire(import.meta.url)("playwright");
+const { chromium, devices } = createRequire(import.meta.url)("./_noBanner.cjs")(createRequire(import.meta.url)("playwright"));
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3400";
 const fail = (m) => { console.error("FAIL:", m); process.exitCode = 1; };

@@ -1,7 +1,7 @@
 // All Homes mockup C (A and B archived): load, noindex, five homes, search shows totals (or reasons), cards carry the dates to
 // the listing, which prefills them. No sideways scroll on a phone. Run: BASE_URL=http://localhost:3401 node e2e/all-homes.mjs
 import { createRequire } from "node:module";
-const { chromium, devices } = createRequire(import.meta.url)("playwright");
+const { chromium, devices } = createRequire(import.meta.url)("./_noBanner.cjs")(createRequire(import.meta.url)("playwright"));
 const BASE = process.env.BASE_URL ?? "http://localhost:3401";
 const ok = (c, m) => { console.log((c ? "ok  - " : "FAIL- ") + m); if (!c) process.exitCode = 1; };
 const browser = await chromium.launch();

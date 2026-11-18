@@ -2,7 +2,7 @@
 // home picker while calendar responses arrive late and out of order; the prices shown must always be the final home's.
 // Run: ALLOW_MOCK=true npx next start -p 3401 ; node e2e/calendar-switch.mjs http://localhost:3401
 import { createRequire } from "node:module";
-const { chromium } = createRequire(import.meta.url)("playwright");
+const { chromium } = createRequire(import.meta.url)("./_noBanner.cjs")(createRequire(import.meta.url)("playwright"));
 const base = process.argv[2] ?? process.env.BASE_URL ?? "http://localhost:3401";
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });

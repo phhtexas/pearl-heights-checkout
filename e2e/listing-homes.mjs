@@ -1,7 +1,7 @@
 // Every home page built from the V2 template (note 155): loads, shows its own facts, hides what it must,
 // and hands the right home to checkout. Run: BASE_URL=http://localhost:3401 node e2e/listing-homes.mjs
 import { createRequire } from "node:module";
-const { chromium, devices } = createRequire(import.meta.url)("playwright");
+const { chromium, devices } = createRequire(import.meta.url)("./_noBanner.cjs")(createRequire(import.meta.url)("playwright"));
 const BASE = process.env.BASE_URL ?? "http://localhost:3401";
 const ok = (c, m) => { console.log((c ? "ok  - " : "FAIL- ") + m); if (!c) process.exitCode = 1; };
 

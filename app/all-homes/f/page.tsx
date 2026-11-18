@@ -94,7 +94,7 @@ export default function Page() {
             <img className="F-logo F-logoDark" src="/brand/logo-dark.webp" alt="" width={200} height={174} />
           </a>
           <nav className="F-nav" aria-label="Sections"><a href="#homes">Homes</a><a href="#locations">Locations</a><a href="#reviews">Reviews</a><a href="#faq">FAQ</a></nav>
-          <a className="F-ask" href="mailto:bookings@pearlheightshomes.com">Ask a question</a>
+          <a className="F-ask" data-cta="header_ask_question" href="mailto:bookings@pearlheightshomes.com">Ask a question</a>
         </div>
       </SiteHeader>
       <main id="top">
@@ -186,7 +186,7 @@ export default function Page() {
           <h2 id="host-h">Have questions before you book?</h2>
           <p>{HOST.bio}</p>
           <ul className="F-chips">{["Local San Antonio hosts", ...HOST.facts].map((f) => <li key={f}>{f}</li>)}</ul>
-          <a className="F-dark" href="mailto:bookings@pearlheightshomes.com">Ask Oscar &amp; Fernanda</a>
+          <a className="F-dark" data-cta="faq_ask_hosts" href="mailto:bookings@pearlheightshomes.com">Ask Oscar &amp; Fernanda</a>
         </section>
       </main>
       {/* Oscar, Nov 16: our logo + Instagram in F's footer (C and E keep the shared footer). Instagram link as on pearlheightshomes.com. */}

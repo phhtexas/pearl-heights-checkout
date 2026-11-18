@@ -32,7 +32,7 @@ function Photos({ h, href, first }: { h: HomeCard; href: string; first: boolean 
     <div className="F-photoWrap">
       <div className="F-photos" ref={strip} onScroll={(e) => setAt(Math.round(e.currentTarget.scrollLeft / Math.max(1, e.currentTarget.clientWidth)))}>
         {photos.map((p, j) => (
-          <a className="F-photo" key={p.src} href={href} draggable={false} tabIndex={j === 0 ? 0 : -1}
+          <a className="F-photo" key={p.src} href={href} data-cta="home_card_photo" data-cta-home={h.key} draggable={false} tabIndex={j === 0 ? 0 : -1}
             aria-label={j === 0 ? `${h.title}: view home` : undefined} aria-hidden={j === 0 ? undefined : true}>
             {Math.abs(j - at) <= 1 && <Image src={p.src} alt={j === 0 ? "" : p.alt} fill sizes="(min-width: 900px) 500px, 100vw" priority={first && j === 0} draggable={false} />}
           </a>
@@ -130,7 +130,7 @@ export function HomesF({ homes, hero, points, reasons }: {
         <div className="F-info">
           <p className="F-fit">{h.bestFit}</p>
           <p className="F-meta">{h.area} · {h.rating ? <span>★ {h.rating.value} <span className="F-dim">({h.rating.count} Airbnb guest reviews)</span></span> : <b>New home</b>}</p>
-          <h3><a href={s.href(h.slug)}>{h.title}</a></h3>
+          <h3><a href={s.href(h.slug)} data-cta="home_card_title" data-cta-home={h.key}>{h.title}</a></h3>
           <p className="F-dim">{h.guests} guests · {h.bedrooms} bedrooms · {h.beds} beds · {h.baths} bath{h.baths === 1 ? "" : "s"}</p>
           <ul className="F-points">{h.points.map((p) => <li key={p}>{p}</li>)}</ul>
           <div className="F-buy">
@@ -142,7 +142,7 @@ export function HomesF({ homes, hero, points, reasons }: {
                 : r.ok ? <><b>{money(r.total!)}</b><span>total for {nights} night{nights === 1 ? "" : "s"}, taxes included</span></>
                 : <><span className="F-dim">{r.reason}</span>{r.reason !== `Sleeps ${h.guests}` && <button type="button" className="F-retry" onClick={toSearch}>Try other dates</button>}</>}
             </p>
-            <a className="F-cta" href={s.href(h.slug)} aria-label={`View ${h.title}`}>View home</a>
+            <a className="F-cta" href={s.href(h.slug)} data-cta="home_card_view" data-cta-home={h.key} aria-label={`View ${h.title}`}>View home</a>
           </div>
         </div>
       </li>
@@ -207,7 +207,7 @@ export function HomesF({ homes, hero, points, reasons }: {
                     {/* each home on its own row with the same pill as its map pin, so two homes read as two */}
                     <ul className="F-hoodHomes">{list.map((h) => (
                       <li key={h.key}>
-                        <a href={`#home-${h.key}`} onMouseEnter={() => setHot(h.key)} onMouseLeave={() => setHot(null)} onFocus={() => setHot(h.key)} onBlur={() => setHot(null)}>
+                        <a href={`#home-${h.key}`} data-cta="map_neighborhood_home" data-cta-home={h.key} onMouseEnter={() => setHot(h.key)} onMouseLeave={() => setHot(null)} onFocus={() => setHot(h.key)} onBlur={() => setHot(null)}>
                           <span className="F-hoodPill" aria-hidden="true">{pinLabel(h)}</span>
                           <span className="F-hoodName">{h.title}</span>
                           <svg className="F-hoodGo" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg>
@@ -226,7 +226,7 @@ export function HomesF({ homes, hero, points, reasons }: {
       </section>
 
       <div className={`F-sticky${sticky ? " is-on" : ""}`} aria-hidden={!sticky}>
-        <button type="button" className="F-stickyBtn" tabIndex={sticky ? 0 : -1} onClick={toSearch}>
+        <button type="button" className="F-stickyBtn" data-cta="all_homes_sticky_search" tabIndex={sticky ? 0 : -1} onClick={toSearch}>
           {searched ? `Change dates · ${shortDate(s.ci)} – ${shortDate(s.co)}` : "Search homes"}
         </button>
       </div>

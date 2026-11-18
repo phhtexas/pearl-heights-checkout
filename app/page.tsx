@@ -6,6 +6,8 @@ import { HOMES } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
 import type { StayPolicy } from "@/domain/policy";
 import { CONSENT_ID, POLICY_LINKS, marketingEmailText, marketingSmsBody } from "@/domain/consent";
+import { track } from "@/client/track";
+import { attribution, consent as cookieConsent, metaBrowserIds } from "@/client/consent";
 
 /**
  * Direct checkout, layout "option E" (Oscar, Nov 15, 2026). Phone follows the option E mockup element for element:
@@ -148,6 +150,7 @@ export default function Checkout() {
     } else setNotice("");
     lastTotal.current = j.quote.total;
     setQuote(j.quote); setQuoteId(j.quoteId); setExpiresAt(j.expiresAt); setPolicy(j.policy ?? null);
+    track("checkout_started", { property: home, nights: j.quote.nights, adults, children, infants, check_in: ci!, check_out: co!, total_cents: j.quote.total, page: "checkout" }, "cs" + home + ci + co + adults + "-" + children + "-" + infants);
     if (payPlan === "split" && !j.quote.splitPlan) setPlan("full");
   }, [ci, co, home, adults, children, infants, plan]);
   useEffect(() => { if (ci && co) void getQuote(); }, [ci, co, home, adults, children, infants]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -199,12 +202,18 @@ export default function Checkout() {
       if (pm.error || !pm.id) { setBusy(false); setErr(pm.error ?? "Please check your card details."); return; }
       paymentMethodId = pm.id;
     }
-    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, consentId: CONSENT_ID, marketingEmail: mktEmail, marketingSms: mktSms, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId }) });
+    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, consentId: CONSENT_ID, marketingEmail: mktEmail, marketingSms: mktSms, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId,
+      analytics: { consent: cookieConsent() === "granted", attribution: attribution(), ...metaBrowserIds(), url: location.href } }) });
     const j = await r.json().catch(() => ({}));
     setBusy(false);
     if (j.reason === "quote_expired") { await getQuote(); setErr(j.guestMessage); return; }
     if (!r.ok) { setErr(j.error ?? j.guestMessage ?? "Something went wrong. No charge was made."); return; }
-    if (j.ok) { setResult(j); setStep("done"); window.scrollTo(0, 0); return; }
+    if (j.ok) {
+      // Booking value for ROAS = what we earn before taxes (nights + extra guests + cleaning + damage waiver).
+      track("purchase", { property: home, booking_ref: j.bookingRef, nights: quote.nights, adults, children, check_in: ci!, check_out: co!,
+        value_cents: quote.total - quote.tax, total_cents: undefined, tax_cents: quote.tax, paid_now_cents: quote.plan.dueNow }, "pu" + j.bookingRef, String(j.bookingRef));
+      setResult(j); setStep("done"); window.scrollTo(0, 0); return;
+    }
     if (j.reason === "dates_taken") {
       setResult(null); setQuote(null); setCi(null); setCo(null); setStep("review"); setCalVersion((v) => v + 1);
       setErr(j.guestMessage + " Please choose new dates.");
@@ -228,6 +237,7 @@ export default function Checkout() {
     if (!fieldOk("phone")) e.phone = "Enter a mobile number with area code.";
     setFieldErr(e);
     if (Object.keys(e).length) { setTimeout(() => document.getElementById("errsum")?.focus(), 0); return; }
+    if (quote) track("guest_details_done", { property: home, nights: quote.nights, check_in: ci!, check_out: co!, total_cents: quote.total }, "gd" + quoteId);
     go("pay");
   }
   // After a confirmed booking, fetch the guest's private stay-page link (same browser session only; needs the database).
@@ -239,6 +249,9 @@ export default function Checkout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, result?.ok ? result.bookingRef : ""]);
   const go = (s: Step) => { setErr(""); setStep(s); window.scrollTo(0, 0); };
+  useEffect(() => {
+    if (step === "pay" && quote) track("payment_step", { property: home, nights: quote.nights, check_in: ci!, check_out: co!, total_cents: quote.total }, "ps" + quoteId);
+  }, [step, quoteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const left = Math.max(0, expiresAt - now);
   const lockMin = Math.ceil(left / 60000);

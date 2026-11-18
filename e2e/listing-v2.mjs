@@ -1,7 +1,7 @@
 // Listing option A: renders, dates → total → Reserve hands off to Checkout E with dates and guests.
 // Run: ALLOW_MOCK=true npx next start -p 3401 ; BASE_URL=http://localhost:3401 node e2e/listing-v2.mjs [shotsDir]
 import { createRequire } from "node:module";
-const { chromium, devices } = createRequire(import.meta.url)("playwright");
+const { chromium, devices } = createRequire(import.meta.url)("./_noBanner.cjs")(createRequire(import.meta.url)("playwright"));
 const BASE = process.env.BASE_URL ?? "http://localhost:3401";
 const SHOTS = process.argv[2];
 const ok = (c, m) => { console.log((c ? "ok  - " : "FAIL- ") + m); if (!c) process.exitCode = 1; };

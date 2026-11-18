@@ -1,6 +1,6 @@
 // Guest portal phase 1 (test data): /stay/demo. Run against a mock server: BASE=http://localhost:3401 node e2e/stay.mjs
 import { createRequire } from "node:module";
-const { chromium, devices } = createRequire(import.meta.url)("playwright");
+const { chromium, devices } = createRequire(import.meta.url)("./_noBanner.cjs")(createRequire(import.meta.url)("playwright"));
 const BASE = process.env.BASE ?? "http://localhost:3401";
 let fails = 0; const ok = (c, m) => { console.log(`${c ? "ok  " : "FAIL"}- ${m}`); if (!c) fails++; };
 const browser = await chromium.launch();

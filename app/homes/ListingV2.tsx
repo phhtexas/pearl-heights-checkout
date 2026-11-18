@@ -135,14 +135,14 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
     if (!ci || !co) { setQuote(null); setQState("idle"); return; }
     const id = ++reqId.current;
     setQuote(null); setQState("loading"); setQErr("");
-    track("availability_searched", { property: prop.key, nights: nightsOf(ci, co), guests, lead_days: nightsOf(new Date().toISOString().slice(0, 10), ci), variant: "v2" });
+    track("availability_searched", { property: prop.key, nights: nightsOf(ci, co), guests, adults, children, check_in: ci, check_out: co, lead_days: nightsOf(new Date().toISOString().slice(0, 10), ci), variant: "v2" });
     fetch("/api/quote", { method: "POST", body: JSON.stringify({ property: prop.key, checkIn: ci, checkOut: co, adults, children, infants, payPlan: "full" }) })
       .then(async (r) => ({ ok: r.ok, status: r.status, j: await r.json().catch(() => ({})) }))
       .then(({ ok, status, j }) => {
         if (id !== reqId.current) return;
         if (!ok) { setQState(status === 409 ? "unavailable" : "error"); setQErr(j.error ?? "We couldn't price these dates."); return; }
         setQuote(j.quote); setQState("idle");
-        track("quote_viewed", { property: prop.key, nights: j.quote.nights, guests, total_cents: j.quote.total, non_refundable: j.quote.nonRefundable, variant: "v2" }, "qv" + j.quoteId);
+        track("quote_viewed", { property: prop.key, nights: j.quote.nights, guests, adults, children, check_in: ci!, check_out: co!, total_cents: j.quote.total, non_refundable: j.quote.nonRefundable, variant: "v2" }, "qv" + j.quoteId);
       })
       .catch(() => { if (id === reqId.current) { setQState("error"); setQErr("We couldn't reach our booking system. Please try again."); } });
   }, [ci, co, adults, children, infants, prop.key]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -179,9 +179,12 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
     setCi(draft.ci); setCo(draft.co); setSheet(null);
     track("dates_selected", { property: prop.key, nights: nightsOf(draft.ci, draft.co), check_in_month: draft.ci.slice(0, 7), variant: "v2" }, "ds" + draft.ci + draft.co);
   }
-  function reserve() {
+  function reserve(where: string) {
     if (!quote || !ci || !co) return;
-    track("checkout_started", { property: prop.key, nights: quote.nights, adults, children, infants, total_cents: quote.total, variant: "v2" }, "cs" + ci + co + adults + "-" + children + "-" + infants);
+    // On pearlheightshomes.com the Reserve hand-off goes to Airbnb (middleware) until direct checkout is live.
+    const destination = /(^|\.)pearlheightshomes\.com$/.test(location.hostname) ? "airbnb" : "checkout";
+    track("book_click", { property: prop.key, cta: where, destination, nights: quote.nights, adults, children, check_in: ci, check_out: co, total_cents: quote.total }, "bk" + where + ci + co + adults + "-" + children);
+    if (destination === "checkout") track("checkout_started", { property: prop.key, nights: quote.nights, adults, children, infants, check_in: ci, check_out: co, total_cents: quote.total, variant: "v2" }, "cs" + ci + co + adults + "-" + children + "-" + infants);
     location.href = `/?home=${prop.key}&checkIn=${ci}&checkOut=${co}&adults=${adults}&children=${children}&infants=${infants}`;
   }
   async function share() {
@@ -399,7 +402,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
           <button className="V-field" onClick={() => open("guests")}><span>Guests</span><b>{guests} {guests === 1 ? "guest" : "guests"}{infants ? `, ${infants} ${infants === 1 ? "infant" : "infants"}` : ""}</b></button>
         </div>
         {(qState === "unavailable" || qState === "error") && <p className="V-cardErr" role="alert">{qErr}</p>}
-        {quote ? <button className="V-cta V-cardCta" onClick={reserve}>Reserve</button> : <button className="V-cta V-cardCta" onClick={() => open("dates")}>Check availability</button>}
+        {quote ? <button className="V-cta V-cardCta" onClick={() => reserve("booking_card")}>Reserve</button> : <button className="V-cta V-cardCta" data-cta="booking_card_availability" data-cta-home={prop.key} onClick={() => open("dates")}>Check availability</button>}
         <p className="V-cardNote">{quote ? "Includes cleaning, the damage waiver and taxes. You'll review everything before you pay." : "Your full total (cleaning, damage waiver and taxes) shows as soon as you pick dates."}</p>
         <p className="V-trust">{TRUST}</p>
       </aside>
@@ -440,7 +443,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
             : <span className="V-barSub">for the full price</span>}
           {(qState === "unavailable" || qState === "error") && <span className="V-barErr" role="alert">{qErr}</span>}
         </div>
-        {quote ? <button className="V-cta" onClick={reserve}>Reserve</button> : <button className="V-cta" onClick={() => open("dates")}>Check availability</button>}
+        {quote ? <button className="V-cta" onClick={() => reserve("sticky_bar")}>Reserve</button> : <button className="V-cta" data-cta="sticky_bar_availability" data-cta-home={prop.key} onClick={() => open("dates")}>Check availability</button>}
         </div>
         <p className="V-barTrust">{TRUST}</p>
       </div>
@@ -472,7 +475,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
               </div>
             </section>))}
           <div className="V-tourCta">
-            {quote ? <button className="V-cta" onClick={reserve}>Reserve</button> : <button className="V-cta" onClick={() => { setSheet(null); setTimeout(() => open("dates"), 0); }}>Check availability</button>}
+            {quote ? <button className="V-cta" onClick={() => reserve("photo_tour")}>Reserve</button> : <button className="V-cta" data-cta="photo_tour_availability" data-cta-home={prop.key} onClick={() => { setSheet(null); setTimeout(() => open("dates"), 0); }}>Check availability</button>}
           </div>
         </div>
       )}
