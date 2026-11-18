@@ -79,6 +79,9 @@ export function HomesF({ homes, hero, points, reasons }: {
   homes: HomeCard[]; hero: { src: string; alt: string }; points: { key: string; lat: number; lon: number }[]; reasons: React.ReactNode;
 }) {
   const s = useStays("f");
+  // "From $X / night" before dates (Oscar, Nov 17): per night incl. cleaning and damage waiver, before taxes.
+  const [fromP, setFromP] = useState<Record<string, number>>({});
+  useEffect(() => { fetch("/api/from-prices").then((r) => r.ok ? r.json() : null).then((j) => { if (j?.from) setFromP(j.from); }).catch(() => {}); }, []);
   const searched = s.state === "done";
   const nights = searched && s.ci && s.co ? Math.round((Date.parse(s.co) - Date.parse(s.ci)) / 864e5) : 0;
   const available = searched ? homes.filter((h) => s.results[h.key]?.ok).length : 0;
@@ -133,7 +136,9 @@ export function HomesF({ homes, hero, points, reasons }: {
           <div className="F-buy">
             <p className="F-price">
               {s.state === "loading" ? <span className="F-dim">Checking these dates…</span>
-                : !searched || !r ? <span className="F-dim">Add dates for the total</span>
+                : !searched || !r ? (fromP[h.key] != null
+                  ? <><span className="F-from">From <b>{money(fromP[h.key]!)}</b> / night</span><span>before taxes · add dates for your exact total</span></>
+                  : <span className="F-dim">Add dates for the total</span>)
                 : r.ok ? <><b>{money(r.total!)}</b><span>total for {nights} night{nights === 1 ? "" : "s"}, taxes included</span></>
                 : <><span className="F-dim">{r.reason}</span>{r.reason !== `Sleeps ${h.guests}` && <button type="button" className="F-retry" onClick={toSearch}>Try other dates</button>}</>}
             </p>
@@ -198,7 +203,7 @@ export function HomesF({ homes, hero, points, reasons }: {
                       </button></h3>
                       <p className="F-dim">{list.length} home{list.length > 1 ? "s" : ""}{AREA_NOTE[area] ? ` · ${AREA_NOTE[area]}` : ""}</p>
                     </div>
-                    <p className="F-hoodPr">{totals.length ? <>from <b>{money(Math.min(...totals))}</b></> : searched ? <span className="F-dim">Not available</span> : <span className="F-dim">Add dates</span>}</p>
+                    <p className="F-hoodPr">{totals.length ? <>from <b>{money(Math.min(...totals))}</b></> : searched ? <span className="F-dim">Not available</span> : list.some((h) => fromP[h.key] != null) ? <>from <b>{money(Math.min(...list.filter((h) => fromP[h.key] != null).map((h) => fromP[h.key]!)))}</b> / night</> : <span className="F-dim">Add dates</span>}</p>
                     {/* each home on its own row with the same pill as its map pin, so two homes read as two */}
                     <ul className="F-hoodHomes">{list.map((h) => (
                       <li key={h.key}>

@@ -217,12 +217,15 @@ export default function Checkout() {
     setStep("review"); setCi(null); setCo(null); setQuote(null); setResult(null); setErr(""); setAgreed(false); setPlan("full");
     setGuest({ firstName: "", lastName: "", email: "", phone: "" }); setMktEmail(false); setMktSms(false); setCalVersion((v) => v + 1);
   }
+  // Same rules as the submit check; also drives the green check shown in each valid field (Oscar, Nov 17).
+  const fieldOk = (k: "firstName" | "lastName" | "email" | "phone") =>
+    k === "email" ? /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guest.email) : k === "phone" ? guest.phone.replace(/\D/g, "").length >= 10 : !!guest[k].trim();
   function submitDetails() {
     const e: typeof fieldErr = {};
-    if (!guest.firstName.trim()) e.firstName = "Enter your first name.";
-    if (!guest.lastName.trim()) e.lastName = "Enter your last name.";
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guest.email)) e.email = "Enter a valid email so we can send your confirmation.";
-    if (guest.phone.replace(/\D/g, "").length < 10) e.phone = "Enter a mobile number with area code.";
+    if (!fieldOk("firstName")) e.firstName = "Enter your first name.";
+    if (!fieldOk("lastName")) e.lastName = "Enter your last name.";
+    if (!fieldOk("email")) e.email = "Enter a valid email so we can send your confirmation.";
+    if (!fieldOk("phone")) e.phone = "Enter a mobile number with area code.";
     setFieldErr(e);
     if (Object.keys(e).length) { setTimeout(() => document.getElementById("errsum")?.focus(), 0); return; }
     go("pay");
@@ -394,10 +397,11 @@ export default function Checkout() {
             <div className="muted">The person booking must be 25 or older and stay at the home.</div>
             {Object.keys(fieldErr).length > 0 && <div id="errsum" className="alert" tabIndex={-1} role="alert">Please fix {Object.keys(fieldErr).length === 1 ? "this" : "these"}: {Object.values(fieldErr).join(" ")}</div>}
             {([["firstName", "First name", "given-name", "text"], ["lastName", "Last name", "family-name", "text"], ["email", "Email", "email", "email"], ["phone", "Mobile phone", "tel", "tel"]] as const).map(([k, label, ac, type]) => (
-              <label key={k} className="fld"><span className="lbl">{label}</span>
-                <input className={"f" + (fieldErr[k] ? " bad" : "")} type={type} autoComplete={ac} value={guest[k]} enterKeyHint={k === "phone" ? "done" : "next"}
+              <label key={k} className={"fld" + (fieldOk(k) && !fieldErr[k] ? " is-ok" : "")}><span className="lbl">{label}</span>
+                <span className="fWrap"><input className={"f" + (fieldErr[k] ? " bad" : "")} type={type} autoComplete={ac} value={guest[k]} enterKeyHint={k === "phone" ? "done" : "next"}
                   onKeyDown={(e) => { if (e.key !== "Enter") return; e.preventDefault(); const all = [...document.querySelectorAll<HTMLInputElement>("main .fld input.f")]; const nx = all[all.indexOf(e.currentTarget) + 1]; if (nx) nx.focus(); else e.currentTarget.blur(); }} aria-invalid={!!fieldErr[k]} aria-describedby={fieldErr[k] ? k + "-err" : undefined}
                   onChange={(e) => { setGuest({ ...guest, [k]: e.target.value }); if (fieldErr[k]) setFieldErr({ ...fieldErr, [k]: undefined }); }} />
+                {fieldOk(k) && !fieldErr[k] && <svg className="okIc" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#127A5E" /><path d="m7 12.5 3.2 3.2L17 9" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>}</span>
                 {fieldErr[k] && <span id={k + "-err"} className="err">{fieldErr[k]}</span>}</label>))}
             <div className="muted">We use your phone for your stay details. Your private stay link is emailed after booking.</div>
           </>)}

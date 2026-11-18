@@ -34,6 +34,20 @@ export function PinMapF({ pins, zoom: baseZoom = 12, area = null, hot = null }: 
   const [zoom, setZoom] = useState(baseZoom);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [circle, setCircle] = useState<{ x: number; y: number; r: number } | null>(null);
+  // Oscar, Nov 17: load only the tiles inside the map box (plus a small margin) — about 3x fewer CARTO tiles per view.
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+  useEffect(() => {
+    const el = box.current; if (!el) return;
+    const on = () => setSize({ w: el.clientWidth, h: el.clientHeight });
+    on();
+    if (!("ResizeObserver" in window)) return;
+    const ro = new ResizeObserver(on); ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const MARGIN = 64;
+  const inView = (t: { left: number; top: number }) => !size || (
+    t.left + pan.x + TILE > -size.w / 2 - MARGIN && t.left + pan.x < size.w / 2 + MARGIN &&
+    t.top + pan.y + TILE > -size.h / 2 - MARGIN && t.top + pan.y < size.h / 2 + MARGIN);
   useEffect(() => {
     const el = box.current;
     if (!el || !("IntersectionObserver" in window)) { setShow(true); return; }
@@ -99,7 +113,7 @@ export function PinMapF({ pins, zoom: baseZoom = 12, area = null, hot = null }: 
     <div className={`C-map F-map ${CARTO_KEY ? "is-carto" : "is-osm"}`} ref={box} data-pan={`${Math.round(pan.x)},${Math.round(pan.y)}`} data-zoom={zoom}>
       {show && (
         <div className="C-tiles" aria-hidden="true">
-          {tiles.map((t) => (
+          {tiles.filter(inView).map((t) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img key={`${zoom}-${t.x}-${t.y}`} alt="" draggable={false} decoding="async" src={tileUrl(zoom, t.x, t.y)}
               style={at(t.left, t.top)} />

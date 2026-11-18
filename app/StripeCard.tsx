@@ -38,7 +38,6 @@ const hasAny = (m: unknown) => !!m && Object.values(m as Record<string, boolean>
 function Inner({ onReady, canPay, billing, onExpress, onLockedTap }: { onReady: (fn: CreatePm | null) => void; canPay: boolean; billing: Billing; onExpress: (id: string) => void; onLockedTap: () => void }) {
   const stripe = useStripe(), elements = useElements();
   const [wallets, setWallets] = useState(false);
-  const [diag, setDiag] = useState("checking…"); // sandbox-only: what Stripe reports for this device
   const canPayRef = useRef(canPay); canPayRef.current = canPay;
   const billingRef = useRef(billing); billingRef.current = billing;
   useEffect(() => {
@@ -62,9 +61,8 @@ function Inner({ onReady, canPay, billing, onExpress, onLockedTap }: { onReady: 
               paymentMethods: { applePay: "auto", googlePay: "auto", link: "auto", paypal: "never", amazonPay: "never", klarna: "never" },
               layout: { maxColumns: 1, maxRows: 3, overflow: "auto" }, // overflow "never" stopped the element from ever loading (tested Nov 17)
             }}
-            onReady={({ availablePaymentMethods }) => { setWallets(hasAny(availablePaymentMethods)); setDiag(availablePaymentMethods ? Object.entries(availablePaymentMethods).filter(([, v]) => v).map(([k]) => k).join(", ") || "none" : "none"); }}
-            onAvailablePaymentMethodsChange={({ paymentMethods }) => { setWallets(!!paymentMethods && Object.values(paymentMethods).some((m) => !!m?.available)); setDiag(paymentMethods ? Object.entries(paymentMethods).filter(([, m]) => m?.available).map(([k]) => k).join(", ") || "none" : "none"); }}
-            onLoadError={(e) => setDiag(`load error: ${e.error?.message ?? "unknown"}`)}
+            onReady={({ availablePaymentMethods }) => setWallets(hasAny(availablePaymentMethods))}
+            onAvailablePaymentMethodsChange={({ paymentMethods }) => setWallets(!!paymentMethods && Object.values(paymentMethods).some((m) => !!m?.available))}
             onClick={(e) => { if (!canPayRef.current) { onLockedTap(); return; } e.resolve(); }}
             onConfirm={async (e) => {
               if (!stripe || !elements) return;
@@ -81,7 +79,6 @@ function Inner({ onReady, canPay, billing, onExpress, onLockedTap }: { onReady: 
         )}
         {wallets && <div className="orCard" aria-hidden="true"><span>or pay with card</span></div>}
       </div>
-      {process.env.NEXT_PUBLIC_SANDBOX === "true" && <p className="walletDiag">Test only · one-tap wallets Stripe found on this device: {diag}</p>}
       <PaymentElement options={{ layout: "tabs", wallets: { applePay: "never", googlePay: "never", link: "never" }, fields: { billingDetails: { name: "never", email: "never", phone: "never" } } }} />
     </>
   );

@@ -304,10 +304,14 @@ input.f.bad { border-color: var(--bad); }
 .ck .payBreak h2 { margin: 0 0 6px; }
 .ck .sum .psFacts { margin: 12px 0; }
 
-.ck .walletDiag { margin: 6px 0 10px; font-size: 12px; color: #8a4b12; }
 
 /* Keyboard open on phones: hide the fixed bottom bar so the next field stays visible (Oscar, Nov 17). */
 @media (max-width: 959px) {
   .ck.isTyping .foot { display: none; }
   html { scroll-padding-bottom: 170px; }
 }
+
+/* Green check in each valid details field (Oscar, Nov 17) */
+.fWrap { position: relative; display: block; }
+.fld.is-ok input.f { padding-right: 46px; border-color: #127A5E; }
+.okIc { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; }
