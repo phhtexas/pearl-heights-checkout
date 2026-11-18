@@ -21,6 +21,11 @@ export interface HospitableAdapter {
   cancelReservation(reservationId: string): Promise<void>;
   /** Reconciliation: find a reservation by our booking ref (the reservation code). null = none exists. */
   findReservationByCode(code: string): Promise<string | null>;
+  /**
+   * Cancels this reservation's unsent Hospitable check-in messages (the door-code message). Oscar, Nov 18: direct guests
+   * get access only on our stay page, after agreement + ID. Returns how many were cancelled. Optional: mock/read-only.
+   */
+  cancelCheckinMessages?(reservationId: string): Promise<number>;
 }
 
 export type PaymentStatus = "authorized" | "captured" | "voided" | "failed";

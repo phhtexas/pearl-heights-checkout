@@ -7,6 +7,7 @@ import { runDueSecondCharges } from "@/services/secondCharge";
 import { purgeOldRateLimits } from "@/server/rateLimit";
 import { getProperty } from "@/domain/properties";
 import { verificationDeadline } from "@/domain/verification";
+import { sweepCheckinMessages } from "@/services/checkinMessageSweep";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -27,7 +28,9 @@ async function handle(req: Request): Promise<Response> {
   const reconciliation = await runReconciliation(ledger, { hosp, pay, propertyUuid: (k) => getProperty(k).hospitableUuid, verification: (ci) => verificationDeadline(new Date(), ci) });
   const secondCharges = await runDueSecondCharges(getDb()!, pay);
   const rateLimitWindowsPurged = await purgeOldRateLimits(getDb()!).catch(() => 0);
-  const counts = { reconciliation, secondCharges, rateLimitWindowsPurged };
+  // Once an hour (the cron runs every minute): make sure no direct booking still has a Hospitable door-code message.
+  const checkinMessages = new Date().getUTCMinutes() === 7 ? await sweepCheckinMessages(getDb()!, hosp).catch(() => null) : undefined;
+  const counts = { reconciliation, secondCharges, rateLimitWindowsPurged, ...(checkinMessages !== undefined ? { checkinMessages } : {}) };
   console.info("maintenance run", JSON.stringify(counts));
   return NextResponse.json(counts, { headers: noStore });
 }

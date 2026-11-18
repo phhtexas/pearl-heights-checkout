@@ -27,6 +27,22 @@ describe("checkout orchestration (mock Hospitable + Stripe)", () => {
     expect(r.verification.rule).toBe("24h");
   });
 
+  it("cancels Hospitable's check-in message, and still books if that call fails", async () => {
+    const h = new MockHospitable(), p = new MockPayments();
+    const calls: string[] = [];
+    (h as any).cancelCheckinMessages = async (id: string) => { calls.push(id); return 1; };
+    const r = await runCheckout(await request(h, "PH-MSG1"), h, p);
+    expect(r.ok).toBe(true);
+    expect(calls).toEqual(["mock-res-PH-MSG1"]);
+    expect(r.log.some((l) => l.includes("check-in messages cancelled: 1"))).toBe(true);
+
+    const h2 = new MockHospitable(), p2 = new MockPayments();
+    (h2 as any).cancelCheckinMessages = async () => { throw Object.assign(new Error("x"), { code: "upstream_error" }); };
+    const r2 = await runCheckout(await request(h2, "PH-MSG2"), h2, p2);
+    expect(r2.ok).toBe(true);
+    expect(r2.log.some((l) => l.includes("sweep will retry"))).toBe(true);
+  });
+
   it("stops before touching the card when the dates were just taken", async () => {
     const h = new MockHospitable(), p = new MockPayments();
     const req = await request(h, "PH-TAKEN");

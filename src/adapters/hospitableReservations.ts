@@ -20,7 +20,7 @@ const UUID = /^[0-9a-f-]{36}$/i;
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const CODE = /^[A-Z0-9-]{4,50}$/;
 
-type Writer = Pick<HospitableAdapter, "createReservation" | "cancelReservation" | "findReservationByCode">;
+type Writer = Pick<HospitableAdapter, "createReservation" | "cancelReservation" | "findReservationByCode"> & { cancelCheckinMessages(id: string): Promise<number> };
 
 export function hospitableReservations(token: string, propertyUuids: string[], fetchImpl: typeof fetch = fetch, channel = "Pearl Heights Homes"): Writer {
   const headers = { Authorization: `Bearer ${token}`, Accept: "application/json", "Content-Type": "application/json" };
@@ -72,6 +72,26 @@ export function hospitableReservations(token: string, propertyUuids: string[], f
       if (res.ok) return;
       if (res.status === 404) throw new AdapterError("Hospitable cancel: not found", "not_found");
       throw new AdapterError(`Hospitable cancel ${res.status}`, "upstream_error");
+    },
+
+    /**
+     * Scheduled messages API (Hospitable changelog, May 15 2026, read Nov 18): GET /reservations/{id}/scheduled-messages,
+     * DELETE /scheduled-messages/{id} cancels without deleting (restorable). Only rows from a "checkin" rule that are not
+     * yet sent or cancelled are touched; message text is never read or logged (it holds door codes).
+     */
+    async cancelCheckinMessages(id) {
+      if (!UUID.test(id)) throw new AdapterError("Hospitable messages: invalid id", "not_found");
+      const res = await call(`${HOSPITABLE_API_BASE}/reservations/${encodeURIComponent(id)}/scheduled-messages`, { method: "GET" });
+      if (!res.ok) throw new AdapterError(`Hospitable scheduled messages ${res.status}`, "upstream_error");
+      const j = (await res.json().catch(() => null)) as { data?: { id?: unknown; sent_at?: unknown; cancelled_at?: unknown; rule?: { event?: unknown } | null }[] } | null;
+      const due = (j?.data ?? []).filter((m) => typeof m.id === "string" && m.rule?.event === "checkin" && !m.sent_at && !m.cancelled_at);
+      let n = 0;
+      for (const m of due) {
+        const d = await call(`${HOSPITABLE_API_BASE}/scheduled-messages/${encodeURIComponent(m.id as string)}`, { method: "DELETE" });
+        if (!d.ok && d.status !== 404 && d.status !== 422) throw new AdapterError(`Hospitable cancel message ${d.status}`, "upstream_error");
+        if (d.ok) n++;
+      }
+      return n;
     },
 
     async findReservationByCode(code) {

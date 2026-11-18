@@ -58,4 +58,20 @@ describe("Hospitable manual reservations", () => {
     expect(realHospitable({ HOSPITABLE_API_TOKEN: "t" } as any)).toBeNull();
     expect(realHospitable({ HOSPITABLE_API_TOKEN: "t", HOSPITABLE_WRITES: "on" } as any)).not.toBeNull();
   });
+  it("cancels only unsent check-in messages for the reservation (door codes stay on the stay page)", async () => {
+    const rows = { data: [
+      { id: "msgCheckin", sent_at: null, cancelled_at: null, rule: { event: "checkin" } },
+      { id: "msgCheckout", sent_at: null, cancelled_at: null, rule: { event: "checkout" } },
+      { id: "msgSent", sent_at: "2027-04-20T10:00:00-05:00", cancelled_at: null, rule: { event: "checkin" } },
+      { id: "msgDone", sent_at: null, cancelled_at: "2026-11-18T14:00:00-06:00", rule: { event: "checkin" } },
+    ] };
+    const f = vi.fn(async (url: string, init: any) => init.method === "GET" ? json(200, rows) : new Response(null, { status: 204 }));
+    const n = await hospitableReservations("tok", [P], f as any).cancelCheckinMessages(R);
+    expect(n).toBe(1);
+    expect(f.mock.calls.map((c: any) => `${c[1].method} ${c[0]}`)).toEqual([
+      `GET https://public.api.hospitable.com/v2/reservations/${R}/scheduled-messages`,
+      "DELETE https://public.api.hospitable.com/v2/scheduled-messages/msgCheckin",
+    ]);
+    await expect(hospitableReservations("tok", [P], vi.fn(async () => json(500, {})) as any).cancelCheckinMessages(R)).rejects.toMatchObject({ code: "upstream_error" });
+  });
 });

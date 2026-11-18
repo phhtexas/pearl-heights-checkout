@@ -144,6 +144,15 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
     return { ok: false, state, reason: "reservation_failed", guestMessage: "We couldn't complete the booking." + HOLD_NOTE, log };
   }
   step("RESERVATION_OK", `reservation ${reservationId}`);
+  // Door codes go only on our stay page (Oscar, Nov 18), so cancel Hospitable's check-in message for this booking.
+  // Never blocks the booking: a failure is logged loudly and the maintenance sweep retries before arrival.
+  try {
+    const n = await hosp.cancelCheckinMessages?.(reservationId);
+    if (n !== undefined) log.push(`check-in messages cancelled: ${n}`);
+  } catch (e) {
+    console.error("[hospitable] ALERT check-in message not cancelled", req.bookingRef, code(e));
+    log.push(`check-in message cancel failed (${code(e)}); sweep will retry`);
+  }
 
   // 4. Confirm the block is visible before charging (bounded fresh polling). If it never shows, or the check
   //    itself fails, do NOT capture: reconciliation captures or unwinds by ID.
