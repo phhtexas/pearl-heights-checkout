@@ -175,12 +175,14 @@ export default function Checkout() {
     return { pad, list: Array.from({ length: n }, (_, i) => `${month}-${String(i + 1).padStart(2, "0")}`) };
   }, [month]);
 
-  async function pay() {
+  async function pay(expressPmId?: string) {
     if (!quote) return;
+    if (!agreed) return;
     if (now > expiresAt) { await getQuote(); setErr("Your price lock ended, so we rechecked the price. Please review your total."); return; }
     setErr(""); setBusy(true);
     let paymentMethodId: string | undefined;
-    if (stripeMode) {
+    if (stripeMode && expressPmId) paymentMethodId = expressPmId; // Apple Pay / Google Pay / Link
+    else if (stripeMode) {
       if (!createPm.current) { setBusy(false); setErr("The payment form is still loading. Please try again."); return; }
       const pm = await createPm.current({ name: `${guest.firstName} ${guest.lastName}`.trim(), email: guest.email, phone: guest.phone });
       if (pm.error || !pm.id) { setBusy(false); setErr(pm.error ?? "Please check your card details."); return; }
@@ -229,7 +231,7 @@ export default function Checkout() {
   // The one main action per step (fixed footer on phones, inline on desktop).
   const primary = step === "review" ? { label: "Continue to your details", disabled: !quote || quoting, run: () => go("details") }
     : step === "details" ? { label: "Continue to payment", disabled: false, run: submitDetails }
-    : step === "pay" && quote ? { label: busy ? "Processing…" : `Confirm and pay ${money(quote.plan.dueNow)}`, disabled: !agreed || busy, run: pay }
+    : step === "pay" && quote ? { label: busy ? "Processing…" : `Confirm and pay ${money(quote.plan.dueNow)}`, disabled: !agreed || busy, run: () => void pay() }
     : null;
 
   const dayState = (iso: string) => {
@@ -245,9 +247,18 @@ export default function Checkout() {
   };
   const draftMin = draft.ci ? byDate[draft.ci]?.minStay ?? 2 : byDate[days.find((d) => d.available)?.date ?? ""]?.minStay ?? 2;
 
+  // Neighborhood only, never the street (Oscar, Nov 17).
+  const areaLine = `${listing?.neighborhood ?? "San Antonio"}, San Antonio`;
+  const stayFacts = ci && co && (
+    <dl className="psFacts">
+      <div><dt>Check-in</dt><dd>{fmtDay(ci)}<span>after 4:00 PM</span></dd></div>
+      <div><dt>Check-out</dt><dd>{fmtDay(co)}<span>by 10:00 AM</span></dd></div>
+      <div className="psGuests"><dt>Guests</dt><dd>{guests} {guests === 1 ? "guest" : "guests"}<span>{adults} {adults === 1 ? "adult" : "adults"}{children ? ` · ${children} ${children === 1 ? "child" : "children"}` : ""}{infants ? ` · ${infants} ${infants === 1 ? "infant" : "infants"}` : ""}</span></dd></div>
+    </dl>
+  );
   const photoEl = (h: number) => photo
     ? <img className="photoImg" src={photo.src} alt={photo.alt} style={{ height: h }} />
-    : <div className="photo" style={{ height: h }} aria-hidden="true"><span>{prop.name}</span></div>;
+    : <div className="photo" style={{ height: h }} aria-hidden="true"><span>{areaLine}</span></div>;
 
   const priceRows = quote && (<>
     <div className="ln"><span>{quote.nights} {quote.nights === 1 ? "night" : "nights"} × {money(Math.round(folded / quote.nights))}</span><span>{money(folded)}</span></div>
@@ -271,7 +282,7 @@ export default function Checkout() {
       {photoEl(190)}
       <div className="sumBody">
         <div><div className="homeName">{homeTitle}</div><div className="muted">Entire home · sleeps {prop.maxGuests} · direct booking</div></div>
-        {step !== "review" && ci && co && <div className="sumLine"><span>{fmtRange(ci, co)}</span><span>{guests} {guests === 1 ? "guest" : "guests"}</span></div>}
+        {step !== "review" && ci && co && stayFacts}
         {quote && <div className="price"><div className="h3">Price details</div>{priceRows}</div>}
         <Badges />
       </div>
@@ -383,16 +394,31 @@ export default function Checkout() {
             <button className="back desktopOnly" aria-label="Back" onClick={() => go("details")}>‹</button>
             <h1>Confirm and pay</h1>
             {notice && <div className="notice" role="status">{notice}</div>}
+            {/* Oscar, Nov 17: stay card like the guest portal's (photo, home, neighborhood, check-in/out), then the cost
+                breakdown. Never the street address: that's released only after signing and the ID check. */}
+            <section className="payStay mobileOnly" aria-label="Your stay">
+              {photoEl(190)}
+              <div className="psText">
+                <p className="psEyebrow">Your stay</p>
+                <h2 className="psTitle">{homeTitle}</h2>
+                <p className="muted">{areaLine}</p>
+                {stayFacts}
+              </div>
+            </section>
+            <section className="payBreak mobileOnly"><h2>Price details</h2>{priceRows}</section>
             <div className="card">
-              <div className="ln"><span>{prop.name} · {fmtRange(ci!, co!)}</span></div>
-              <div className="ln"><span>Total</span><b>{money(quote.total)}</b></div>
+              <div className="ln desktopOnlyFlex"><span>{homeTitle} · {fmtRange(ci!, co!)}</span></div>
+              <div className="ln desktopOnlyFlex"><span>Total</span><b>{money(quote.total)}</b></div>
               <div className="ln"><span>Due today</span><b>{money(quote.plan.dueNow)}</b></div>
               {quote.plan.split && <div className="ln muted"><span>Charged {balance}</span><span>{money(quote.plan.scheduled!.amount)}</span></div>}
             </div>
             <div className="accept"><div className="cap">We accept</div>
               <div className="brands" aria-label="Accepted cards"><span className="visa">VISA</span><span>Mastercard</span><span>Amex</span><span>Discover</span></div></div>
             {stripeMode
-              ? <><StripeCard publishableKey={cfg.publishableKey!} amount={quote.plan.dueNow} saveForLater={quote.plan.split} onReady={onCardReady} />
+              ? <><StripeCard publishableKey={cfg.publishableKey!} amount={quote.plan.dueNow} saveForLater={quote.plan.split} onReady={onCardReady}
+                  canPay={agreed && !busy} billing={{ name: `${guest.firstName} ${guest.lastName}`.trim(), email: guest.email, phone: guest.phone }}
+                  onExpress={(id) => void pay(id)}
+                  onLockedTap={() => { const el = document.getElementById("agree-box"); el?.scrollIntoView({ block: "center", behavior: "smooth" }); el?.focus({ preventScroll: true }); const lb = el?.closest("label"); lb?.classList.remove("nudge"); void lb?.getBoundingClientRect(); lb?.classList.add("nudge"); }} />
                   <div className="muted">Test mode: card 4242 4242 4242 4242, any future date, any CVC. Decline: 4000 0000 0000 0002.</div></>
               : <div className="cardForm">Secure card form (Stripe) appears here</div>}
             
@@ -400,7 +426,7 @@ export default function Checkout() {
             <label className="fld"><span className="lbl">Test: simulate</span>
               <select className="f" value={sim} onChange={(e) => setSim(e.target.value)}>{SIMS.filter(([v]) => !(stripeMode && CARD_SIMS.includes(v))).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
             {result && !result.ok && <div className="alert">{result.guestMessage}</div>}
-            <label className="chk"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+            <label className="chk"><input id="agree-box" type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
               <span>{quote.plan.split ? `I authorize Pearl Heights Homes to charge ${money(quote.plan.scheduled!.amount)} to this card on ${balance} at 4:00 PM CT, when flexible cancellation ends. ` : ""}
                 {/* Same words as CONSENT_TEXT (src/domain/consent.ts), saved with the booking. Links open in a new tab so the checkout isn't lost. */}
                 <span data-consent>I&apos;m at least 25 and will stay at the home. I agree to the <a href={POLICY_LINKS.bookingTerms} target="_blank" rel="noopener">Direct Booking Terms and Cancellation Policy</a>, the <a href={POLICY_LINKS.rentalAgreement} target="_blank" rel="noopener">Rental Agreement and House Rules</a> (I&apos;ll sign it after paying) and the <a href={POLICY_LINKS.websiteTerms} target="_blank" rel="noopener">Website Terms</a>, and I&apos;ve read the <a href={POLICY_LINKS.privacy} target="_blank" rel="noopener">Privacy Notice</a>. I authorize the payments shown above.</span></span></label>
@@ -416,7 +442,7 @@ export default function Checkout() {
           {step === "done" && result?.ok && (<>
             <div className="okmark" aria-hidden="true">✓</div>
             <h1>You're booked, {guest.firstName}!</h1>
-            <div>{prop.name} · {fmtRange(ci!, co!)} · {guests} {guests === 1 ? "guest" : "guests"} · Booking {result.bookingRef}</div>
+            <div>{homeTitle} · {fmtRange(ci!, co!)} · {guests} {guests === 1 ? "guest" : "guests"} · Booking {result.bookingRef}</div>
             <div className="box warm">To keep your reservation, please finish two quick steps by <b>{result.verification.deadlineText}</b>: sign the rental agreement and verify your ID.</div>
             <div className="muted">Paid today: {money(quote!.plan.dueNow)}{quote!.plan.split ? ` · ${money(quote!.plan.scheduled!.amount)} on ${balance}` : ""}</div>
             <div className="muted">Test mode: no email is sent. Questions: <a href="mailto:bookings@thepearlheightshomes.com">bookings@thepearlheightshomes.com</a></div>

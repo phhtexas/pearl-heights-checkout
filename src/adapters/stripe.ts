@@ -16,6 +16,8 @@ export function assertTestKeys(env: NodeJS.ProcessEnv): { secret: string; publis
   return { secret, publishable };
 }
 
+export const ACCEPTED_PM_TYPES: string[] = ["card", "link"];
+
 type StripeLike = Pick<Stripe, "paymentIntents" | "customers" | "paymentMethods">;
 
 export class StripePayments implements PaymentsAdapter {
@@ -29,9 +31,11 @@ export class StripePayments implements PaymentsAdapter {
   async authorize(i: Parameters<PaymentsAdapter["authorize"]>[0]) {
     if (!i.paymentMethodId) throw new AdapterError("No card details were provided.", "card_declined");
     try {
-      // Cards only for this milestone (ChatGPT note 76): reject any other payment-method type before charging.
+      // Cards plus Link (Oscar, Nov 17: Apple Pay, Google Pay and Link). Apple Pay and Google Pay arrive as type "card";
+      // Link is type "link". Both support manual capture and saving for the split-payment second charge.
+      // Everything else (bank debits, pay-later, etc.) is rejected before charging (ChatGPT note 76).
       const pm = await this.stripe.paymentMethods.retrieve(i.paymentMethodId);
-      if (pm.type !== "card") throw new AdapterError(`Payment method type ${pm.type} is not accepted`, "unsupported_method");
+      if (!ACCEPTED_PM_TYPES.includes(pm.type)) throw new AdapterError(`Payment method type ${pm.type} is not accepted`, "unsupported_method");
       let customer: string | undefined;
       if (i.savePaymentMethod && i.customer) {
         const c = await this.stripe.customers.create(
@@ -42,7 +46,7 @@ export class StripePayments implements PaymentsAdapter {
       }
       const pi = await this.stripe.paymentIntents.create({
         amount: i.amount, currency: "usd", capture_method: "manual", confirm: true,
-        payment_method: i.paymentMethodId, allowed_payment_method_types: ["card"],
+        payment_method: i.paymentMethodId, allowed_payment_method_types: [pm.type],
         description: i.description, metadata: i.metadata,
         ...(customer ? { customer, setup_future_usage: "off_session" as const } : {}),
       }, { idempotencyKey: i.idempotencyKey });
@@ -100,7 +104,7 @@ export class StripePayments implements PaymentsAdapter {
     try {
       const pi = await this.stripe.paymentIntents.create({
         amount: i.amount, currency: "usd", customer: i.customerId, payment_method: i.paymentMethodId,
-        off_session: true, confirm: true, allowed_payment_method_types: ["card"], description: i.description, metadata: i.metadata,
+        off_session: true, confirm: true, allowed_payment_method_types: [...ACCEPTED_PM_TYPES], description: i.description, metadata: i.metadata,
       }, { idempotencyKey: i.idempotencyKey });
       if (pi.status === "succeeded") return { paymentIntentId: pi.id, status: "succeeded" as const };
       if (pi.status === "requires_action") throw new AdapterError("Card requires authentication", "authentication_required");

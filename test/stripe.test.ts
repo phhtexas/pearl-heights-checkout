@@ -55,7 +55,7 @@ describe("Stripe test-mode adapter", () => {
     await expect(new StripePayments(stripe).authorize(input)).rejects.toMatchObject({ code: "authentication_required" });
     expect(calls.some((c) => c[0] === "cancel" && c[1] === "pi_auth")).toBe(true);
   });
-  it("rejects any non-card payment method before creating a PaymentIntent", async () => {
+  it("rejects any payment method other than card or Link before creating a PaymentIntent", async () => {
     for (const t of ["us_bank_account", "affirm", "cashapp", "klarna", "amazon_pay"]) {
       const { stripe, calls } = fakeStripe({ pmType: t });
       await expect(new StripePayments(stripe).authorize(input)).rejects.toMatchObject({ code: "unsupported_method" });

@@ -274,3 +274,32 @@ input.f.bad { border-color: var(--bad); }
   .ck .progress li.past { color: #8a8f93; }
   .ck .progress li.past > span { background: var(--ck-blueSoft); border-color: var(--ck-blueSoft); color: var(--ck-blue); }
 }
+
+/* One-tap wallets above the card form (Oscar, Nov 17) */
+.ck .express { margin: 14px 0 4px; }
+.ck .express.isEmpty { display: none; }
+.ck .express { position: relative; }
+.ck .express.isLocked .expressBtns { opacity: .45; pointer-events: none; filter: grayscale(.3); }
+.ck .expressLock { display: block; width: 100%; margin-top: 8px; border: 0; background: none; color: var(--ck-blue); font: inherit; font-size: 14px; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 6px 0; }
+.ck .orCard { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; color: #6a6e72; font-size: 13px; }
+.ck .orCard::before, .ck .orCard::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+@keyframes ckNudge { 0%, 100% { background: transparent; } 30% { background: var(--ck-blueSoft); } }
+.ck .chk.nudge { animation: ckNudge 1.4s ease 2; border-radius: 10px; }
+@media (prefers-reduced-motion: reduce) { .ck .chk.nudge { animation: none; outline: 2px solid var(--ck-blue); } }
+
+/* Payment step stay card (Oscar, Nov 17): same look as the guest portal's "Your stay" card. */
+.ck .payStay { background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.06); margin: 12px 0 16px; }
+.ck .payStay .photoImg, .ck .payStay .photo { display: block; width: 100%; object-fit: cover; border-radius: 0; }
+.ck .psText { padding: 16px 18px 18px; }
+.ck .psEyebrow { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ck-blue); }
+.ck .psTitle { margin: 6px 0 2px; font-size: 21px; line-height: 1.25; }
+.ck .psText .muted { margin: 0; }
+.ck .psFacts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 0; }
+.ck .psFacts div { background: #f3efe9; border-radius: 14px; padding: 11px 13px; }
+.ck .psFacts .psGuests { grid-column: 1 / -1; }
+.ck .psFacts dt { font-size: 12.5px; color: #6b635a; }
+.ck .psFacts dd { margin: 2px 0 0; font-weight: 600; }
+.ck .psFacts dd span { display: block; font-weight: 400; font-size: 13.5px; color: #6b635a; }
+.ck .payBreak { margin: 0 0 14px; }
+.ck .payBreak h2 { margin: 0 0 6px; }
+.ck .sum .psFacts { margin: 12px 0; }
