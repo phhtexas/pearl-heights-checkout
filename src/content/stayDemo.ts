@@ -1,4 +1,5 @@
 import { HOMES } from "@/content/homes";
+import { houseGuide } from "@/content/houseGuides";
 import { verificationDeadline } from "@/domain/verification";
 import { addDaysISO, todayChicago } from "@/domain/time";
 
@@ -33,7 +34,12 @@ export function demoStay(now = new Date()): StayData {
     holder: "Test Guest",
     paidAtText: new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(paidAt),
     deadlineText: d.deadlineText,
-    // House rules and check-in facts come from the home's listing content (sourced in homeSources.ts).
-    thingsToKnow: h.thingsToKnow.filter((t) => t.title !== "Safety and property").concat(h.thingsToKnow.filter((t) => t.title === "Safety and property")),
+    // House guide (Oscar, Nov 17): check-in and house rules from the listing (source of truth), then the home's Guest
+    // Book topics (houseGuides.ts: washer, appliances, parking, trash, places...), then safety from the listing.
+    thingsToKnow: [
+      ...h.thingsToKnow.filter((t) => t.title !== "Safety and property"),
+      ...houseGuide(h.key),
+      ...h.thingsToKnow.filter((t) => t.title === "Safety and property"),
+    ],
   };
 }

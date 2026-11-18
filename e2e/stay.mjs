@@ -66,6 +66,8 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   await page.fill("#st-msg", "What time is check-in?"); await page.click('.ST-send button');
   ok(/What time is check-in\?/.test(await page.locator(".ST-thread").innerText()) && /sandbox, not sent/.test(await page.locator(".ST-thread").innerText()), `${tag}: message shows in the thread, marked test`);
   ok((await page.locator(".ST-know").count()) >= 2 && /Quiet hours/.test(await page.locator(".ST-know").allTextContents().then((t) => t.join(" "))), `${tag}: house rules from the listing`);
+  const guide = await page.locator(".ST-know summary").allInnerTexts();
+  ok(/House guide/.test(await page.locator("#know-h").innerText()) && guide.includes("Washer and dryer") && guide.includes("Parking") && guide.at(-1) === "Safety and property", `${tag}: house guide with the 752 Guest Book topics`);
   // reset
   await page.click("text=Reset sandbox");
   ok(!/Test address/.test(await body()), `${tag}: reset locks it again`);

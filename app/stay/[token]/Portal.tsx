@@ -315,7 +315,8 @@ export function Portal({ stay }: { stay: StayData }) {
 
         {/* Step 4: during the stay */}
         <section className="ST-card" aria-labelledby="know-h">
-          <h2 id="know-h">Good to know</h2>
+          <h2 id="know-h">House guide</h2>
+          <p className="ST-dim">Everything you need during your stay: house rules, the washer, appliances, parking, trash and our favorite places nearby.</p>
           {stay.thingsToKnow.map((g) => (
             <details key={g.title} className="ST-know" open={g.title === "Check-in and check-out"}>
               <summary>{g.title}</summary>
