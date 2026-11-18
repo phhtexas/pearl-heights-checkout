@@ -46,7 +46,7 @@ const GUIDES: Record<string, GuideTopic[]> = {
       "Hospital: Methodist Hospital Metropolitan, 1310 McCullough Ave.",
       "Pharmacy: CVS, 1915 Broadway (about half a mile).",
       "Police: 2020 N St Mary's St. Fire department: 1430 N St Mary's St.",
-      "Need us? Message us here anytime, or call (210) 400-2540 if it's urgent.",
+      "Need us? Message us here anytime. Our urgent contact number is in your check-in details.",
     ] },
     { title: "Getting around", items: [ // Canva p.11
       "San Antonio International Airport (SAT) is about 7 miles away.",
