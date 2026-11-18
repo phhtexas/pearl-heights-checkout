@@ -39,7 +39,11 @@ export function hospitableReservations(token: string, propertyUuids: string[], f
         guests: { adults: i.adults, children: i.children, infants: i.infants, pets: 0 },
         guest: { first_name: i.guest.firstName, last_name: i.guest.lastName, email: i.guest.email, phone: i.guest.phone || null },
         channel, reservation_code: i.code, notes: i.note.slice(0, 1000), language: "en",
-        financials: { currency: "USD", accommodation: Math.round(i.accommodationCents), cleaning_fee: Math.round(i.cleaningCents) },
+        financials: {
+          currency: "USD", accommodation: Math.round(i.accommodationCents), cleaning_fee: Math.round(i.cleaningCents),
+          // Oscar, Nov 18: Hospitable revenue should match what the guest paid before tax, so the $79 damage protection goes in too.
+          ...(i.protectionCents ? { other_fees: [{ label: "Damage protection", amount: Math.round(i.protectionCents) }] } : {}),
+        },
       };
       const res = await call(`${HOSPITABLE_API_BASE}/reservations`, { method: "POST", body: JSON.stringify(body) });
       if (res.status === 201 || res.status === 200) {

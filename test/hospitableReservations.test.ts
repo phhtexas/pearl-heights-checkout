@@ -24,6 +24,12 @@ describe("Hospitable manual reservations", () => {
       guests: { adults: 2, children: 1, infants: 0 }, guest: { first_name: "Ana", last_name: "Guest", email: "ana@example.com" },
       financials: { currency: "USD", accommodation: 120000, cleaning_fee: 35000 },
     });
+    expect(JSON.parse(init.body).financials.other_fees).toBeUndefined();
+  });
+  it("sends damage protection as an other-fee line so Hospitable revenue matches the pre-tax total", async () => {
+    const f = vi.fn(async () => json(201, { data: { id: R } }));
+    await hospitableReservations("tok", [P], f as any).createReservation({ ...input, protectionCents: 7900 });
+    expect(JSON.parse((f.mock.calls[0] as any)[1].body).financials.other_fees).toEqual([{ label: "Damage protection", amount: 7900 }]);
   });
   it("maps errors: duplicate code and overlap are definite; 5xx and timeouts are unknown", async () => {
     const mk = (r: () => Promise<Response>) => hospitableReservations("tok", [P], vi.fn(r) as any);

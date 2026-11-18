@@ -16,7 +16,7 @@ export interface HospitableAdapter {
   createReservation(input: {
     propertyUuid: string; checkIn: string; checkOut: string; adults: number; children: number; infants: number;
     guest: { firstName: string; lastName: string; email: string; phone?: string };
-    code: string; accommodationCents: Cents; cleaningCents: Cents; note: string;
+    code: string; accommodationCents: Cents; cleaningCents: Cents; protectionCents?: Cents; note: string;
   }): Promise<{ reservationId: string }>;
   cancelReservation(reservationId: string): Promise<void>;
   /** Reconciliation: find a reservation by our booking ref (the reservation code). null = none exists. */

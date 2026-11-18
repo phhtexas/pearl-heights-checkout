@@ -132,7 +132,7 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
     ({ reservationId } = await hosp.createReservation({
       propertyUuid: req.property.hospitableUuid, checkIn: req.checkIn, checkOut: req.checkOut,
       adults: req.adults, children: req.children, infants: req.infants, guest: req.guest,
-      code: req.bookingRef, accommodationCents: quote.lodging + quote.extraGuestFee, cleaningCents: quote.cleaning,
+      code: req.bookingRef, accommodationCents: quote.lodging + quote.extraGuestFee, cleaningCents: quote.cleaning, protectionCents: quote.protection,
       note: `Direct booking ${req.bookingRef}. Agreement + ID pending. Do not send access until verified.`,
     }));
   } catch (e) {
