@@ -151,7 +151,7 @@ Nothing in these Terms waives a right or remedy that cannot legally be waived, i
 
 Operator: PR Portfolio Properties LLC, doing business as Pearl Heights Homes
 
-Support and written cancellation email: bookings@thepearlheightshomes.com
+Support and written cancellation email: bookings@pearlheightshomes.com
 
 Mailing address: [Commercial mailing address to be inserted before publication]
 

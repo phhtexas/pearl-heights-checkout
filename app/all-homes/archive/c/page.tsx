@@ -61,7 +61,7 @@ export default function Page() {
       <aside className="C-mock" aria-label="Archived mockup">Archived · Mockup C · kept for reference · <a href="/all-homes/f" style={{ color: "#fff" }}>Current version: Mockup F</a></aside>
       <header className="C-top">
         <a className="C-brand" href="/all-homes/archive/c">Pearl Heights <span>HOMES</span></a>
-        <a className="C-ask" href="mailto:bookings@thepearlheightshomes.com">Ask a question</a>
+        <a className="C-ask" href="mailto:bookings@pearlheightshomes.com">Ask a question</a>
       </header>
       <main>
         <HomesC homes={homes} hero={hero} points={mapPoints()} reasons={reasons} />
@@ -130,7 +130,7 @@ export default function Page() {
           <h2 id="host-h">Have questions before you book?</h2>
           <p>{HOST.bio}</p>
           <ul className="C-chips">{["Local San Antonio hosts", ...HOST.facts].map((f) => <li key={f}>{f}</li>)}</ul>
-          <a className="C-dark" href="mailto:bookings@thepearlheightshomes.com">Ask Oscar &amp; Fernanda</a>
+          <a className="C-dark" href="mailto:bookings@pearlheightshomes.com">Ask Oscar &amp; Fernanda</a>
         </section>
       </main>
       <Footer cls="C-foot" />

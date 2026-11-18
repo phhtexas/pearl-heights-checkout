@@ -19,7 +19,7 @@ export function SiteNav({ extra, sticky = true }: { extra?: ReactNode; sticky?: 
         </nav>
         <div className="SN-right">
           {extra}
-          <a className="SN-ask" href="mailto:bookings@thepearlheightshomes.com">Ask a question</a>
+          <a className="SN-ask" href="mailto:bookings@pearlheightshomes.com">Ask a question</a>
         </div>
       </div>
     </header>

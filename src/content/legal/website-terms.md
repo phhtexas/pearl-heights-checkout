@@ -121,6 +121,6 @@ If a provision is unenforceable, it will be enforced to the maximum lawful exten
 
 Operator: PR Portfolio Properties LLC, doing business as Pearl Heights Homes
 
-Email: bookings@thepearlheightshomes.com
+Email: bookings@pearlheightshomes.com
 
 Mailing address: [Commercial mailing address to be inserted before publication]

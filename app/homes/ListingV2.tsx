@@ -33,9 +33,9 @@ const AV_COLORS = ["#c9b8a3", "#a9b9a6", "#b3b8c9", "#c9a9a9", "#b9adc4", "#a7c0
 const DOTS = 5;
 /** Note 150: compact, factual trust proof beside the booking action (approved wording). */
 const TRUST = "Airbnb Superhosts · 4.98 across 463 Airbnb reviews · Secure payment by Stripe";
-/** Footer (Oscar, chat Nov 16, 2026): email only (incl. the "thepearlheightshomes.com" domain), managed-by line, Instagram from
+/** Footer (Oscar, chat Nov 16, 2026): email only (incl. the "pearlheightshomes.com" domain), managed-by line, Instagram from
  *  pearlheightshomes.com's own footer link. Instagram only (note 155). */
-const CONTACT = { email: "bookings@thepearlheightshomes.com", managedBy: "Site managed by PR Portfolio Properties LLC | San Antonio, TX" };
+const CONTACT = { email: "bookings@pearlheightshomes.com", managedBy: "Site managed by PR Portfolio Properties LLC | San Antonio, TX" };
 const SOCIAL = [{ name: "Instagram", icon: "instagram", href: "https://www.instagram.com/pearlheightshomes" }];
 
 /** Photo tour groups, matched from each photo's description (first match wins). Labels describe the space, not a specific bedroom. */

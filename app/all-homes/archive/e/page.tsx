@@ -49,7 +49,7 @@ export default function Page() {
           <nav className="E-navlinks" aria-label="Sections">
             <a href="#homes">Homes</a><a href="#locations">Locations</a><a href="#reviews">Reviews</a><a href="#faq">FAQ</a>
           </nav>
-          <a className="E-nav-cta" href="mailto:bookings@thepearlheightshomes.com">Ask a question</a>
+          <a className="E-nav-cta" href="mailto:bookings@pearlheightshomes.com">Ask a question</a>
         </div>
       </Header>
       <main id="top">
@@ -137,7 +137,7 @@ export default function Page() {
             <h2>Meet your hosts</h2>
             <p className="E-bio">{HOST.bio}</p>
             <div className="E-tags">{["Local San Antonio hosts", ...HOST.facts].map((f) => <span key={f}>{f}</span>)}</div>
-            <a className="E-btn" href="mailto:bookings@thepearlheightshomes.com">Ask us a question</a>
+            <a className="E-btn" href="mailto:bookings@pearlheightshomes.com">Ask us a question</a>
           </div>
         </section>
       </main>
@@ -146,10 +146,10 @@ export default function Page() {
           <div className="E-fgrid">
             <div>
               <div className="E-logo E-logoFoot">Pearl Heights <span>HOMES</span></div>
-              <p className="E-note">Hosted by Oscar &amp; Fernanda · San Antonio, Texas<br /><a href="mailto:bookings@thepearlheightshomes.com">bookings@thepearlheightshomes.com</a></p>
+              <p className="E-note">Hosted by Oscar &amp; Fernanda · San Antonio, Texas<br /><a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></p>
             </div>
             <div><p className="E-fh">Explore</p><a className="E-fl" href="#homes">All homes</a><a className="E-fl" href="#locations">Locations</a><a className="E-fl" href="#reviews">Reviews</a><a className="E-fl" href="#faq">FAQ</a></div>
-            <div><p className="E-fh">Support</p><a className="E-fl" href="mailto:bookings@thepearlheightshomes.com">Ask a question</a><span className="E-fl">Terms of service (coming soon)</span><span className="E-fl">Privacy policy (coming soon)</span></div>
+            <div><p className="E-fh">Support</p><a className="E-fl" href="mailto:bookings@pearlheightshomes.com">Ask a question</a><span className="E-fl">Terms of service (coming soon)</span><span className="E-fl">Privacy policy (coming soon)</span></div>
           </div>
           <div className="E-fbottom"><span>Ratings and reviews are from Airbnb guests who stayed in our homes.</span><span>© 2026 Pearl Heights Homes</span></div>
         </div>

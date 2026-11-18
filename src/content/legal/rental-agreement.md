@@ -144,7 +144,7 @@ Routine notices may be sent through the guest portal, email or text using the re
 
 Operator and notice recipient: PR Portfolio Properties LLC, doing business as Pearl Heights Homes
 
-Email: bookings@thepearlheightshomes.com
+Email: bookings@pearlheightshomes.com
 
 Mailing address: [Commercial mailing address to be inserted before publication]
 

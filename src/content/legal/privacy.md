@@ -110,9 +110,9 @@ We use reasonable administrative, technical and physical safeguards appropriate 
 
 Depending on where you live and the law that applies, you may have rights to request access, correction, deletion or a portable copy of personal data and to opt out of targeted advertising, certain sales or sharing, and qualifying profiling. You may also withdraw marketing consent. We will not discriminate against you for exercising a privacy right.
 
-Submit a request to bookings@thepearlheightshomes.com with the subject "Privacy Request." We will authenticate the request using information reasonably related to your interaction with us. Do not email a copy of your government ID unless we specifically provide a secure method. Where applicable, we respond within 45 days and will explain any permitted extension or denial.
+Submit a request to bookings@pearlheightshomes.com with the subject "Privacy Request." We will authenticate the request using information reasonably related to your interaction with us. Do not email a copy of your government ID unless we specifically provide a secure method. Where applicable, we respond within 45 days and will explain any permitted extension or denial.
 
-If we deny a request, you may appeal by emailing bookings@thepearlheightshomes.com with the subject "Privacy Appeal" and explaining the basis for the appeal. We will review the appeal and provide instructions for contacting the Texas Attorney General or another regulator when required by law. Authorized agents may submit requests where legally permitted, subject to verification of authority and identity.
+If we deny a request, you may appeal by emailing bookings@pearlheightshomes.com with the subject "Privacy Appeal" and explaining the basis for the appeal. We will review the appeal and provide instructions for contacting the Texas Attorney General or another regulator when required by law. Authorized agents may submit requests where legally permitted, subject to verification of authority and identity.
 
 ## 13 Children
 
@@ -136,6 +136,6 @@ We may update this Notice to reflect service, provider or legal changes. The cur
 
 Privacy contact and operator: PR Portfolio Properties LLC, doing business as Pearl Heights Homes
 
-Email: bookings@thepearlheightshomes.com
+Email: bookings@pearlheightshomes.com
 
 Mailing address: [Commercial mailing address to be inserted before publication]

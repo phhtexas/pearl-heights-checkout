@@ -118,7 +118,7 @@ export function HomesE({ homes, points }: { homes: HomeCard[]; points: { key: st
             <div className="E-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12a7.5 7.5 0 0 1-11 6.6L4 20l1.4-4.6A7.5 7.5 0 1 1 20 12z" /></svg></div>
             <h3>Not sure which home fits?</h3>
             <p>Tell us your dates and your group, and we&apos;ll point you to the right home. We usually reply within an hour.</p>
-            <a href="mailto:bookings@thepearlheightshomes.com">Ask Oscar &amp; Fernanda →</a>
+            <a href="mailto:bookings@pearlheightshomes.com">Ask Oscar &amp; Fernanda →</a>
           </div>
         </div>
       </section>

@@ -472,7 +472,7 @@ export default function Checkout() {
             {stayUrl && <a className="btn stayBtn" href={stayUrl}>Sign the agreement and verify your ID</a>}
             {stayUrl && <div className="muted small">This is your private stay page. Bookmark it: your check-in details appear there once both steps are done.</div>}
             <div className="muted">Paid today: {money(quote!.plan.dueNow)}{quote!.plan.split ? ` · ${money(quote!.plan.scheduled!.amount)} on ${balance}` : ""}</div>
-            <div className="muted">Test mode: no email is sent. Questions: <a href="mailto:bookings@thepearlheightshomes.com">bookings@thepearlheightshomes.com</a></div>
+            <div className="muted">Test mode: no email is sent. Questions: <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
             <button className="btn ghost" onClick={restart}>Start another booking</button>
           </>)}
 

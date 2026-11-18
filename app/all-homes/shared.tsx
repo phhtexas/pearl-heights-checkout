@@ -65,7 +65,7 @@ export function Footer({ cls }: { cls: string }) {
   return (
     <footer className={cls}>
       <p className="F-brand">Pearl Heights <span>HOMES</span></p>
-      <p>Hosted by Oscar &amp; Fernanda · San Antonio, Texas · <a href="mailto:bookings@thepearlheightshomes.com">bookings@thepearlheightshomes.com</a></p>
+      <p>Hosted by Oscar &amp; Fernanda · San Antonio, Texas · <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></p>
       <p className="F-legal">Terms of service (coming soon) · Privacy policy (coming soon)</p>
       <p className="F-note">Ratings and reviews are from Airbnb guests who stayed in our homes.</p>
     </footer>

@@ -16,7 +16,7 @@ export default function Page() {
       <aside className="A-mock" aria-label="Archived mockup">Archived · Mockup A (Classic search) · kept for reference · <a href="/all-homes/f" style={{ color: "#fff" }}>Current version: Mockup F</a></aside>
       <header className="A-top">
         <a className="A-brand" href="/all-homes/archive/a">Pearl Heights <span>HOMES</span></a>
-        <a className="A-ask" href="mailto:bookings@thepearlheightshomes.com">Ask a question</a>
+        <a className="A-ask" href="mailto:bookings@pearlheightshomes.com">Ask a question</a>
       </header>
       <main>
         <HomesA homes={homes}>
@@ -42,7 +42,7 @@ export default function Page() {
             <h2 id="host-h">Meet your hosts, Oscar &amp; Fernanda</h2>
             <p>{HOST.bio}</p>
             <ul className="A-hostFacts">{["Local San Antonio hosts", ...HOST.facts].map((f) => <li key={f}>{f}</li>)}</ul>
-            <a className="A-btnGhost" href="mailto:bookings@thepearlheightshomes.com">Ask us a question</a>
+            <a className="A-btnGhost" href="mailto:bookings@pearlheightshomes.com">Ask us a question</a>
           </div>
         </section>
       </main>

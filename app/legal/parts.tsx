@@ -46,7 +46,7 @@ export function Shell({ crumbs, children }: { crumbs: { label: string; href?: st
         <p className="L-draft" role="note"><strong>Draft — not for real bookings.</strong> These documents are under attorney review and are not in effect yet.</p>
         <LegalSearch entries={searchIndex()} />
         {children}
-        <p className="L-foot">Questions about these terms? Email <a href="mailto:bookings@thepearlheightshomes.com">bookings@thepearlheightshomes.com</a>. Times are Central Time (San Antonio).</p>
+        <p className="L-foot">Questions about these terms? Email <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a>. Times are Central Time (San Antonio).</p>
       </main>
     </div>
   );

@@ -31,7 +31,7 @@ export default function Page() {
       <aside className="B-mock" aria-label="Archived mockup">Archived · Mockup B (Editorial) · kept for reference · <a href="/all-homes/f" style={{ color: "#fff" }}>Current version: Mockup F</a></aside>
       <header className="B-top">
         <a className="B-brand" href="/all-homes/archive/b">Pearl Heights <span>HOMES</span></a>
-        <a className="B-ask" href="mailto:bookings@thepearlheightshomes.com">Ask a question</a>
+        <a className="B-ask" href="mailto:bookings@pearlheightshomes.com">Ask a question</a>
       </header>
       <main>
         <HomesB homes={homes} hero={hero} trust={trust} />
@@ -45,7 +45,7 @@ export default function Page() {
             <h2 id="host-h">Questions before you book?</h2>
             <p>{HOST.bio}</p>
             <ul>{["Local San Antonio hosts", ...HOST.facts].map((f) => <li key={f}>{f}</li>)}</ul>
-            <a className="B-cta B-ctaLight" href="mailto:bookings@thepearlheightshomes.com">Ask us a question</a>
+            <a className="B-cta B-ctaLight" href="mailto:bookings@pearlheightshomes.com">Ask us a question</a>
           </div>
         </section>
       </main>

@@ -6,7 +6,7 @@ import "../legal/legal.css";
 import "./contact.css";
 
 /**
- * Contact page (Oscar, Nov 17): the Stripe "Customer support URL" (thepearlheightshomes.com/contact at launch).
+ * Contact page (Oscar, Nov 17): the Stripe "Customer support URL" (pearlheightshomes.com/contact at launch).
  * Facts: email = business contact Oscar confirmed (Nov 2026); "usually reply within an hour" = host facts (Airbnb host
  * profile, homeSources). The urgent phone number is server-only by design (shown to verified guests in their stay
  * page), so it is NOT on this public page. noindex while the site is in test.
@@ -14,7 +14,7 @@ import "./contact.css";
 export const metadata: Metadata = { title: "Contact us | Pearl Heights Homes", robots: { index: false, follow: false } };
 export const dynamic = "force-static";
 
-const EMAIL = "bookings@thepearlheightshomes.com";
+const EMAIL = "bookings@pearlheightshomes.com";
 
 export default function Page() {
   return (
