@@ -61,7 +61,7 @@ function Inner({ onReady, canPay, billing, onExpress, onLockedTap }: { onReady: 
               layout: { maxColumns: 1, maxRows: 3, overflow: "never" },
             }}
             onReady={({ availablePaymentMethods }) => setWallets(hasAny(availablePaymentMethods))}
-            onAvailablePaymentMethodsChange={({ availablePaymentMethods }) => setWallets(hasAny(availablePaymentMethods))}
+            onAvailablePaymentMethodsChange={({ paymentMethods }) => setWallets(!!paymentMethods && Object.values(paymentMethods).some((m) => !!m?.available))}
             onClick={(e) => { if (!canPayRef.current) { onLockedTap(); return; } e.resolve(); }}
             onConfirm={async (e) => {
               if (!stripe || !elements) return;
