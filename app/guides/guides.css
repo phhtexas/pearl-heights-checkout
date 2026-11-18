@@ -28,3 +28,10 @@
 .G-index a { color: inherit; text-decoration: none; display: block; border: 1px solid var(--line, #ddddda); border-radius: 14px; padding: 16px; }
 .G-index a strong { display: block; font-size: 19px; margin-bottom: 4px; }
 .G-index a span { color: var(--ink2, #3a3f44); font-size: 15px; }
+.G-steps { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 10px; }
+.G-steps li { display: grid; grid-template-columns: 110px 1fr; gap: 12px; padding: 12px 14px; border: 1px solid var(--line, #ddddda); border-radius: 12px; }
+.G-steps strong { color: var(--green, #1f6b3a); }
+@media (max-width: 420px) { .G-steps li { grid-template-columns: 1fr; gap: 2px; } }
+.G-sources { padding-left: 20px; font-size: 15px; display: flex; flex-direction: column; gap: 4px; }
+.G-sources a { color: var(--green, #1f6b3a); }
+.G-note { font-size: 14px; color: var(--muted, #55595d); }

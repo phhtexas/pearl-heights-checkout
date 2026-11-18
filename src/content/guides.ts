@@ -15,9 +15,11 @@ export interface Guide {
   heroHome: string;         // HOMES key for the photo
   intro: string[];
   homes: { key: string; fit: string; points: string[] }[];
-  sections: { heading: string; paragraphs?: string[]; bullets?: string[] }[];
+  sections: { heading: string; paragraphs?: string[]; bullets?: string[]; steps?: { when: string; text: string }[] }[];
   quotes: { home: string; reviewer: string }[]; // real guest reviews, looked up from homes.ts (never written for us)
   faq: { q: string; a: string }[];
+  /** Public sources for facts about places beyond our homes (shown at the bottom of the guide). */
+  sources: { label: string; url: string; read: string }[];
 }
 
 export const GUIDES: Guide[] = [
@@ -56,6 +58,41 @@ export const GUIDES: Guide[] = [
     ],
     sections: [
       {
+        heading: "Walk to the Pearl and leave the car at home",
+        paragraphs: [
+          "Both homes have free parking, and the Pearl is about a 3-minute walk, so you can skip Pearl's parking entirely. That helps on weekends: Pearl's surface lots are free on weekday mornings and early afternoons, but they charge a flat rate after 3 PM on weekdays and all day on Saturdays and Sundays, and the garages charge by the hour. Rates change, so check Pearl's parking page before you drive.", // atpearl.com/home/parking (page updated Feb 2025, read Nov 18)
+        ],
+      },
+      {
+        heading: "Weekends at the Pearl",
+        paragraphs: [
+          "On Saturdays the Pearl holds its farmers and ranchers market, and on Sundays an artisan market. Both are open-air and held rain or shine. Market hours are listed on Pearl's events calendar, so check it for the weekend you're here.",
+          "Pullman Market at the Pearl is open every day from 8 AM, until 9 PM Sunday to Thursday and until 10 PM on Fridays and Saturdays.", // atpearl.com/weekend-market (read Nov 18)
+        ],
+      },
+      {
+        heading: "The River Walk from your door",
+        paragraphs: [
+          "Both homes are a few minutes' walk from the Museum Reach, the northern stretch of the River Walk. Families who stayed with toddlers tell us they walked to the Pearl or the River Walk every morning.", // Hannah (752 review, Aug 2026)
+          "To ride a boat, GO RIO's narrated river cruises board downtown, at the Rivercenter, Historia and Aztec docks, and leave about every 15 minutes, 10 AM to 10 PM most of the year. GO RIO also runs a river shuttle with stops along the River Walk, including the Museum Reach.",
+        ],
+      },
+      {
+        heading: "A morning at Brackenridge Park",
+        paragraphs: [
+          "The San Antonio Zoo, the DoSeum (San Antonio's children's museum) and the Witte Museum are all about a 5 to 7 minute drive from either home. They sit in and around Brackenridge Park, which also has the Japanese Tea Garden, playgrounds and the San Antonio River running through it. From 752 Myrtle, the McNay Art Museum is in the same drive range.",
+        ],
+      },
+      {
+        heading: "A simple day with little ones",
+        steps: [
+          { when: "Morning", text: "Walk to the Pearl, about 3 minutes away (on a Saturday, the farmers market is on)." },
+          { when: "Late morning", text: "Drive about 5 to 7 minutes to the Zoo or the DoSeum in the Brackenridge Park area." },
+          { when: "Afternoon", text: "Head back for naps, the playroom and the fenced backyard." },
+          { when: "Evening", text: "Walk the Museum Reach of the River Walk and have dinner at one of the Pearl's restaurants, a few minutes from home." },
+        ],
+      },
+      {
         heading: "What both homes have for little ones",
         bullets: [
           "One level, no stairs inside",
@@ -63,12 +100,6 @@ export const GUIDES: Guide[] = [
           "Children's dinnerware, outlet covers and table corner guards",
           "A full kitchen and a washer and dryer in the home",
           "A dedicated workspace if a parent needs to work",
-        ],
-      },
-      {
-        heading: "Family outings a short drive away",
-        paragraphs: [
-          "From either home, the San Antonio Zoo, the DoSeum and the Witte Museum are about a 5 to 7 minute drive, and from 752 Myrtle the McNay Art Museum is in the same range.", // 736 location: ~5 min; 752 location: 5–7 min incl. McNay
         ],
       },
       {
@@ -90,6 +121,16 @@ export const GUIDES: Guide[] = [
       { q: "Do you have a crib and a high chair?", a: "Yes. Both homes have a crib, a pack 'n play, a high chair and a baby bath. Tell us what you'd like set up before you arrive." },
       { q: "Which home is bigger?", a: "736 Myrtle sleeps 10 in 5 bedrooms with 3.5 baths. 752 Myrtle sleeps 8 in 3 bedrooms plus a sofa bed, with 2 full baths." },
       { q: "Is there parking?", a: "Yes, free parking at both: up to 3 cars behind the gate at 736 Myrtle and 4 cars at 752 Myrtle, plus free street parking." },
+      { q: "Do we need to pay for parking at the Pearl?", a: "Not if you walk: the Pearl is about 3 minutes from both homes. If you drive, Pearl's surface lots are free on weekdays before 3 PM and charge after that and on weekends." },
+      { q: "When is the Pearl farmers market?", a: "Saturdays, with an artisan market on Sundays. Check Pearl's events calendar for that weekend's hours." },
+    ],
+    sources: [
+      { label: "Pearl: Parking", url: "https://atpearl.com/home/parking/", read: "2026-11-18" },
+      { label: "Pearl: Weekend Market", url: "https://atpearl.com/weekend-market/", read: "2026-11-18" },
+      { label: "Pearl: Farmers Market events calendar", url: "https://events.atpearl.com/series/farmers-market/", read: "2026-11-18" },
+      { label: "GO RIO: Visitor information", url: "https://goriocruises.com/visitor-information", read: "2026-11-18" },
+      { label: "GO RIO: FAQ", url: "https://www.goriocruises.com/faq/", read: "2026-11-18" },
+      { label: "Brackenridge Park Conservancy: Things to see and do", url: "https://www.brackenridgepark.org/visit-the-park/things-to-see-and-do", read: "2026-11-18" },
     ],
   },
 ];

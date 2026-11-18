@@ -27,6 +27,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       { "@type": "Article", "@id": `${url}#article`, headline: g.title, description: g.description, dateModified: g.updated, url,
         image: hero.photoBase + hero.photos[0]!.id + ".jpg",
         author: { "@type": "Person", name: "Oscar & Fernanda" }, publisher: { "@id": `${SITE}/#org` },
+        citation: g.sources.map((x) => x.url),
         about: g.homes.map((h) => ({ "@id": `${SITE}/homes/${HOMES[h.key]!.slug}#home` })) },
       { "@type": "FAQPage", "@id": `${url}#faq`, mainEntity: g.faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
     ],
@@ -65,6 +66,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             <h2>{s.heading}</h2>
             {s.paragraphs?.map((p) => <p key={p}>{p}</p>)}
             {s.bullets && <ul className="G-list">{s.bullets.map((b) => <li key={b}>{b}</li>)}</ul>}
+            {s.steps && <ol className="G-steps">{s.steps.map((x) => <li key={x.when}><strong>{x.when}</strong><span>{x.text}</span></li>)}</ol>}
           </section>
         ))}
 
@@ -81,6 +83,12 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
         <h2>Questions</h2>
         <div className="G-faq">{g.faq.map((f) => <details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>)}</div>
+
+        {g.sources.length > 0 && <>
+          <h2>Sources</h2>
+          <ul className="G-sources">{g.sources.map((x) => <li key={x.url}><a href={x.url} target="_blank" rel="noopener noreferrer">{x.label}</a></li>)}</ul>
+          <p className="G-note">Hours, prices and schedules for places outside our homes can change; check each official page before you go.</p>
+        </>}
 
         <p className="G-updated">Written by Oscar &amp; Fernanda, your hosts · Updated {new Date(g.updated + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
       </main>
