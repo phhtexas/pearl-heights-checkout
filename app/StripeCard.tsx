@@ -31,6 +31,9 @@ export function StripeCard({ publishableKey, amount, saveForLater, onReady, canP
   );
 }
 
+// Stripe can report wallets at "ready" or later (e.g. Apple Pay after the device check), so both events update this.
+const hasAny = (m: unknown) => !!m && Object.values(m as Record<string, boolean>).some(Boolean);
+
 function Inner({ onReady, canPay, billing, onExpress, onLockedTap }: { onReady: (fn: CreatePm | null) => void; canPay: boolean; billing: Billing; onExpress: (id: string) => void; onLockedTap: () => void }) {
   const stripe = useStripe(), elements = useElements();
   const [wallets, setWallets] = useState(false);
@@ -57,7 +60,8 @@ function Inner({ onReady, canPay, billing, onExpress, onLockedTap }: { onReady: 
               paymentMethods: { applePay: "auto", googlePay: "auto", link: "auto", paypal: "never", amazonPay: "never", klarna: "never" },
               layout: { maxColumns: 1, maxRows: 3, overflow: "never" },
             }}
-            onReady={({ availablePaymentMethods }) => setWallets(!!availablePaymentMethods && Object.values(availablePaymentMethods).some(Boolean))}
+            onReady={({ availablePaymentMethods }) => setWallets(hasAny(availablePaymentMethods))}
+            onAvailablePaymentMethodsChange={({ availablePaymentMethods }) => setWallets(hasAny(availablePaymentMethods))}
             onClick={(e) => { if (!canPayRef.current) { onLockedTap(); return; } e.resolve(); }}
             onConfirm={async (e) => {
               if (!stripe || !elements) return;

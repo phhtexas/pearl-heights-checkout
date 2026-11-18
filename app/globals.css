@@ -277,7 +277,7 @@ input.f.bad { border-color: var(--bad); }
 
 /* One-tap wallets above the card form (Oscar, Nov 17) */
 .ck .express { margin: 14px 0 4px; }
-.ck .express.isEmpty { display: none; }
+.ck .express.isEmpty { height: 0; overflow: hidden; margin: 0; } /* kept rendered (not display:none) so Stripe can still detect wallets */
 .ck .express { position: relative; }
 .ck .express.isLocked .expressBtns { opacity: .45; pointer-events: none; filter: grayscale(.3); }
 .ck .expressLock { display: block; width: 100%; margin-top: 8px; border: 0; background: none; color: var(--ck-blue); font: inherit; font-size: 14px; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 6px 0; }
