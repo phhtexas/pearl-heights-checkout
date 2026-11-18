@@ -310,7 +310,7 @@ export default function Checkout() {
         <div className="brand"><img className="brandLogo" src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} /></div>
         <span className="mobileOnly hdrSide stepOf">{step !== "done" ? `${stepIdx + 1} of 3` : ""}</span>
         {step !== "done" && <ol className="progress desktopOnlyFlex" aria-label="Checkout steps">
-          {STEPS.map(([k, label], i) => <li key={k} className={i < stepIdx ? "past" : i === stepIdx ? "now" : ""} aria-current={i === stepIdx ? "step" : undefined}><span>{i + 1}</span>{label}</li>)}
+          {STEPS.map(([k, label], i) => <li key={k} className={i < stepIdx ? "past" : i === stepIdx ? "now" : ""} aria-current={i === stepIdx ? "step" : undefined}><span>{i < stepIdx ? <svg className="stepChk" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg> : i + 1}</span>{label}{i < stepIdx && <span className="sr"> (completed)</span>}</li>)}
         </ol>}
       </header>
 
@@ -432,7 +432,7 @@ export default function Checkout() {
       {primary && (
         <footer className="foot mobileOnly">
           <ol className="bars" aria-label="Checkout progress">
-            {STEPS.map(([k, , short], i) => <li key={k} className={i <= stepIdx ? "on" : ""} aria-current={i === stepIdx ? "step" : undefined}><i aria-hidden="true" /><span>{i + 1} {short}</span></li>)}
+            {STEPS.map(([k, , short], i) => <li key={k} className={i < stepIdx ? "done" : i === stepIdx ? "on" : ""} aria-current={i === stepIdx ? "step" : undefined}><i aria-hidden="true" /><span>{i < stepIdx ? <><svg className="stepChk" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>{short}<span className="sr"> (completed)</span></> : <>{i + 1} {short}</>}</span></li>)}
           </ol>
           <button className="btn" disabled={primary.disabled} onClick={primary.run}>{primary.label}</button>
         </footer>

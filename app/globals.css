@@ -211,7 +211,7 @@ input.f.bad { border-color: var(--bad); }
 /* Nov 16: same blue as listing option A on the checkout's main buttons and selections (black stays for text and outlines). */
 .ck { --ck-blue: #127A5E; --ck-blueSoft: #e7f2ee; } /* Nov 17 (Oscar): All Homes teal (was #0071e3) */
 .ck .btn:not(:disabled):not(.ghost) { background: var(--ck-blue); }
-.ck .btn:not(:disabled):not(.ghost):hover { background: #005bbf; } /* a11y: #0077ed was 4.3:1 with white */
+.ck .btn:not(:disabled):not(.ghost):hover { background: #0e6650; } /* darker teal on hover (was the old blue) */
 .ck .day.sel { background: var(--ck-blue); }
 .ck .day.in { background: var(--ck-blueSoft); }
 .ck .plan.on { border-color: var(--ck-blue); }
@@ -261,3 +261,16 @@ input.f.bad { border-color: var(--bad); }
   .SN-ask { padding: 9px 14px; font-size: 13.5px; }
 }
 @media (prefers-reduced-motion: reduce) { .SN-ask, .SN-nav a { transition: none; } .SN-ask:hover { transform: none; } }
+
+/* Step bar (Oscar, Nov 17): current step highlighted in teal; finished steps get a check and are greyed out a bit. */
+.ck .bars .on i { background: var(--ck-blue); }
+.ck .bars .on span { color: var(--ck-blue); font-weight: 700; }
+.ck .bars .done i { background: var(--ck-blue); opacity: .35; }
+.ck .bars .done > span { color: #8a8f93; font-weight: 500; display: inline-flex; align-items: center; gap: 3px; }
+.ck .bars .done .stepChk { color: var(--ck-blue); opacity: .7; }
+@media (min-width: 960px) {
+  .ck .progress li.now { color: var(--ck-blue); }
+  .ck .progress li.now span { background: var(--ck-blue); border-color: var(--ck-blue); color: #fff; }
+  .ck .progress li.past { color: #8a8f93; }
+  .ck .progress li.past > span { background: var(--ck-blueSoft); border-color: var(--ck-blueSoft); color: var(--ck-blue); }
+}
