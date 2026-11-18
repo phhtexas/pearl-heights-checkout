@@ -329,3 +329,6 @@ button.V-room { display: flex; flex-direction: column; justify-content: flex-sta
 
 /* Oscar, Nov 17: bigger highlight icons (was 18px) */
 .V-high li > .L-ico { flex: 0 0 36px; width: 28px; height: 28px; margin-top: 4px; }
+/* Oscar, Nov 17: bigger icons in the location list (was 18px) */
+.V-facts li { align-items: center; }
+.V-facts li > .L-ico { flex: 0 0 36px; width: 26px; height: 26px; }

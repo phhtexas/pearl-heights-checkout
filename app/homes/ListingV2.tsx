@@ -337,7 +337,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
               <button className="V-expand" onClick={() => open("map")} aria-label="Open the map full screen"><Icon name="expand" size={20} /></button>
             </div>)}
           <p className="V-p">{home.location.text}</p>
-          <ul className="V-list V-rules V-facts">{home.location.facts.map((f) => <li key={f}><Icon name={/drive/.test(f) ? "car" : "walk"} size={18} />{f}</li>)}</ul>
+          <ul className="V-list V-rules V-facts">{home.location.facts.map((f) => <li key={f}><Icon name={/drive/.test(f) ? "car" : "walk"} size={26} />{f}</li>)}</ul>
           <p className="V-note">{home.location.note}</p>
         </section>
 
