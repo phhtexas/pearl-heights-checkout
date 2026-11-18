@@ -295,7 +295,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
           <div><b>Hosted by {home.host.names}</b><span>{home.host.facts[0]} · {home.host.facts.find((f) => /reply/i.test(f)) ?? ""}</span></div>
         </section>
 
-        <ul id="overview" className="V-high">{home.highlights.map((h) => <li key={h.title}><Icon name={iconFor(h.title)} size={18} /><div><b>{h.title}</b><span>{h.text}</span></div></li>)}</ul>
+        <ul id="overview" className="V-high">{home.highlights.map((h) => <li key={h.title}><Icon name={iconFor(h.title)} size={28} /><div><b>{h.title}</b><span>{h.text}</span></div></li>)}</ul>
 
         <section className="V-sec">
           <h2>About this home</h2>
