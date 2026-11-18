@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { StayData } from "@/content/stayDemo";
 import { loadStripe } from "@stripe/stripe-js";
+import { todayChicago } from "@/domain/time";
 
 /**
  * Guest portal, phase 1 (test data). Flow, matching the "Booking directly is simple" steps on All Homes F:
@@ -10,7 +11,7 @@ import { loadStripe } from "@stripe/stripe-js";
  *  ->  4 Enjoy your stay (house rules, messages).
  * In this test version the state lives in this browser only (localStorage), and nothing is sent or charged.
  */
-type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; idSession?: string; allSetSeen?: boolean; messages: { from: "guest" | "note"; text: string; at: string }[] };
+type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; idSession?: string; allSetSeen?: boolean; simDay?: "checkin"; messages: { from: "guest" | "note"; text: string; at: string }[] };
 const fresh = (): State => ({ messages: [] });
 const KEY = (t: string) => `ph-stay-${t}`;
 /** Sandbox labels render only when NEXT_PUBLIC_SANDBOX=true (inlined at build); never in a production build without it. */
@@ -138,7 +139,13 @@ export function Portal({ stay }: { stay: StayData }) {
     if (!unlocked) setAllSetNow(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, unlocked]);
-  const step = unlocked ? 3 : 2;
+  // Step 4 "Enjoy your stay" starts on check-in day (Central time) once the paperwork is done (Oscar, Nov 17).
+  // Same moment the door code and Wi-Fi are released. Test controls can jump to check-in day.
+  const [today, setToday] = useState("");
+  useEffect(() => { setToday(todayChicago(new Date())); }, []);
+  const isCheckinDay = s.simDay === "checkin" || (!!today && today >= stay.checkIn);
+  const released = unlocked && isCheckinDay;
+  const step = !unlocked ? 2 : isCheckinDay ? 4 : 3;
   const ci = fmtDay(stay.checkIn, { weekday: "short", month: "short", day: "numeric" });
   const co = fmtDay(stay.checkOut, { weekday: "short", month: "short", day: "numeric" });
   const ciMorning = fmtDay(stay.checkIn, { weekday: "long", month: "long", day: "numeric" });
@@ -353,9 +360,9 @@ export function Portal({ stay }: { stay: StayData }) {
                     (sent from the server only after unlock); the test link goes to the neighborhood. */}
                 <a className="ST-dir" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${stay.home.neighborhood}, San Antonio, TX`)}`} target="_blank" rel="noopener"><Ico d={I.nav} size={16} /> Get directions</a>{SANDBOX && <span className="ST-testLine"> Test link goes to the neighborhood.</span>}</div></li>
               <li><span className="ST-infoIc"><Ico d={I.door} /></span><div><h3>Entry steps</h3><p>Self check-in with a door keypad. Step-by-step entry instructions appear here.</p></div></li>
-              <li><span className="ST-infoIc"><Ico d={I.wifi} /></span><div><h3>Wi-Fi</h3><p>Network and password appear here (test)</p></div></li>
+              <li className="ST-code"><span className="ST-infoIc"><Ico d={I.wifi} /></span><div><h3>Wi-Fi</h3><p>{released ? "Network and password appear here (test)." : <>Arrives on check-in morning, {ciMorning}.</>}</p></div></li>
               <li><span className="ST-infoIc"><Ico d={I.car} /></span><div><h3>Parking</h3><p>Parking details for this home appear here.</p></div></li>
-              <li className="ST-code"><span className="ST-infoIc"><Ico d={I.key} /></span><div><h3>Door code</h3><p>Arrives on check-in morning, {ciMorning}.</p></div></li>
+              <li className="ST-code"><span className="ST-infoIc"><Ico d={I.key} /></span><div><h3>Door code</h3><p>{released ? "Your door code appears here (test)." : <>Arrives on check-in morning, {ciMorning}.</>}</p></div></li>
               <li><span className="ST-infoIc"><Ico d={I.phone} /></span><div><h3>Urgent property contact</h3><p>Shown here for verified guests (test).</p></div></li>
             </ul>
           ) : (
@@ -408,6 +415,7 @@ export function Portal({ stay }: { stay: StayData }) {
             <div className="ST-row">
               <button className="ST-link" type="button" disabled={signed} onClick={() => save({ ...sRef.current, signedAt: nowText(), signedOn: new Date().toISOString(), signedName: stay.holder })}>Mark agreement signed</button>
               <button className="ST-link" type="button" disabled={verified} onClick={() => save({ ...sRef.current, verifiedAt: nowText() })}>Mark ID verified</button>
+              <button className="ST-link" type="button" disabled={s.simDay === "checkin"} onClick={() => save({ ...sRef.current, simDay: "checkin" })}>Jump to check-in day</button>
               <button className="ST-link" type="button" onClick={() => { save(fresh()); setAgree(false); setName(stay.holder); setEsign("idle"); setIdState("idle"); setIdMsg(""); setAllSetNow(false); scrollTo({ top: 0 }); }}>Reset sandbox</button>
             </div>
           </section>
