@@ -269,7 +269,7 @@ describe("checkout consent evidence (Legal note 14)", () => {
     const out = await bookingAttempt(ledger, saved, { ...req("PH-CONS01"), consent: consentRecord(NOW) }, h, p, fast);
     expect(out.ok).toBe(true);
     const [row] = await db.query<any>(`SELECT consent_id, consent_text, policy_versions, consent_accepted_at FROM bookings WHERE booking_ref = 'PH-CONS01'`);
-    expect(row.consent_id).toBe("checkout-1.2");
+    expect(row.consent_id).toBe("checkout-1.3");
     expect(row.consent_text).toBe(CONSENT_TEXT);
     expect(row.policy_versions).toEqual({ bookingTerms: "1.2", rentalAgreement: "1.2", privacy: "1.2", websiteTerms: "1.2" });
     expect(new Date(row.consent_accepted_at).toISOString()).toBe(NOW.toISOString());

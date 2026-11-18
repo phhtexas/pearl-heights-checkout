@@ -37,6 +37,6 @@ await page.waitForSelector("text=You're booked", { timeout: 20000 });
 ok(checkouts.length === 1, `double-click Pay sent exactly one checkout request (${checkouts.length})`);
 ok(checkouts.every((c) => /^[0-9a-f-]{36}$/.test(c.quoteId)), "checkout request carries the saved quote id");
 ok(checkouts[0]?.property === "indianola" && checkouts[0]?.agreed === true, "request is for the chosen home with the agreement accepted");
-ok(checkouts[0]?.consentId === "checkout-1.2" && checkouts[0]?.marketingEmail === false && checkouts[0]?.marketingSms === false, "request carries the consent id and no marketing opt-in by default");
+ok(checkouts[0]?.consentId === "checkout-1.3" && checkouts[0]?.marketingEmail === false && checkouts[0]?.marketingSms === false, "request carries the consent id and no marketing opt-in by default");
 await browser.close();
 console.log(process.exitCode ? "FULL FLOW FAILED" : "FULL FLOW PASSED");

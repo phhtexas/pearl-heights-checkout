@@ -71,7 +71,7 @@ ok(quotes.length > n2 && quotes.at(-1).quoteId !== second.quoteId, "date change 
 const third = quotes.at(-1);
 const res = await page.evaluate(async ({ old, total }) => {
   const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: "claywell", checkIn: "2027-01-10", checkOut: "2027-01-12", adults: 7, children: 0, infants: 0,
-    payPlan: "full", guest: { firstName: "Ana", lastName: "Test", email: "ana@example.com", phone: "2105550100" }, agreed: true, consentId: "checkout-1.2", acceptedTotal: total, quoteId: old, attemptKey: crypto.randomUUID() }) });
+    payPlan: "full", guest: { firstName: "Ana", lastName: "Test", email: "ana@example.com", phone: "2105550100" }, agreed: true, consentId: "checkout-1.3", acceptedTotal: total, quoteId: old, attemptKey: crypto.randomUUID() }) });
   return { status: r.status, body: await r.json() };
 }, { old: first.quoteId, total: third.quote.total });
 ok(res.status === 400, `superseded quote rejected (${res.status}: ${res.body.error ?? res.body.guestMessage})`);
