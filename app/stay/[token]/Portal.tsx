@@ -5,8 +5,8 @@ import { loadStripe } from "@stripe/stripe-js";
 
 /**
  * Guest portal, phase 1 (test data). Flow, matching the "Booking directly is simple" steps on All Homes F:
- *  1 Booked  ->  2 Confirm your reservation (sign agreement + verify ID by the deadline)
- *  ->  3 Get ready for arrival (address, entry steps, Wi-Fi unlock only after BOTH are done; door code on check-in morning)
+ *  1 Your home is booked  ->  2 Complete paperwork (sign agreement + verify ID by the deadline)
+ *  ->  3 Receive check-in details (address, entry steps, Wi-Fi unlock only after BOTH are done; door code on check-in morning)
  *  ->  4 Enjoy your stay (house rules, messages).
  * In this test version the state lives in this browser only (localStorage), and nothing is sent or charged.
  */
@@ -25,6 +25,7 @@ const Ico = ({ d, size = 20 }: { d: string; size?: number }) => (
 const I = {
   check: "m5 12.5 4.5 4.5L19 7.5",
   pen: "M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4",
+  doc: "M6.5 3.5h7l4 4v13h-11zM13.5 3.5v4h4M9 12h6M9 15h6M9 18h3",
   id: "M3.5 6.5h17v11h-17zM8 10.5a1.8 1.8 0 1 0 0 .01M6 15c.5-1.3 1.2-2 2-2s1.5.7 2 2M13 10h5M13 13h4",
   lock: "M6.5 10.5h11v9h-11zM8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5",
   pin: "M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
@@ -186,93 +187,105 @@ export function Portal({ stay }: { stay: StayData }) {
 
         {/* Progress, same 4 steps as All Homes F */}
         <ol className="ST-steps" aria-label="Your booking steps">
-          {["Book your home", "Confirm your reservation", "Get ready for arrival", "Enjoy your stay"].map((t, i) => {
+          {["Your home is booked", "Complete paperwork", "Receive check-in details", "Enjoy your stay"].map((t, i) => {
             const n = i + 1, done = n < step || (n === 1), now = n === step && !done;
             const sub = n === 2 && !unlocked && (signed || verified) ? "1 of 2 done" : "";
             return <li key={t} className={`${done ? "is-done" : now ? "is-now" : ""}${sub ? " is-half" : ""}`} aria-current={now ? "step" : undefined}><span className="ST-dot">{done ? <Ico d={I.check} size={14} /> : n}</span><span>{t}{sub && <small className="ST-sub">{sub}</small>}</span></li>;
           })}
         </ol>
 
-        {/* Step 2: confirm */}
-        <section className="ST-card" aria-labelledby="confirm-h">
-          <div className="ST-cardHead">
-            <h2 id="confirm-h">Confirm your reservation</h2>
+        {/* Step 2: complete paperwork (Oscar's mockup, Nov 17): "You're booked!" box, then one row per item
+            with an icon and its own button. The signing window / ID check open under their row. */}
+        <section className="ST-card ST-paper" aria-labelledby="confirm-h">
+          <div className={`ST-booked${unlocked ? " is-all" : ""}`} role="status">
+            <span className="ST-bookedIc" aria-hidden="true"><Ico d={I.check} size={26} /></span>
+            <div>
+              {unlocked ? (<>
+                <p className="ST-bookedH">You&apos;re all set!</p>
+                <p className="ST-bookedB">Paperwork complete. Your check-in details are below.</p>
+              </>) : (<>
+                <p className="ST-bookedH">You&apos;re booked!</p>
+                <p className="ST-bookedB">Payment received. Your dates are reserved. The only items left are signing the rental agreement and completing ID verification.</p>
+                <p className="ST-bookedS">Complete both by the deadline shown below to receive your check-in details.</p>
+              </>)}
+            </div>
+          </div>
+
+          <div className="ST-cardHead ST-paperHead">
+            <h2 id="confirm-h">Complete paperwork</h2>
             <p className={`ST-due${unlocked ? " is-ok" : ""}`}>{unlocked ? "All done" : <>Due by <b>{stay.deadlineText}</b></>}</p>
           </div>
-          <p className="ST-dim">The reservation holder signs the rental agreement and verifies their ID. Each takes about 2 minutes.</p>
 
-          <div className={`ST-task${signed ? " is-done" : ""}`}>
-            <span className="ST-taskIc"><Ico d={signed ? I.check : I.pen} /></span>
-            <div className="ST-taskBody">
-              <h3>Rental agreement</h3>
-              {signed ? (
-                // Confirmation state (Oscar, Nov 17): check, signed date, download link.
-                <div className="ST-signed" role="status">
-                  <p className="ST-signedLine">Agreement signed — {signedDate(s.signedOn)}</p>
-                  {s.signDoc
-                    ? <a className="ST-dl" href={`/api/stay/${stay.token}/agreement/pdf?doc=${s.signDoc}`} target="_blank" rel="noopener">Download a copy (PDF)</a>
-                    : <p className="ST-dim">Signed by {s.signedName}</p>}
-                </div>
-              ) : (
-                <p className="ST-dim">Sign online — takes about 2 minutes.</p>
+          {/* Row 1: rental agreement (SignWell, embedded; the guest's legal name is editable inside the agreement). */}
+          <div className={`ST-task ST-pRow${signed ? " is-done" : ""}`}>
+            <div className="ST-pMain">
+              <span className="ST-pIc" aria-hidden="true"><Ico d={signed ? I.check : I.doc} size={26} /></span>
+              <div className="ST-pText">
+                <h3>Sign rental agreement</h3>
+                {signed && (
+                  <p className="ST-signedLine">Agreement signed — {signedDate(s.signedOn)}{s.signDoc
+                    ? <> · <a className="ST-dl" href={`/api/stay/${stay.token}/agreement/pdf?doc=${s.signDoc}`} target="_blank" rel="noopener">Download a copy (PDF)</a></>
+                    : <> · Signed by {s.signedName}</>}</p>
+                )}
+              </div>
+              {!signed && esign !== "fallback" && esign !== "open" && esign !== "checking" && (
+                <button className="ST-btn ST-pBtn" type="button" onClick={() => { setSigning(true); void openAgreement(); }} disabled={!ready || !name.trim() || esign === "loading"}>
+                  {esign === "loading" ? "Opening…" : "Sign agreement"}
+                </button>
               )}
-              {/* Oscar, Nov 17: one tap. "Review & sign" opens SignWell right away; the guest's full legal name is an
-                  editable field inside the agreement, prefilled from the reservation (no name field on this page). */}
-              {!signed && esign !== "fallback" && (
-                <div className="ST-signFlow">
-                  <p className="ST-copy">The agreement covers your reservation details, house rules, and cancellation terms. When you tap the button, it opens in a secure window from SignWell, our e-signature partner — no printing or downloads needed.</p>
-                  {esign !== "open" && esign !== "checking" && (
-                    <div className="ST-row">
-                      <button className="ST-btn" type="button" onClick={() => { setSigning(true); void openAgreement(); }} disabled={!ready || !name.trim() || esign === "loading"}>
-                        {esign === "loading" ? "Opening…" : "Review & sign"}
-                      </button>
-                    </div>
-                  )}
-                  {(esign === "open" || esign === "checking") && (
-                    <div className="ST-row">
-                      <span className="ST-hint" role="status">{esign === "checking" ? "Confirming your signature…" : "Check your name in the agreement, then sign."}</span>
-                      <button className="ST-link" type="button" onClick={() => { setSigning(false); setEsign("idle"); }}>Not now</button>
-                    </div>
-                  )}
-                  {esignMsg && <p className="ST-err" role="alert">{esignMsg}</p>}
-                  {SANDBOX && <p className="ST-testLine">Sandbox mode — this test document isn&apos;t legally binding.</p>}
-                  <div id="st-sign-frame" className={`ST-frame${esign === "open" && signing ? " is-open" : ""}`} />
-                </div>
-              )}
-              {!signed && signing && esign === "fallback" && (
-                <div className="ST-panel">
-                  <p>Read the full <a href="/rental-agreement" target="_blank" rel="noopener">rental agreement</a> (opens in a new tab). Signing isn&apos;t connected here, so this only records it in your browser.</p>
-                  <label className="ST-check"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> I have read and agree to the rental agreement.</label>
-                  <label className="ST-field">Full legal name — exactly as it appears on your ID<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
-                  <div className="ST-row"><button className="ST-btn" type="button" onClick={sign} disabled={!agree || !name.trim()}>Sign agreement</button><button className="ST-link" type="button" onClick={() => setSigning(false)}>Not now</button></div>
-                </div>
+              {!signed && esign === "fallback" && !signing && (
+                <button className="ST-btn ST-pBtn" type="button" onClick={() => setSigning(true)}>Sign agreement</button>
               )}
             </div>
+            {!signed && esign !== "fallback" && (
+              <div className="ST-signFlow">
+                {(esign === "open" || esign === "checking") && (
+                  <div className="ST-row">
+                    <span className="ST-hint" role="status">{esign === "checking" ? "Confirming your signature…" : "Check your name in the agreement, then sign."}</span>
+                    <button className="ST-link" type="button" onClick={() => { setSigning(false); setEsign("idle"); }}>Not now</button>
+                  </div>
+                )}
+                {esignMsg && <p className="ST-err" role="alert">{esignMsg}</p>}
+                {SANDBOX && <p className="ST-testLine">Sandbox mode — this test document isn&apos;t legally binding.</p>}
+                <div id="st-sign-frame" className={`ST-frame${esign === "open" && signing ? " is-open" : ""}`} />
+              </div>
+            )}
+            {!signed && signing && esign === "fallback" && (
+              <div className="ST-panel">
+                <p>Read the full <a href="/rental-agreement" target="_blank" rel="noopener">rental agreement</a> (opens in a new tab). Signing isn&apos;t connected here, so this only records it in your browser.</p>
+                <label className="ST-check"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> I have read and agree to the rental agreement.</label>
+                <label className="ST-field">Full legal name — exactly as it appears on your ID<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
+                <div className="ST-row"><button className="ST-btn" type="button" onClick={sign} disabled={!agree || !name.trim()}>Sign agreement</button><button className="ST-link" type="button" onClick={() => setSigning(false)}>Not now</button></div>
+              </div>
+            )}
           </div>
 
-          <div className={`ST-task${verified ? " is-done" : ""}`}>
-            <span className="ST-taskIc"><Ico d={verified ? I.check : I.id} /></span>
-            <div className="ST-taskBody">
-              <h3>ID check</h3>
-              <p className="ST-dim">{verified ? `Verified · ${s.verifiedAt}` : "A quick photo of your ID and a selfie, handled securely by Stripe Identity."}</p>
-              {!verified && idState !== "fallback" && (
-                <>
-                  {idState !== "checking" && (
-                    <button className="ST-btn" type="button" onClick={() => void startId()} disabled={!ready || idState === "loading"}>
-                      {idState === "loading" ? "Opening…" : idState === "retry" ? "Try again" : "Verify my ID"}
-                    </button>
-                  )}
-                  {idMsg && <p className={idState === "checking" ? "ST-hint" : "ST-err"} role={idState === "checking" ? "status" : "alert"}>{idMsg}</p>}
-                  {SANDBOX && <p className="ST-testLine">Sandbox mode — Stripe test mode: no real ID needed, and you can choose the result.</p>}
-                </>
-              )}
-              {!verified && idState === "fallback" && idOpen && (
-                <div className="ST-panel">
-                  <p>Stripe Identity isn&apos;t connected here yet, so this sandbox simulates the check. Your ID photos would go to Stripe; we never store them on this site.</p>
-                  <div className="ST-row"><button className="ST-btn" type="button" onClick={() => { save({ ...s, verifiedAt: nowText() }); setIdOpen(false); setIdState("idle"); }}>Simulate a successful check</button><button className="ST-link" type="button" onClick={() => { setIdOpen(false); setIdState("idle"); }}>Cancel</button></div>
-                </div>
+          {/* Row 2: ID check (Stripe Identity). */}
+          <div className={`ST-task ST-pRow${verified ? " is-done" : ""}`}>
+            <div className="ST-pMain">
+              <span className="ST-pIc" aria-hidden="true"><Ico d={verified ? I.check : I.id} size={26} /></span>
+              <div className="ST-pText">
+                <h3>Verify your identity</h3>
+                {verified && <p className="ST-signedLine">Verified · {s.verifiedAt}</p>}
+              </div>
+              {!verified && idState !== "fallback" && idState !== "checking" && (
+                <button className="ST-btn ST-pBtn" type="button" onClick={() => void startId()} disabled={!ready || idState === "loading"}>
+                  {idState === "loading" ? "Opening…" : idState === "retry" ? "Try again" : "Verify identity"}
+                </button>
               )}
             </div>
+            {!verified && idState !== "fallback" && (idMsg || SANDBOX) && (
+              <div className="ST-signFlow">
+                {idMsg && <p className={idState === "checking" ? "ST-hint" : "ST-err"} role={idState === "checking" ? "status" : "alert"}>{idMsg}</p>}
+                {SANDBOX && <p className="ST-testLine">Sandbox mode — Stripe test mode: no real ID needed, and you can choose the result.</p>}
+              </div>
+            )}
+            {!verified && idState === "fallback" && idOpen && (
+              <div className="ST-panel">
+                <p>Stripe Identity isn&apos;t connected here yet, so this sandbox simulates the check. Your ID photos would go to Stripe; we never store them on this site.</p>
+                <div className="ST-row"><button className="ST-btn" type="button" onClick={() => { save({ ...s, verifiedAt: nowText() }); setIdOpen(false); setIdState("idle"); }}>Simulate a successful check</button><button className="ST-link" type="button" onClick={() => { setIdOpen(false); setIdState("idle"); }}>Cancel</button></div>
+              </div>
+            )}
           </div>
         </section>
 

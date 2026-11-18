@@ -11,12 +11,15 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok(/noindex/.test(await page.locator('meta[name="robots"]').getAttribute("content") ?? ""), `${tag}: portal is noindex`);
   ok(/Sandbox mode/.test(await page.locator(".ST-test").innerText()), `${tag}: labeled as sandbox`);
   ok(/Due by/.test(await page.locator(".ST-due").innerText()), `${tag}: shows the sign-and-verify deadline`);
-  ok((await page.locator(".ST-steps .is-now").innerText()).includes("Confirm your reservation"), `${tag}: current step is Confirm your reservation`);
+  ok((await page.locator(".ST-steps .is-now").innerText()).includes("Complete paperwork"), `${tag}: current step is Complete paperwork`);
+  ok(/You’re booked!|You're booked!/.test(await page.locator(".ST-booked").innerText()) && /completing ID verification/.test(await page.locator(".ST-booked").innerText()), `${tag}: "You're booked!" box`);
   const body = () => page.evaluate(() => document.body.innerText);
   ok(!/Test address/.test(await body()) && (await page.locator(".ST-lockNote").count()) === 1, `${tag}: arrival details locked before signing and verifying`);
   // sign: one tap; the name is edited inside the agreement, so no name field or "Fix it" link on the page
-  const flow = await page.locator(".ST-signFlow").innerText();
-  ok(/covers your reservation details, house rules, and cancellation terms/.test(flow) && !/Preview the full agreement/.test(flow) && (await page.locator(".ST-signFlow .ST-field").count()) === 0 && !/Fix it/.test(flow), `${tag}: one-tap step, no name field or Fix it link`);
+  const rows = await page.locator(".ST-pRow h3").allInnerTexts();
+  ok(rows.join("|") === "Sign rental agreement|Verify your identity" && (await page.locator('.ST-pRow button:has-text("Sign agreement")').count()) === 1 && (await page.locator('.ST-pRow button:has-text("Verify identity")').count()) === 1, `${tag}: paperwork rows with their own buttons`);
+  const flow = await page.locator(".ST-signFlow").first().innerText();
+  ok((await page.locator(".ST-signFlow .ST-field").count()) === 0 && !/Fix it/.test(flow), `${tag}: one-tap step, no name field or Fix it link`);
   ok(/Sandbox mode — this test document isn't legally binding\./.test(flow), `${tag}: sandbox callout shows in a sandbox build`);
   // SignWell path (mocked here): the agreement opens INSIDE the portal; when SignWell reports "completed" the page
   // confirms with the server, then shows the signed state.
@@ -27,13 +30,13 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   await page.route("https://static.signwell.com/assets/embedded.js", (r) => r.fulfill({ contentType: "text/javascript", body:
     "window.SignWellEmbed=function(o){this.open=function(){var c=document.getElementById(o.containerId);var f=document.createElement('iframe');f.title='SignWell';f.setAttribute('data-url',o.url);c.appendChild(f);window.__swDone=function(){o.events.completed({id:'x'})};};};" }));
   const before = page.url();
-  await page.click('.ST-signFlow button:has-text("Review & sign")');
+  await page.click('.ST-pRow button:has-text("Sign agreement")');
   await page.waitForSelector("#st-sign-frame.is-open iframe", { state: "attached", timeout: 8000 }).catch(() => {});
   ok(page.url() === before && (await page.locator("#st-sign-frame iframe").getAttribute("data-url")) === "https://www.signwell.com/docs/test/" && page.context().pages().length === 1, `${tag}: one tap opens the agreement inside the portal (no new tab)`);
-  ok(/Check your name in the agreement, then sign\./.test(await page.locator(".ST-signFlow").innerText()), `${tag}: tells the guest to check their name in the agreement`);
+  ok(/Check your name in the agreement, then sign\./.test(await page.locator(".ST-signFlow").first().innerText()), `${tag}: tells the guest to check their name in the agreement`);
   swSigned = true; await page.evaluate(() => window.__swDone());
-  await page.waitForSelector(".ST-signed", { timeout: 8000 });
-  ok((await page.locator(".ST-signedLine").innerText()) === "Agreement signed — November 17, 2026" && (await page.locator(".ST-task").first().evaluate((e) => e.classList.contains("is-done"))), `${tag}: confirmation with green check and the signed date`);
+  await page.waitForSelector(".ST-pRow.is-done", { timeout: 8000 });
+  ok((await page.locator(".ST-signedLine").innerText()).startsWith("Agreement signed — November 17, 2026") && (await page.locator(".ST-task").first().evaluate((e) => e.classList.contains("is-done"))), `${tag}: confirmation with green check and the signed date`);
   ok((await page.locator(".ST-dl").getAttribute("href")) === "/api/stay/demo/agreement/pdf?doc=a692e1ce-9929-4541-adc7-61932bab39d3" && (await page.locator(".ST-dl").innerText()) === "Download a copy (PDF)", `${tag}: Download a copy (PDF) link`);
   ok(await page.evaluate(() => { const v = JSON.parse(localStorage.getItem("ph-stay-demo") || "{}"); return v.signedName === "Oscar Pena" && v.nameEdited === true; }), `${tag}: saves the name typed in the agreement and flags the change`);
   ok(/1 of 2 done/.test(await page.locator(".ST-steps").innerText()), `${tag}: step indicator advances (1 of 2 done)`);
@@ -46,7 +49,7 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   await page.route("https://js.stripe.com/**", (r) => r.fulfill({ contentType: "text/javascript", body: "window.Stripe=function(){return{verifyIdentity:function(c){window.__idSecret=c;window.__idCalls=(window.__idCalls||0)+1;return Promise.resolve(window.__idResult||{})}}};" }));
   ok(/Stripe test mode/.test(await page.locator(".ST-task").nth(1).innerText()), `${tag}: ID step labeled as Stripe test mode in the sandbox`);
   await page.evaluate(() => { window.__idResult = { error: { code: "session_cancelled" } }; });
-  await page.click("text=Verify my ID");
+  await page.click('.ST-pRow button:has-text("Verify identity")');
   await page.waitForSelector("text=Try again", { timeout: 8000 }).catch(() => {});
   ok(await page.evaluate(() => window.__idSecret === "vs_TEST_secret") && (await page.locator("text=Try again").count()) === 1, `${tag}: closing Stripe's window early offers Try again`);
   await page.evaluate(() => { window.__idResult = {}; }); idDone = true;
@@ -55,7 +58,7 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok((await page.locator(".ST-task.is-done").count()) === 2, `${tag}: verified by Stripe -> ID step done`);
   await page.unroute("**/api/stay/demo/identity"); await page.unroute("**/api/stay/demo/identity?vs=*");
   ok(/Test address/.test(await body()) && /Arrives on check-in morning/.test(await body()) && (await page.locator(".ST-due").innerText()) === "All done", `${tag}: both done -> arrival details unlock; door code says check-in morning`);
-  ok((await page.locator(".ST-steps .is-now").innerText()).includes("Get ready for arrival"), `${tag}: step moves to Get ready for arrival`);
+  ok((await page.locator(".ST-steps .is-now").innerText()).includes("Receive check-in details"), `${tag}: step moves to Receive check-in details`);
   // persists on reload
   await page.reload(); await page.waitForTimeout(300);
   ok(/Test address/.test(await body()), `${tag}: progress kept on reload (this browser)`);

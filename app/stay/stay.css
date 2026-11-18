@@ -108,3 +108,31 @@
 .ST-copy { margin: 10px 0 0; color: #3e3832; font-size: 15px; }
 .ST-signFlow .ST-field { margin-top: 12px; }
 .ST-signFlow .ST-row .ST-hint { margin: 12px 0 0; }
+
+/* Complete paperwork (Oscar's mockup, Nov 17) */
+.ST-paper { padding-top: 18px; }
+.ST-booked { display: grid; grid-template-columns: 52px 1fr; gap: 16px; align-items: start; background: var(--sage); border-radius: 18px; padding: 18px 20px; }
+.ST-bookedIc { width: 52px; height: 52px; border-radius: 50%; background: var(--acc); color: #fff; display: grid; place-items: center; }
+.ST-bookedH { margin: 2px 0 4px; font-size: 26px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
+.ST-bookedB { margin: 0; font-weight: 600; color: #4a433c; }
+.ST-bookedS { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+.ST-paperHead { margin-top: 22px; }
+.ST-paperHead h2 { font-size: 24px; }
+.ST-task.ST-pRow { display: block; border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; margin-top: 12px; }
+.ST-pMain { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 0; }
+.ST-pIc { display: grid; place-items: center; height: 44px; border-right: 1px solid var(--line); margin-right: 18px; color: var(--ink); }
+.ST-pRow.is-done .ST-pIc { color: var(--acc); }
+.ST-pText h3 { font-size: 18px; }
+.ST-pText .ST-signedLine { margin: 3px 0 0; font-weight: 500; font-size: 14px; }
+.ST-pText .ST-dl { display: inline; margin: 0; }
+.ST .ST-pBtn { margin: 0 0 0 12px; white-space: nowrap; padding: 11px 20px; }
+.ST-pRow .ST-signFlow:empty { display: none; }
+.ST-pRow .ST-signFlow { margin-top: 4px; }
+@media (max-width: 560px) {
+  .ST-booked { grid-template-columns: 40px 1fr; gap: 12px; padding: 16px; }
+  .ST-bookedIc { width: 40px; height: 40px; }
+  .ST-bookedH { font-size: 22px; }
+  .ST-pMain { grid-template-columns: 44px 1fr; row-gap: 12px; }
+  .ST-pIc { margin-right: 14px; }
+  .ST .ST-pBtn { grid-column: 1 / -1; margin: 0; width: 100%; }
+}
