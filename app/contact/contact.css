@@ -1,0 +1,9 @@
+/* Contact page (Oscar, Nov 17): same calm look as the policy pages, teal accents */
+.CT .CT-lead { font-size: 18px; margin: -12px 0 28px; color: #3e3832; }
+.CT .CT-card { border: 1px solid #e6dfd5; border-radius: 16px; padding: 18px 20px; margin: 0 0 14px; background: #fff; }
+.CT .CT-card h2 { font-size: 19px; margin: 0 0 6px; }
+.CT .CT-card p { margin: 0 0 8px; }
+.CT .CT-card a { color: #127A5E; font-weight: 600; }
+.CT .CT-dim { color: #6a6e72; font-size: 15px; }
+.CT .CT-alert { display: inline-block; background: #fbf0e3; color: #8a4b12; border-radius: 999px; padding: 4px 12px; font-weight: 600; font-size: 15px; }
+.CT .CT-links { margin: 0; padding-left: 20px; }

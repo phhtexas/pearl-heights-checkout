@@ -18,7 +18,7 @@ const KEY = (t: string) => `ph-stay-${t}`;
 const SANDBOX = process.env.NEXT_PUBLIC_SANDBOX === "true";
 const signedDate = (iso?: string) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "long", day: "numeric", year: "numeric" }).format(iso ? new Date(iso) : new Date());
 const fmtDay = (iso: string, o: Intl.DateTimeFormatOptions) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { ...o, timeZone: "UTC" });
-const nowText = () => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date());
+const nowText = (at: Date = new Date()) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(at);
 
 const Ico = ({ d, size = 20 }: { d: string; size?: number }) => (
   <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
@@ -66,7 +66,16 @@ export function Portal({ stay }: { stay: StayData }) {
   // Oscar, Nov 17 (option 2): prefilled with the reservation holder's name from the booking; editable to fix a typo.
   const [name, setName] = useState(stay.holder);
   const [draft, setDraft] = useState("");
-  useEffect(() => { try { const raw = localStorage.getItem(KEY(stay.token)); if (raw) setS({ ...fresh(), ...JSON.parse(raw) }); } catch { /* private mode */ } setReady(true); }, [stay.token]);
+  useEffect(() => {
+    let st: State = fresh();
+    try { const raw = localStorage.getItem(KEY(stay.token)); if (raw) st = { ...fresh(), ...JSON.parse(raw) }; } catch { /* private mode */ }
+    // Real bookings (Oscar, Nov 17): paperwork saved on the server counts on any device.
+    const d = stay.done;
+    if (d?.signedOn && !st.signedAt) st = { ...st, signedAt: nowText(new Date(d.signedOn)), signedOn: d.signedOn, signedName: d.signedName ?? st.signedName, signDoc: d.signDoc ?? st.signDoc, pendingDoc: undefined };
+    if (d?.verifiedOn && !st.verifiedAt) st = { ...st, verifiedAt: nowText(new Date(d.verifiedOn)) };
+    setS(st); setReady(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stay.token]);
   const save = (n: State) => { setS(n); try { localStorage.setItem(KEY(stay.token), JSON.stringify(n)); } catch { /* ignore */ } };
 
   // ID check through Stripe Identity (Oscar, Nov 17, option 1). Stripe's own window opens over this page; the result
@@ -411,7 +420,7 @@ export function Portal({ stay }: { stay: StayData }) {
         </section>
 
         {/* Test site only: walk through the whole flow in seconds (Oscar, Nov 17). */}
-        {SANDBOX && (
+        {SANDBOX && stay.mode === "demo" && (
           <section className="ST-testCtl" aria-label="Test controls">
             <p><b>Test controls</b> · test site only, never shown to guests</p>
             <div className="ST-row">

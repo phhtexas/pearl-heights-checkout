@@ -230,6 +230,14 @@ export default function Checkout() {
     if (Object.keys(e).length) { setTimeout(() => document.getElementById("errsum")?.focus(), 0); return; }
     go("pay");
   }
+  // After a confirmed booking, fetch the guest's private stay-page link (same browser session only; needs the database).
+  const [stayUrl, setStayUrl] = useState("");
+  useEffect(() => {
+    if (step !== "done" || !result?.ok || !result.bookingRef) { setStayUrl(""); return; }
+    fetch("/api/stay-link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingRef: result.bookingRef }) })
+      .then((r) => (r.ok ? r.json() : null)).then((j) => { if (j?.url) setStayUrl(j.url); }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, result?.ok ? result.bookingRef : ""]);
   const go = (s: Step) => { setErr(""); setStep(s); window.scrollTo(0, 0); };
 
   const left = Math.max(0, expiresAt - now);
@@ -460,6 +468,9 @@ export default function Checkout() {
             <h1>You're booked, {guest.firstName}!</h1>
             <div>{homeTitle} · {fmtRange(ci!, co!)} · {guests} {guests === 1 ? "guest" : "guests"} · Booking {result.bookingRef}</div>
             <div className="box warm">To keep your reservation, please finish two quick steps by <b>{result.verification.deadlineText}</b>: sign the rental agreement and verify your ID.</div>
+            {/* Oscar, Nov 17 (real bookings): the guest's private stay page, where both steps happen. */}
+            {stayUrl && <a className="btn stayBtn" href={stayUrl}>Sign the agreement and verify your ID</a>}
+            {stayUrl && <div className="muted small">This is your private stay page. Bookmark it: your check-in details appear there once both steps are done.</div>}
             <div className="muted">Paid today: {money(quote!.plan.dueNow)}{quote!.plan.split ? ` · ${money(quote!.plan.scheduled!.amount)} on ${balance}` : ""}</div>
             <div className="muted">Test mode: no email is sent. Questions: <a href="mailto:bookings@thepearlheightshomes.com">bookings@thepearlheightshomes.com</a></div>
             <button className="btn ghost" onClick={restart}>Start another booking</button>

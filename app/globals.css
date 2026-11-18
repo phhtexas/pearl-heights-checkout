@@ -315,3 +315,6 @@ input.f.bad { border-color: var(--bad); }
 .fWrap { position: relative; display: block; }
 .fld.is-ok input.f { padding-right: 46px; border-color: #127A5E; }
 .okIc { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+
+/* Confirmation -> private stay page (Oscar, Nov 17) */
+.ck a.btn.stayBtn { display: flex; align-items: center; justify-content: center; text-decoration: none; background: var(--ck-blue); color: #fff; margin: 4px 0; }

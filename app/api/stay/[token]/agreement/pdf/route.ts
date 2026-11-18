@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
 import { ESignUnavailable, getCompletedPdf, getDocumentStatus } from "@/services/esign/signwell";
+import { paperworkFor } from "@/server/stay";
 
-/** "Download a copy (PDF)" of the signed agreement. Sandbox portal only for now; the document must belong to it and be completed. */
+/** "Download a copy (PDF)" of the signed agreement (demo portal or a real booking in test mode); the document must belong to it and be completed. */
 export const dynamic = "force-dynamic";
 const noStore = { "Cache-Control": "no-store" };
 
 export async function GET(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const doc = new URL(req.url).searchParams.get("doc") ?? "";
-  if (token !== "demo" || process.env.NEXT_PUBLIC_SANDBOX !== "true" || !/^[0-9a-f-]{36}$/i.test(doc)) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
+  const ctx = /^[0-9a-f-]{36}$/i.test(doc) ? await paperworkFor(token) : null;
+  if (!ctx) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
   try {
     const s = await getDocumentStatus(doc);
-    if (s.metadata?.token !== token || !s.completed) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
+    if ((s.metadata?.stay ?? (s.metadata?.token === "demo" ? "demo" : undefined)) !== (ctx.kind === "demo" ? "demo" : ctx.row.bookingId) || !s.completed) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
     const pdf = await getCompletedPdf(doc);
     return new NextResponse(pdf, { headers: { ...noStore, "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="rental-agreement-${s.metadata.booking ?? "signed"}.pdf"` } });
   } catch (e) {
