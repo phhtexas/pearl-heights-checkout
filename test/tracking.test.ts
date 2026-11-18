@@ -19,7 +19,8 @@ describe("Meta Conversions API purchase", () => {
   });
   it("only sends in live mode, or with a Meta test code; never without pixel id and token", () => {
     expect(capiEnabled({ CHECKOUT_MODE: "test" } as any).on).toBe(false);
-    expect(capiEnabled({ CHECKOUT_MODE: "test", NEXT_PUBLIC_META_PIXEL_ID: "1", META_CAPI_TOKEN: "t" } as any).on).toBe(false);
+    expect(capiEnabled({ CHECKOUT_MODE: "test", META_CAPI_TOKEN: "t" } as any).on).toBe(false);
+    expect(capiEnabled({ CHECKOUT_MODE: "live" } as any).on).toBe(false);
     expect(capiEnabled({ CHECKOUT_MODE: "test", NEXT_PUBLIC_META_PIXEL_ID: "1", META_CAPI_TOKEN: "t", META_TEST_EVENT_CODE: "TEST1" } as any)).toEqual({ on: true, testCode: "TEST1" });
     expect(capiEnabled({ CHECKOUT_MODE: "live", NEXT_PUBLIC_META_PIXEL_ID: "1", META_CAPI_TOKEN: "t" } as any)).toEqual({ on: true });
   });

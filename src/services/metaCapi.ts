@@ -40,8 +40,9 @@ export function capiBody(e: PurchaseEvent, testCode?: string) {
   };
 }
 
+const PIXEL = (env: NodeJS.ProcessEnv) => env.NEXT_PUBLIC_META_PIXEL_ID || "761704693497474"; // Pearl Heights Homes dataset
 export function capiEnabled(env: NodeJS.ProcessEnv = process.env): { on: boolean; testCode?: string } {
-  if (!env.NEXT_PUBLIC_META_PIXEL_ID || !env.META_CAPI_TOKEN) return { on: false };
+  if (!env.META_CAPI_TOKEN) return { on: false };
   if ((env.CHECKOUT_MODE ?? "mock") === "live") return { on: true };
   return env.META_TEST_EVENT_CODE ? { on: true, testCode: env.META_TEST_EVENT_CODE } : { on: false };
 }
@@ -49,7 +50,7 @@ export function capiEnabled(env: NodeJS.ProcessEnv = process.env): { on: boolean
 export async function sendPurchase(e: PurchaseEvent, env: NodeJS.ProcessEnv = process.env, fetcher: typeof fetch = fetch): Promise<"sent" | "skipped" | "failed"> {
   const cfg = capiEnabled(env);
   if (!cfg.on) return "skipped";
-  const url = `https://graph.facebook.com/v21.0/${encodeURIComponent(env.NEXT_PUBLIC_META_PIXEL_ID!)}/events?access_token=${encodeURIComponent(env.META_CAPI_TOKEN!)}`;
+  const url = `https://graph.facebook.com/v21.0/${encodeURIComponent(PIXEL(env))}/events?access_token=${encodeURIComponent(env.META_CAPI_TOKEN!)}`;
   try {
     const r = await fetcher(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(capiBody(e, cfg.testCode)), signal: AbortSignal.timeout(4000) });
     if (!r.ok) { console.error("[capi] purchase failed", r.status, (await r.text()).slice(0, 200)); return "failed"; }

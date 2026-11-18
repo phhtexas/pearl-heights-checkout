@@ -6,7 +6,7 @@
  * Conversions API event for bookings (booking ref), so Meta counts each booking once.
  * No names, emails, phone numbers or addresses are ever sent from the browser.
  */
-import { analyticsIds, consent, loadTrackers } from "./consent";
+import { analyticsIds, consent, loadTrackers, trackingConfigured } from "./consent";
 
 export type FunnelEvent =
   | "all_homes_search" | "property_viewed" | "dates_selected" | "availability_searched" | "quote_viewed"
@@ -56,7 +56,7 @@ export function track(event: FunnelEvent, params: Params, once: string = event +
   (w.dataLayer ??= []).push(payload);
   (w.__phEvents ??= []).push(payload); // read by the e2e tests
   if (process.env.NODE_ENV !== "production" || location.hostname.includes("-git-")) console.info("[track]", event, params);
-  if (consent() !== "granted") return;
+  if (consent() !== "granted" || !trackingConfigured()) return;
   loadTrackers();
   const ids = analyticsIds();
   const { ga, meta } = shape(event, params);

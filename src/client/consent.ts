@@ -1,16 +1,25 @@
 /**
  * Cookie consent + tracker loading (Oscar, Nov 18). Google Analytics and the Meta Pixel load only after the visitor
- * taps "Accept". The choice is kept in this browser (localStorage) for 180 days. IDs come from public env vars, so the
- * trackers stay off until they are set in Vercel.
+ * taps "Accept". The choice is kept in this browser (localStorage) for 180 days. Only on pearlheightshomes.com, so test
+ * traffic on the Vercel test site never reaches the real Analytics and Meta reports (env vars can turn it on elsewhere).
  */
 export type Consent = "granted" | "denied" | "unset";
 const KEY = "ph-consent";
 const DAYS = 180;
 
+/** Pearl Heights Homes IDs, confirmed in GA4 (property 510217432, stream "Pearl Heights Homes") and Meta Events Manager
+ *  (dataset "Pearl Heights Homes") on Nov 18. Public IDs, not secrets. Env vars can override them. */
+export const GA4_ID = "G-CWJ10Z81C4";
+export const META_PIXEL_ID = "761704693497474";
 export function analyticsIds() {
-  return { ga4: process.env.NEXT_PUBLIC_GA4_ID || "", pixel: process.env.NEXT_PUBLIC_META_PIXEL_ID || "" };
+  return { ga4: process.env.NEXT_PUBLIC_GA4_ID || GA4_ID, pixel: process.env.NEXT_PUBLIC_META_PIXEL_ID || META_PIXEL_ID };
 }
-export const trackingConfigured = () => { const i = analyticsIds(); return !!(i.ga4 || i.pixel); };
+export const trackingConfigured = () => {
+  if (typeof window === "undefined") return false;
+  const live = /(^|\.)pearlheightshomes\.com$/.test(location.hostname);
+  const override = !!(process.env.NEXT_PUBLIC_GA4_ID || process.env.NEXT_PUBLIC_META_PIXEL_ID);
+  return live || override;
+};
 
 export function consent(): Consent {
   try {
@@ -30,7 +39,7 @@ export function setConsent(v: "granted" | "denied") {
 
 let loaded = false;
 export function loadTrackers() {
-  if (loaded || typeof window === "undefined" || consent() !== "granted") return;
+  if (loaded || typeof window === "undefined" || consent() !== "granted" || !trackingConfigured()) return;
   loaded = true;
   const { ga4, pixel } = analyticsIds();
   const w = window as unknown as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
