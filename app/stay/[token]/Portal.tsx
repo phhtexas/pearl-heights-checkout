@@ -10,7 +10,7 @@ import { loadStripe } from "@stripe/stripe-js";
  *  ->  4 Enjoy your stay (house rules, messages).
  * In this test version the state lives in this browser only (localStorage), and nothing is sent or charged.
  */
-type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; idSession?: string; messages: { from: "guest" | "note"; text: string; at: string }[] };
+type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; idSession?: string; allSetSeen?: boolean; messages: { from: "guest" | "note"; text: string; at: string }[] };
 const fresh = (): State => ({ messages: [] });
 const KEY = (t: string) => `ph-stay-${t}`;
 /** Sandbox labels render only when NEXT_PUBLIC_SANDBOX=true (inlined at build); never in a production build without it. */
@@ -112,6 +112,14 @@ export function Portal({ stay }: { stay: StayData }) {
     return t.split(re).map((part, i) => (i % 2 ? <mark key={i}>{part}</mark> : part));
   };
   const signed = !!s.signedAt, verified = !!s.verifiedAt, unlocked = signed && verified;
+  const firstName = (s.signedName || stay.holder).trim().split(/\s+/)[0] || "there";
+  // Show "You're all set!" the first time the guest sees both steps done (this visit); remember it, so later visits skip it.
+  const [allSetNow, setAllSetNow] = useState(false);
+  useEffect(() => {
+    if (ready && unlocked && !s.allSetSeen) { setAllSetNow(true); save({ ...sRef.current, allSetSeen: true }); }
+    if (!unlocked) setAllSetNow(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, unlocked]);
   const step = unlocked ? 3 : 2;
   const ci = fmtDay(stay.checkIn, { weekday: "short", month: "short", day: "numeric" });
   const co = fmtDay(stay.checkOut, { weekday: "short", month: "short", day: "numeric" });
@@ -186,9 +194,14 @@ export function Portal({ stay }: { stay: StayData }) {
         <section className="ST-hero" aria-labelledby="st-h">
           <img className="ST-heroImg" src={stay.home.photo} alt={stay.home.photoAlt} />
           <div className="ST-heroText">
+            {/* Oscar, Nov 17: personal greeting with the reservation holder's first name. */}
+            <h1 id="st-h" className="ST-hello">Hi {firstName}! We&apos;re excited to host you.</h1>
             <p className="ST-eyebrow">Your stay · {stay.code}</p>
-            <h1 id="st-h">{stay.home.title}</h1>
+            <p className="ST-homeTitle">{stay.home.title}</p>
             <p className="ST-dim">{stay.home.neighborhood}, San Antonio</p>
+            {unlocked && !allSetNow && (
+              <p className="ST-paperDone"><Ico d={I.check} size={16} /> Paperwork complete{s.signDoc && <> · <a href={`/api/stay/${stay.token}/agreement/pdf?doc=${s.signDoc}`} target="_blank" rel="noopener">Rental agreement (PDF)</a></>}</p>
+            )}
             <dl className="ST-facts">
               <div><dt>Check-in</dt><dd>{ci}<span>after 4:00 PM</span></dd></div>
               <div><dt>Check-out</dt><dd>{co}<span>by 10:00 AM</span></dd></div>
@@ -208,6 +221,9 @@ export function Portal({ stay }: { stay: StayData }) {
 
         {/* Step 2: complete paperwork (Oscar's mockup, Nov 17): "You're booked!" box, then one row per item
             with an icon and its own button. The signing window / ID check open under their row. */}
+        {/* Oscar, Nov 17: once both are done the guest sees "You're all set!" once; on later visits this whole section is
+            gone and a "Paperwork complete · Rental agreement (PDF)" line stays in the stay card. */}
+        {(!unlocked || allSetNow) && (
         <section className="ST-card ST-paper" aria-labelledby="confirm-h">
           <div className={`ST-booked${unlocked ? " is-all" : ""}`} role="status">
             <span className="ST-bookedIc" aria-hidden="true"><Ico d={I.check} size={26} /></span>
@@ -223,6 +239,9 @@ export function Portal({ stay }: { stay: StayData }) {
             </div>
           </div>
 
+          {unlocked ? (
+            <button className="ST-btn ST-goArrive" type="button" onClick={() => document.getElementById("arrive-h")?.scrollIntoView({ behavior: "smooth", block: "start" })}>See your check-in details</button>
+          ) : (<>
           <div className="ST-cardHead ST-paperHead">
             <h2 id="confirm-h">Complete paperwork</h2>
             <p className={`ST-due${unlocked ? " is-ok" : ""}`}>{unlocked ? "All done" : <>Due by <b>{stay.deadlineText}</b></>}</p>
@@ -299,7 +318,9 @@ export function Portal({ stay }: { stay: StayData }) {
               </div>
             )}
           </div>
+          </>)}
         </section>
+        )}
 
         {/* Step 3: arrival details, locked until both are done */}
         <section className={`ST-card${unlocked ? "" : " is-locked"}`} aria-labelledby="arrive-h">
@@ -359,7 +380,17 @@ export function Portal({ stay }: { stay: StayData }) {
           </form>
         </section>
 
-        {SANDBOX && <p className="ST-reset"><button className="ST-link" type="button" onClick={() => { save(fresh()); setAgree(false); setName(stay.holder); setEsign("idle"); setIdState("idle"); setIdMsg(""); }}>Reset sandbox</button></p>}
+        {/* Test site only: walk through the whole flow in seconds (Oscar, Nov 17). */}
+        {SANDBOX && (
+          <section className="ST-testCtl" aria-label="Test controls">
+            <p><b>Test controls</b> · test site only, never shown to guests</p>
+            <div className="ST-row">
+              <button className="ST-link" type="button" disabled={signed} onClick={() => save({ ...sRef.current, signedAt: nowText(), signedOn: new Date().toISOString(), signedName: stay.holder })}>Mark agreement signed</button>
+              <button className="ST-link" type="button" disabled={verified} onClick={() => save({ ...sRef.current, verifiedAt: nowText() })}>Mark ID verified</button>
+              <button className="ST-link" type="button" onClick={() => { save(fresh()); setAgree(false); setName(stay.holder); setEsign("idle"); setIdState("idle"); setIdMsg(""); setAllSetNow(false); scrollTo({ top: 0 }); }}>Reset sandbox</button>
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );

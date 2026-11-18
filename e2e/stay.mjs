@@ -11,6 +11,7 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok(/noindex/.test(await page.locator('meta[name="robots"]').getAttribute("content") ?? ""), `${tag}: portal is noindex`);
   ok(/Sandbox mode/.test(await page.locator(".ST-test").innerText()), `${tag}: labeled as sandbox`);
   ok(/Due by/.test(await page.locator(".ST-due").innerText()), `${tag}: shows the sign-and-verify deadline`);
+  ok(/^Hi Test! We're excited to host you\.$/.test(await page.locator("h1").innerText()), `${tag}: personal greeting with the guest's first name`);
   ok((await page.locator(".ST-steps .is-now").innerText()).includes("Complete paperwork"), `${tag}: current step is Complete paperwork`);
   ok(/You’re booked!|You're booked!/.test(await page.locator(".ST-booked").innerText()) && /completing ID verification/.test(await page.locator(".ST-booked").innerText()), `${tag}: "You're booked!" box`);
   const body = () => page.evaluate(() => document.body.innerText);
@@ -54,14 +55,15 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok(await page.evaluate(() => window.__idSecret === "vs_TEST_secret") && (await page.locator("text=Try again").count()) === 1, `${tag}: closing Stripe's window early offers Try again`);
   await page.evaluate(() => { window.__idResult = {}; }); idDone = true;
   await page.click("text=Try again");
-  await page.waitForSelector(".ST-task.is-done >> nth=1", { timeout: 8000 }).catch(() => {});
-  ok((await page.locator(".ST-task.is-done").count()) === 2, `${tag}: verified by Stripe -> ID step done`);
+  await page.waitForSelector("text=You're all set!", { timeout: 8000 }).catch(() => {});
+  ok(/You're all set!/.test(await page.locator(".ST-booked").innerText()) && (await page.locator(".ST-pRow").count()) === 0, `${tag}: verified by Stripe -> "You're all set!", paperwork rows gone`);
   await page.unroute("**/api/stay/demo/identity"); await page.unroute("**/api/stay/demo/identity?vs=*");
-  ok(/Test address/.test(await body()) && /Arrives on check-in morning/.test(await body()) && (await page.locator(".ST-due").innerText()) === "All done", `${tag}: both done -> arrival details unlock; door code says check-in morning`);
+  ok(/Test address/.test(await body()) && /Arrives on check-in morning/.test(await body()) && (await page.locator(".ST-goArrive").count()) === 1, `${tag}: both done -> arrival details unlock; door code says check-in morning`);
   ok((await page.locator(".ST-steps .is-now").innerText()).includes("Receive check-in details"), `${tag}: step moves to Receive check-in details`);
   // persists on reload
   await page.reload(); await page.waitForTimeout(300);
   ok(/Test address/.test(await body()), `${tag}: progress kept on reload (this browser)`);
+  ok((await page.locator(".ST-paper").count()) === 0 && /Paperwork complete/.test(await page.locator(".ST-paperDone").innerText()), `${tag}: later visits: paperwork section gone, "Paperwork complete" line in the stay card`);
   // messages
   await page.fill("#st-msg", "What time is check-in?"); await page.click('.ST-send button');
   ok(/What time is check-in\?/.test(await page.locator(".ST-thread").innerText()) && /sandbox, not sent/.test(await page.locator(".ST-thread").innerText()), `${tag}: message shows in the thread, marked test`);
@@ -78,6 +80,9 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   // reset
   await page.click("text=Reset sandbox");
   ok(!/Test address/.test(await body()), `${tag}: reset locks it again`);
+  await page.click("text=Mark agreement signed"); await page.click("text=Mark ID verified"); await page.waitForTimeout(300);
+  ok(/You're all set!/.test(await body()) && /Test address/.test(await body()), `${tag}: test controls walk the whole flow`);
+  await page.click("text=Reset sandbox");
   ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${tag}: no sideways scroll`);
   if (process.env.AXE_PATH) {
     await page.addScriptTag({ path: process.env.AXE_PATH });
