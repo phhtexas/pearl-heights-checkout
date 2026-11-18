@@ -136,3 +136,12 @@
   .ST-pIc { margin-right: 14px; }
   .ST .ST-pBtn { grid-column: 1 / -1; margin: 0; width: 100%; }
 }
+
+/* House guide search (Oscar, Nov 17) */
+.ST-gSearch { position: relative; display: flex; align-items: center; gap: 8px; margin: 14px 0 6px; border: 1px solid #cfc6b9; border-radius: 12px; padding: 0 12px; background: #fff; color: var(--muted); }
+.ST-gSearch:focus-within { border-color: var(--acc); box-shadow: 0 0 0 3px var(--sage); }
+.ST-gSearch input { flex: 1; border: 0; outline: 0; font: inherit; font-size: 16px; padding: 12px 0; background: transparent; color: var(--ink); min-width: 0; }
+.ST-gSearch input::-webkit-search-cancel-button { display: none; }
+.ST-gClear { border: 0; background: none; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; padding: 4px; }
+.ST-gCount { margin: 6px 0 4px; font-size: 14px; }
+.ST-know mark { background: var(--sage); color: var(--ink); border-radius: 3px; padding: 0 1px; }

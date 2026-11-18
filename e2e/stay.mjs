@@ -68,6 +68,13 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok((await page.locator(".ST-know").count()) >= 2 && /Quiet hours/.test(await page.locator(".ST-know").allTextContents().then((t) => t.join(" "))), `${tag}: house rules from the listing`);
   const guide = await page.locator(".ST-know summary").allInnerTexts();
   ok(/House guide/.test(await page.locator("#know-h").innerText()) && guide.includes("Washer and dryer") && guide.includes("Parking") && guide.at(-1) === "Safety and property", `${tag}: house guide with the 752 Guest Book topics`);
+  await page.fill(".ST-gSearch input", "washer");
+  const hits = await page.locator(".ST-know summary").allInnerTexts();
+  ok(hits.includes("Washer and dryer") && !hits.includes("Parking") && (await page.locator(".ST-know mark").count()) > 0, `${tag}: guide search finds the washer and highlights it`);
+  await page.fill(".ST-gSearch input", "zzzz");
+  ok(/No results/.test(await page.locator(".ST-gCount").innerText()) && (await page.locator(".ST-know").count()) === 0, `${tag}: guide search shows no results`);
+  await page.click(".ST-gClear");
+  ok((await page.locator(".ST-know").count()) >= 8, `${tag}: clearing the search shows every topic again`);
   // reset
   await page.click("text=Reset sandbox");
   ok(!/Test address/.test(await body()), `${tag}: reset locks it again`);

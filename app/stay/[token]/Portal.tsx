@@ -99,6 +99,18 @@ export function Portal({ stay }: { stay: StayData }) {
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idState, s.idSession]);
+  // House guide search: every word must appear in the topic title or the line (case-insensitive).
+  const [gq, setGq] = useState("");
+  const gWords = gq.toLowerCase().split(/\s+/).filter(Boolean);
+  const gMatch = (t: string) => gWords.every((w) => t.toLowerCase().includes(w));
+  const guideHits = gWords.length ? stay.thingsToKnow
+    .map((g) => gMatch(g.title) ? g : { ...g, items: g.items.filter((x) => gMatch(x) || gWords.every((w) => (g.title + " " + x).toLowerCase().includes(w))) })
+    .filter((g) => g.items.length) : [];
+  const hl = (t: string) => {
+    if (!gWords.length) return t;
+    const re = new RegExp(`(${gWords.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "ig");
+    return t.split(re).map((part, i) => (i % 2 ? <mark key={i}>{part}</mark> : part));
+  };
   const signed = !!s.signedAt, verified = !!s.verifiedAt, unlocked = signed && verified;
   const step = unlocked ? 3 : 2;
   const ci = fmtDay(stay.checkIn, { weekday: "short", month: "short", day: "numeric" });
@@ -317,10 +329,17 @@ export function Portal({ stay }: { stay: StayData }) {
         <section className="ST-card" aria-labelledby="know-h">
           <h2 id="know-h">House guide</h2>
           <p className="ST-dim">Everything you need during your stay: house rules, the washer, appliances, parking, trash and our favorite places nearby.</p>
-          {stay.thingsToKnow.map((g) => (
-            <details key={g.title} className="ST-know" open={g.title === "Check-in and check-out"}>
-              <summary>{g.title}</summary>
-              <ul>{g.items.map((x) => <li key={x}>{x}</li>)}</ul>
+          {/* Search (Oscar, Nov 17): filters topics and lines as you type; matching topics open, matches highlighted. */}
+          <div className="ST-gSearch" role="search">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM20 20l-4.8-4.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+            <input type="search" value={gq} onChange={(e) => setGq(e.target.value)} placeholder="Search the house guide (e.g. washer, parking, trash)" aria-label="Search the house guide" enterKeyHint="search" />
+            {gq && <button type="button" className="ST-gClear" onClick={() => setGq("")} aria-label="Clear search">×</button>}
+          </div>
+          {gq.trim() && <p className="ST-dim ST-gCount" aria-live="polite">{guideHits.length ? `${guideHits.reduce((n, g) => n + g.items.length, 0)} result${guideHits.reduce((n, g) => n + g.items.length, 0) === 1 ? "" : "s"}` : <>No results for “{gq.trim()}”. <a href="#messages">Ask us</a> and we&apos;ll help.</>}</p>}
+          {(gq.trim() ? guideHits : stay.thingsToKnow).map((g) => (
+            <details key={g.title + (gq.trim() ? ":q" : "")} className="ST-know" open={gq.trim() ? true : g.title === "Check-in and check-out"}>
+              <summary><span>{hl(g.title)}</span></summary>
+              <ul>{g.items.map((x) => <li key={x}>{hl(x)}</li>)}</ul>
             </details>
           ))}
           <p className="ST-dim ST-small">Cancellation terms: <a href="/policies/cancellation">cancellation policy</a> · <a href="/rental-agreement">rental agreement</a></p>
