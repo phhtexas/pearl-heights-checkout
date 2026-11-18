@@ -75,7 +75,7 @@ export function Portal({ stay }: { stay: StayData }) {
     save({ ...sRef.current, idSession: j.sessionId });
     try {
       const cfg = await fetch("/api/config").then((x) => x.json());
-      const stripe = cfg?.publishableKey ? await loadStripe(cfg.publishableKey) : null;
+      const stripe = cfg?.publishableKey ? await loadStripe(cfg.publishableKey, { developerTools: { assistant: { enabled: false } } }) : null;
       if (!stripe) throw new Error("no stripe");
       const res = await stripe.verifyIdentity(j.clientSecret);
       if (res.error && res.error.code === "session_cancelled") { setIdState("retry"); setIdMsg("The ID check was closed before it finished. Tap Verify my ID to continue."); return; }

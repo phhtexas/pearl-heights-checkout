@@ -4,7 +4,8 @@ import { Elements, ExpressCheckoutElement, PaymentElement, useElements, useStrip
 import { loadStripe, Stripe } from "@stripe/stripe-js";
 
 let stripePromise: Promise<Stripe | null> | null = null;
-const getStripe = (pk: string) => (stripePromise ??= loadStripe(pk));
+// developerTools off: hides Stripe's test-mode "stripe >" helper tab in the corner (Oscar, Nov 17).
+const getStripe = (pk: string) => (stripePromise ??= loadStripe(pk, { developerTools: { assistant: { enabled: false } } }));
 
 export type CreatePm = (billing: { name: string; email: string; phone: string }) => Promise<{ id?: string; error?: string }>;
 type Billing = { name: string; email: string; phone: string };
