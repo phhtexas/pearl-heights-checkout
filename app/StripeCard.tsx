@@ -60,7 +60,7 @@ function Inner({ onReady, canPay, billing, onExpress, onLockedTap }: { onReady: 
             options={{
               buttonType: { applePay: "book", googlePay: "book" }, buttonHeight: 50,
               paymentMethods: { applePay: "auto", googlePay: "auto", link: "auto", paypal: "never", amazonPay: "never", klarna: "never" },
-              layout: { maxColumns: 1, maxRows: 3, overflow: "never" },
+              layout: { maxColumns: 1, maxRows: 3, overflow: "auto" }, // overflow "never" stopped the element from ever loading (tested Nov 17)
             }}
             onReady={({ availablePaymentMethods }) => { setWallets(hasAny(availablePaymentMethods)); setDiag(availablePaymentMethods ? Object.entries(availablePaymentMethods).filter(([, v]) => v).map(([k]) => k).join(", ") || "none" : "none"); }}
             onAvailablePaymentMethodsChange={({ paymentMethods }) => { setWallets(!!paymentMethods && Object.values(paymentMethods).some((m) => !!m?.available)); setDiag(paymentMethods ? Object.entries(paymentMethods).filter(([, m]) => m?.available).map(([k]) => k).join(", ") || "none" : "none"); }}
