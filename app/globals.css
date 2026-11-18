@@ -303,3 +303,5 @@ input.f.bad { border-color: var(--bad); }
 .ck .payBreak { margin: 0 0 14px; }
 .ck .payBreak h2 { margin: 0 0 6px; }
 .ck .sum .psFacts { margin: 12px 0; }
+
+.ck .walletDiag { margin: 6px 0 10px; font-size: 12px; color: #8a4b12; }
