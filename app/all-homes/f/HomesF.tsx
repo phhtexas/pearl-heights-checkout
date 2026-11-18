@@ -42,7 +42,12 @@ function Photos({ h, href, first }: { h: HomeCard; href: string; first: boolean 
       <button type="button" className="F-arrow F-arrowNext" aria-label={`Next photo of ${h.title}`} onClick={() => go(at + 1)}>›</button>
       <div className="F-dots" aria-hidden="true">{photos.map((p, j) => <span key={p.src} className={j === at ? "on" : ""} />)}</div>
       <span className="F-count" aria-hidden="true">{at + 1} / {photos.length}</span>
-      {PILLS[h.key] && <ul className="F-pills" aria-label="Highlights">{PILLS[h.key]!.map((t) => <li key={t}>{t}</li>)}</ul>}
+      {PILLS[h.key] && (
+        <ul className="F-pills" aria-label="Highlights">
+          {PRESS[h.key] && <li className="F-press"><a href={PRESS[h.key]!.href} target="_blank" rel="noopener">{PRESS[h.key]!.label}<span className="sr-only"> (opens in a new window)</span></a></li>}
+          {PILLS[h.key]!.map((t) => <li key={t}>{t}</li>)}
+        </ul>
+      )}
     </div>
   );
 }
@@ -60,6 +65,14 @@ const PILLS: Record<string, string[]> = {
   edgewood: ["Quiet Alamo Heights street", "Kids' playroom"],
   claywell: ["Tree-lined Alamo Heights", "Large family home"],
   indianola: ["Walk to downtown", "King bed in every room"],
+};
+
+/**
+ * Press mention (Oscar, Nov 17): Edgewood is in Condé Nast Traveler's "14 San Antonio Airbnbs that Capture the Alamo
+ * City's Spirit" (link from Oscar). Text pill only, no logo (their trademark). Opens the article in a new window.
+ */
+const PRESS: Record<string, { label: string; href: string }> = {
+  edgewood: { label: "Featured in Condé Nast Traveler", href: "https://www.cntraveler.com/gallery/best-airbnbs-in-san-antonio" },
 };
 
 export function HomesF({ homes, hero, points, reasons }: {

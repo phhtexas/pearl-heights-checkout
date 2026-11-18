@@ -557,3 +557,12 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
    overflow-x: hidden/auto silently turns overflow-y into "auto", so lock it explicitly. */
 .F-page .F-photos { overflow-y: hidden; }
 @media (hover: hover) and (pointer: fine) { .F-page .F-photos { overflow: hidden; } }
+
+/* Press pill (Oscar, Nov 17): a link, so it takes clicks while the other pills don't */
+.F-page .F-pills li.F-press { padding: 0; background: #127A5E; pointer-events: auto; }
+.F-page .F-pills li.F-press a { display: block; padding: 6px 12px; color: #fff; text-decoration: none; border-radius: 999px; }
+.F-page .F-pills li.F-press a:hover { text-decoration: underline; }
+.F-page .F-pills li.F-press a:focus-visible { outline: 3px solid #fff; outline-offset: 1px; }
+.F-page .F-pills li.F-press + li { background: rgba(29,26,23,.62); color: #fff; }
+.F-page .F-pills li.F-press ~ li:last-child { background: rgba(255,255,255,.88); color: #1d1a17; }
+@media (max-width: 420px) { .F-page .F-pills li.F-press a { padding: 5px 10px; } }
