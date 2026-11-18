@@ -56,7 +56,22 @@ export function track(event: FunnelEvent, params: Params, once: string = event +
   (w.dataLayer ??= []).push(payload);
   (w.__phEvents ??= []).push(payload); // read by the e2e tests
   if (process.env.NODE_ENV !== "production" || location.hostname.includes("-git-")) console.info("[track]", event, params);
-  if (consent() !== "granted" || !trackingConfigured()) return;
+  if (consent() !== "granted" || !trackingConfigured()) {
+    // Held for this page view only: sent if the visitor taps Accept on this page (e.g. the home they're viewing).
+    if (consent() === "unset" && pending.length < 30) pending.push([event, params, once, eventId]);
+    return;
+  }
+  send(event, params, once, eventId);
+}
+
+const pending: [FunnelEvent, Params, string, string | undefined][] = [];
+if (typeof window !== "undefined") window.addEventListener("ph-consent", (e) => {
+  if ((e as CustomEvent).detail === "granted") for (const p of pending.splice(0)) send(...p);
+  else pending.length = 0;
+});
+
+function send(event: FunnelEvent, params: Params, once: string, eventId?: string) {
+  const w = window as unknown as { gtag?: (...a: unknown[]) => void; fbq?: (...a: unknown[]) => void };
   loadTrackers();
   const ids = analyticsIds();
   const { ga, meta } = shape(event, params);
