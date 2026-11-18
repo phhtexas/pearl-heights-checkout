@@ -479,16 +479,23 @@ export default function Checkout() {
           </>)}
 
           {step === "done" && result?.ok && (<>
+            {/* Oscar, Nov 18: the home card from the payment page (photo + check-in/out) on top, then the confirmation,
+                one button (the stay page), the deadline under it, and an Instagram text link (no button). */}
+            <section className="doneCard">
+              {photoEl(200)}
+              <div className="doneBody">
+                <div className="homeName">{homeTitle}</div>
+                <div className="muted">{areaLine} · Booking {result.bookingRef}</div>
+                {stayFacts}
+              </div>
+            </section>
             <div className="okmark" aria-hidden="true">✓</div>
             <h1>You're booked, {guest.firstName}!</h1>
-            <div>{homeTitle} · {fmtRange(ci!, co!)} · {guests} {guests === 1 ? "guest" : "guests"} · Booking {result.bookingRef}</div>
-            <div className="box warm">To keep your reservation, please finish two quick steps by <b>{result.verification.deadlineText}</b>: sign the rental agreement and verify your ID.</div>
-            {/* Oscar, Nov 17 (real bookings): the guest's private stay page, where both steps happen. */}
             {stayUrl && <a className="btn stayBtn" href={stayUrl}>Sign the agreement and verify your ID</a>}
-            {stayUrl && <div className="muted small">This is your private stay page. Bookmark it: your check-in details appear there once both steps are done.</div>}
+            <div className="box warm">To keep your reservation, please finish two quick steps by <b>{result.verification.deadlineText}</b>: sign the rental agreement and verify your ID.</div>
             <div className="muted">Paid today: {money(quote!.plan.dueNow)}{quote!.plan.split ? ` · ${money(quote!.plan.scheduled!.amount)} on ${balance}` : ""}</div>
-            <div className="muted">Test mode: no email is sent. Questions: <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
-            <button className="btn ghost" onClick={restart}>Start another booking</button>
+            <p className="followIg">Follow along on Instagram for local tips and new homes: <a href="https://www.instagram.com/pearlheightshomes" target="_blank" rel="noopener noreferrer" data-cta="confirmation_instagram">@pearlheightshomes</a></p>
+            <div className="muted">Questions? <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
           </>)}
 
           {err && <div className="err" role="alert">{err}</div>}

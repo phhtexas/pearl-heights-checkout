@@ -327,3 +327,10 @@ input.f.bad { border-color: var(--bad); }
 .PH-consent button { min-height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid #1f2933; background: #fff; color: #1f2933; font: 600 14px Inter, system-ui, sans-serif; cursor: pointer; }
 .PH-consent button + button { background: #1f2933; color: #fff; }
 .PH-cookieLink { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+/* Confirmation (Oscar, Nov 18): home card on top, then the message. */
+.ck .doneCard { border: 1px solid #e6dfd5; border-radius: 16px; overflow: hidden; background: #fff; }
+.ck .doneCard .photoImg, .ck .doneCard .photo { width: 100%; object-fit: cover; display: block; }
+.ck .doneCard .doneBody { padding: 14px 16px 16px; }
+.ck .doneCard .psFacts { margin-top: 12px; }
+.ck .followIg { margin: 4px 0 0; color: #3a3f44; }
+.ck .followIg a { color: inherit; font-weight: 600; }
