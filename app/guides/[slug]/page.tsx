@@ -62,7 +62,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           </div>
         )}
 
-        <h2>Our homes by the Pearl</h2>
+        <h2>{g.homesHeading}</h2>
         <div className="G-homes">
           {g.homes.map((x) => {
             const h = HOMES[x.key]!;
@@ -94,10 +94,12 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           <section id="eat">
             <h2>{g.eat.heading}</h2>
             <p>{g.eat.intro}</p>
-            <div className="G-eatMap">
-              <TileMapV2 lat={29.44228} lon={-98.47995} zoom={16} interactive span={3} place="Pearl" />
-              <a className="G-btn" href="https://www.google.com/maps/search/?api=1&query=Pearl%2C%20San%20Antonio%2C%20TX" target="_blank" rel="noopener noreferrer" data-cta="guide_map_pearl">Directions to the Pearl</a>
-            </div>
+            {g.eat.map && (
+              <div className="G-eatMap">
+                <TileMapV2 lat={g.eat.map.lat} lon={g.eat.map.lon} zoom={16} interactive span={3} place={g.eat.map.label} />
+                <a className="G-btn" href={g.eat.map.directions} target="_blank" rel="noopener noreferrer" data-cta="guide_map">Directions to the {g.eat.map.label}</a>
+              </div>
+            )}
             <nav className="G-chips" aria-label="Meal types">
               {g.eat.groups.map((grp, i) => <a key={grp.name} href={`#eat-${i}`}>{grp.name}</a>)}
             </nav>
@@ -107,10 +109,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 <ul className="G-places">
                   {grp.places.map((pl) => (
                     <li key={pl.name} className="G-place">
-                      <strong>{pl.name}</strong>
+                      <strong>{pl.name}{pl.pick && <em className="G-pick">Our pick</em>}</strong>
                       <span>{pl.what}</span>
                       <div className="G-placeLinks">
-                        <a href={pl.web ?? pl.pearl} target="_blank" rel="noopener noreferrer" data-cta="guide_eat_web">{pl.web ? "Website" : "Info"}</a>
+                        {(pl.web ?? pl.pearl) && <a href={pl.web ?? pl.pearl} target="_blank" rel="noopener noreferrer" data-cta="guide_eat_web">{pl.web ? "Website" : "Info"}</a>}
                         <a href={pl.map} target="_blank" rel="noopener noreferrer" data-cta="guide_eat_directions">Directions</a>
                       </div>
                     </li>
@@ -131,7 +133,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                   {t.photo && <img src={t.photo.src} alt={t.photo.alt} loading="lazy" />}
                   <div>
                     <h3>{t.name}</h3>
-                    <p>{t.what}</p>
+                    {t.what && <p>{t.what}</p>}
                     <p className="G-dist">{t.distance}</p>
                     {t.photo?.credit && <p className="G-cardCredit">Photo: <a href={t.photo.credit.page} target="_blank" rel="noopener noreferrer">{t.photo.credit.author}</a>, <a href={t.photo.credit.licenseUrl} target="_blank" rel="noopener noreferrer">{t.photo.credit.license}</a></p>}
                   </div>

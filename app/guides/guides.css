@@ -74,3 +74,4 @@
 .G-place > span { color: var(--muted, #55595d); font-size: 14px; }
 .G-placeLinks { display: flex; gap: 8px; margin-top: 8px; }
 .G-placeLinks a { font-size: 14px; font-weight: 600; color: var(--green, #1f6b3a); border: 1px solid var(--green-soft, #e6f2ea); background: var(--green-soft, #e6f2ea); border-radius: 8px; padding: 6px 10px; text-decoration: none; }
+.G-pick { display: inline-block; margin-left: 8px; font-style: normal; font-size: 12px; font-weight: 600; color: var(--sand-ink, #3a2a10); background: var(--sand, #f8f1e4); border-radius: 999px; padding: 2px 8px; vertical-align: 2px; }
