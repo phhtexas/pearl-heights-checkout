@@ -157,3 +157,14 @@
 .ST-testCtl .ST-link { color: #8a4b12; padding: 6px 8px 6px 0; margin-top: 0; font-size: 14px; }
 .ST-testCtl .ST-link:disabled { opacity: .45; cursor: default; }
 @media (max-width: 560px) { .ST .ST-hello { font-size: 23px; } }
+
+/* House guide icons + green toggles; directions link (Oscar, Nov 17) */
+.ST-know summary { align-items: center; gap: 12px; justify-content: flex-start; }
+.ST-know summary .ST-kT { flex: 1; }
+.ST-kIc { width: 34px; height: 34px; border-radius: 50%; background: var(--sage); color: var(--acc); display: grid; place-items: center; flex: none; }
+.ST-know summary::after { color: var(--acc); font-weight: 600; }
+.ST-know ul { padding-left: 66px; }
+.ST-dir { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-weight: 600; color: var(--acc); text-decoration: none; padding: 6px 12px; border: 1px solid var(--acc); border-radius: 999px; font-size: 14px; }
+.ST-dir:hover { background: var(--sage); }
+.ST-dir + .ST-testLine { display: block; margin-top: 4px; }
+@media (max-width: 560px) { .ST-know ul { padding-left: 20px; } }

@@ -59,6 +59,7 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok(/You're all set!/.test(await page.locator(".ST-booked").innerText()) && (await page.locator(".ST-pRow").count()) === 0, `${tag}: verified by Stripe -> "You're all set!", paperwork rows gone`);
   await page.unroute("**/api/stay/demo/identity"); await page.unroute("**/api/stay/demo/identity?vs=*");
   ok(/Test address/.test(await body()) && /Arrives on check-in morning/.test(await body()) && (await page.locator(".ST-goArrive").count()) === 1, `${tag}: both done -> arrival details unlock; door code says check-in morning`);
+  ok(/^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=/.test(await page.locator(".ST-dir").getAttribute("href") ?? "") && (await page.locator(".ST-dir").getAttribute("target")) === "_blank", `${tag}: Get directions opens Google Maps directions`);
   ok((await page.locator(".ST-steps .is-now").innerText()).includes("Receive check-in details"), `${tag}: step moves to Receive check-in details`);
   // persists on reload
   await page.reload(); await page.waitForTimeout(300);

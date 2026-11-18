@@ -35,6 +35,24 @@ const I = {
   car: "M5 16.5V12l2-5h10l2 5v4.5M5 16.5h14M7.5 16.5v2M16.5 16.5v2M5 12h14",
   chat: "M20 12a7.5 7.5 0 0 1-11 6.6L4 20l1.4-4.6A7.5 7.5 0 1 1 20 12z",
   phone: "M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z",
+  clock: "M12 20.5a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17zM12 7.5V12l3 2",
+  rules: "M8 6.5h11M8 12h11M8 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01",
+  washer: "M5 3.5h14v17H5zM5 8h14M8 5.8h.01M11 5.8h.01M12 18a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+  plug: "M9 3.5v4M15 3.5v4M6.5 7.5h11v3a5.5 5.5 0 0 1-11 0zM12 16v4.5",
+  home: "M4 11 12 4l8 7M6 9.5V20h12V9.5M10 20v-5h4v5",
+  trash: "M4.5 6.5h15M9.5 6.5V4h5v2.5M6.5 6.5l1 14h9l1-14M10 10.5v6M14 10.5v6",
+  aid: "M4 7.5h16v12H4zM9 7.5V5h6v2.5M12 10.5v6M9 13.5h6",
+  route: "M6 19.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 8.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM8 17.5h7.5a3 3 0 0 0 0-6h-7a3 3 0 0 1 0-6H16",
+  heart: "M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z",
+  shield: "M12 3.5 19 6v5.5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6zM9 12l2 2 4-4",
+  nav: "M12 3 20 20l-8-3.5L4 20z",
+};
+
+// House guide topic icons (Oscar, Nov 17).
+const GUIDE_IC: Record<string, string> = {
+  "Check-in and check-out": I.clock, "House rules": I.rules, "Washer and dryer": I.washer, "Appliances": I.plug,
+  "Around the house": I.home, "Parking": I.car, "Trash": I.trash, "Emergencies and nearby help": I.aid,
+  "Getting around": I.route, "Our favorite places": I.heart, "Safety and property": I.shield,
 };
 
 export function Portal({ stay }: { stay: StayData }) {
@@ -330,7 +348,10 @@ export function Portal({ stay }: { stay: StayData }) {
           </div>
           {unlocked ? (
             <ul className="ST-info">
-              <li><span className="ST-infoIc"><Ico d={I.pin} /></span><div><h3>Address</h3><p>Test address (the real one appears here)</p></div></li>
+              <li><span className="ST-infoIc"><Ico d={I.pin} /></span><div><h3>Address</h3><p>Test address (the real one appears here)</p>
+                {/* Oscar, Nov 17: Google Maps directions from wherever the guest is. Real stays link to the home's address
+                    (sent from the server only after unlock); the test link goes to the neighborhood. */}
+                <a className="ST-dir" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${stay.home.neighborhood}, San Antonio, TX`)}`} target="_blank" rel="noopener"><Ico d={I.nav} size={16} /> Get directions</a>{SANDBOX && <span className="ST-testLine"> Test link goes to the neighborhood.</span>}</div></li>
               <li><span className="ST-infoIc"><Ico d={I.door} /></span><div><h3>Entry steps</h3><p>Self check-in with a door keypad. Step-by-step entry instructions appear here.</p></div></li>
               <li><span className="ST-infoIc"><Ico d={I.wifi} /></span><div><h3>Wi-Fi</h3><p>Network and password appear here (test)</p></div></li>
               <li><span className="ST-infoIc"><Ico d={I.car} /></span><div><h3>Parking</h3><p>Parking details for this home appear here.</p></div></li>
@@ -353,13 +374,13 @@ export function Portal({ stay }: { stay: StayData }) {
           {/* Search (Oscar, Nov 17): filters topics and lines as you type; matching topics open, matches highlighted. */}
           <div className="ST-gSearch" role="search">
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM20 20l-4.8-4.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
-            <input type="search" value={gq} onChange={(e) => setGq(e.target.value)} placeholder="Search the house guide (e.g. washer, parking, trash)" aria-label="Search the house guide" enterKeyHint="search" />
+            <input type="search" value={gq} onChange={(e) => setGq(e.target.value)} placeholder="Search the house guide" aria-label="Search the house guide" enterKeyHint="search" />
             {gq && <button type="button" className="ST-gClear" onClick={() => setGq("")} aria-label="Clear search">×</button>}
           </div>
           {gq.trim() && <p className="ST-dim ST-gCount" aria-live="polite">{guideHits.length ? `${guideHits.reduce((n, g) => n + g.items.length, 0)} result${guideHits.reduce((n, g) => n + g.items.length, 0) === 1 ? "" : "s"}` : <>No results for “{gq.trim()}”. <a href="#messages">Ask us</a> and we&apos;ll help.</>}</p>}
           {(gq.trim() ? guideHits : stay.thingsToKnow).map((g) => (
             <details key={g.title + (gq.trim() ? ":q" : "")} className="ST-know" open={gq.trim() ? true : g.title === "Check-in and check-out"}>
-              <summary><span>{hl(g.title)}</span></summary>
+              <summary><span className="ST-kIc" aria-hidden="true"><Ico d={GUIDE_IC[g.title] ?? I.doc} size={20} /></span><span className="ST-kT">{hl(g.title)}</span></summary>
               <ul>{g.items.map((x) => <li key={x}>{hl(x)}</li>)}</ul>
             </details>
           ))}
