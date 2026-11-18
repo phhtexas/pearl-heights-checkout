@@ -320,3 +320,9 @@ button.V-room { display: flex; flex-direction: column; justify-content: flex-sta
 .V-social a:hover { text-decoration: none; border-color: #17191b; }
 /* Nov 17: the sticky phone hero was drawing over the footer; keep the footer above it like the sheet */
 .V-footer { position: relative; z-index: 1; }
+
+/* Oscar, Nov 17: listing maps match All Homes F (CARTO Voyager, full color; softened OSM only as a fallback). */
+.TV-map.is-carto .TV-tiles { filter: none; }
+.TV-map.is-osm .TV-tiles { filter: saturate(.55) brightness(1.07) contrast(.9); }
+.TV-map { background: #f2f1ee; }
+.TV-credit a { color: inherit; text-decoration: none; }

@@ -6,6 +6,10 @@ import { useRef, useState } from "react";
  * `interactive` adds drag-to-pan and +/- zoom (full-screen view). Tiles are greyed in CSS for a calmer, Airbnb-like look.
  */
 const TILE = 256;
+// Oscar, Nov 17: same map style as All Homes F: CARTO Voyager when NEXT_PUBLIC_CARTO_KEY is set, else softened OSM.
+const CARTO_KEY = process.env.NEXT_PUBLIC_CARTO_KEY ?? "";
+const tileUrl = (z: number, x: number, y: number) =>
+  CARTO_KEY ? `https://basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}.png?key=${encodeURIComponent(CARTO_KEY)}` : `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
 const project = (lat: number, lon: number, z: number) => {
   const n = 2 ** z, r = (lat * Math.PI) / 180;
   return { x: ((lon + 180) / 360) * n * TILE, y: ((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * n * TILE };
@@ -29,14 +33,14 @@ export function TileMapV2({ lat, lon, zoom: z0, interactive = false, span = 2 }:
   const pin = { left: c.x - cx, top: c.y - cy };
 
   return (
-    <div className={"TV-map" + (interactive ? " TV-live" : "")}
+    <div className={"TV-map" + (interactive ? " TV-live" : "") + (CARTO_KEY ? " is-carto" : " is-osm")}
       onPointerDown={interactive ? (e) => { if ((e.target as HTMLElement).closest("button, a")) return; drag.current = { x: e.clientX, y: e.clientY }; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); } : undefined}
       onPointerMove={interactive ? (e) => { if (!drag.current) return; const d = { x: e.clientX - drag.current.x, y: e.clientY - drag.current.y }; drag.current = { x: e.clientX, y: e.clientY }; setOff((o) => ({ x: o.x + d.x, y: o.y + d.y })); } : undefined}
       onPointerUp={interactive ? () => { drag.current = null; } : undefined}>
       <div className="TV-tiles" aria-hidden="true">
         {tiles.map((t) => (
           // eslint-disable-next-line @next/next/no-img-element
-          <img key={`${z}-${t.x}-${t.y}`} alt="" draggable={false} loading={interactive ? "eager" : "lazy"} decoding="async" src={`https://tile.openstreetmap.org/${z}/${((t.x % n) + n) % n}/${t.y}.png`}
+          <img key={`${z}-${t.x}-${t.y}`} alt="" draggable={false} loading={interactive ? "eager" : "lazy"} decoding="async" src={tileUrl(z, ((t.x % n) + n) % n, t.y)}
             style={{ left: `calc(50% + ${t.left}px)`, top: `calc(50% + ${t.top}px)` }} />
         ))}
       </div>
@@ -48,7 +52,7 @@ export function TileMapV2({ lat, lon, zoom: z0, interactive = false, span = 2 }:
           <button onClick={() => zoomTo(1)} aria-label="Zoom in">+</button>
           <button onClick={() => zoomTo(-1)} aria-label="Zoom out">−</button>
         </div>)}
-      <a className="TV-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>
+      <span className="TV-credit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>{CARTO_KEY && <> · <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">© CARTO</a></>}</span>
     </div>
   );
 }
