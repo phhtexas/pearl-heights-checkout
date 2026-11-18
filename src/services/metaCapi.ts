@@ -54,6 +54,8 @@ export async function sendPurchase(e: PurchaseEvent, env: NodeJS.ProcessEnv = pr
   try {
     const r = await fetcher(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(capiBody(e, cfg.testCode)), signal: AbortSignal.timeout(4000) });
     if (!r.ok) { console.error("[capi] purchase failed", r.status, (await r.text()).slice(0, 200)); return "failed"; }
+    const j = (await r.json().catch(() => ({}))) as { events_received?: number };
+    console.info("[capi] purchase sent", e.bookingRef, cfg.testCode ? "(test events)" : "(live)", "received:", j.events_received ?? "?");
     return "sent";
   } catch (err) { console.error("[capi] purchase error", (err as Error).message.slice(0, 120)); return "failed"; }
 }

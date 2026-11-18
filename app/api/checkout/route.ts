@@ -70,7 +70,7 @@ async function afterBooking(req: Request, b: any, input: { property: string; che
     ? Object.fromEntries(Object.entries(a.attribution as Record<string, unknown>).filter(([k]) => /^(utm_(source|medium|campaign|content|term)|fbclid|gclid|landing|referrer|at)$/.test(k)).map(([k, v]) => [k, str(v)]))
     : null;
   const db = getDb();
-  let sent: string = "skipped";
+  let sent: string = a.consent === true ? "skipped" : "no-consent";
   try {
     if (a.consent === true) {
       sent = await sendPurchase({
@@ -82,5 +82,6 @@ async function afterBooking(req: Request, b: any, input: { property: string; che
     }
     if (db) await db.query(`UPDATE bookings SET attribution = $2::jsonb, ad_events_sent_at = CASE WHEN $3 THEN now() ELSE ad_events_sent_at END WHERE booking_ref = $1`,
       [bookingRef, attrib ? JSON.stringify(attrib) : null, sent === "sent"]);
+    console.info("[capi] booking", bookingRef, sent);
   } catch (e) { console.error("afterBooking", redact(String((e as Error).message))); }
 }
