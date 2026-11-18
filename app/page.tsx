@@ -121,6 +121,17 @@ export default function Checkout() {
   const byDate = useMemo(() => Object.fromEntries(days.map((d) => [d.date, d])), [days]);
 
   useEffect(() => { if (ready && !ci && !co && step === "review" && sheet === null) openDates(); }, [ready, ci, co]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Phones (Oscar, Nov 17): while the keyboard is up, hide the fixed bottom bar so it doesn't cover the next field.
+  // Typing fields only (text, email, tel), not checkboxes or buttons. Stripe's card iframe is left out: its focus
+  // events don't reliably reach this page, so the bar could get stuck hidden.
+  const [typing, setTyping] = useState(false);
+  useEffect(() => {
+    const isField = (el: EventTarget | null) => el instanceof HTMLElement && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && /^(text|email|tel|number|search)$/.test((el as HTMLInputElement).type)));
+    const on = (e: FocusEvent) => { if (isField(e.target)) setTyping(true); };
+    const off = () => setTimeout(() => setTyping(isField(document.activeElement)), 50);
+    document.addEventListener("focusin", on); document.addEventListener("focusout", off);
+    return () => { document.removeEventListener("focusin", on); document.removeEventListener("focusout", off); };
+  }, []);
 
   const getQuote = useCallback(async (payPlan: "full" | "split" = plan) => {
     if (!ci || !co) return;
@@ -307,7 +318,7 @@ export default function Checkout() {
   );
 
   return (
-    <div className="ck">
+    <div className={"ck" + (typing ? " isTyping" : "")}>
       <div className="testbar">
         <span>Test checkout · {stripeMode ? "Stripe test payments" : "fake payments"} · no real charges</span>
         <label>Home <select value={home} onChange={(e) => { setHome(e.target.value); setCi(null); setCo(null); setQuote(null); setStep("review"); }}>
@@ -384,7 +395,8 @@ export default function Checkout() {
             {Object.keys(fieldErr).length > 0 && <div id="errsum" className="alert" tabIndex={-1} role="alert">Please fix {Object.keys(fieldErr).length === 1 ? "this" : "these"}: {Object.values(fieldErr).join(" ")}</div>}
             {([["firstName", "First name", "given-name", "text"], ["lastName", "Last name", "family-name", "text"], ["email", "Email", "email", "email"], ["phone", "Mobile phone", "tel", "tel"]] as const).map(([k, label, ac, type]) => (
               <label key={k} className="fld"><span className="lbl">{label}</span>
-                <input className={"f" + (fieldErr[k] ? " bad" : "")} type={type} autoComplete={ac} value={guest[k]} aria-invalid={!!fieldErr[k]} aria-describedby={fieldErr[k] ? k + "-err" : undefined}
+                <input className={"f" + (fieldErr[k] ? " bad" : "")} type={type} autoComplete={ac} value={guest[k]} enterKeyHint={k === "phone" ? "done" : "next"}
+                  onKeyDown={(e) => { if (e.key !== "Enter") return; e.preventDefault(); const all = [...document.querySelectorAll<HTMLInputElement>("main .fld input.f")]; const nx = all[all.indexOf(e.currentTarget) + 1]; if (nx) nx.focus(); else e.currentTarget.blur(); }} aria-invalid={!!fieldErr[k]} aria-describedby={fieldErr[k] ? k + "-err" : undefined}
                   onChange={(e) => { setGuest({ ...guest, [k]: e.target.value }); if (fieldErr[k]) setFieldErr({ ...fieldErr, [k]: undefined }); }} />
                 {fieldErr[k] && <span id={k + "-err"} className="err">{fieldErr[k]}</span>}</label>))}
             <div className="muted">We use your phone for your stay details. Your private stay link is emailed after booking.</div>

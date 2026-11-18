@@ -26,6 +26,7 @@ await page.fill('input[autocomplete="given-name"]', "Ana");
 await page.fill('input[autocomplete="family-name"]', "Test");
 await page.fill('input[type="email"]', "ana@example.com");
 await page.fill('input[type="tel"]', "2105550100");
+await page.evaluate(() => document.activeElement?.blur()); // keyboard closed (the bottom bar hides while typing)
 await page.click("footer .btn");
 await page.check(".chk input");
 ok(await page.isChecked(".chk input"), "authorization ticked on the pay step");
