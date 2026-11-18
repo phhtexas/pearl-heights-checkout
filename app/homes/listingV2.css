@@ -332,3 +332,5 @@ button.V-room { display: flex; flex-direction: column; justify-content: flex-sta
 /* Oscar, Nov 17: bigger icons in the location list (was 18px) */
 .V-facts li { align-items: center; }
 .V-facts li > .L-ico { flex: 0 0 36px; width: 26px; height: 26px; }
+/* Oscar, Nov 17: bigger icons in the booking badges row (was 18px) */
+.V-badges .L-ico { width: 28px; height: 28px; margin-bottom: 6px; }

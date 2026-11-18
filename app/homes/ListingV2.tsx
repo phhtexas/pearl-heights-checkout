@@ -383,10 +383,10 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
         </section>
 
         <ul className="V-badges" aria-label="Booking direct">
-          <li><Icon name="home" size={18} /><b>Book direct</b><span>with the hosts</span></li>
-          <li><Icon name="lock" size={18} /><b>Secure payment</b><span>by Stripe</span></li>
-          <li><Icon name="chat" size={18} /><b>Local hosts</b><span>reply within an hour</span></li>
-          <li><Icon name="shield" size={18} /><b>Damage waiver</b><span>included</span></li>
+          <li><Icon name="home" size={28} /><b>Book direct</b><span>with the hosts</span></li>
+          <li><Icon name="lock" size={28} /><b>Secure payment</b><span>by Stripe</span></li>
+          <li><Icon name="chat" size={28} /><b>Local hosts</b><span>reply within an hour</span></li>
+          <li><Icon name="shield" size={28} /><b>Damage waiver</b><span>included</span></li>
         </ul>
       </main>
 
