@@ -15,7 +15,7 @@ type Billing = { name: string; email: string; phone: string };
  * Oscar, Nov 17 (option 1): one-tap Apple Pay, Google Pay and Link above the card form (Express Checkout Element).
  * Same flow as the card: the wallet gives us a pm_ id, and the server authorizes it with manual capture. Each button
  * only shows when the guest's device/browser supports it and the site's domain is registered in Stripe.
- * The buttons stay locked until the guest agrees to the terms (the checkbox below), like the main pay button.
+ * The buttons stay locked until the guest agrees to the terms (the checkbox above them), like the main pay button.
  */
 export function StripeCard({ publishableKey, amount, saveForLater, onReady, canPay, billing, onExpress, onLockedTap }: {
   publishableKey: string; amount: number; saveForLater: boolean; onReady: (fn: CreatePm | null) => void;
@@ -77,7 +77,7 @@ function Inner({ onReady, canPay, billing, onExpress, onLockedTap }: { onReady: 
           />
         </div>
         {!canPay && wallets && (
-          <button type="button" className="expressLock" onClick={onLockedTap}>Tick “I agree” below to pay with one tap</button>
+          <button type="button" className="expressLock" onClick={onLockedTap}>Tick “I agree” above to pay with one tap</button>
         )}
         {wallets && <div className="orCard" aria-hidden="true"><span>or pay with card</span></div>}
       </div>

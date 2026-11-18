@@ -412,6 +412,11 @@ export default function Checkout() {
               <div className="ln"><span>Due today</span><b>{money(quote.plan.dueNow)}</b></div>
               {quote.plan.split && <div className="ln muted"><span>Charged {balance}</span><span>{money(quote.plan.scheduled!.amount)}</span></div>}
             </div>
+            {/* Oscar, Nov 17: "I agree" sits above the payment options, so Apple Pay / Google Pay / Link are ready to tap right below it. */}
+            <label className="chk"><input id="agree-box" type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+              <span>{quote.plan.split ? `I authorize Pearl Heights Homes to charge ${money(quote.plan.scheduled!.amount)} to this card on ${balance} at 4:00 PM CT, when flexible cancellation ends. ` : ""}
+                {/* Same words as CONSENT_TEXT (src/domain/consent.ts), saved with the booking. Links open in a new tab so the checkout isn't lost. */}
+                <span data-consent>I&apos;m at least 25 and will stay at the home. I agree to the <a href={POLICY_LINKS.bookingTerms} target="_blank" rel="noopener">Direct Booking Terms and Cancellation Policy</a>, the <a href={POLICY_LINKS.rentalAgreement} target="_blank" rel="noopener">Rental Agreement and House Rules</a> (I&apos;ll sign it after paying) and the <a href={POLICY_LINKS.websiteTerms} target="_blank" rel="noopener">Website Terms</a>, and I&apos;ve read the <a href={POLICY_LINKS.privacy} target="_blank" rel="noopener">Privacy Notice</a>. I authorize the payments shown above.</span></span></label>
             <div className="accept"><div className="cap">We accept</div>
               <div className="brands" aria-label="Accepted cards"><span className="visa">VISA</span><span>Mastercard</span><span>Amex</span><span>Discover</span></div></div>
             {stripeMode
@@ -426,10 +431,6 @@ export default function Checkout() {
             <label className="fld"><span className="lbl">Test: simulate</span>
               <select className="f" value={sim} onChange={(e) => setSim(e.target.value)}>{SIMS.filter(([v]) => !(stripeMode && CARD_SIMS.includes(v))).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
             {result && !result.ok && <div className="alert">{result.guestMessage}</div>}
-            <label className="chk"><input id="agree-box" type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-              <span>{quote.plan.split ? `I authorize Pearl Heights Homes to charge ${money(quote.plan.scheduled!.amount)} to this card on ${balance} at 4:00 PM CT, when flexible cancellation ends. ` : ""}
-                {/* Same words as CONSENT_TEXT (src/domain/consent.ts), saved with the booking. Links open in a new tab so the checkout isn't lost. */}
-                <span data-consent>I&apos;m at least 25 and will stay at the home. I agree to the <a href={POLICY_LINKS.bookingTerms} target="_blank" rel="noopener">Direct Booking Terms and Cancellation Policy</a>, the <a href={POLICY_LINKS.rentalAgreement} target="_blank" rel="noopener">Rental Agreement and House Rules</a> (I&apos;ll sign it after paying) and the <a href={POLICY_LINKS.websiteTerms} target="_blank" rel="noopener">Website Terms</a>, and I&apos;ve read the <a href={POLICY_LINKS.privacy} target="_blank" rel="noopener">Privacy Notice</a>. I authorize the payments shown above.</span></span></label>
             <fieldset className="optIn">
               <legend>Stay in touch (optional)</legend>
               <label className="chk" data-optin="email"><input type="checkbox" checked={mktEmail} onChange={(e) => setMktEmail(e.target.checked)} />
