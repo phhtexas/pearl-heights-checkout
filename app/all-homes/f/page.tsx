@@ -3,6 +3,7 @@ import { EVERY_HOME, guestReviews, homeCards, mapPoints, sharedFaq } from "@/con
 import { HOMES } from "@/content/homes";
 import { policyOverview } from "@/domain/policy";
 import { HOST, mockMeta } from "../shared";
+import { ldJson, siteJsonLd } from "@/seo";
 import { HomesF } from "./HomesF";
 import { Reveal, ReviewLoop, SiteHeader } from "./Motion";
 import "../search.css";
@@ -83,6 +84,7 @@ export default function Page() {
 
   return (
     <div className="F-page">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(siteJsonLd(["736", "752", "indianola", "edgewood", "claywell"].map((k) => HOMES[k]!))) }} />
       <aside className="F-mock" aria-label="Prototype label">Mockup F · prototype, not linked from the site</aside>
       {/* E's conventional header (note 176): logo, section links, a clear "Ask a question" */}
       <Reveal />

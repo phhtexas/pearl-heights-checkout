@@ -38,7 +38,8 @@ const CLOSED = [/^\/api\/checkout/, /^\/api\/stay-link/, /^\/api\/stay\//, /^\/s
 
 export function middleware(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").toLowerCase().split(":")[0]!;
-  if (!PUBLIC_HOSTS.has(host)) return NextResponse.next();
+  // The Vercel test address and previews must never be indexed (only the real domain can be, after launch).
+  if (!PUBLIC_HOSTS.has(host)) { const r = NextResponse.next(); r.headers.set("X-Robots-Tag", "noindex, nofollow"); return r; }
   const { pathname, searchParams } = req.nextUrl;
   if (host === "www.pearlheightshomes.com") {
     const u = req.nextUrl.clone(); u.host = "pearlheightshomes.com"; u.port = "";
@@ -53,6 +54,8 @@ export function middleware(req: NextRequest) {
     const u = req.nextUrl.clone(); u.pathname = "/all-homes/f"; u.search = "";
     return NextResponse.rewrite(u);
   }
+  // Prototype pages stay noindex on the real domain too (Version F is indexed only as "/").
+  if (pathname.startsWith("/all-homes")) { const r = NextResponse.next(); r.headers.set("X-Robots-Tag", "noindex, nofollow"); return r; }
   return NextResponse.next();
 }
 
