@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { GUIDES, guideBySlug, guideQuote } from "@/content/guides";
+import { GUIDES, guideBySlug, guideQuote, type GuidePhoto } from "@/content/guides";
 import { HOMES } from "@/content/homes";
 import { SITE, ldJson, publicMeta } from "@/seo";
 import { guideVisible } from "@/guidesAccess";
@@ -16,16 +16,28 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return g.approved ? m : { ...m, robots: { index: false, follow: false } };
 }
 
+/** A photo with its caption and, for Creative Commons photos, the required credit (author, license, source link). */
+function Photo({ p, className, eager }: { p: GuidePhoto; className?: string; eager?: boolean }) {
+  return (
+    <figure className={`G-fig ${className ?? ""}`}>
+      <img src={p.src} alt={p.alt} loading={eager ? "eager" : "lazy"} />
+      <figcaption>
+        {p.caption}
+        {p.credit && <span className="G-credit"> · Photo: <a href={p.credit.page} target="_blank" rel="noopener noreferrer">{p.credit.author}</a>, <a href={p.credit.licenseUrl} target="_blank" rel="noopener noreferrer">{p.credit.license}</a></span>}
+      </figcaption>
+    </figure>
+  );
+}
+
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const g = guideBySlug((await params).slug);
   if (!g || !(await guideVisible(g))) notFound();
-  const hero = HOMES[g.heroHome]!;
   const url = `${SITE}/guides/${g.slug}`;
   const ld = {
     "@context": "https://schema.org",
     "@graph": [
       { "@type": "Article", "@id": `${url}#article`, headline: g.title, description: g.description, dateModified: g.updated, url,
-        image: hero.photoBase + hero.photos[0]!.id + ".jpg",
+        image: [g.hero.src, ...g.gallery.map((p) => p.src)],
         author: { "@type": "Person", name: "Oscar & Fernanda" }, publisher: { "@id": `${SITE}/#org` },
         citation: g.sources.map((x) => x.url),
         about: g.homes.map((h) => ({ "@id": `${SITE}/homes/${HOMES[h.key]!.slug}#home` })) },
@@ -40,8 +52,13 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         {!g.approved && <p className="G-draft">Draft for Oscar&apos;s review · only visible on the test site</p>}
         <p className="G-kicker">Guide</p>
         <h1>{g.title}</h1>
-        <img className="G-hero" src={hero.photoBase + hero.photos[0]!.id + ".jpg"} alt={hero.photos[0]!.alt} />
+        <Photo p={g.hero} className="G-hero" eager />
         {g.intro.map((p) => <p key={p} className="G-lead">{p}</p>)}
+        {g.gallery.length > 0 && (
+          <div className="G-gallery" role="region" aria-label="Photos of the area, swipe for more" tabIndex={0}>
+            {g.gallery.map((p) => <Photo key={p.src} p={p} className="G-slide" />)}
+          </div>
+        )}
 
         <h2>Our homes by the Pearl</h2>
         <div className="G-homes">
@@ -64,11 +81,47 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         {g.sections.map((s) => (
           <section key={s.heading}>
             <h2>{s.heading}</h2>
+            {s.photo && <Photo p={s.photo} className="G-secPhoto" />}
             {s.paragraphs?.map((p) => <p key={p}>{p}</p>)}
             {s.bullets && <ul className="G-list">{s.bullets.map((b) => <li key={b}>{b}</li>)}</ul>}
             {s.steps && <ol className="G-steps">{s.steps.map((x) => <li key={x.when}><strong>{x.when}</strong><span>{x.text}</span></li>)}</ol>}
           </section>
         ))}
+
+        {g.eat && (
+          <section>
+            <h2>{g.eat.heading}</h2>
+            <p>{g.eat.intro}</p>
+            <div className="G-eat">
+              {g.eat.groups.map((grp) => (
+                <div key={grp.name} className="G-eatGroup">
+                  <h3>{grp.name}</h3>
+                  <ul>{grp.places.map((pl) => <li key={pl.name}><strong>{pl.name}</strong><span>{pl.what}</span></li>)}</ul>
+                </div>
+              ))}
+            </div>
+            <p className="G-note">{g.eat.note}</p>
+          </section>
+        )}
+
+        {g.todo && (
+          <section>
+            <h2>{g.todo.heading}</h2>
+            <div className="G-todo">
+              {g.todo.items.map((t) => (
+                <article key={t.name} className={`G-todoCard${t.photo ? "" : " G-todoPlain"}`}>
+                  {t.photo && <img src={t.photo.src} alt={t.photo.alt} loading="lazy" />}
+                  <div>
+                    <h3>{t.name}</h3>
+                    <p>{t.what}</p>
+                    <p className="G-dist">{t.distance}</p>
+                    {t.photo?.credit && <p className="G-cardCredit">Photo: <a href={t.photo.credit.page} target="_blank" rel="noopener noreferrer">{t.photo.credit.author}</a>, <a href={t.photo.credit.licenseUrl} target="_blank" rel="noopener noreferrer">{t.photo.credit.license}</a></p>}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
 
         <h2>What families say</h2>
         {g.quotes.map((q) => {

@@ -35,3 +35,31 @@
 .G-sources { padding-left: 20px; font-size: 15px; display: flex; flex-direction: column; gap: 4px; }
 .G-sources a { color: var(--green, #1f6b3a); }
 .G-note { font-size: 14px; color: var(--muted, #55595d); }
+.G-fig { margin: 0; }
+.G-fig img { width: 100%; display: block; object-fit: cover; border-radius: 14px; background: var(--soft, #ecece9); }
+.G-fig figcaption { font-size: 13px; color: var(--muted, #55595d); margin-top: 6px; line-height: 1.4; }
+.G-credit a { color: inherit; }
+.G-hero { margin: 8px 0 24px; }
+.G-hero img { aspect-ratio: 16 / 9; }
+.G-secPhoto { margin: 4px 0 16px; }
+.G-secPhoto img { aspect-ratio: 16 / 9; }
+.G-gallery { display: grid; grid-auto-flow: column; grid-auto-columns: 82%; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 20px -16px 8px; padding: 0 16px 8px; scrollbar-width: thin; }
+@media (min-width: 640px) { .G-gallery { grid-auto-columns: 46%; } }
+.G-slide { scroll-snap-align: start; }
+.G-slide img { aspect-ratio: 4 / 3; }
+.G-eat { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .G-eat { grid-template-columns: 1fr 1fr; } }
+.G-eatGroup { border: 1px solid var(--line, #ddddda); border-radius: 14px; padding: 14px 16px; }
+.G-eatGroup h3 { margin: 0 0 8px; font-size: 17px; }
+.G-eatGroup ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
+.G-eatGroup li { display: flex; flex-direction: column; }
+.G-eatGroup li span { color: var(--muted, #55595d); font-size: 14px; }
+.G-todo { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .G-todo { grid-template-columns: 1fr 1fr; } }
+.G-todoCard { border: 1px solid var(--line, #ddddda); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+.G-todoCard img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+.G-todoCard > div { padding: 12px 14px 14px; }
+.G-todoCard h3 { margin: 0 0 4px; font-size: 17px; }
+.G-todoCard p { margin: 0; font-size: 15px; color: var(--ink2, #3a3f44); }
+.G-todoCard .G-dist { margin-top: 6px; font-size: 14px; color: var(--green, #1f6b3a); font-weight: 600; }
+.G-todoCard .G-cardCredit { margin-top: 6px; font-size: 12px; color: var(--muted, #55595d); } .G-cardCredit a { color: inherit; }

@@ -3,19 +3,58 @@ import { HOMES } from "./homes";
 /**
  * Guides (Oscar, Nov 18): neighborhood guides that answer the questions families ask Google and AI assistants, each
  * linking to the homes it covers. Every fact comes from the approved home content (homes.ts, which carries the
- * listing source for each line); nothing about third-party places beyond what the listings say (names + drive/walk times).
+ * listing source for each line) or from the official public pages listed in `sources`.
+ * Photos of places other than our homes are freely licensed Wikimedia Commons photos, always shown with the author,
+ * license and a link (Creative Commons attribution terms); never photos copied from other businesses' sites.
  * `approved: false` = draft: shown on the Vercel test site only; pearlheightshomes.com returns 404 until Oscar approves.
  */
+export interface GuidePhoto {
+  src: string; alt: string; caption: string;
+  /** Creative Commons credit; omitted for our own listing photos. */
+  credit?: { author: string; license: string; licenseUrl: string; page: string };
+}
+const commons = (file: string, thumb: string, author: string, license: string, licenseUrl: string, alt: string, caption: string): GuidePhoto =>
+  ({ src: thumb, alt, caption, credit: { author, license, licenseUrl, page: `https://commons.wikimedia.org/wiki/${file}` } });
+const own = (home: string, alt: string, caption: string): GuidePhoto => {
+  const h = HOMES[home]!; const p = h.photos.find((x) => x.alt === alt)!;
+  return { src: h.photoBase + p.id + ".jpg", alt, caption };
+};
+
+/** Photos used in the Pearl guide (Commons metadata read Nov 18, 2026). */
+const PH = {
+  pearl: commons("File:PearlBreweryCurrent15.JPG", "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/PearlBreweryCurrent15.JPG/1280px-PearlBreweryCurrent15.JPG",
+    "Brownings", "CC BY-SA 3.0", "https://creativecommons.org/licenses/by-sa/3.0/", "The historic Pearl brewhouse and lawn", "The Pearl, about a 3-minute walk from both homes"),
+  tanks: commons("File:Storage_tanks_at_Pearl_Brewery,_San_Antonio,_Texas,_US.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Storage_tanks_at_Pearl_Brewery%2C_San_Antonio%2C_Texas%2C_US.jpg/1280px-Storage_tanks_at_Pearl_Brewery%2C_San_Antonio%2C_Texas%2C_US.jpg",
+    "Clyde Charles Brown", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/", "Old brewery storage tanks covered in vines at the Pearl", "The old brewery tanks at the Pearl"),
+  aerial: own("736", "Aerial view of the neighborhood near the Pearl", "Our neighborhood, Tobin Hill, next to the Pearl"),
+  reachNight: commons("File:Lights_along_the_Museum_Reach_of_the_San_Antonio_Riverwalk.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Lights_along_the_Museum_Reach_of_the_San_Antonio_Riverwalk.jpg/1280px-Lights_along_the_Museum_Reach_of_the_San_Antonio_Riverwalk.jpg",
+    "Corey Leopold", "CC BY 2.0", "https://creativecommons.org/licenses/by/2.0/", "Lights along the Museum Reach of the River Walk at night", "The Museum Reach of the River Walk in the evening"),
+  reachFalls: commons("File:Head_of_Navigation_of_the_Museum_Reach_of_the_San_Antonio_Riverwalk,_2013.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Head_of_Navigation_of_the_Museum_Reach_of_the_San_Antonio_Riverwalk%2C_2013.jpg/1280px-Head_of_Navigation_of_the_Museum_Reach_of_the_San_Antonio_Riverwalk%2C_2013.jpg",
+    "Cohee", "CC BY 3.0", "https://creativecommons.org/licenses/by/3.0/", "Small waterfalls on the river at the top of the Museum Reach", "The top of the Museum Reach, near the Pearl"),
+  brackenridge: commons("File:Brackenridge_Low_Water_Crossing.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Brackenridge_Low_Water_Crossing.jpg/1280px-Brackenridge_Low_Water_Crossing.jpg",
+    "Corey Leopold", "CC BY 2.0", "https://creativecommons.org/licenses/by/2.0/", "Shaded river crossing in Brackenridge Park", "The San Antonio River in Brackenridge Park"),
+  teaGarden: commons("File:San_Antonio_Japanese_Tea_Garden_2022.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/San_Antonio_Japanese_Tea_Garden_2022.jpg/1280px-San_Antonio_Japanese_Tea_Garden_2022.jpg",
+    "Jouaienttoi", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/", "Ponds and stone paths in the Japanese Tea Garden", "The Japanese Tea Garden in Brackenridge Park"),
+  witte: commons("File:Dinosaur_exhibit_in_the_Witte_Museum.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Dinosaur_exhibit_in_the_Witte_Museum.jpg/1280px-Dinosaur_exhibit_in_the_Witte_Museum.jpg",
+    "Mlwmiller", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/", "Dinosaur skeleton in the Witte Museum", "A dinosaur exhibit at the Witte Museum"),
+} satisfies Record<string, GuidePhoto>;
+
 export interface Guide {
   slug: string;
   approved: boolean;
   title: string;
   description: string;      // search/AI summary, ~150 characters
   updated: string;          // YYYY-MM-DD
-  heroHome: string;         // HOMES key for the photo
+  hero: GuidePhoto;
+  /** Swipeable photo strip under the intro. */
+  gallery: GuidePhoto[];
   intro: string[];
   homes: { key: string; fit: string; points: string[] }[];
-  sections: { heading: string; paragraphs?: string[]; bullets?: string[]; steps?: { when: string; text: string }[] }[];
+  sections: { heading: string; photo?: GuidePhoto; paragraphs?: string[]; bullets?: string[]; steps?: { when: string; text: string }[] }[];
+  /** Where to eat: names and descriptions as the venue lists them (source in `sources`). */
+  eat?: { heading: string; intro: string; groups: { name: string; places: { name: string; what: string }[] }[]; note: string };
+  /** Things to do: cards with distance from the homes. */
+  todo?: { heading: string; items: { name: string; what: string; distance: string; photo?: GuidePhoto }[] };
   quotes: { home: string; reviewer: string }[]; // real guest reviews, looked up from homes.ts (never written for us)
   faq: { q: string; a: string }[];
   /** Public sources for facts about places beyond our homes (shown at the bottom of the guide). */
@@ -29,7 +68,8 @@ export const GUIDES: Guide[] = [
     title: "Staying near the Pearl with kids",
     description: "Two family homes in Tobin Hill, about a 3-minute walk to the Pearl and the River Walk, with playrooms, cribs and fenced backyards.",
     updated: "2026-11-18",
-    heroHome: "752",
+    hero: PH.pearl,
+    gallery: [PH.aerial, PH.tanks, PH.reachFalls, PH.reachNight, PH.brackenridge, PH.teaGarden, PH.witte],
     intro: [
       "The Pearl and the Museum Reach of the River Walk are a short walk from our two homes in Tobin Hill: about 3 minutes on foot from each one.", // 736 + 752 highlights "Walk to the Pearl"
       "We're Oscar & Fernanda, parents of two young kids, and we set up both homes for families with babies and little ones: a play area, a crib, a high chair and child-safe touches, all on one level with no stairs inside.",
@@ -65,6 +105,7 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: "Weekends at the Pearl",
+        photo: PH.tanks,
         paragraphs: [
           "On Saturdays the Pearl holds its farmers and ranchers market, and on Sundays an artisan market. Both are open-air and held rain or shine. Market hours are listed on Pearl's events calendar, so check it for the weekend you're here.",
           "Pullman Market at the Pearl is open every day from 8 AM, until 9 PM Sunday to Thursday and until 10 PM on Fridays and Saturdays.", // atpearl.com/weekend-market (read Nov 18)
@@ -72,6 +113,7 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: "The River Walk from your door",
+        photo: PH.reachNight,
         paragraphs: [
           "Both homes are a few minutes' walk from the Museum Reach, the northern stretch of the River Walk. Families who stayed with toddlers tell us they walked to the Pearl or the River Walk every morning.", // Hannah (752 review, Aug 2026)
           "To ride a boat, GO RIO's narrated river cruises board downtown, at the Rivercenter, Historia and Aztec docks, and leave about every 15 minutes, 10 AM to 10 PM most of the year. GO RIO also runs a river shuttle with stops along the River Walk, including the Museum Reach.",
@@ -79,6 +121,7 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: "A morning at Brackenridge Park",
+        photo: PH.brackenridge,
         paragraphs: [
           "The San Antonio Zoo, the DoSeum (San Antonio's children's museum) and the Witte Museum are all about a 5 to 7 minute drive from either home. They sit in and around Brackenridge Park, which also has the Japanese Tea Garden, playgrounds and the San Antonio River running through it. From 752 Myrtle, the McNay Art Museum is in the same drive range.",
         ],
@@ -112,6 +155,52 @@ export const GUIDES: Guide[] = [
         ],
       },
     ],
+    eat: {
+      heading: "Where to eat at the Pearl",
+      intro: "The Pearl has more than 30 places to eat and drink, all a few minutes' walk from both homes. A few by type of meal, with each place's own description:",
+      groups: [
+        { name: "Breakfast, coffee and bakeries", places: [
+          { name: "Bakery Lorraine", what: "Classic French pastries" },
+          { name: "Local Coffee Founders", what: "Coffee shop" },
+          { name: "Voila Café", what: "French casual bistro" },
+          { name: "Pullman Market", what: "Specialty grocer with quick eats and dine-in spots" },
+        ] },
+        { name: "Quick and casual", places: [
+          { name: "Henbit", what: "Smashburgers, shakes, fries" },
+          { name: "WonderSlice", what: "Neighborhood pizza joint" },
+          { name: "La Gloria", what: "Mexican street food" },
+          { name: "Freight Fried Chicken", what: "Fried chicken" },
+          { name: "Food Hall at Bottling Department", what: "Chef-driven food stands and a bar" },
+        ] },
+        { name: "Sit-down dinner", places: [
+          { name: "Fife & Farro", what: "Wood-fired pizza and fresh pasta" },
+          { name: "Southerleigh Fine Food & Brewery", what: "Texas cross-cultural cuisine and craft brewery" },
+          { name: "Boiler House", what: "Texas grill and wine garden" },
+          { name: "Mezquite", what: "The flavors of Sonora" },
+          { name: "Brasserie Mon Chou Chou", what: "French comfort food" },
+          { name: "Ladino", what: "Modern Mediterranean grill" },
+          { name: "Best Quality Daughter", what: "New Asian-American cuisine" },
+        ] },
+        { name: "Treats", places: [
+          { name: "Lick Honest Ice Cream", what: "Ice cream made with local, seasonal ingredients" },
+          { name: "Nicosi", what: "Dessert bar" },
+        ] },
+      ],
+      note: "From Pearl's Dine & Drink list. Hours and menus change, so check each place before you go.",
+    },
+    todo: {
+      heading: "Things to do nearby",
+      items: [
+        { name: "Pearl weekend markets", what: "Farmers and ranchers market on Saturdays, artisan market on Sundays, open-air, rain or shine.", distance: "About a 3-minute walk", photo: PH.pearl },
+        { name: "Museum Reach of the River Walk", what: "The northern stretch of the River Walk, right by the Pearl.", distance: "A few minutes' walk", photo: PH.reachFalls },
+        { name: "GO RIO river cruise", what: "Narrated boat rides that board downtown (Rivercenter, Historia and Aztec docks), about every 15 minutes.", distance: "Short drive downtown" },
+        { name: "San Antonio Zoo", what: "In the Brackenridge Park area.", distance: "About a 5–7 minute drive" },
+        { name: "The DoSeum", what: "San Antonio's children's museum.", distance: "About a 5–7 minute drive" },
+        { name: "Witte Museum", what: "Museum next to Brackenridge Park, with a dinosaur exhibit.", distance: "About a 5–7 minute drive", photo: PH.witte },
+        { name: "Japanese Tea Garden", what: "Gardens and ponds inside Brackenridge Park.", distance: "In Brackenridge Park", photo: PH.teaGarden },
+        { name: "McNay Art Museum", what: "Art museum.", distance: "About a 5–7 minute drive from 752 Myrtle" },
+      ],
+    },
     quotes: [
       { home: "752", reviewer: "Hannah" },
       { home: "736", reviewer: "Rebecca" },
@@ -125,6 +214,7 @@ export const GUIDES: Guide[] = [
       { q: "When is the Pearl farmers market?", a: "Saturdays, with an artisan market on Sundays. Check Pearl's events calendar for that weekend's hours." },
     ],
     sources: [
+      { label: "Pearl: Dine & Drink", url: "https://atpearl.com/eat/", read: "2026-11-18" },
       { label: "Pearl: Parking", url: "https://atpearl.com/home/parking/", read: "2026-11-18" },
       { label: "Pearl: Weekend Market", url: "https://atpearl.com/weekend-market/", read: "2026-11-18" },
       { label: "Pearl: Farmers Market events calendar", url: "https://events.atpearl.com/series/farmers-market/", read: "2026-11-18" },
