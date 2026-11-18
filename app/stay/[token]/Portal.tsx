@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { StayData } from "@/content/stayDemo";
 import { loadStripe } from "@stripe/stripe-js";
-import { todayChicago } from "@/domain/time";
+import { checkInInstant, todayChicago } from "@/domain/time";
 
 /**
  * Guest portal, phase 1 (test data). Flow, matching the "Booking directly is simple" steps on All Homes F:
@@ -11,7 +11,7 @@ import { todayChicago } from "@/domain/time";
  *  ->  4 Enjoy your stay (house rules, messages).
  * In this test version the state lives in this browser only (localStorage), and nothing is sent or charged.
  */
-type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; idSession?: string; allSetSeen?: boolean; simDay?: "checkin"; messages: { from: "guest" | "note"; text: string; at: string }[] };
+type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; idSession?: string; allSetSeen?: boolean; simDay?: "morning" | "checkin"; messages: { from: "guest" | "note"; text: string; at: string }[] };
 const fresh = (): State => ({ messages: [] });
 const KEY = (t: string) => `ph-stay-${t}`;
 /** Sandbox labels render only when NEXT_PUBLIC_SANDBOX=true (inlined at build); never in a production build without it. */
@@ -139,13 +139,15 @@ export function Portal({ stay }: { stay: StayData }) {
     if (!unlocked) setAllSetNow(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, unlocked]);
-  // Step 4 "Enjoy your stay" starts on check-in day (Central time) once the paperwork is done (Oscar, Nov 17).
-  // Same moment the door code and Wi-Fi are released. Test controls can jump to check-in day.
-  const [today, setToday] = useState("");
-  useEffect(() => { setToday(todayChicago(new Date())); }, []);
-  const isCheckinDay = s.simDay === "checkin" || (!!today && today >= stay.checkIn);
+  // Oscar, Nov 17: the door code and Wi-Fi are released on check-in MORNING (Central time); step 4 "Enjoy your stay"
+  // starts at check-in TIME (4:00 PM Central on check-in day). Both only once the paperwork is done.
+  // Test controls can jump to check-in morning or to check-in time.
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => { setNow(Date.now()); const t = setInterval(() => setNow(Date.now()), 60_000); return () => clearInterval(t); }, []);
+  const isCheckinDay = s.simDay === "morning" || s.simDay === "checkin" || (now !== null && todayChicago(new Date(now)) >= stay.checkIn);
+  const isCheckinTime = s.simDay === "checkin" || (now !== null && now >= checkInInstant(stay.checkIn).getTime());
   const released = unlocked && isCheckinDay;
-  const step = !unlocked ? 2 : isCheckinDay ? 4 : 3;
+  const step = !unlocked ? 2 : isCheckinTime ? 4 : 3;
   const ci = fmtDay(stay.checkIn, { weekday: "short", month: "short", day: "numeric" });
   const co = fmtDay(stay.checkOut, { weekday: "short", month: "short", day: "numeric" });
   const ciMorning = fmtDay(stay.checkIn, { weekday: "long", month: "long", day: "numeric" });
@@ -415,7 +417,8 @@ export function Portal({ stay }: { stay: StayData }) {
             <div className="ST-row">
               <button className="ST-link" type="button" disabled={signed} onClick={() => save({ ...sRef.current, signedAt: nowText(), signedOn: new Date().toISOString(), signedName: stay.holder })}>Mark agreement signed</button>
               <button className="ST-link" type="button" disabled={verified} onClick={() => save({ ...sRef.current, verifiedAt: nowText() })}>Mark ID verified</button>
-              <button className="ST-link" type="button" disabled={s.simDay === "checkin"} onClick={() => save({ ...sRef.current, simDay: "checkin" })}>Jump to check-in day</button>
+              <button className="ST-link" type="button" disabled={!!s.simDay} onClick={() => save({ ...sRef.current, simDay: "morning" })}>Jump to check-in morning</button>
+              <button className="ST-link" type="button" disabled={s.simDay === "checkin"} onClick={() => save({ ...sRef.current, simDay: "checkin" })}>Jump to check-in time (4 PM)</button>
               <button className="ST-link" type="button" onClick={() => { save(fresh()); setAgree(false); setName(stay.holder); setEsign("idle"); setIdState("idle"); setIdMsg(""); setAllSetNow(false); scrollTo({ top: 0 }); }}>Reset sandbox</button>
             </div>
           </section>

@@ -181,7 +181,7 @@ export const HOMES: Record<string, HomeContent> = {
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
-      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes each). The address, entry steps and WiFi appear in your private stay page once both are done." },
+      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes each). After verification, your personal guest portal has the address and entry instructions, and you can message us there. Your door code and Wi-Fi arrive on check-in morning." },
       { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
       { q: "Can I pay in two parts?", a: "Paying in full is the default. When check-in is more than 30 days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost." },
       { q: "Is the home good for babies and toddlers?", a: "Yes: there's a playroom with toys and books, children's dinnerware, outlet covers and corner guards, and a crib, pack-n-play, high chair and baby bath kept at the home. Tell us what you'd like set up." },
@@ -309,7 +309,7 @@ export const HOMES: Record<string, HomeContent> = {
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
-      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes each). The address, entry steps and WiFi appear in your private stay page once both are done." },
+      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes each). After verification, your personal guest portal has the address and entry instructions, and you can message us there. Your door code and Wi-Fi arrive on check-in morning." },
       { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
       { q: "Can I pay in two parts?", a: "Paying in full is the default. When check-in is more than 30 days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost." },
       { q: "Is the home good for babies and toddlers?", a: "Yes: there's a playroom with toys, books and games, children's dinnerware, outlet covers and a baby bath. A mini crib, pack 'n play and high chair are available on request." },
@@ -431,7 +431,7 @@ export const HOMES: Record<string, HomeContent> = {
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
-      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes each). The address, entry steps and WiFi appear in your private stay page once both are done." },
+      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes each). After verification, your personal guest portal has the address and entry instructions, and you can message us there. Your door code and Wi-Fi arrive on check-in morning." },
       { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
       { q: "Can I pay in two parts?", a: "Paying in full is the default. When check-in is more than 30 days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost." },
       { q: "Is the home good for babies and toddlers?", a: "Yes: there's a bonus room that works as a play area, children's books and toys, children's dinnerware, outlet covers and corner guards. A crib, pack 'n play, high chair and baby bath are available on request." },
@@ -573,7 +573,7 @@ export const HOMES: Record<string, HomeContent> = {
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
-      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes each). The address, entry steps and WiFi appear in your private stay page once both are done." },
+      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes each). After verification, your personal guest portal has the address and entry instructions, and you can message us there. Your door code and Wi-Fi arrive on check-in morning." },
       { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
       { q: "Can I pay in two parts?", a: "Paying in full is the default. When check-in is more than 30 days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost." },
       { q: "Is the home good for babies and toddlers?", a: "Yes: there are children's books and toys, children's dinnerware, baby safety gates, window guards, outlet covers and corner guards. A crib, pack 'n play, high chair and baby bath are available on request." },
@@ -681,7 +681,7 @@ export const HOMES: Record<string, HomeContent> = {
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
-      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes each). The address, entry steps and WiFi appear in your private stay page once both are done." },
+      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes each). After verification, your personal guest portal has the address and entry instructions, and you can message us there. Your door code and Wi-Fi arrive on check-in morning." },
       { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
       { q: "Can I pay in two parts?", a: "Paying in full is the default. When check-in is more than 30 days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost." },
       { q: "Is the home good for babies and toddlers?", a: "Yes: there's a children's playroom, an outdoor playground, a toddler bed and crib in the primary bedroom, children's dinnerware, outlet covers and corner guards. A high chair and baby bath are available on request." },

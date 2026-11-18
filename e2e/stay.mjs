@@ -85,8 +85,10 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok(/You're all set!/.test(await body()) && /Test address/.test(await body()), `${tag}: test controls walk the whole flow`);
   const wifi = await page.locator(".ST-info li", { hasText: "Wi-Fi" }).innerText();
   ok(/Arrives on check-in morning, \w+day, \w+ \d+\./.test(wifi) && (await page.locator(".ST-steps .is-now").innerText()).includes("Receive check-in details"), `${tag}: before check-in day: Wi-Fi arrives on check-in morning, step 3`);
-  await page.click("text=Jump to check-in day"); await page.waitForTimeout(300);
-  ok((await page.locator(".ST-steps .is-now").innerText()).includes("Enjoy your stay") && /appear here/.test(await page.locator(".ST-info li", { hasText: "Wi-Fi" }).innerText()) && /door code appears here/i.test(await page.locator(".ST-info li", { hasText: "Door code" }).innerText()), `${tag}: check-in day: step 4, Wi-Fi and door code released`);
+  await page.click("text=Jump to check-in morning"); await page.waitForTimeout(300);
+  ok((await page.locator(".ST-steps .is-now").innerText()).includes("Receive check-in details") && /appear here/.test(await page.locator(".ST-info li", { hasText: "Wi-Fi" }).innerText()) && /door code appears here/i.test(await page.locator(".ST-info li", { hasText: "Door code" }).innerText()), `${tag}: check-in morning: Wi-Fi and door code released, still step 3`);
+  await page.click("text=Jump to check-in time (4 PM)"); await page.waitForTimeout(300);
+  ok((await page.locator(".ST-steps .is-now").innerText()).includes("Enjoy your stay"), `${tag}: check-in time (4 PM): step 4 Enjoy your stay`);
   await page.click("text=Reset sandbox");
   ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${tag}: no sideways scroll`);
   if (process.env.AXE_PATH) {
