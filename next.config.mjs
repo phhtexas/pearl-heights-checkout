@@ -17,6 +17,30 @@ export default {
       // C and E archived (Oscar, Nov 17): work continues on F only; old links still work.
       { source: "/all-homes/c", destination: "/all-homes/archive/c", permanent: false },
       { source: "/all-homes/e", destination: "/all-homes/archive/e", permanent: false },
+      // Old WordPress site (pages listed from its REST API on WP Engine, Nov 18) -> the matching new page, so old links
+      // and bookmarks still land somewhere useful. Temporary (307) until the site is opened to Google at launch.
+      ...[
+        ["/guest/steps-away-from-pearl-riverwalk", "/homes/752-myrtle"],
+        ["/guest/large-family-house-next-to-the-pearl", "/homes/736-myrtle"],
+        ["/guest/alamo-heights-home", "/homes/edgewood-alamo-heights"],
+        ["/guest", "/"],
+        ["/privacy-policy", "/privacy"],
+        ["/terms-and-conditions", "/terms"],
+        ["/website-terms-promotions-policy", "/website-terms"],
+        ["/house-rules", "/rental-agreement"],
+        ["/frequently-asked-questions", "/#faq"],
+        ["/meet-your-hosts", "/"],
+        ["/san-antonio-vaction-homes", "/"],
+        ["/our-blog", "/"],
+        ["/thank-you-email", "/"],
+        ["/booking-form", "/"],
+        ["/wp-booking-calendar", "/"],
+        ["/wpbc-booking-payment-failed", "/"], ["/wpbc-booking-payment-successful", "/"], ["/wpbc-my-bookings-listing", "/"], ["/wpbc-my-booking", "/"], ["/wpbc-booking-received", "/"],
+        ["/my-account", "/"], ["/my-account-2", "/"],
+        ["/checkout", "/"], ["/checkout-2", "/"],
+        ["/cart", "/"], ["/cart-2", "/"],
+        ["/shop", "/"],
+      ].flatMap(([from, to]) => [{ source: from, destination: to, permanent: false }, { source: from + "/", destination: to, permanent: false }]),
     ];
   },
   images: {
