@@ -11,6 +11,8 @@ import type { MockFailure } from "@/adapters/mock";
 import { consentRecord } from "@/domain/consent";
 import { sendPurchase } from "@/services/metaCapi";
 import { textConfirmation } from "@/services/sms";
+import { emailConfirmation } from "@/services/email";
+import { HOMES } from "@/content/homes";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -61,6 +63,21 @@ export async function POST(req: Request) {
         const outcome = await textConfirmation(db, { bookingRef: ref, phone: input.guest.phone, homeName: getProperty(input.property).name,
           dates: shortRange(input.checkIn, input.checkOut), deadline, origin: new URL(req.url).origin }).catch(() => "failed" as const);
         console.info("[sms] booking", ref, outcome);
+      }
+      // Booking confirmation email (Oscar, Nov 18): every direct booking, once. Off until GUEST_EMAILS=on + RESEND_API_KEY.
+      if (db && deadline) {
+        const qq = (view as { quote?: typeof q.quote }).quote ?? q.quote;
+        const home = HOMES[input.property];
+        const usd = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+        const day = (d: Date | string) => new Date(d).toLocaleDateString("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric" });
+        const outcome = await emailConfirmation(db, {
+          email: input.guest.email, firstName: input.guest.firstName, homeName: getProperty(input.property).name,
+          photoUrl: home?.photos[0] ? home.photoBase + home.photos[0].id + ".jpg" : undefined,
+          bookingRef: ref, dates: shortRange(input.checkIn, input.checkOut), guests: input.adults + input.children, deadline,
+          paidToday: usd(qq.plan.dueNow), balanceLine: qq.plan.scheduled ? `${usd(qq.plan.scheduled.amount)} on ${day(qq.plan.scheduled.chargeAt)}` : undefined,
+          nonRefundable: qq.nonRefundable, origin: new URL(req.url).origin,
+        }).catch(() => "failed" as const);
+        console.info("[email] booking", ref, outcome);
       }
     }
     return withSession(NextResponse.json({ mode, ...view }, { headers: noStore }), session);
