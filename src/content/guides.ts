@@ -177,7 +177,7 @@ export const GUIDES: Guide[] = [
           { name: "WonderSlice", what: "Neighborhood pizza joint", web: "https://www.wonderslicepizza.com/", map: "https://maps.app.goo.gl/7jnUvBxLaqiqUtKx9", pearl: "https://atpearl.com/dine-and-drink/wonderslice/" },
           { name: "La Gloria", what: "Mexican street food", web: "https://chefjohnnyhernandez.com/la-gloria-pearl/", map: "https://maps.app.goo.gl/cbHfar3oysLXKiLR6", pearl: "https://atpearl.com/dine-and-drink/la-gloria/", pick: true },
           { name: "Freight Fried Chicken", what: "Fried chicken", web: "https://www.bottlingdepartment.com/freight/", map: "https://maps.app.goo.gl/ykk7suGp3CvkYMtj6", pearl: "https://atpearl.com/dine-and-drink/freight-fried-chicken/" },
-          { name: "Food Hall at Bottling Department", what: "Chef-driven food stands and a bar", web: "https://www.bottlingdepartment.com/", map: "https://maps.app.goo.gl/JS7ooYDUBag93UWn7", pearl: "https://atpearl.com/dine-and-drink/food-hall-at-bottling-department/" },
+          { name: "Food Hall at Bottling Department", what: "Chef-driven food stands and a bar", web: "https://www.bottlingdepartment.com/", map: "https://maps.app.goo.gl/JS7ooYDUBag93UWn7", pearl: "https://atpearl.com/dine-and-drink/food-hall-at-bottling-department/", pick: true },
         ] },
         { name: "Sit-down dinner", places: [
           { name: "Fife & Farro", what: "Wood-fired pizza and fresh pasta", web: "https://fifeandfarro.com/", map: "https://maps.app.goo.gl/5ifi2gnS4g2FWWhP9", pearl: "https://atpearl.com/dine-and-drink/fife-farro/" },
@@ -195,6 +195,8 @@ export const GUIDES: Guide[] = [
           { name: "Carriqui", what: "Restaurant", map: mapq("Carriqui San Antonio"), pick: true },
           { name: "Burger Boy", what: "Burgers", map: mapq("Burger Boy San Antonio"), pick: true },
           { name: "Velvet Taco", what: "Tacos", map: mapq("Velvet Taco San Antonio"), pick: true },
+          { name: "Cured", what: "Restaurant at the Pearl", map: mapq("Cured at Pearl San Antonio"), pick: true }, // Edgewood guest book (Canva p.14, read Nov 18)
+          { name: "Hotel Emma bar", what: "The bar at Hotel Emma, at the Pearl", map: mapq("Sternewirth Hotel Emma San Antonio"), pick: true }, // Edgewood guest book: "Check out the Hotel Emma's bar as well!"
           { name: "Merritt Coffee", what: "Coffee", map: mapq("Merritt Coffee San Antonio"), pick: true },
           { name: "Extra Fine Coffee", what: "Coffee", map: mapq("Extra Fine Coffee San Antonio"), pick: true },
         ] },
@@ -317,9 +319,20 @@ export const GUIDES: Guide[] = [
       },
     ],
     eat: {
-      heading: "Groceries and coffee near our Alamo Heights homes",
-      intro: "Our own go-to spots from our guest book. Each links to a map search.",
-      groups: [
+      heading: "Where to eat near our Alamo Heights homes",
+      intro: "Our own favorites from our Edgewood guest book, in our words. Each links to a map search.",
+      groups: [ // Oscar & Fernanda's guest book for 147 Edgewood (Canva p.13-14, read Nov 18, 2026)
+        { name: "Our favorite restaurants nearby", places: [
+          { name: "Cappy's", what: "Amazing food and service, great for brunch and dinner. Try to reserve ahead of time.", map: mapq("Cappy's Restaurant Alamo Heights San Antonio"), pick: true },
+          { name: "Soluna", what: "Mexican food, great margaritas and food", map: mapq("Soluna Alamo Heights San Antonio"), pick: true },
+          { name: "Paloma Blanca", what: "Mexican food and a great drinks spot", map: mapq("Paloma Blanca San Antonio"), pick: true },
+          { name: "Hanzo", what: "Small bar-like place for great food and drinks", map: mapq("Hanzo Alamo Heights San Antonio"), pick: true },
+          { name: "Bar Mon-Amie", what: "Nice little neighborhood bar", map: mapq("Bar Mon-Amie San Antonio"), pick: true },
+          { name: "Piatti", what: "Italian food", map: mapq("Piatti Alamo Heights San Antonio"), pick: true },
+          { name: "CAVA", what: "Mediterranean, quick and casual", map: mapq("CAVA Alamo Heights San Antonio"), pick: true },
+          { name: "Sushi Zushi", what: "Sushi", map: mapq("Sushi Zushi Alamo Heights San Antonio"), pick: true },
+          { name: "La Fonda on Main", what: "Mexican restaurant", map: mapq("La Fonda on Main San Antonio"), pick: true },
+        ] },
         { name: "Groceries", places: [
           { name: "Central Market", what: "Grocery store on Broadway", map: mapq("Central Market Broadway San Antonio"), pick: true },
           { name: "Trader Joe's", what: "At the Quarry", map: mapq("Trader Joe's Quarry San Antonio"), pick: true },
@@ -328,13 +341,17 @@ export const GUIDES: Guide[] = [
         { name: "Coffee and bakeries", places: [
           { name: "Bird Bakery", what: "Bakery", map: mapq("Bird Bakery San Antonio"), pick: true },
           { name: "Merritt Coffee", what: "Coffee", map: mapq("Merritt Coffee San Antonio"), pick: true },
+          { name: "Press Coffee", what: "Coffee", map: mapq("Press Coffee Alamo Heights San Antonio"), pick: true },
+          { name: "Boss Bagel", what: "Amazing bagels and great coffee", map: mapq("Boss Bagel San Antonio"), pick: true },
+          { name: "Revolución", what: "Great coffee and fresh pressed juices", map: mapq("Revolucion Coffee Juice Alamo Heights San Antonio"), pick: true },
+          { name: "Extra Fine Coffee", what: "Coffee", map: mapq("Extra Fine Coffee San Antonio"), pick: true },
         ] },
         { name: "Shopping", places: [
           { name: "Quarry Village", what: "Shops and restaurants", map: mapq("Quarry Village San Antonio"), pick: true },
           { name: "Lincoln Heights", what: "Shops and restaurants", map: mapq("Lincoln Heights shopping center San Antonio"), pick: true },
         ] },
       ],
-      note: "Hours change, so check before you go. For restaurants, see our Pearl guide: the Pearl is a short drive away.",
+      note: "All of these are from our own guest book and link to a map search. Hours and menus change, so check before you go. The Pearl is a short drive away: our restaurant picks there are in our Pearl guide.",
     },
     todo: {
       heading: "Things to do nearby",
