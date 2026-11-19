@@ -29,14 +29,14 @@ export interface StayData {
 }
 export interface StayPayments {
   totalText: string; paidText: string; paidOnText: string;
-  balance?: { amountText: string; dueText: string; state: "scheduled" | "paid" | "attention" | "cancelled" };
+  balance?: { amountText: string; dueText: string; state: "scheduled" | "paid" | "attention" | "approve" | "cancelled" };
 }
 
 const usd = (c: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(c / 100);
 /** Payments card data from stored amounts (cents) and the second payment's status. */
 export function stayPayments(o: { totalCents: number; paidNowCents: number; paidAt: Date; balance?: { cents: number; dueAt: Date; status: string } | null }): StayPayments {
   const state = (st: string): NonNullable<StayPayments["balance"]>["state"] =>
-    st === "paid" ? "paid" : st === "scheduled" ? "scheduled" : /refund|cancel/.test(st) ? "cancelled" : "attention";
+    st === "paid" ? "paid" : st === "scheduled" ? "scheduled" : st === "requires_action" ? "approve" : /refund|cancel/.test(st) ? "cancelled" : "attention";
   return {
     totalText: usd(o.totalCents), paidText: usd(o.paidNowCents), paidOnText: fmtCT(o.paidAt),
     ...(o.balance ? { balance: { amountText: usd(o.balance.cents), dueText: formatChicagoDateTime(o.balance.dueAt), state: state(o.balance.status) } } : {}),

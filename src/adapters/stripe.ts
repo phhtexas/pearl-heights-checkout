@@ -146,15 +146,30 @@ export class StripePayments implements PaymentsAdapter {
         off_session: true, confirm: true, allowed_payment_method_types: [...ACCEPTED_PM_TYPES], description: i.description, metadata: i.metadata,
       }, { idempotencyKey: i.idempotencyKey });
       if (pi.status === "succeeded") return { paymentIntentId: pi.id, status: "succeeded" as const };
-      if (pi.status === "requires_action") throw new AdapterError("Card requires authentication", "authentication_required");
+      if (pi.status === "requires_action") {
+        const a = new AdapterError("Card requires authentication", "authentication_required");
+        if (pi.client_secret) a.action = { paymentIntentId: pi.id, clientSecret: pi.client_secret };
+        throw a;
+      }
       throw new AdapterError(`Unexpected status ${pi.status}`, "upstream_error");
     } catch (e) {
       if (e instanceof AdapterError) throw e;
-      const err = e as { type?: string; code?: string };
-      if (err.code === "authentication_required") throw new AdapterError("Card requires authentication", "authentication_required");
+      const err = e as { type?: string; code?: string; payment_intent?: { id?: string; client_secret?: string | null } };
+      if (err.code === "authentication_required") {
+        // F17: keep the PaymentIntent so the guest can approve it from the stay page.
+        const a = new AdapterError("Card requires authentication", "authentication_required");
+        if (err.payment_intent?.id && err.payment_intent.client_secret) a.action = { paymentIntentId: err.payment_intent.id, clientSecret: err.payment_intent.client_secret };
+        throw a;
+      }
       if (err.type === "StripeCardError") throw new AdapterError("Card declined", "card_declined");
       throw new AdapterError("Payment service error", "upstream_error");
     }
+  }
+
+  /** F17: a PaymentIntent's status and, while it waits for the guest's bank approval, its client secret. */
+  async intentAction(id: string) {
+    const pi = await this.stripe.paymentIntents.retrieve(id);
+    return { status: pi.status, clientSecret: pi.status === "requires_action" ? pi.client_secret ?? null : null };
   }
 
   async voidAuthorization(id: string) {

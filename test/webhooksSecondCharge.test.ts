@@ -305,6 +305,22 @@ describe("note 95 fixes", () => {
     expect((await one(`SELECT state FROM bookings`)).state).toBe("confirmed"); // booking intact
     await dueAgain();
     expect(await runDueSecondCharges(db, p)).toMatchObject({ due: 0 });
+    // F17: the 72-hour window starts, the host is emailed once, and the guest is due an "approve payment" notice.
+    expect((await one(`SELECT cure_deadline_at IS NOT NULL AS has FROM payments WHERE kind = 'scheduled'`)).has).toBe(true);
+    const { alertHostPaymentIssues } = await import("../src/services/paymentAlerts");
+    const sent: any[] = [];
+    const f = (async (_u: string, init: any) => { sent.push(JSON.parse(init.body)); return new Response(JSON.stringify({ id: "em" }), { status: 200 }); }) as unknown as typeof fetch;
+    const env = { RESEND_API_KEY: "re_test", HOST_ALERT_EMAIL: "host@example.com" } as unknown as NodeJS.ProcessEnv;
+    expect(await alertHostPaymentIssues(db, "https://test.example", env, f)).toEqual({ sent: 1, failed: 0 });
+    expect(await alertHostPaymentIssues(db, "https://test.example", env, f)).toEqual({ sent: 0, failed: 0 }); // once
+    expect(sent[0].subject).toMatch(/^TEST · Second payment needs attention · PH-SPL001/);
+    expect(sent[0].text).toContain("approve");
+    const { dueNotices } = await import("../src/services/guestNotices");
+    const cure = (await one(`SELECT cure_deadline_at FROM payments WHERE kind = 'scheduled'`)).cure_deadline_at as Date;
+    const row = { id: "b", ref: "PH-SPL001", state: "confirmed", confirmedAt: new Date(Date.now() - 864e5), deadlineAt: null, rule: null, propertyKey: "752",
+      checkIn: "2027-04-12", checkOut: "2027-04-14", firstName: "Ana", email: "a@example.com", phone: "2105550100", agreementDone: true, idDone: true, textedConfirmation: false,
+      balance: { cents: 1000, status: "requires_action", scheduledFor: new Date(), cureDeadline: new Date(cure), declined: false }, refundedCents: 0 };
+    expect(dueNotices(row, new Date())).toContain("balance_approval");
   });
   it("(5) body limit: oversized chunked stream and oversized declared length are refused before any work", async () => {
     const { readBodyLimited } = await import("../src/server/stripeWebhook");

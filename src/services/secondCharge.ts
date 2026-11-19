@@ -118,8 +118,11 @@ async function chargeOne(db: Db, pay: PaymentsAdapter, jobId: string, bookingId:
     const code = e instanceof AdapterError ? e.code : "unknown";
     if (code === "authentication_required") {
       // Not a normal decline: the bank wants the guest present. No more off-session tries; booking intact.
+      // F17: keep the PaymentIntent (the guest approves it on the stay page) and start the same 72-hour window as a decline.
+      const piId = e instanceof AdapterError ? e.action?.paymentIntentId ?? null : null;
       return manualReview("requires_action", "card requires authentication; guest action needed",
-        [`UPDATE payments SET status = 'requires_action', attempts = $1, last_error = $2 WHERE id = $3`, [n, code, b.pay_id]], b.pay_id);
+        [`UPDATE payments SET status = 'requires_action', attempts = $1, last_error = $2, stripe_payment_intent_id = COALESCE($4, stripe_payment_intent_id),
+            cure_deadline_at = COALESCE(cure_deadline_at, now() + make_interval(secs => $5)) WHERE id = $3`, [n, code, b.pay_id, piId, SECOND_CHARGE_CURE_HOURS * 3600]], b.pay_id);
     }
     if (code === "card_declined") {
       const declines = Number(b.decline_count) + 1;

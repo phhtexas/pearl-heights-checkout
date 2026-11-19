@@ -10,6 +10,7 @@ import { getProperty } from "@/domain/properties";
 import { verificationDeadline } from "@/domain/verification";
 import { sweepCheckinMessages } from "@/services/checkinMessageSweep";
 import { sweepGuestNotices } from "@/services/guestNotices";
+import { alertHostPaymentIssues } from "@/services/paymentAlerts";
 import { redactDueVerifications } from "@/services/idRedaction";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +48,8 @@ async function handle(req: Request): Promise<Response> {
     } catch (e) { console.error("[maintenance] live run skipped:", String((e as Error).message).slice(0, 200)); }
   }
   const rateLimitWindowsPurged = await purgeOldRateLimits(getDb()!).catch(() => 0);
+  // F17: tell the host about second payments that need attention (bank approval, unpaid after 72 h, manual review).
+  const paymentAlerts = await alertHostPaymentIssues(getDb()!, process.env.HOST_ORIGIN || "https://pearl-heights-checkout.vercel.app").catch(() => ({ sent: 0, failed: 1 }));
   // Once an hour (the cron runs every minute): make sure no direct booking still has a Hospitable door-code message.
   const checkinMessages = new Date().getUTCMinutes() === 7 ? await sweepCheckinMessages(getDb()!, liveHosp ?? hosp).catch(() => ({ checked: 0, cancelled: 0, failed: 1 })) : undefined;
   // Every 5 minutes: guest reminders and notices (off until GUEST_EMAILS=on). Links use the public site address.
@@ -55,7 +58,7 @@ async function handle(req: Request): Promise<Response> {
     : undefined;
   // Once an hour: ask Stripe to redact ID checks 120 days after check-out (Privacy Notice §4, §10).
   const idRedaction = new Date().getUTCMinutes() === 23 ? await redactDueVerifications(getDb()!).catch(() => ({ due: 0, redacted: 0, failed: 1 })) : undefined;
-  const counts = { reconciliation, secondCharges, ...(live ? { live } : {}), rateLimitWindowsPurged, ...(checkinMessages !== undefined ? { checkinMessages } : {}), ...(guestNotices !== undefined ? { guestNotices } : {}), ...(idRedaction !== undefined ? { idRedaction } : {}) };
+  const counts = { reconciliation, secondCharges, ...(live ? { live } : {}), rateLimitWindowsPurged, paymentAlerts, ...(checkinMessages !== undefined ? { checkinMessages } : {}), ...(guestNotices !== undefined ? { guestNotices } : {}), ...(idRedaction !== undefined ? { idRedaction } : {}) };
   console.info("maintenance run", JSON.stringify(counts));
   return NextResponse.json(counts, { headers: noStore });
 }

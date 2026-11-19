@@ -481,7 +481,7 @@ export function Portal({ stay }: { stay: StayData }) {
         {/* Payments (Perplexity PX-F8, Nov 19): what was paid and, for split bookings, the second payment and its status. */}
         {stay.payments && (() => {
           const pm = stay.payments, b = pm.balance;
-          const tag = b && { scheduled: "Scheduled", paid: "Paid", attention: "Needs attention", cancelled: "Cancelled" }[b.state];
+          const tag = b && { scheduled: "Scheduled", paid: "Paid", attention: "Needs attention", approve: "Needs your approval", cancelled: "Cancelled" }[b.state];
           return (
             <section className="ST-card" aria-labelledby="pay-h">
               <h2 id="pay-h">Payments</h2>
@@ -490,7 +490,8 @@ export function Portal({ stay }: { stay: StayData }) {
                 {b && <div><dt>Second payment<span>{b.state === "paid" ? "Charged" : "Charged automatically"} {b.dueText}</span></dt><dd>{b.amountText}<span className={`ST-payTag is-${b.state}`}>{tag}</span></dd></div>}
                 <div className="ST-payTotal"><dt>Total</dt><dd>{pm.totalText}</dd></div>
               </dl>
-              {b?.state === "attention"
+              {b?.state === "approve" && stay.mode === "booking" && <ApproveBalance token={stay.token} />}
+              {b?.state === "approve" ? null : b?.state === "attention"
                 ? <p className="ST-dim ST-small" role="status">Your bank declined the second payment. <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a> and we&apos;ll send a secure link to update your card. Please never send card details in a message.</p>
                 : <p className="ST-dim ST-small">Charged to the card you booked with. Questions about a payment? <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a>.</p>}
             </section>
@@ -560,4 +561,33 @@ export function Portal({ stay }: { stay: StayData }) {
 function linkify(text: string) {
   return text.split(/(https?:\/\/[^\s)]+)/g).map((part, i) =>
     i % 2 ? <a key={i} href={part} target="_blank" rel="noopener noreferrer">{part}</a> : part);
+}
+
+/** F17: the guest approves a second payment their bank flagged, through Stripe's bank check. */
+function ApproveBalance({ token }: { token: string }) {
+  const [st, setSt] = useState<"idle" | "working" | "paid" | "error">("idle"), [msg, setMsg] = useState("");
+  const run = async () => {
+    setSt("working"); setMsg("");
+    try {
+      const g = await fetch(`/api/stay/${token}/balance`, { cache: "no-store" }).then((r) => r.json());
+      if (g.state === "succeeded") { setSt("paid"); return; }
+      if (!g.clientSecret || !g.publishableKey) throw new Error("This payment can't be approved right now. Please message us.");
+      const { loadStripe } = await import("@stripe/stripe-js");
+      const stripe = await loadStripe(g.publishableKey).catch(() => null);
+      if (!stripe) throw new Error("We couldn't load the secure payment check. Please try again.");
+      const res = await stripe.handleNextAction({ clientSecret: g.clientSecret });
+      if (res.error) throw new Error(`${res.error.message ?? "Your bank's check wasn't completed."} Nothing was charged.`);
+      const p = await fetch(`/api/stay/${token}/balance`, { method: "POST" }).then((r) => r.json());
+      if (!p.paid) throw new Error("Your bank's check wasn't completed. Nothing was charged; please try again.");
+      setSt("paid");
+    } catch (e) { setSt("error"); setMsg((e as Error).message); }
+  };
+  if (st === "paid") return <p className="ST-dim" role="status">Thank you! Your second payment is approved and paid.</p>;
+  return (
+    <div className="ST-approve">
+      <p className="ST-dim">Your bank asked you to approve this payment. Nothing has been charged yet.</p>
+      <button type="button" className="ST-ask" disabled={st === "working"} onClick={run}>{st === "working" ? "Opening your bank's check…" : "Approve payment"}</button>
+      {msg && <p className="ST-err" role="alert">{msg}</p>}
+    </div>
+  );
 }

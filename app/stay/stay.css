@@ -196,3 +196,8 @@
 .ST-lostActs .ST-ask { color: #fff; }
 /* Real check-in message (F1) */
 .ST-checkinMsg { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 6px; background: var(--soft); border-radius: 14px; padding: 14px 16px; line-height: 1.55; }
+/* F17: approve the second payment */
+.ST-approve { display: grid; gap: 8px; justify-items: start; margin-top: 8px; }
+.ST-approve .ST-ask { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
+.ST-err { color: #A1291F; margin: 0; }
+.ST-payTag.is-approve { color: #A1291F; }
