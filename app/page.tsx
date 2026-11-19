@@ -551,7 +551,9 @@ export default function Checkout() {
               </div>
             </section>
             {quote && <div className="muted">Paid today: {money(quote.plan.dueNow)}{quote.plan.split ? ` · ${money(quote.plan.scheduled!.amount)} on ${balance}` : ""}</div>}
-            <div className="muted">Questions? <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
+            {stayUrl
+              ? <div className="muted">Questions? <a href={`${stayUrl}#chat`} data-cta="confirmation_message_hosts">Message Oscar &amp; Fernanda</a> · we usually reply within an hour.</div>
+              : <div className="muted">Questions? <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>}
             {stayUrl && !nextInView && <div className="stickySign"><a className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign_sticky">Complete required steps →</a></div>}
           </>)}
 
