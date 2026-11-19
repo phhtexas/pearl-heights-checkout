@@ -1,7 +1,7 @@
 import { MockHospitable, MockPayments, MockFailure } from "../adapters/mock";
 import { HospitableAdapter, PaymentsAdapter } from "../adapters/types";
 import { BookingStore, MemoryBookingStore } from "../services/bookingStore";
-import { StripePayments, assertTestKeys } from "../adapters/stripe";
+import { StripePayments, assertLiveKeys, assertTestKeys } from "../adapters/stripe";
 import { getDb } from "../db/client";
 import { CalendarSource, hospitableCalendarSource } from "../adapters/hospitableCalendar";
 import { DbLedger, Ledger, MemoryLedger } from "../db/ledger";
@@ -9,8 +9,9 @@ import { hospitableReservations } from "../adapters/hospitableReservations";
 import { PROPERTIES } from "../domain/properties";
 
 /**
- * Picks adapters by CHECKOUT_MODE. Only "mock" exists today; "test" (Stripe test mode + Hospitable)
- * and "live" are added once Oscar enters the keys in Vercel.
+ * Picks adapters by mode: "mock", "test" (Stripe TEST keys; Hospitable writes only with HOSPITABLE_WRITES=on) or
+ * "live" (pearlheightshomes.com with LIVE_CHECKOUT=on; Stripe LIVE keys; always real Hospitable reservations).
+ * Callers pass the request's settings from envForRequest (src/server/mode.ts).
  *
  * Guards (ChatGPT review, note 68):
  *  - A production deployment refuses mock adapters unless ALLOW_MOCK=true is set explicitly
@@ -20,7 +21,7 @@ import { PROPERTIES } from "../domain/properties";
  */
 type MockSet = { hosp: MockHospitable; pay: MockPayments; store: BookingStore; ledger: MemoryLedger; used: number };
 /** One isolated mock calendar + payments per tester session (ChatGPT note 73), capped in memory. */
-const g = globalThis as unknown as { __phh?: Map<string, MockSet>; __stripe?: StripePayments; __ledger?: DbLedger; __cal?: CalendarSource };
+const g = globalThis as unknown as { __phh?: Map<string, MockSet>; __stripe?: StripePayments; __stripeLive?: StripePayments; __liveStore?: BookingStore; __ledger?: DbLedger; __cal?: CalendarSource };
 const MAX_SESSIONS = 200;
 
 function mockSet(session: string): MockSet {
@@ -58,7 +59,14 @@ export function getAdapters(failure: MockFailure = "none", env: NodeJS.ProcessEn
     const errs = launchGateErrors(env);
     if (errs.length) throw new Error("Live mode blocked: " + errs.join(" "));
   }
-  if (mode !== "mock" && mode !== "test") throw new Error(`CHECKOUT_MODE=${mode} is not implemented yet; use mock or test.`);
+  if (mode === "live") {
+    // Live (pearlheightshomes.com with LIVE_CHECKOUT=on; env comes from envForMode): live Stripe keys, and every booking
+    // must create a real Hospitable reservation, so the dates are blocked on Airbnb too. No mocks, no simulated failures.
+    if (!env.HOSPITABLE_API_TOKEN) throw new Error("Live mode needs HOSPITABLE_API_TOKEN.");
+    g.__stripeLive ??= StripePayments.fromEnv(env); // refuses anything but live keys
+    return { hosp: realHospitable(env, true)!, pay: g.__stripeLive as PaymentsAdapter, store: (g.__liveStore ??= new MemoryBookingStore()), mode };
+  }
+  if (mode !== "mock" && mode !== "test") throw new Error(`CHECKOUT_MODE=${mode} is not implemented; use mock or test.`);
   // Hospitable is still mocked in both modes (Oscar, Nov 14: real calendar later, fake bookings), so the mock guard applies.
   // Vercel branch previews have no secrets: they run fully mocked (fake calendar, fake payments, in memory) for design review.
   const previewMock = env.VERCEL_ENV === "preview" && mode === "mock";
@@ -78,6 +86,7 @@ export function getAdapters(failure: MockFailure = "none", env: NodeJS.ProcessEn
 export function publicConfig(env: NodeJS.ProcessEnv = process.env): { mode: string; publishableKey?: string } {
   const mode = env.CHECKOUT_MODE ?? "mock";
   if (mode === "test") return { mode, publishableKey: assertTestKeys(env).publishable };
+  if (mode === "live") return { mode, publishableKey: assertLiveKeys(env).publishable };
   return { mode };
 }
 
@@ -104,8 +113,9 @@ function liveCalendar(env: NodeJS.ProcessEnv = process.env): CalendarSource | un
  * reservation (blocks the dates on every channel; Hospitable messages the guest), so it is turned on only for a
  * supervised test or at launch.
  */
-export function realHospitable(env: NodeJS.ProcessEnv = process.env): HospitableAdapter | null {
-  if (env.HOSPITABLE_WRITES !== "on" || !env.HOSPITABLE_API_TOKEN) return null;
+export function realHospitable(env: NodeJS.ProcessEnv = process.env, live = false): HospitableAdapter | null {
+  // Live bookings always write (that is the point); test bookings only with HOSPITABLE_WRITES=on (supervised tests).
+  if ((!live && env.HOSPITABLE_WRITES !== "on") || !env.HOSPITABLE_API_TOKEN) return null;
   const cal = liveCalendar(env)!;
   const w = hospitableReservations(env.HOSPITABLE_API_TOKEN, PROPERTIES.map((p) => p.hospitableUuid));
   return { getCalendar: (u, a, b, o) => cal(u, a, b, o), ...w };

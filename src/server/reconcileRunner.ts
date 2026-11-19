@@ -19,9 +19,9 @@ export function authorized(header: string | null, secret: string | undefined): b
 
 export interface RunCounts { due: number; resolved: number; deferred: number; skipped: number; failed: number; manual_review: number; timed_out: number }
 
-export async function runReconciliation(ledger: DbLedger, deps: ReconcileDeps, opts: { batch?: number; itemTimeoutMs?: number; deadlineMs?: number } = {}): Promise<RunCounts> {
+export async function runReconciliation(ledger: DbLedger, deps: ReconcileDeps, opts: { batch?: number; itemTimeoutMs?: number; deadlineMs?: number; livemode?: boolean } = {}): Promise<RunCounts> {
   const batch = Math.min(opts.batch ?? 10, 25), itemTimeoutMs = opts.itemTimeoutMs ?? 20_000, deadline = Date.now() + (opts.deadlineMs ?? 45_000);
-  const keys = await ledger.pendingReconciliation(batch);
+  const keys = await ledger.pendingReconciliation(batch, opts.livemode ?? false);
   const counts: RunCounts = { due: keys.length, resolved: 0, deferred: 0, skipped: 0, failed: 0, manual_review: 0, timed_out: 0 };
   for (const key of keys) {
     if (Date.now() > deadline) break;

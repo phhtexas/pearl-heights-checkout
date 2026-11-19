@@ -13,6 +13,7 @@ import { sendPurchase } from "@/services/metaCapi";
 import { textConfirmation } from "@/services/sms";
 import { emailConfirmation } from "@/services/email";
 import { HOMES } from "@/content/homes";
+import { envForRequest } from "@/server/mode";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -42,7 +43,11 @@ export async function POST(req: Request) {
     if (q.total !== input.acceptedTotal) return NextResponse.json({ error: "Your total doesn't match the price we showed. Please see your total again." }, { status: 400, headers: noStore });
     if (q.expiresAt.getTime() < Date.now()) return NextResponse.json({ ok: false, reason: "quote_expired", guestMessage: "Your 15-minute price hold expired. Please check your total again." }, { status: 409, headers: noStore });
 
-    const { hosp, pay, mode } = getAdapters((b.simulate ?? "none") as MockFailure, process.env, session.id);
+    // Live on pearlheightshomes.com (LIVE_CHECKOUT=on), test elsewhere; the quote must have been made in the same mode.
+    const env = envForRequest(req);
+    const live = env.CHECKOUT_MODE === "live";
+    if (!!q.livemode !== live) return NextResponse.json({ error: "Your stay details changed. Please see your total again." }, { status: 400, headers: noStore });
+    const { hosp, pay, mode } = getAdapters(live ? "none" : ((b.simulate ?? "none") as MockFailure), env, session.id);
     const bookingRef = newRef();
     const now = new Date();
     const request = { ...input, property: getProperty(input.property), bookingRef, now, lockedQuote: q.quote, consent: consentRecord(now) };
@@ -51,10 +56,10 @@ export async function POST(req: Request) {
       console.info("checkout", bookingRef, outcome.state, outcome.log.join(" | "));
       return outcome;
     });
-    getAdapters("none", process.env, session.id); // reset simulated failure
+    if (!live) getAdapters("none", process.env, session.id); // reset simulated failure
     if ((view as { ok?: boolean }).ok) {
       const ref = (view as { bookingRef?: string }).bookingRef ?? bookingRef;
-      await afterBooking(req, b, input, q.quote, ref);
+      await afterBooking(req, b, input, q.quote, ref, env);
       // Booking confirmation by text (Oscar, Nov 18). Only when the guest ticked the box on the details step (Twilio
       // toll-free verification requires an unchecked consent box). Off until GUEST_TEXTS=on + Twilio settings; never blocks.
       const db = getDb();
@@ -99,7 +104,7 @@ function shortRange(a: string, b: string) {
  * page) on the booking, and, if the guest accepted cookies, sends the server-side Meta "Purchase" event with the booking
  * value (before taxes) so Meta can report bookings and ROAS. Never blocks or fails the booking.
  */
-async function afterBooking(req: Request, b: any, input: { property: string; checkIn: string; checkOut: string; adults: number; children: number; guest: { email: string; phone: string } }, quote: { total: number; tax: number; nights: number }, bookingRef: string) { // eslint-disable-line @typescript-eslint/no-explicit-any
+async function afterBooking(req: Request, b: any, input: { property: string; checkIn: string; checkOut: string; adults: number; children: number; guest: { email: string; phone: string } }, quote: { total: number; tax: number; nights: number }, bookingRef: string, env: NodeJS.ProcessEnv = process.env) { // eslint-disable-line @typescript-eslint/no-explicit-any
   const a = b?.analytics ?? {};
   const str = (v: unknown, n = 200) => (typeof v === "string" ? v.slice(0, n) : undefined);
   const attrib = a.attribution && typeof a.attribution === "object"
@@ -114,7 +119,7 @@ async function afterBooking(req: Request, b: any, input: { property: string; che
         checkIn: input.checkIn, checkOut: input.checkOut, email: input.guest.email, phone: input.guest.phone,
         clientIp: (req.headers.get("x-forwarded-for") ?? "").split(",")[0]!.trim() || undefined, userAgent: req.headers.get("user-agent") ?? undefined,
         fbp: str(a.fbp), fbc: str(a.fbc), url: str(a.url, 500),
-      });
+      }, env);
     }
     if (db) await db.query(`UPDATE bookings SET attribution = $2::jsonb, ad_events_sent_at = CASE WHEN $3 THEN now() ELSE ad_events_sent_at END WHERE booking_ref = $1`,
       [bookingRef, attrib ? JSON.stringify(attrib) : null, sent === "sent"]);

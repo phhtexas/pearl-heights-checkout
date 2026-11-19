@@ -36,6 +36,8 @@ export function airbnbUrl(q: URLSearchParams): string | null {
 
 const CLOSED = [/^\/api\/checkout/, /^\/api\/host\//, /^\/host(\/|$)/, /^\/api\/stay-link/, /^\/api\/stay\//, /^\/stay\//, /^\/api\/mock/, /^\/preview\//];
 
+const ALWAYS_CLOSED = [/^\/api\/mock/, /^\/preview\//, /^\/api\/internal\/test-email/];
+
 export function middleware(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").toLowerCase().split(":")[0]!;
   // The Vercel test address and previews must never be indexed (only the real domain can be, after launch).
@@ -45,8 +47,12 @@ export function middleware(req: NextRequest) {
     const u = req.nextUrl.clone(); u.host = "pearlheightshomes.com"; u.port = "";
     return NextResponse.redirect(u, 308);
   }
-  if (CLOSED.some((r) => r.test(pathname))) return new NextResponse("Not found", { status: 404 });
+  // Launch switch (LIVE_CHECKOUT=on): direct booking opens on the real domain: checkout, stay pages, guest chat and the
+  // host inbox work, and Reserve stays on our checkout instead of going to Airbnb. Test-only paths stay closed.
+  const live = process.env.LIVE_CHECKOUT === "on";
+  if ((live ? ALWAYS_CLOSED : CLOSED).some((r) => r.test(pathname))) return new NextResponse("Not found", { status: 404 });
   if (pathname === "/") {
+    if (searchParams.get("home") && live) return NextResponse.next(); // the checkout page
     if (searchParams.get("home")) {
       const to = airbnbUrl(searchParams);
       if (to) return NextResponse.redirect(to, 307);

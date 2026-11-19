@@ -29,15 +29,15 @@ export async function bookingForToken(token: string): Promise<StayRow | null> {
 }
 
 /**
- * Who may use the paperwork APIs for a link: the sample portal in sandbox builds, or a real booking while checkout
- * runs in TEST mode (Oscar, Nov 17: real bookings, test mode first). Live mode stays off until launch sign-off.
+ * Who may use the paperwork APIs for a link: the sample portal in sandbox builds, or a real booking. A booking's
+ * paperwork uses the same mode it was paid in (row.livemode): test bookings get a SignWell TEST document and a Stripe
+ * TEST ID check; live bookings (pearlheightshomes.com) get the real ones.
  */
 export type PaperworkCtx =
   | { kind: "demo"; stay: StayData }
   | { kind: "booking"; stay: StayData; row: StayRow };
 export async function paperworkFor(token: string): Promise<PaperworkCtx | null> {
   if (token === "demo") return process.env.NEXT_PUBLIC_SANDBOX === "true" ? { kind: "demo", stay: demoStay() } : null;
-  if ((process.env.CHECKOUT_MODE ?? "mock") === "live") return null;
   const row = await bookingForToken(token);
   if (!row) return null;
   const stay = await stayForToken(token);

@@ -1,3 +1,4 @@
+import { urgentContact } from "../../server/stayContact";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { HOMES } from "@/content/homes";
@@ -33,7 +34,8 @@ const day = (iso: string) => new Date(iso + "T12:00:00Z").toLocaleDateString("en
 const TEST_GAP = "TEST: not yet provided";
 
 export function agreementSchedulefor(i: AgreementInput): PropertySchedule {
-  if (!i.testMode) return agreementSchedule(i.propertyKey, i.urgentContact);
+  // Live agreements always carry the urgent contact (server-only number, Legal note 9).
+  if (!i.testMode) return agreementSchedule(i.propertyKey, i.urgentContact ?? urgentContact());
   const d = draftSchedule(i.propertyKey, i.urgentContact ?? TEST_GAP);
   const gaps = new Set(scheduleGaps(d));
   return Object.fromEntries(SCHEDULE_FIELDS.map(([k, label]) => [k, gaps.has(label) ? TEST_GAP : d[k]!])) as PropertySchedule;

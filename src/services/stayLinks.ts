@@ -22,6 +22,8 @@ export interface StayRow {
   agreementSignedAt: string | null; agreementSignedName: string | null; signwellDocumentId: string | null;
   idCheckedAt: string | null; idStatus: string; stripeSession: string | null;
   totalCents: number; paidNowCents: number | null; guestEmail: string;
+  /** Paid in Stripe LIVE mode (pearlheightshomes.com); false = test. */
+  livemode: boolean;
 }
 
 const iso = (d: unknown) => (d instanceof Date ? d.toISOString() : d == null ? null : String(d));
@@ -48,7 +50,7 @@ export async function loadStay(db: Db, token: string, now = new Date()): Promise
   const [r] = await db.query<any>(
     `SELECT b.id, b.booking_ref, b.confirmed_at, b.verification_deadline_at,
             q.property_key, q.check_in, q.check_out, q.adults, q.children, q.infants,
-            q.total_cents, g.first_name, g.last_name, g.email,
+            q.total_cents, q.livemode, g.first_name, g.last_name, g.email,
             (SELECT p.amount_cents FROM payments p WHERE p.booking_id = b.id AND p.kind = 'initial' LIMIT 1) AS paid_now,
             v.agreement_signed_at, v.agreement_signed_name, v.signwell_document_id, v.id_checked_at, v.id_status, v.stripe_verification_session
        FROM stay_links l
@@ -66,6 +68,7 @@ export async function loadStay(db: Db, token: string, now = new Date()): Promise
     agreementSignedAt: iso(r.agreement_signed_at), agreementSignedName: r.agreement_signed_name ?? null, signwellDocumentId: r.signwell_document_id ?? null,
     idCheckedAt: iso(r.id_checked_at), idStatus: r.id_status ?? "pending", stripeSession: r.stripe_verification_session ?? null,
     totalCents: Number(r.total_cents), paidNowCents: r.paid_now == null ? null : Number(r.paid_now), guestEmail: r.email,
+    livemode: !!r.livemode,
   };
 }
 

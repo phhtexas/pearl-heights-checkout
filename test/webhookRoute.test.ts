@@ -8,7 +8,7 @@ const route = await import("../app/api/webhooks/stripe/route");
 const SECRET = "whsec_test_" + "b".repeat(24);
 const raw = JSON.stringify({ id: "evt_1", object: "event", type: "payment_intent.succeeded", created: 1, livemode: false, data: { object: { id: "pi_1" } } });
 const post = (body: string, sig?: string) => route.POST(new Request("https://x.test/api/webhooks/stripe", { method: "POST", body, headers: sig ? { "stripe-signature": sig } : {} }));
-afterEach(() => { delete process.env.STRIPE_WEBHOOK_SECRET; handled.mockClear(); });
+afterEach(() => { delete process.env.STRIPE_WEBHOOK_SECRET; delete process.env.STRIPE_LIVE_WEBHOOK_SECRET; handled.mockClear(); });
 
 describe("POST /api/webhooks/stripe", () => {
   it("not configured -> 503", async () => expect((await post(raw)).status).toBe(503));
@@ -43,6 +43,26 @@ describe("POST /api/webhooks/stripe body limit (note 95)", () => {
       expect(r.status).toBe(413);
       expect(r.headers.get("cache-control")).toBe("no-store");
     }
+    expect(handled).not.toHaveBeenCalled();
+  });
+});
+
+describe("live endpoint on pearlheightshomes.com (Oscar, Nov 19)", () => {
+  const LIVE = "whsec_live_" + "c".repeat(24);
+  const at = (host: string, body: string, secret: string) => route.POST(new Request(`https://${host}/api/webhooks/stripe`, { method: "POST", body,
+    headers: { host, "stripe-signature": Stripe.webhooks.generateTestHeaderString({ payload: body, secret }) } }));
+  const live = raw.replace('"livemode":false', '"livemode":true');
+  it("verifies with the LIVE secret and processes live events", async () => {
+    process.env.STRIPE_WEBHOOK_SECRET = SECRET; process.env.STRIPE_LIVE_WEBHOOK_SECRET = LIVE;
+    expect((await at("pearlheightshomes.com", live, SECRET)).status).toBe(400); // test secret is wrong here
+    const r = await at("pearlheightshomes.com", live, LIVE);
+    expect(r.status).toBe(200);
+    expect(handled).toHaveBeenCalledTimes(1);
+  });
+  it("ignores a test event at the live endpoint, and a live event at the test endpoint", async () => {
+    process.env.STRIPE_WEBHOOK_SECRET = SECRET; process.env.STRIPE_LIVE_WEBHOOK_SECRET = LIVE;
+    expect(await (await at("pearlheightshomes.com", raw, LIVE)).json()).toMatchObject({ ignored: "testmode" });
+    expect(await (await at("pearl-heights-checkout.vercel.app", live, SECRET)).json()).toMatchObject({ ignored: "livemode" });
     expect(handled).not.toHaveBeenCalled();
   });
 });

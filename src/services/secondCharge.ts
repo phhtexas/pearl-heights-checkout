@@ -29,16 +29,19 @@ const CLAIM_S = 120;
 
 export interface SecondChargeCounts { due: number; paid: number; retry_scheduled: number; failed_final: number; skipped: number; ambiguous: number; manual_review: number }
 
-export async function runDueSecondCharges(db: Db, pay: PaymentsAdapter, limit = 10): Promise<SecondChargeCounts> {
+/** Second payments due in one Stripe mode (livemode follows the booking's quote; test and live never mix). */
+export async function runDueSecondCharges(db: Db, pay: PaymentsAdapter, limit = 10, livemode = false): Promise<SecondChargeCounts> {
   const c: SecondChargeCounts = { due: 0, paid: 0, retry_scheduled: 0, failed_final: 0, skipped: 0, ambiguous: 0, manual_review: 0 };
   for (let i = 0; i < limit; i++) {
     const token = crypto.randomUUID();
     const [job] = await db.query<{ id: string; booking_id: string }>(
       `UPDATE jobs SET status = 'running', claim_token = $1, claim_expires_at = now() + make_interval(secs => $2), attempts = attempts + 1
-       WHERE id = (SELECT id FROM jobs WHERE type = 'second_payment'
-                     AND ((status = 'pending' AND run_at <= now()) OR (status = 'running' AND claim_expires_at < now()))
-                   ORDER BY run_at LIMIT 1 FOR UPDATE SKIP LOCKED)
-       RETURNING id, booking_id`, [token, CLAIM_S]);
+       WHERE id = (SELECT j.id FROM jobs j WHERE j.type = 'second_payment'
+                     AND ((j.status = 'pending' AND j.run_at <= now()) OR (j.status = 'running' AND j.claim_expires_at < now()))
+                     AND COALESCE((SELECT q.livemode FROM bookings b JOIN quotes q ON q.id = b.quote_id AND q.version = b.quote_version
+                                    WHERE b.id = j.booking_id), false) = $3
+                   ORDER BY j.run_at LIMIT 1 FOR UPDATE OF j SKIP LOCKED)
+       RETURNING id, booking_id`, [token, CLAIM_S, livemode]);
     if (!job) break;
     c.due++;
     c[await chargeOne(db, pay, job.id, job.booking_id, token)]++;

@@ -44,12 +44,14 @@ export interface SavedQuote {
   adults: number; children: number; infants: number; total: number; expiresAt: Date; quote: Quote;
   /** Anonymous browser session that requested the quote; checkout must come from the same session. */
   sessionId: string;
+  /** Stripe LIVE mode (pearlheightshomes.com with LIVE_CHECKOUT=on); false = test or mock. */
+  livemode?: boolean;
 }
 
 export interface StayRef { property: string; checkIn: string; checkOut: string; adults: number; children: number; infants: number }
 
 export interface Ledger {
-  saveQuote(stay: StayRef, quote: Quote, session: string, now: Date): Promise<SavedQuote>;
+  saveQuote(stay: StayRef, quote: Quote, session: string, now: Date, livemode?: boolean): Promise<SavedQuote>;
   getQuote(id: string): Promise<SavedQuote | null>;
   /** Runs the checkout once per attempt key; repeats get the stored guest view. */
   runAttempt(attemptKey: string, q: SavedQuote, bookingRef: string, work: () => Promise<CheckoutOutcome>): Promise<GuestView>;
@@ -79,27 +81,27 @@ function marketingRows(req: CheckoutRequest, guestId: string, bookingId: string)
 export class DbLedger implements Ledger {
   constructor(private db: Db, private pollMs = 400) {}
 
-  async saveQuote(stay: StayRef, quote: Quote, session: string, now: Date): Promise<SavedQuote> {
+  async saveQuote(stay: StayRef, quote: Quote, session: string, now: Date, livemode = false): Promise<SavedQuote> {
     const expiresAt = new Date(now.getTime() + QUOTE_HOLD_MS);
     const [row] = await this.db.query<{ id: string; version: number }>(
-      `INSERT INTO quotes (property_key, check_in, check_out, adults, children, infants, line_items, total_cents, expires_at, session_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, version`,
-      [stay.property, stay.checkIn, stay.checkOut, stay.adults, stay.children, stay.infants, JSON.stringify(quote), quote.total, expiresAt.toISOString(), session],
+      `INSERT INTO quotes (property_key, check_in, check_out, adults, children, infants, line_items, total_cents, expires_at, session_id, livemode)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, version`,
+      [stay.property, stay.checkIn, stay.checkOut, stay.adults, stay.children, stay.infants, JSON.stringify(quote), quote.total, expiresAt.toISOString(), session, livemode],
     );
     return { id: row!.id, version: row!.version, propertyKey: stay.property, checkIn: stay.checkIn, checkOut: stay.checkOut,
-      adults: stay.adults, children: stay.children, infants: stay.infants, total: quote.total, expiresAt, quote, sessionId: session };
+      adults: stay.adults, children: stay.children, infants: stay.infants, total: quote.total, expiresAt, quote, sessionId: session, livemode };
   }
 
   async getQuote(id: string): Promise<SavedQuote | null> {
     const rows = await this.db.query<any>(
       `SELECT id, version, property_key, to_char(check_in, 'YYYY-MM-DD') AS check_in, to_char(check_out, 'YYYY-MM-DD') AS check_out,
-              adults, children, infants, total_cents, expires_at, line_items, session_id
+              adults, children, infants, total_cents, expires_at, line_items, session_id, livemode
        FROM quotes WHERE id = $1 ORDER BY version DESC LIMIT 1`, [id]);
     const r = rows[0];
     if (!r) return null;
     const quote = typeof r.line_items === "string" ? JSON.parse(r.line_items) : r.line_items;
     return { id: r.id, version: r.version, propertyKey: r.property_key, checkIn: r.check_in, checkOut: r.check_out,
-      adults: r.adults, children: r.children, infants: r.infants, total: r.total_cents, expiresAt: new Date(r.expires_at), quote, sessionId: r.session_id ?? "" };
+      adults: r.adults, children: r.children, infants: r.infants, total: r.total_cents, expiresAt: new Date(r.expires_at), quote, sessionId: r.session_id ?? "", livemode: !!r.livemode };
   }
 
   async runAttempt(attemptKey: string, q: SavedQuote, bookingRef: string, work: () => Promise<CheckoutOutcome>): Promise<GuestView> {
@@ -395,13 +397,14 @@ export class DbLedger implements Ledger {
     return cal.filter((d) => d.date < q.checkOut).every((d) => !d.available);
   }
 
-  /** Attempts waiting for reconciliation (including claims whose worker died), oldest first. */
-  async pendingReconciliation(limit = 20): Promise<string[]> {
+  /** Attempts waiting for reconciliation (including claims whose worker died), oldest first, for one Stripe mode. */
+  async pendingReconciliation(limit = 20, livemode = false): Promise<string[]> {
     return (await this.db.query<{ attempt_key: string }>(
-      `SELECT attempt_key FROM checkout_attempts
-       WHERE (status = 'needs_reconciliation' AND (next_reconcile_at IS NULL OR next_reconcile_at <= now()))
-          OR (status = 'reconciling' AND claim_expires_at < now())
-       ORDER BY created_at LIMIT $1`, [limit])).map((r) => r.attempt_key);
+      `SELECT a.attempt_key FROM checkout_attempts a
+       WHERE ((a.status = 'needs_reconciliation' AND (a.next_reconcile_at IS NULL OR a.next_reconcile_at <= now()))
+          OR (a.status = 'reconciling' AND a.claim_expires_at < now()))
+         AND COALESCE((SELECT q.livemode FROM quotes q WHERE q.id = a.quote_id AND q.version = a.quote_version), false) = $2
+       ORDER BY a.created_at LIMIT $1`, [limit, livemode])).map((r) => r.attempt_key);
   }
 
   private async finish(attemptKey: string, stored: StoredOutcome): Promise<void> {

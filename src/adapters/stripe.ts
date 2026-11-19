@@ -16,6 +16,14 @@ export function assertTestKeys(env: NodeJS.ProcessEnv): { secret: string; publis
   return { secret, publishable };
 }
 
+/** Live mode (pearlheightshomes.com, LIVE_CHECKOUT=on): LIVE keys only. A restricted key (rk_live_) is fine. */
+export function assertLiveKeys(env: NodeJS.ProcessEnv): { secret: string; publishable: string } {
+  const secret = env.STRIPE_SECRET_KEY ?? "", publishable = env.STRIPE_PUBLISHABLE_KEY ?? "";
+  if (!secret.startsWith("sk_live_") && !secret.startsWith("rk_live_")) throw new Error("Live mode needs a Stripe LIVE secret key (STRIPE_LIVE_SECRET_KEY). Refusing to start.");
+  if (!publishable.startsWith("pk_live_")) throw new Error("Live mode needs a Stripe LIVE publishable key (STRIPE_LIVE_PUBLISHABLE_KEY). Refusing to start.");
+  return { secret, publishable };
+}
+
 export const ACCEPTED_PM_TYPES: string[] = ["card", "link"];
 
 type StripeLike = Pick<Stripe, "paymentIntents" | "customers" | "paymentMethods">;
@@ -24,7 +32,7 @@ export class StripePayments implements PaymentsAdapter {
   constructor(private stripe: StripeLike) {}
 
   static fromEnv(env: NodeJS.ProcessEnv): StripePayments {
-    const { secret } = assertTestKeys(env);
+    const { secret } = env.CHECKOUT_MODE === "live" ? assertLiveKeys(env) : assertTestKeys(env);
     return new StripePayments(new Stripe(secret, { maxNetworkRetries: 2 }));
   }
 

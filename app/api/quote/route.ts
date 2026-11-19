@@ -8,6 +8,7 @@ import { parseStay, ValidationError } from "@/server/validate";
 import { readSession, withSession } from "@/server/session";
 import { earliestCheckIn } from "@/domain/time";
 import { stayPolicy } from "@/domain/policy";
+import { hostOf, modeForHost } from "@/server/mode";
 
 export const dynamic = "force-dynamic";
 const noStore = { "Cache-Control": "no-store" };
@@ -31,7 +32,10 @@ export async function POST(req: Request) {
     if (nights.length < min) return NextResponse.json({ error: `Minimum stay is ${min} nights from this date.` }, { status: 400, headers: noStore });
     const quote = buildQuote({ ...s, property, nightlyRates: Object.fromEntries(nights.map((d) => [d.date, d.price])), now });
     // The quote the guest sees is saved; checkout must name it (persisted quote acceptance).
-    const saved = await getLedger(process.env, session.id).ledger.saveQuote({ ...s, property: property.key }, quote, session.id, now);
+    // The quote remembers its Stripe mode (live only on pearlheightshomes.com with LIVE_CHECKOUT=on), so it can only be
+    // paid in that mode. Prices and availability are the same real calendar either way.
+    const livemode = modeForHost(hostOf(req)) === "live";
+    const saved = await getLedger(process.env, session.id).ledger.saveQuote({ ...s, property: property.key }, quote, session.id, now, livemode);
     return withSession(NextResponse.json({ quote, quoteId: saved.id, expiresAt: saved.expiresAt.getTime(), policy: stayPolicy(s.checkIn, now, { exactGrace: false }) }, { headers: noStore }), session);
   } catch (e) {
     const status = e instanceof QuoteError || e instanceof ValidationError ? 400 : 500;

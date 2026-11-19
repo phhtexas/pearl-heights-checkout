@@ -6,7 +6,7 @@ import Stripe from "stripe";
  *
  * Privacy notice §4: this app keeps only the outcome, timestamps and the session id, never ID images or extracted
  * fields. So we never expand `verified_outputs` or `last_verification_report`; we read the status alone.
- * Test phase: only TEST keys are accepted (sk_test_/rk_test_); a live key throws.
+ * Keys: TEST keys for test bookings; LIVE keys (from envForLivemode) only when env.CHECKOUT_MODE is "live".
  */
 export class IdentityUnavailable extends Error { name = "IdentityUnavailable"; }
 
@@ -15,7 +15,8 @@ type IdentityLike = Pick<Stripe["identity"], "verificationSessions">;
 export function identityClient(env: Record<string, string | undefined> = process.env): IdentityLike {
   const k = env.STRIPE_SECRET_KEY?.trim() ?? "";
   if (!k) throw new IdentityUnavailable("STRIPE_SECRET_KEY is not set");
-  if (!k.startsWith("sk_test_") && !k.startsWith("rk_test_")) throw new Error("Identity is test-only for now: a TEST secret key is required.");
+  const live = env.CHECKOUT_MODE === "live";
+  if (live ? !/^(sk|rk)_live_/.test(k) : !/^(sk|rk)_test_/.test(k)) throw new Error(`Identity needs a ${live ? "LIVE" : "TEST"} secret key for this booking.`);
   return new Stripe(k, { maxNetworkRetries: 2 }).identity;
 }
 

@@ -8,9 +8,9 @@ import { recordAgreementSigned, recordSigningDocument } from "@/services/stayLin
 /**
  * Guest portal: rental agreement signing through SignWell (embedded).
  *  - /stay/demo (sandbox builds): a sample reservation.
- *  - Real bookings (Oscar, Nov 17), while checkout runs in TEST mode: the booking's own details, still a SignWell TEST
- *    document (not billed, not legally binding) with a test email, so nothing reaches the guest. On completion the
- *    signature is saved on the booking (verifications), so it shows on any device.
+ *  - Test bookings: the booking's own details in a SignWell TEST document (not billed, not binding) with a test email.
+ *  - Live bookings (paid on pearlheightshomes.com): a real document to the guest's email, with the urgent contact.
+ *  On completion the signature is saved on the booking (verifications), so it shows on any device.
  * The stay-link token is never sent to SignWell; documents are tied to the booking by an internal id in metadata.
  * POST  -> creates the agreement and returns the embedded signing URL.
  * GET ?doc=<id> -> asks SignWell whether that document is completed (the browser's "completed" event isn't trusted).
@@ -21,6 +21,8 @@ const TEST_EMAIL = "test-guest@example.com";
 const money = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 /** What ties a SignWell document to this portal: "demo", or the booking's internal id. */
 const owner = (c: PaperworkCtx) => (c.kind === "demo" ? "demo" : c.row.bookingId);
+/** Live bookings (paid on pearlheightshomes.com) get a real, binding SignWell document sent to the guest's own email. */
+const isLive = (c: PaperworkCtx) => c.kind === "booking" && c.row.livemode;
 
 // Best-effort throttle per server instance (test documents aren't billed, but keep the endpoint from being abused).
 const hits = new Map<string, number[]>();
@@ -45,19 +47,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   const price = ctx.kind === "booking"
     ? { total: money(ctx.row.totalCents), paidNow: ctx.row.paidNowCents == null ? money(ctx.row.totalCents) : money(ctx.row.paidNowCents) }
     : { total: "TEST $0.00", paidNow: "TEST $0.00" };
+  const live = isLive(ctx);
+  const email = live && ctx.kind === "booking" ? ctx.row.guestEmail : TEST_EMAIL;
   try {
     const html = agreementHtml({
-      bookingId: stay.code, propertyKey: stay.home.key, holder: { name, email: TEST_EMAIL },
+      bookingId: stay.code, propertyKey: stay.home.key, holder: { name, email },
       checkIn: stay.checkIn, checkOut: stay.checkOut, guests: { adults: stay.guests.adults, children: stay.guests.children, infants: ctx.kind === "booking" ? ctx.row.infants : 0 },
-      price, testMode: true,
+      price, testMode: !live,
     });
     const doc = await createSigningDocument({
-      name: `TEST Rental Agreement ${stay.code}`, html, signer: { name, email: TEST_EMAIL }, testMode: true,
+      name: `${live ? "" : "TEST "}Rental Agreement ${stay.code}`, html, signer: { name, email }, testMode: !live,
       redirectUrl: `${new URL(req.url).origin}/stay/${token}?signed=1`,
       metadata: { stay: owner(ctx), booking: stay.code, holder: stay.holder },
     });
     if (ctx.kind === "booking") { const db = getDb(); if (db) await recordSigningDocument(db, ctx.row.bookingId, doc.documentId).catch(() => undefined); }
-    return NextResponse.json({ documentId: doc.documentId, url: doc.embeddedSigningUrl, testMode: true }, { headers: noStore });
+    return NextResponse.json({ documentId: doc.documentId, url: doc.embeddedSigningUrl, testMode: !live }, { headers: noStore });
   } catch (e) {
     if (e instanceof ESignUnavailable) return NextResponse.json({ error: "Signing isn't set up yet.", fallback: true }, { status: 503, headers: noStore });
     console.error("[stay/agreement] create failed", (e as Error).message);
@@ -72,7 +76,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ token: s
   if (!ctx) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
   try {
     const s = await getDocumentStatus(doc);
-    if ((s.metadata?.stay ?? (s.metadata?.token === "demo" ? "demo" : undefined)) !== owner(ctx) || !s.testMode) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
+    if ((s.metadata?.stay ?? (s.metadata?.token === "demo" ? "demo" : undefined)) !== owner(ctx) || s.testMode === isLive(ctx)) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
     // The name the guest typed in the agreement's "Full legal name" field; nameEdited flags a change from the booking.
     const legalName = s.completed ? s.legalName : undefined;
     const nameEdited = !!legalName && !!s.metadata?.holder && legalName.toLowerCase() !== String(s.metadata.holder).trim().toLowerCase();

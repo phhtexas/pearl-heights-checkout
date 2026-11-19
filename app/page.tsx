@@ -93,7 +93,9 @@ export default function Checkout() {
   const [cfg, setCfg] = useState<{ mode: string; publishableKey?: string }>({ mode: "loading" });
   const createPm = useRef<CreatePm | null>(null);
   const onCardReady = useCallback((fn: CreatePm | null) => { createPm.current = fn; }, []);
-  const stripeMode = cfg.mode === "test" && !!cfg.publishableKey;
+  // Live (pearlheightshomes.com after launch): real Stripe, no test bar, test hints or simulations.
+  const isLive = cfg.mode === "live";
+  const stripeMode = (cfg.mode === "test" || isLive) && !!cfg.publishableKey;
   const prop = PROPERTIES.find((p) => p.key === home)!;
   const guests = adults + children;
   const listing = HOMES[home];
@@ -374,7 +376,7 @@ export default function Checkout() {
 
   if (!ready || !revealed) return (
     <div className="ck" aria-busy="true">
-      <div className="testbar"><span>Test checkout · no real charges</span></div>
+      {cfg.mode !== "live" && cfg.mode !== "loading" && <div className="testbar"><span>Test checkout · no real charges</span></div>}
       <header className="top"><span className="hdrSide" /><span className="brand"><img className="brandLogo" src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} /></span><span className="hdrSide" /></header>
       <main className="layout" aria-label="Loading your stay">
         <p className="sr" role="status">Loading your stay…</p>
@@ -390,12 +392,12 @@ export default function Checkout() {
 
   return (
     <div className={"ck" + (typing ? " isTyping" : "")}>
-      <div className="testbar">
+      {!isLive && <div className="testbar">
         <span>Test checkout · {stripeMode ? "Stripe test payments" : "fake payments"} · no real charges</span>
         <label>Home <select value={home} onChange={(e) => { setHome(e.target.value); setCi(null); setCo(null); setQuote(null); setStep("review"); }}>
           {PROPERTIES.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}</select></label>
         <button className="link" onClick={async () => { await fetch("/api/mock/reset", { method: "POST" }); restart(); }}>Reset</button>
-      </div>
+      </div>}
 
       <header className="top">
         <span className="mobileOnly hdrSide">{(step === "details" || step === "pay") &&
@@ -508,12 +510,12 @@ export default function Checkout() {
                   canPay={agreed && !busy} billing={{ name: `${guest.firstName} ${guest.lastName}`.trim(), email: guest.email, phone: guest.phone }}
                   onExpress={(id) => void pay(id)}
                   onLockedTap={() => { const el = document.getElementById("agree-box"); el?.scrollIntoView({ block: "center", behavior: "smooth" }); el?.focus({ preventScroll: true }); const lb = el?.closest("label"); lb?.classList.remove("nudge"); void lb?.getBoundingClientRect(); lb?.classList.add("nudge"); }} />
-                  <div className="muted">Test mode: card 4242 4242 4242 4242, any future date, any CVC. Decline: 4000 0000 0000 0002.</div></>
+                  {!isLive && <div className="muted">Test mode: card 4242 4242 4242 4242, any future date, any CVC. Decline: 4000 0000 0000 0002.</div>}</>
               : <div className="cardForm" id="card-box" tabIndex={-1}>Secure card form (Stripe) appears here</div>}
             
             <div className="muted small">After paying, you'll sign the rental agreement and verify your ID within {deadlineWindow}.</div>
-            <label className="fld"><span className="lbl">Test: simulate</span>
-              <select className="f" value={sim} onChange={(e) => setSim(e.target.value)}>{SIMS.filter(([v]) => !(stripeMode && CARD_SIMS.includes(v))).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+            {!isLive && <label className="fld"><span className="lbl">Test: simulate</span>
+              <select className="f" value={sim} onChange={(e) => setSim(e.target.value)}>{SIMS.filter(([v]) => !(stripeMode && CARD_SIMS.includes(v))).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>}
             <fieldset className="optIn">
               <legend>Stay in touch (optional)</legend>
               <label className="chk" data-optin="email"><input type="checkbox" checked={mktEmail} onChange={(e) => setMktEmail(e.target.checked)} />

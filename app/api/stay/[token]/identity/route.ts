@@ -2,18 +2,21 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { paperworkFor, type PaperworkCtx } from "@/server/stay";
 import { recordIdVerified } from "@/services/stayLinks";
-import { IdentityUnavailable, createIdSession, getIdState } from "@/services/identity";
+import { IdentityUnavailable, createIdSession, getIdState, identityClient } from "@/services/identity";
+import { envForLivemode } from "@/server/mode";
 
 /**
- * Guest portal: ID check through Stripe Identity: the TEST portal (/stay/demo), and real bookings while checkout runs in
- * test mode (Oscar, Nov 17; result saved on the booking). Stripe
- * TEST keys, so no real ID is needed (Stripe's test flow lets you pick the outcome) and nothing is billed.
+ * Guest portal: ID check through Stripe Identity: the TEST portal (/stay/demo) and real bookings (result saved on the
+ * booking). Test bookings use Stripe TEST keys (no real ID needed, nothing billed); live bookings use LIVE keys.
  * POST -> creates a verification session; returns its client secret for Stripe.js (and the hosted URL as a fallback).
  * GET ?vs=<id> -> the session's status, read from Stripe (the browser's result alone isn't trusted).
  */
 export const dynamic = "force-dynamic";
 /** What ties a Stripe verification session to this portal: "demo", or the booking's internal id (never the link token). */
 const owner = (c: PaperworkCtx) => (c.kind === "demo" ? "demo" : c.row.bookingId);
+/** Live bookings use the LIVE Identity account; test bookings and the demo use TEST. */
+const isLive = (c: PaperworkCtx) => c.kind === "booking" && c.row.livemode;
+const idClient = (c: PaperworkCtx) => identityClient(envForLivemode(isLive(c)));
 const noStore = { "Cache-Control": "no-store" };
 
 const hits = new Map<string, number[]>();
@@ -41,7 +44,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   if (ctx.kind === "booking" && ctx.row.idCheckedAt) return NextResponse.json({ error: "Your ID is already verified." }, { status: 409, headers: noStore });
   if (throttled(req)) return NextResponse.json({ error: "Too many tries. Please wait a few minutes." }, { status: 429, headers: noStore });
   try {
-    const s = await createIdSession({ metadata: { stay: owner(ctx), booking: ctx.stay.code }, returnUrl: `${new URL(req.url).origin}/stay/${token}?id=done` });
+    const s = await createIdSession({ metadata: { stay: owner(ctx), booking: ctx.stay.code }, returnUrl: `${new URL(req.url).origin}/stay/${token}?id=done` }, idClient(ctx));
     return NextResponse.json({ sessionId: s.id, clientSecret: s.clientSecret, url: s.url }, { headers: noStore });
   } catch (e) {
     const u = unavailable(e); if (u) return u;
@@ -56,8 +59,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ token: s
   const ctx = /^vs_[A-Za-z0-9]{8,64}$/.test(vs) ? await paperworkFor(token) : null;
   if (!ctx) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
   try {
-    const s = await getIdState(vs);
-    if ((s.metadata?.stay ?? (s.metadata?.token === "demo" ? "demo" : undefined)) !== owner(ctx) || !s.testMode) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
+    const s = await getIdState(vs, idClient(ctx));
+    if ((s.metadata?.stay ?? (s.metadata?.token === "demo" ? "demo" : undefined)) !== owner(ctx) || s.testMode === isLive(ctx)) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
     if (s.status === "verified" && ctx.kind === "booking") {
       const db = getDb();
       if (db) await recordIdVerified(db, ctx.row.bookingId, { sessionId: vs, checkedAt: new Date().toISOString(), checkoutISO: ctx.row.checkOut });

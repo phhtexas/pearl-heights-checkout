@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authorized, runReconciliation } from "@/server/reconcileRunner";
 import { getAdapters, getLedger } from "@/server/adapters";
+import { envForMode, liveSwitchOn } from "@/server/mode";
 import { DbLedger } from "@/db/ledger";
 import { getDb } from "@/db/client";
 import { runDueSecondCharges } from "@/services/secondCharge";
@@ -26,16 +27,32 @@ async function handle(req: Request): Promise<Response> {
   const { ledger } = getLedger(process.env, "reconciler");
   if (!(ledger instanceof DbLedger)) return NextResponse.json({ error: "Not configured" }, { status: 503, headers: noStore });
   const { hosp, pay } = getAdapters("none", process.env, "reconciler");
-  const reconciliation = await runReconciliation(ledger, { hosp, pay, propertyUuid: (k) => getProperty(k).hospitableUuid, verification: (ci) => verificationDeadline(new Date(), ci) });
+  const deps = (h: typeof hosp, p: typeof pay) => ({ hosp: h, pay: p, propertyUuid: (k: string) => getProperty(k).hospitableUuid, verification: (ci: string) => verificationDeadline(new Date(), ci) });
+  const reconciliation = await runReconciliation(ledger, deps(hosp, pay));
   const secondCharges = await runDueSecondCharges(getDb()!, pay);
+  // Live bookings (pearlheightshomes.com) get the same runs with the LIVE keys; test and live records never mix.
+  // Also runs if the switch is turned off later, while live bookings still have balances due.
+  let live: { reconciliation: unknown; secondCharges: unknown } | undefined;
+  let liveHosp: typeof hosp | undefined;
+  const hasLive = liveSwitchOn() || (await (async () => getDb()!.query(`SELECT 1 FROM quotes WHERE livemode LIMIT 1`))().catch(() => [])).length > 0;
+  if (hasLive) {
+    try {
+      const L = getAdapters("none", envForMode("live"), "reconciler-live");
+      liveHosp = L.hosp;
+      live = {
+        reconciliation: await runReconciliation(ledger, deps(L.hosp, L.pay), { livemode: true }),
+        secondCharges: await runDueSecondCharges(getDb()!, L.pay, 10, true),
+      };
+    } catch (e) { console.error("[maintenance] live run skipped:", String((e as Error).message).slice(0, 200)); }
+  }
   const rateLimitWindowsPurged = await purgeOldRateLimits(getDb()!).catch(() => 0);
   // Once an hour (the cron runs every minute): make sure no direct booking still has a Hospitable door-code message.
-  const checkinMessages = new Date().getUTCMinutes() === 7 ? await sweepCheckinMessages(getDb()!, hosp).catch(() => ({ checked: 0, cancelled: 0, failed: 1 })) : undefined;
+  const checkinMessages = new Date().getUTCMinutes() === 7 ? await sweepCheckinMessages(getDb()!, liveHosp ?? hosp).catch(() => ({ checked: 0, cancelled: 0, failed: 1 })) : undefined;
   // Every 5 minutes: guest reminders and notices (off until GUEST_EMAILS=on). Links use the public site address.
   const guestNotices = new Date().getUTCMinutes() % 5 === 3
     ? await sweepGuestNotices(getDb()!, process.env.PUBLIC_ORIGIN || "https://pearlheightshomes.com").catch((e) => { console.error("guest notices", String(e?.message ?? e)); return { checked: 0, sent: 0, failed: 1 }; })
     : undefined;
-  const counts = { reconciliation, secondCharges, rateLimitWindowsPurged, ...(checkinMessages !== undefined ? { checkinMessages } : {}), ...(guestNotices !== undefined ? { guestNotices } : {}) };
+  const counts = { reconciliation, secondCharges, ...(live ? { live } : {}), rateLimitWindowsPurged, ...(checkinMessages !== undefined ? { checkinMessages } : {}), ...(guestNotices !== undefined ? { guestNotices } : {}) };
   console.info("maintenance run", JSON.stringify(counts));
   return NextResponse.json(counts, { headers: noStore });
 }
