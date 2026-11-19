@@ -77,6 +77,10 @@ export default function Checkout() {
   const [sim, setSim] = useState("none");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  // Payment errors (Oscar, Nov 18): shown in one bar right above the Pay button (inside the pinned bar on phones), with
+  // "Change" to jump to the card field when the card is the problem. Cleared when they tap Change or pay again.
+  const [payErr, setPayErr] = useState<{ msg: string; change: boolean } | null>(null);
+  const CARD_REASONS = ["card_declined", "unsupported_method", "authentication_required"];
   const [quoting, setQuoting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [notice, setNotice] = useState("");
@@ -210,22 +214,22 @@ export default function Checkout() {
   async function pay(expressPmId?: string) {
     if (!quote) return;
     if (!agreed) return;
-    if (now > expiresAt) { await getQuote(); setErr("Your price lock ended, so we rechecked the price. Please review your total."); return; }
-    setErr(""); setBusy(true);
+    if (now > expiresAt) { await getQuote(); setPayErr({ msg: "Your price lock ended, so we rechecked the price. Please review your total.", change: false }); return; }
+    setErr(""); setPayErr(null); setBusy(true);
     let paymentMethodId: string | undefined;
     if (stripeMode && expressPmId) paymentMethodId = expressPmId; // Apple Pay / Google Pay / Link
     else if (stripeMode) {
-      if (!createPm.current) { setBusy(false); setErr("The payment form is still loading. Please try again."); return; }
+      if (!createPm.current) { setBusy(false); setPayErr({ msg: "The payment form is still loading. Please try again.", change: false }); return; }
       const pm = await createPm.current({ name: `${guest.firstName} ${guest.lastName}`.trim(), email: guest.email, phone: guest.phone });
-      if (pm.error || !pm.id) { setBusy(false); setErr(pm.error ?? "Please check your card details."); return; }
+      if (pm.error || !pm.id) { setBusy(false); setPayErr({ msg: pm.error ?? "Please check your card details.", change: true }); return; }
       paymentMethodId = pm.id;
     }
     const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, consentId: CONSENT_ID, marketingEmail: mktEmail, marketingSms: mktSms, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId,
       analytics: { consent: cookieConsent() === "granted", attribution: attribution(), ...metaBrowserIds(), url: location.href } }) });
     const j = await r.json().catch(() => ({}));
     setBusy(false);
-    if (j.reason === "quote_expired") { await getQuote(); setErr(j.guestMessage); return; }
-    if (!r.ok) { setErr(j.error ?? j.guestMessage ?? "Something went wrong. No charge was made."); return; }
+    if (j.reason === "quote_expired") { await getQuote(); setPayErr({ msg: j.guestMessage, change: false }); return; }
+    if (!r.ok) { setPayErr({ msg: j.error ?? j.guestMessage ?? "Something went wrong. No charge was made.", change: false }); return; }
     if (j.ok) {
       // Booking value for ROAS = what we earn before taxes (nights + extra guests + cleaning + damage waiver).
       track("purchase", { property: home, booking_ref: j.bookingRef, nights: quote.nights, adults, children, check_in: ci!, check_out: co!,
@@ -238,6 +242,7 @@ export default function Checkout() {
       return;
     }
     setResult(j);
+    if (j.guestMessage) setPayErr({ msg: j.guestMessage, change: CARD_REASONS.includes(j.reason) });
   }
 
   function restart() {
@@ -278,7 +283,15 @@ export default function Checkout() {
       .then((r) => (r.ok ? r.json() : null)).then((j) => { if (j?.url) setStayUrl(j.url); }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, preview, result?.ok ? result.bookingRef : ""]);
-  const go = (s: Step) => { setErr(""); setStep(s); window.scrollTo(0, 0); };
+  const go = (s: Step) => { setErr(""); setPayErr(null); setStep(s); window.scrollTo(0, 0); };
+  const changeCard = () => { setPayErr(null); const el = document.getElementById("card-box"); el?.scrollIntoView({ block: "center", behavior: "smooth" }); el?.focus({ preventScroll: true }); };
+  const payBar = payErr && (
+    <div className="payErr" role="alert">
+      <span className="peIcon" aria-hidden="true">!</span>
+      <span className="peMsg">{payErr.msg}</span>
+      {payErr.change && <button type="button" className="peChange" onClick={changeCard}>Change</button>}
+    </div>
+  );
   useEffect(() => {
     if (step === "pay" && quote) track("payment_step", { property: home, nights: quote.nights, check_in: ci!, check_out: co!, total_cents: quote.total }, "ps" + quoteId);
   }, [step, quoteId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -294,10 +307,12 @@ export default function Checkout() {
   const deadlineWindow = ci && Date.parse(ci + "T22:00:00Z") - now >= 48 * 3_600_000 ? "24 hours" : "2 hours";
 
   // The one main action per step (fixed footer on phones, inline on desktop).
-  const primary = step === "review" ? { label: "Continue to your details", disabled: !quote || quoting, run: () => go("details") }
+  const primary: { label: string; busy?: boolean; disabled: boolean; run: () => void } | null = step === "review" ? { label: "Continue to your details", disabled: !quote || quoting, run: () => go("details") }
     : step === "details" ? { label: "Continue to payment", disabled: false, run: submitDetails }
-    : step === "pay" && quote ? { label: busy ? "Processing…" : `Confirm and pay ${money(quote.plan.dueNow)}`, disabled: !agreed || busy, run: () => void pay() }
+    : step === "pay" && quote ? { label: `Confirm and pay ${money(quote.plan.dueNow)}`, busy, disabled: !agreed || busy, run: () => void pay() }
     : null;
+  // Processing state (Oscar, Nov 18): spinner + "Processing…", button keeps its color so it doesn't look broken.
+  const btnLabel = primary?.busy ? <><span className="spin" aria-hidden="true" />Processing…</> : primary?.label;
 
   const dayState = (iso: string) => {
     const d = byDate[iso];
@@ -486,17 +501,16 @@ export default function Checkout() {
                 <span data-consent>I&apos;m at least 25 and will stay at the home. I agree to the <a href={POLICY_LINKS.bookingTerms} target="_blank" rel="noopener">Direct Booking Terms and Cancellation Policy</a>, the <a href={POLICY_LINKS.rentalAgreement} target="_blank" rel="noopener">Rental Agreement and House Rules</a> (I&apos;ll sign it after paying) and the <a href={POLICY_LINKS.websiteTerms} target="_blank" rel="noopener">Website Terms</a>, and I&apos;ve read the <a href={POLICY_LINKS.privacy} target="_blank" rel="noopener">Privacy Notice</a>. I authorize the payment(s) shown above.</span></span></label>
             {/* Oscar, Nov 17: "We accept" card row removed; the card field already shows the card logos. */}
             {stripeMode
-              ? <><StripeCard publishableKey={cfg.publishableKey!} amount={quote.plan.dueNow} saveForLater={quote.plan.split} onReady={onCardReady}
+              ? <><div id="card-box" tabIndex={-1} /><StripeCard publishableKey={cfg.publishableKey!} amount={quote.plan.dueNow} saveForLater={quote.plan.split} onReady={onCardReady}
                   canPay={agreed && !busy} billing={{ name: `${guest.firstName} ${guest.lastName}`.trim(), email: guest.email, phone: guest.phone }}
                   onExpress={(id) => void pay(id)}
                   onLockedTap={() => { const el = document.getElementById("agree-box"); el?.scrollIntoView({ block: "center", behavior: "smooth" }); el?.focus({ preventScroll: true }); const lb = el?.closest("label"); lb?.classList.remove("nudge"); void lb?.getBoundingClientRect(); lb?.classList.add("nudge"); }} />
                   <div className="muted">Test mode: card 4242 4242 4242 4242, any future date, any CVC. Decline: 4000 0000 0000 0002.</div></>
-              : <div className="cardForm">Secure card form (Stripe) appears here</div>}
+              : <div className="cardForm" id="card-box" tabIndex={-1}>Secure card form (Stripe) appears here</div>}
             
             <div className="muted small">After paying, you'll sign the rental agreement and verify your ID within {deadlineWindow}.</div>
             <label className="fld"><span className="lbl">Test: simulate</span>
               <select className="f" value={sim} onChange={(e) => setSim(e.target.value)}>{SIMS.filter(([v]) => !(stripeMode && CARD_SIMS.includes(v))).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-            {result && !result.ok && <div className="alert">{result.guestMessage}</div>}
             <fieldset className="optIn">
               <legend>Stay in touch (optional)</legend>
               <label className="chk" data-optin="email"><input type="checkbox" checked={mktEmail} onChange={(e) => setMktEmail(e.target.checked)} />
@@ -539,7 +553,8 @@ export default function Checkout() {
           </>)}
 
           {err && !preview && <div className="err" role="alert">{err}</div>}
-          {primary && <button className="btn desktopOnly" disabled={primary.disabled} onClick={primary.run}>{primary.label}</button>}
+          {step === "pay" && payErr && <div className="desktopOnly">{payBar}</div>}
+          {primary && <button className={"btn desktopOnly" + (primary.busy ? " isBusy" : "")} disabled={primary.disabled} onClick={primary.run} aria-busy={primary.busy || undefined}>{btnLabel}</button>}
         </main>
         {step !== "done" && <div className="side desktopOnly">{aside}</div>}
       </div>
@@ -549,7 +564,8 @@ export default function Checkout() {
           <ol className="bars" aria-label="Checkout progress">
             {STEPS.map(([k, , short], i) => <li key={k} className={i < stepIdx ? "done" : i === stepIdx ? "on" : ""} aria-current={i === stepIdx ? "step" : undefined}><i aria-hidden="true" /><span>{i < stepIdx ? <><svg className="stepChk" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>{short}<span className="sr"> (completed)</span></> : <>{i + 1} {short}</>}</span></li>)}
           </ol>
-          <button className="btn" disabled={primary.disabled} onClick={primary.run}>{primary.label}</button>
+          {step === "pay" && payErr && payBar}
+          <button className={"btn" + (primary.busy ? " isBusy" : "")} disabled={primary.disabled} onClick={primary.run} aria-busy={primary.busy || undefined}>{btnLabel}</button>
         </footer>
       )}
 

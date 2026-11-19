@@ -370,3 +370,12 @@ input.f.bad { border-color: var(--bad); }
 .ck .miniHead .homeName { font-size: 17px; }
 .ck .bookedBanner h1 { font-size: 25px; line-height: 1.2; }
 .ck .nextStep .nsTime { margin: -2px 0 0; text-align: center; font-size: 14px; font-weight: 600; color: #1e4d35; }
+/* Pay button processing + payment error bar (Oscar, Nov 18). */
+.ck .btn.isBusy, .ck .btn.isBusy:disabled { opacity: 1; background: var(--ck-blue); color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 10px; cursor: progress; }
+.ck .spin { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.35); border-top-color: #fff; animation: ckspin .8s linear infinite; flex: none; }
+@keyframes ckspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ck .spin { animation-duration: 2.4s; } }
+.ck .payErr { display: flex; align-items: center; gap: 10px; background: #1d1a17; color: #fff; border-radius: 14px; padding: 12px 14px; margin: 0 0 10px; font-size: 14.5px; line-height: 1.35; }
+.ck .payErr .peIcon { flex: none; width: 22px; height: 22px; border-radius: 50%; background: #e57373; color: #1d1a17; font-weight: 800; display: grid; place-items: center; font-size: 14px; }
+.ck .payErr .peMsg { flex: 1; }
+.ck .payErr .peChange { flex: none; background: none; border: 0; color: #8fd19e; font: inherit; font-weight: 700; cursor: pointer; padding: 4px 2px; }
