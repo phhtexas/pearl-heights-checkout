@@ -87,7 +87,7 @@ export default function Page() {
     <div className="F-page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(siteJsonLd(["736", "752", "indianola", "edgewood", "claywell"].map((k) => HOMES[k]!))) }} />
       <aside className="F-mock" aria-label="Prototype label">Mockup F · prototype, not linked from the site</aside>
-      {/* E's conventional header (note 176): logo, section links, a clear "Ask a question" */}
+      {/* Oscar, Nov 19: logo + Browse homes · Map · Reviews · FAQ; "Ask a question" as a light outlined button so it doesn't compete with search. */}
       <Reveal />
       <SiteHeader>
         <div className="F-topIn">
@@ -96,7 +96,7 @@ export default function Page() {
             <img className="F-logo F-logoWhite" src="/brand/logo-white.webp" alt="" width={200} height={174} />
             <img className="F-logo F-logoDark" src="/brand/logo-dark.webp" alt="" width={200} height={174} />
           </a>
-          <nav className="F-nav" aria-label="Sections"><a href="#homes">Homes</a><a href="#locations">Locations</a><a href="#reviews">Reviews</a><a href="#faq">FAQ</a></nav>
+          <nav className="F-nav" aria-label="Sections"><a href="#homes">Browse homes</a><a href="#locations">Map</a><a href="#reviews">Reviews</a><a href="#faq">FAQ</a></nav>
           <a className="F-ask" data-cta="header_ask_question" href="mailto:bookings@pearlheightshomes.com">Ask a question</a>
         </div>
       </SiteHeader>

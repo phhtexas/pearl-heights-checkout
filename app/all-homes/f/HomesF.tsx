@@ -115,7 +115,29 @@ export function HomesF({ homes, hero, points, reasons }: {
   const [saved, toggleSaved] = useSaved(homes.map((h) => h.key));
   const savedCount = homes.filter((h) => saved[h.key]).length;
   const [onlySaved, setOnlySaved] = useState(false);
-  useEffect(() => { if (!savedCount) setOnlySaved(false); }, [savedCount]);
+  // The Saved filter lives in the URL (?saved=1) like the search, so Back (link or browser) restores it.
+  useEffect(() => { if (new URLSearchParams(location.search).get("saved") === "1") setOnlySaved(true); }, []);
+  const hadSaved = useRef(false);
+  useEffect(() => { if (savedCount) hadSaved.current = true; else if (hadSaved.current) setOnlySaved(false); }, [savedCount]);
+  useEffect(() => {
+    const u = new URL(location.href);
+    if (onlySaved) u.searchParams.set("saved", "1"); else u.searchParams.delete("saved");
+    if (u.href !== location.href) history.replaceState(history.state, "", u);
+  }, [onlySaved]);
+  // Back from a listing (?card=<home>): once the results are on screen, bring that home's card into view, then drop
+  // the param so a reload or a later visit doesn't jump again. Only for returns to the same results.
+  useEffect(() => {
+    const u = new URL(location.href), key = u.searchParams.get("card");
+    if (!key || !/^[a-z0-9-]{2,20}$/.test(key)) return;
+    const waiting = u.searchParams.get("checkIn") && s.state !== "done" && s.state !== "error";
+    if (waiting) return;
+    requestAnimationFrame(() => {
+      document.getElementById(`home-${key}`)?.scrollIntoView({ block: "start" });
+      u.searchParams.delete("card");
+      history.replaceState(history.state, "", u);
+    });
+  }, [s.state]);
+  const link = (slug: string) => s.href(slug, onlySaved ? { saved: "1" } : {});
   const selArea = selected?.name;
   const mapRef = useRef<HTMLDivElement>(null);
   const pickArea = (name: string) => {
@@ -132,8 +154,12 @@ export function HomesF({ homes, hero, points, reasons }: {
     const off = searched && r && !r.ok;
     const on = !!saved[h.key];
     return (
-      <li key={h.key} id={`home-${h.key}`} className={`F-card${off ? " is-off" : ""}`} data-reveal>
-        <Photos h={h} href={s.href(h.slug)} first={i === 0} />
+      <li key={h.key} id={`home-${h.key}`} className={`F-card${off ? " is-off" : ""}`} data-reveal onClickCapture={(e) => {
+        // Remember which card was opened in this page's own URL, so the browser Back button also returns to it.
+        if (!(e.target as HTMLElement).closest("a[href^='/homes/']")) return;
+        const u = new URL(location.href); u.searchParams.set("card", h.key); history.replaceState(history.state, "", u);
+      }}>
+        <Photos h={h} href={link(h.slug)} first={i === 0} />
         <button type="button" className={"F-heart" + (on ? " is-on" : "")} aria-pressed={on} aria-label={on ? `Saved: ${h.title}` : `Save ${h.title}`}
           onClick={() => toggleSaved(h.key, "home_card")}>
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 20s-7-4.4-9.2-8.6C1.3 8.4 3.2 5 6.6 5c2 0 3.4 1.1 4.4 2.5C12 6.1 13.4 5 15.4 5c3.4 0 5.3 3.4 3.8 6.4C19 15.6 12 20 12 20z" /></svg>
@@ -141,7 +167,7 @@ export function HomesF({ homes, hero, points, reasons }: {
         <div className="F-info">
           <p className="F-fit">{h.bestFit}</p>
           <p className="F-meta">{h.area} · {h.rating ? <span>★ {h.rating.value} <span className="F-dim">({h.rating.count} Airbnb guest reviews)</span></span> : <b>New home</b>}</p>
-          <h3><a href={s.href(h.slug)} data-cta="home_card_title" data-cta-home={h.key}>{h.title}</a></h3>
+          <h3><a href={link(h.slug)} data-cta="home_card_title" data-cta-home={h.key}>{h.title}</a></h3>
           <p className="F-dim">{h.guests} guests · {h.bedrooms} bedrooms · {h.beds} beds · {h.baths} bath{h.baths === 1 ? "" : "s"}</p>
           <ul className="F-points">{h.points.map((p) => <li key={p}>{p}</li>)}</ul>
           <div className="F-buy">
@@ -153,7 +179,7 @@ export function HomesF({ homes, hero, points, reasons }: {
                 : r.ok ? <><b>{money(r.total!)}</b><span>total for {nights} night{nights === 1 ? "" : "s"}, taxes included</span></>
                 : <><span className="F-dim">{r.reason}</span>{r.reason !== `Sleeps ${h.guests}` && <button type="button" className="F-retry" onClick={toSearch}>Try other dates</button>}</>}
             </p>
-            <a className="F-cta" href={s.href(h.slug)} data-cta="home_card_view" data-cta-home={h.key} aria-label={`View ${h.title}`}>View home</a>
+            <a className="F-cta" href={link(h.slug)} data-cta="home_card_view" data-cta-home={h.key} aria-label={`View ${h.title}`}>View home</a>
           </div>
         </div>
       </li>

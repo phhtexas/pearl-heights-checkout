@@ -50,9 +50,16 @@ export function useStays(variant: "a" | "b" | "c" | "e" | "f") {
   }, [run]);
 
   const search = () => run(ci, co, adults, children);
-  const href = (slug: string) => {
-    const base = `/homes/${slug}`;
-    return ci && co && state === "done" ? `${base}?checkIn=${ci}&checkOut=${co}&adults=${adults}&children=${children}` : base;
+  /**
+   * Link to a home from these results. It carries the search (dates + guests, only after a finished search, as before)
+   * and from=browse plus any extra list state (e.g. saved=1), so the listing's "Back to all homes" can rebuild these
+   * exact results (Oscar, Nov 19). The URL stays the one source of truth; no separate storage.
+   */
+  const href = (slug: string, extra: Record<string, string> = {}) => {
+    const q = new URLSearchParams({ from: "browse" });
+    if (ci && co && state === "done") for (const [k, v] of Object.entries({ checkIn: ci, checkOut: co, adults: String(adults), children: String(children) })) q.set(k, v);
+    for (const [k, v] of Object.entries(extra)) q.set(k, v);
+    return `/homes/${slug}?${q}`;
   };
   const setCheckIn = (v: string) => { setCi(v); if (co && co <= v) setCo(""); };
   return { ci, co, setCheckIn, setCo, adults, setAdults, children, setChildren, results, state, error, search, href, min };

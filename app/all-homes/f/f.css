@@ -39,7 +39,7 @@
 
 /* Home cards */
 .F-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 32px; }
-.F-card { position: relative; background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.07); scroll-margin-top: 24px; transition: box-shadow .3s; }
+.F-card { position: relative; background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.07); scroll-margin-top: 84px; transition: box-shadow .3s; }
 .F-card.is-flash { box-shadow: 0 0 0 3px var(--acc), 0 10px 30px rgba(0,0,0,.1); }
 .F-photos { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 4px; scrollbar-width: none; }
 .F-photos:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; }
@@ -579,3 +579,9 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 .F-savedBar { display: inline-flex; gap: 6px; margin: 14px 0 0; padding: 4px; border-radius: 999px; background: #f1f0ec; }
 .F-savedBar button { font: inherit; font-size: 15px; border: 0; background: none; padding: 8px 16px; border-radius: 999px; cursor: pointer; color: var(--ink); }
 .F-savedBar button[aria-pressed="true"] { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.12); font-weight: 600; }
+
+/* Oscar, Nov 19: "Ask a question" as a light outlined button (search stays the primary action). */
+.F-page .F-ask, .F-page .F-top:not(.is-solid) .F-ask { background: transparent; color: var(--ink); border: 1.5px solid currentColor; padding: 9.5px 16px; font-weight: 600; }
+.F-page .F-top:not(.is-solid) .F-ask { color: #fff; }
+.F-page .F-ask:hover, .F-page .F-top:not(.is-solid) .F-ask:hover { background: rgba(127,127,127,.12); transform: none; }
+@media (max-width: 760px) { .F-page .F-ask, .F-page .F-top:not(.is-solid) .F-ask { padding: 8px 12px; } }

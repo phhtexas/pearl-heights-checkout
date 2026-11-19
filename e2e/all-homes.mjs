@@ -32,7 +32,7 @@ for (const v of ["c"]) for (const dev of [devices["iPhone 13"], { viewport: { wi
   ok((after.match(/total for 3 nights/g) ?? []).length >= 1, `${tag}: search shows exact totals`);
   ok(page.url().includes(`checkIn=${iso(a)}`), `${tag}: search is in the link (shareable)`);
   const href = await page.locator('#home-752 a[href^="/homes/"]').first().getAttribute("href");
-  ok(href === `/homes/752-myrtle?checkIn=${iso(a)}&checkOut=${iso(b)}&adults=2&children=0`, `${tag}: card link carries the search (${href})`);
+  ok(href === `/homes/752-myrtle?from=browse&checkIn=${iso(a)}&checkOut=${iso(b)}&adults=2&children=0`, `${tag}: card link carries the search (${href})`);
   // Guests over capacity -> reason on the 8-guest homes
   await page.click(".S-guests > button");
   for (let i = 0; i < 7; i++) await page.click('button[aria-label="More adults"]');
@@ -120,7 +120,7 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   const totals = await page.$$eval(".E-card .E-price b", (bs) => bs.map((b) => Number((b.textContent ?? "").replace(/[^\d]/g, ""))).filter((n) => n > 0));
   ok(totals.length >= 2 && totals.every((v, i) => i === 0 || v >= totals[i - 1]), `${tag}: sort by lowest total works`);
   const href = await page.locator("#home-752 a.E-stretch").getAttribute("href");
-  ok(href === `/homes/752-myrtle?checkIn=${iso(a)}&checkOut=${iso(b)}&adults=2&children=0`, `${tag}: card opens the listing with the dates (${href})`);
+  ok(href === `/homes/752-myrtle?from=browse&checkIn=${iso(a)}&checkOut=${iso(b)}&adults=2&children=0`, `${tag}: card opens the listing with the dates (${href})`);
   ok(/from \$[\d,]+/.test(await page.locator(".E-hoods").innerText()), `${tag}: neighborhoods show live 'from' totals`);
   await page.locator("#locations").scrollIntoViewIfNeeded(); await page.waitForTimeout(600);
   ok((await page.locator(".C-pin").count()) === 5 && (await page.locator(".C-pin").allInnerTexts()).some((x) => /^\$/.test(x)), `${tag}: real map with five priced pins`);
@@ -162,7 +162,7 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   ok(!(await page.locator("header.F-top").getAttribute("class")).includes("is-solid"), `${tag}: header see-through over the photo`);
   ok((await page.locator('.F-logoWhite[src="/brand/logo-white.webp"]').count()) === 1 && (await page.locator('.F-logoDark[src="/brand/logo-dark.webp"]').count()) === 1, `${tag}: site logo (white over photo, dark when solid)`);
   ok(await page.evaluate(() => getComputedStyle(document.querySelector(".F-heroText")).textAlign === "center"), `${tag}: hero text centered`);
-  if (w > 760) ok((await page.locator(".F-nav a").allInnerTexts()).join(",") === "Homes,Locations,Reviews,FAQ", `${tag}: nav Homes, Locations, Reviews, FAQ`);
+  if (w > 760) ok((await page.locator(".F-nav a").allInnerTexts()).join(",") === "Browse homes,Map,Reviews,FAQ", `${tag}: nav Browse homes, Map, Reviews, FAQ`);
   for (const id of ["homes", "locations", "reviews", "faq"]) ok((await page.locator(`#${id}`).count()) === 1, `${tag}: nav target #${id}`);
   ok((await page.locator(".E-chip, .chip, select[aria-label='Sort homes']").count()) === 0, `${tag}: no filters or sort`);
   const t = await page.evaluate(() => document.body.innerText);
@@ -197,7 +197,7 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   await page.waitForFunction(() => /total for 3 nights/.test(document.body.innerText), null, { timeout: 15000 }).catch(() => {});
   ok(/total for 3 nights/.test(await page.evaluate(() => document.body.innerText)), `${tag}: 'Select dates' runs the search -> live totals`);
   const href = await page.locator('#home-752 a[href^="/homes/"]').first().getAttribute("href");
-  ok(href === `/homes/752-myrtle?checkIn=${iso(a)}&checkOut=${iso(b)}&adults=2&children=0`, `${tag}: View home carries the dates`);
+  ok(href === `/homes/752-myrtle?from=browse&checkIn=${iso(a)}&checkOut=${iso(b)}&adults=2&children=0`, `${tag}: View home carries the dates`);
   { // available homes first, unavailable below a divider (all still shown)
     const order = await page.evaluate(() => [...document.querySelectorAll(".F-list > li")].map((li) => li.classList.contains("F-offHead") ? "divider" : li.classList.contains("is-off") ? "off" : "on"));
     const firstOff = order.indexOf("off");

@@ -9,7 +9,7 @@ import { track } from "@/client/track";
 import { ShareSheet } from "./ShareSheet";
 import { useSaved } from "@/client/saved";
 import { Icon, iconFor } from "./icons";
-import { SiteNav } from "../SiteNav";
+import { ALL_HOMES, ListingNav } from "../SiteNav";
 import { TileMapV2 as TileMap } from "./TileMapV2";
 import "./listing.css";
 import "./listingV2.css";
@@ -123,6 +123,18 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
       .catch(() => setCalErr("Availability is temporarily unavailable. Please try again."));
   }, [prop.key]);
   const byDate = useMemo(() => Object.fromEntries(days.map((d) => [d.date, d])), [days]);
+  // "← Back to all homes" (Oscar, Nov 19): when this page was opened from the All Homes results (from=browse), rebuild
+  // those results from this page's own URL (dates, guests, saved filter) and ask All Homes to bring this home's card
+  // back into view (card=). Opened directly: the default All Homes page, nothing restored. Never a blind history.back().
+  const [backHref, setBackHref] = useState(ALL_HOMES);
+  useEffect(() => {
+    const q = new URLSearchParams(location.search);
+    if (q.get("from") !== "browse") return;
+    const keep = new URLSearchParams();
+    for (const k of ["checkIn", "checkOut", "adults", "children", "saved"]) { const v = q.get(k); if (v && /^[0-9-]{1,10}$/.test(v)) keep.set(k, v); }
+    keep.set("card", prop.key);
+    setBackHref(`${ALL_HOMES}?${keep}`);
+  }, [prop.key]);
   // Dates and guests handed over from the All Homes page (?checkIn=&checkOut=&adults=&children=): prefill, then quote.
   useEffect(() => {
     const q = new URLSearchParams(location.search);
@@ -258,16 +270,18 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
   return (
     <div className="V-page">
       <div className="V-test">Test site · nothing is booked or charged</div>
-      {/* Oscar, Nov 17: the All Homes F menu on every page; share/save stay next to "Ask a question" */}
-      <SiteNav sticky={false} extra={<>
-        <button className="V-round" onClick={share} aria-label="Share this home"><Icon name="share" size={18} /></button>
-        <button className={"V-round" + (saved ? " V-saved" : "")} onClick={toggleSave} aria-pressed={saved} aria-label={saved ? "Saved" : "Save this home"}><Icon name="heart" size={18} /></button>
-      </>} />
+      {/* Oscar, Nov 19: a simpler header on property pages (back to the results, ask about THIS home). */}
+      <ListingNav backHref={backHref} askHref={`mailto:${CONTACT.email}?subject=${encodeURIComponent("Question about " + home.title)}`} />
       {shared && <div className="V-toast" role="status">{shared}</div>}
       <ShareSheet open={shareOpen} onClose={() => setShareOpen(false)} url={typeof location !== "undefined" ? location.origin + location.pathname : ""}
         title={home.title} photo={src(home.photos[0]!.id)} photoAlt={home.photos[0]!.alt} rating={home.rating ?? undefined} area={`${home.neighborhood}, San Antonio`} propertyKey={prop.key} />
 
       <section ref={heroRef} className="V-hero" aria-label="Photos">
+        {/* Share and Save over the gallery's top-right (Oscar, Nov 19), first in the tab order: clear of the arrows (middle) and counter (bottom). */}
+        <div className="V-heroActs">
+          <button className="V-heroBtn" onClick={share} aria-label="Share this home"><Icon name="share" size={20} /></button>
+          <button className={"V-heroBtn" + (saved ? " V-saved" : "")} onClick={toggleSave} aria-pressed={saved} aria-label={saved ? "Saved" : "Save this home"}><Icon name="heart" size={20} /></button>
+        </div>
         <div ref={carRef} className="V-carousel" tabIndex={0} role="region" aria-roledescription="carousel" aria-label={`Photos, ${slide + 1} of ${home.photos.length}. Use the left and right arrow keys to browse; press Enter for the photo tour.`}
           onKeyDown={(e) => { if (e.key === "ArrowRight") { e.preventDefault(); goSlide(slide + 1); } else if (e.key === "ArrowLeft") { e.preventDefault(); goSlide(slide - 1); } else if (e.key === "Enter") { setTourFocus(null); open("tour"); } }}
           onClick={() => { setTourFocus(null); open("tour"); }} onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
