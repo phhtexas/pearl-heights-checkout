@@ -381,7 +381,7 @@ export const GUIDES: Guide[] = [
   },
   {
     slug: "downtown-hemisfair-alamodome",
-    approved: false,
+    approved: true, // Oscar approved Nov 18, 2026
     title: "Downtown with kids: Hemisfair, the Tower and the Alamodome",
     description: "A family home in historic Lavaca, about a 2-minute walk to the Tower of the Americas and 5 minutes to Hemisfair's playgrounds and the Convention Center.",
     updated: "2026-11-18",

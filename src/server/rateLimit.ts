@@ -18,6 +18,7 @@ export const LIMITS = {
   quote: { bucket: "quote", max: 30, windowS: 60 },
   checkout: { bucket: "checkout", max: 10, windowS: 600 },
   mockReset: { bucket: "mock_reset", max: 5, windowS: 60 },
+  testEmail: { bucket: "test_email", max: 3, windowS: 3600 },
 } satisfies Record<string, Limit>;
 
 export function clientHash(req: Request, salt: string): string {
