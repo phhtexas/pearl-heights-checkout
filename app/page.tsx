@@ -519,7 +519,7 @@ export default function Checkout() {
               <h2 id="nextStepTitle">Complete your paperwork</h2>
               <p>Sign the rental agreement and verify your ID by <b>{result.verification.deadlineText}</b>.</p>
               {stayUrl && <a ref={nextBtn} className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign">Complete required steps →</a>}
-              <p className="nsTime">Takes about 4 minutes: about 2 minutes each.</p>
+              <p className="nsTime">Takes about 2 minutes.</p>
               <p className="nsAfter">Once both are complete, you'll get your check-in details in your guest portal.</p>
             </section>
             <section className="miniHome">

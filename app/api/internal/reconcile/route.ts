@@ -29,7 +29,7 @@ async function handle(req: Request): Promise<Response> {
   const secondCharges = await runDueSecondCharges(getDb()!, pay);
   const rateLimitWindowsPurged = await purgeOldRateLimits(getDb()!).catch(() => 0);
   // Once an hour (the cron runs every minute): make sure no direct booking still has a Hospitable door-code message.
-  const checkinMessages = new Date().getUTCMinutes() === 7 ? await sweepCheckinMessages(getDb()!, hosp).catch(() => null) : undefined;
+  const checkinMessages = new Date().getUTCMinutes() === 7 ? await sweepCheckinMessages(getDb()!, hosp).catch(() => ({ checked: 0, cancelled: 0, failed: 1 })) : undefined;
   const counts = { reconciliation, secondCharges, rateLimitWindowsPurged, ...(checkinMessages !== undefined ? { checkinMessages } : {}) };
   console.info("maintenance run", JSON.stringify(counts));
   return NextResponse.json(counts, { headers: noStore });
