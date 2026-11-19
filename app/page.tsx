@@ -532,7 +532,7 @@ export default function Checkout() {
             <div className="muted">Questions? <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
           </>)}
 
-          {err && <div className="err" role="alert">{err}</div>}
+          {err && !preview && <div className="err" role="alert">{err}</div>}
           {primary && <button className="btn desktopOnly" disabled={primary.disabled} onClick={primary.run}>{primary.label}</button>}
         </main>
         {step !== "done" && <div className="side desktopOnly">{aside}</div>}
