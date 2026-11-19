@@ -108,6 +108,10 @@ export async function maybeDoorCodeAlert(db: Db, bookingId: string, env: NodeJS.
     [bookingId]);
   const i = r?.info && (typeof r.info === "string" ? JSON.parse(r.info) : r.info);
   if (!i) return false;
+  // Homes whose check-in message uses one fixed code (e.g. 613 Indianola) have nothing to set per guest: no alert.
+  // If the home isn't set up yet, alert anyway so the lock is ready either way.
+  const d = await getDetails(db, i.home).catch(() => null);
+  if (d?.message && !d.message.toLowerCase().includes("%guest_phone_last4%")) return false;
   const iso = (d: unknown) => (d instanceof Date ? d.toISOString() : String(d)).slice(0, 10);
   const home = HOMES[i.home]?.title ?? i.home, code = phoneLast4(i.phone), tag = i.live ? "" : "TEST · ";
   const dates = `${day(iso(i.ci))} – ${day(iso(i.co))}`;

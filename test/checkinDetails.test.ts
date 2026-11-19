@@ -106,4 +106,17 @@ describe("check-in details", () => {
     expect(sent[0].subject).toMatch(/^TEST · Set door code 0100 · /); // test booking, phone 2105550100
     expect(sent[0].text).toContain("PH-STAY01");
   });
+
+  it("no door-code alert for a home whose message uses one fixed code", async () => {
+    await book();
+    const t = (await issueStayLink(db, { bookingRef: "PH-STAY01", sessionId: "sess-A", channel: "confirmation", now: NOW }))!;
+    const id = (await loadStay(db, t, NOW))!.bookingId;
+    await saveDetails(db, "752", { address: "1 Sample St", message: "Hi %guest_first_name%, the code is 0000 for everyone." }, "h");
+    await recordAgreementSigned(db, id, { documentId: "11111111-2222-4333-8444-555555555555", signedAt: "2026-11-15T10:00:00Z", signedName: "Ana Guest" });
+    await recordIdVerified(db, id, { sessionId: "vs_test123456", checkedAt: "2026-11-15T10:05:00Z", checkoutISO: "2027-04-14" });
+    const sent: unknown[] = [];
+    const fetchImpl = (async (_u: string, init: any) => { sent.push(init); return new Response("{}", { status: 200 }); }) as unknown as typeof fetch;
+    expect(await maybeDoorCodeAlert(db, id, { RESEND_API_KEY: "re_test" } as unknown as NodeJS.ProcessEnv, fetchImpl)).toBe(false);
+    expect(sent).toHaveLength(0);
+  });
 });
