@@ -22,6 +22,7 @@ await page.waitForFunction(() => { const b = document.querySelector("footer .btn
 ok((await page.locator(".ln.total").first().innerText()).includes("$"), "total shown on the review step");
 await next.click();
 for (const [label, v] of [["First name", "Test"], ["Last name", "Guest"], ["Email", "test@example.com"], ["Mobile phone", "2105550100"]]) await page.getByLabel(label).fill(v);
+ok(!(await page.locator('[data-optin="booking-text"] input').isChecked()), "booking-text consent box starts unchecked (Twilio)");
 await page.evaluate(() => document.activeElement?.blur()); // keyboard closed (the bottom bar hides while typing)
 await next.click(); // Continue to payment
 // Optional marketing boxes: present, separate; the text names the number the texts would go to.

@@ -53,10 +53,11 @@ export async function POST(req: Request) {
     if ((view as { ok?: boolean }).ok) {
       const ref = (view as { bookingRef?: string }).bookingRef ?? bookingRef;
       await afterBooking(req, b, input, q.quote, ref);
-      // Booking confirmation by text (Oscar, Nov 18). Off until GUEST_TEXTS=on + Twilio settings; never blocks.
+      // Booking confirmation by text (Oscar, Nov 18). Only when the guest ticked the box on the details step (Twilio
+      // toll-free verification requires an unchecked consent box). Off until GUEST_TEXTS=on + Twilio settings; never blocks.
       const db = getDb();
       const deadline = (view as { verification?: { deadlineText?: string } }).verification?.deadlineText;
-      if (db && deadline) {
+      if (db && deadline && b.textConfirmation === true) {
         const outcome = await textConfirmation(db, { bookingRef: ref, phone: input.guest.phone, homeName: getProperty(input.property).name,
           dates: shortRange(input.checkIn, input.checkOut), deadline, origin: new URL(req.url).origin }).catch(() => "failed" as const);
         console.info("[sms] booking", ref, outcome);

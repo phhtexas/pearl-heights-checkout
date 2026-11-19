@@ -74,6 +74,8 @@ export default function Checkout() {
   // opt-out, every email carries an unsubscribe link). Texts stay unchecked: TCPA needs a clear written opt-in.
   const [mktEmail, setMktEmail] = useState(true);
   const [mktSms, setMktSms] = useState(false);
+  // Booking text consent (Twilio toll-free verification, Nov 18): unchecked; the confirmation text goes only to guests who tick it.
+  const [textConfirm, setTextConfirm] = useState(false);
   const [sim, setSim] = useState("none");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -224,7 +226,7 @@ export default function Checkout() {
       if (pm.error || !pm.id) { setBusy(false); setPayErr({ msg: pm.error ?? "Please check your card details.", change: true }); return; }
       paymentMethodId = pm.id;
     }
-    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, consentId: CONSENT_ID, marketingEmail: mktEmail, marketingSms: mktSms, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId,
+    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, consentId: CONSENT_ID, marketingEmail: mktEmail, marketingSms: mktSms, textConfirmation: textConfirm, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId,
       analytics: { consent: cookieConsent() === "granted", attribution: attribution(), ...metaBrowserIds(), url: location.href } }) });
     const j = await r.json().catch(() => ({}));
     setBusy(false);
@@ -247,7 +249,7 @@ export default function Checkout() {
 
   function restart() {
     setStep("review"); setCi(null); setCo(null); setQuote(null); setResult(null); setErr(""); setAgreed(false); setPlan("full");
-    setGuest({ firstName: "", lastName: "", email: "", phone: "" }); setMktEmail(true); setMktSms(false); setCalVersion((v) => v + 1);
+    setGuest({ firstName: "", lastName: "", email: "", phone: "" }); setMktEmail(true); setMktSms(false); setTextConfirm(false); setCalVersion((v) => v + 1);
   }
   // Same rules as the submit check; also drives the green check shown in each valid field (Oscar, Nov 17).
   const fieldOk = (k: "firstName" | "lastName" | "email" | "phone") =>
@@ -469,7 +471,8 @@ export default function Checkout() {
                   onChange={(e) => { setGuest({ ...guest, [k]: e.target.value }); if (fieldErr[k]) setFieldErr({ ...fieldErr, [k]: undefined }); }} />
                 {fieldOk(k) && !fieldErr[k] && <svg className="okIc" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#127A5E" /><path d="m7 12.5 3.2 3.2L17 9" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>}</span>
                 {fieldErr[k] && <span id={k + "-err"} className="err">{fieldErr[k]}</span>}</label>))}
-            <div className="muted">We'll text your booking confirmation and private stay link to this number. Message and data rates may apply. Reply STOP to opt out.</div>
+            <label className="chk" data-optin="booking-text"><input type="checkbox" checked={textConfirm} onChange={(e) => setTextConfirm(e.target.checked)} />
+              <span>Text me my booking confirmation and private stay link at this number (optional). One text per booking. Message and data rates may apply. Reply HELP for help, STOP to opt out. See the <a href={POLICY_LINKS.websiteTerms} target="_blank" rel="noopener">Website Terms</a> and <a href={POLICY_LINKS.privacy} target="_blank" rel="noopener">Privacy Notice</a>.</span></label>
           </>)}
 
           {step === "pay" && quote && (<>
