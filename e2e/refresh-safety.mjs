@@ -83,5 +83,29 @@ if (demo?.status() === 200) {
   ok(/First payment/.test(t) && /Second payment/.test(t) && /Total/.test(t), "stay page shows a Payments card with both payments and the total");
 } else console.log("skip - /stay/demo not in this build (needs NEXT_PUBLIC_SANDBOX=true)");
 
+// 7) Stripe's script blocked (ChatGPT GPT-F1): a clear message with Try again, no page crash.
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const q = await ctx.newPage();
+  const errs = []; q.on("pageerror", (e) => errs.push(e.message));
+  await q.route("**/api/config", (r) => r.fulfill({ json: { mode: "test", publishableKey: "pk_test_blocked" } }));
+  await q.route("https://js.stripe.com/**", (r) => r.abort());
+  let found = false;
+  for (let d = 60; d < 200 && !found; d += 5) {
+    await q.goto(link(d, 3, "752"));
+    await q.waitForFunction(() => (/Continue to your details/.test(document.body.innerText) && /\$/.test(document.querySelector(".ln.total")?.textContent ?? "")) || /already booked/i.test(document.body.innerText), null, { timeout: 15000 });
+    found = !/already booked/i.test(await q.locator("body").innerText());
+  }
+  await q.getByRole("button", { name: /Continue to your details/ }).first().click();
+  for (const [l, v] of [["First name", "Qa"], ["Last name", "Blocked"], ["Email", "qa@example.com"], ["Mobile phone", "2105550100"]]) await q.getByLabel(l).fill(v);
+  await q.getByRole("button", { name: /Continue to payment/ }).first().click();
+  await q.locator("text=We couldn't load the secure payment form").waitFor({ timeout: 15000 });
+  ok(true, "blocked Stripe: guest sees 'We couldn't load the secure payment form' with Try again");
+  ok(await q.getByRole("button", { name: "Try again" }).count() === 1, "blocked Stripe: Try again button");
+  ok(errs.length === 0, `blocked Stripe: no page errors (${errs.length})`);
+  ok(!/Application error/.test(await q.locator("body").innerText()), "blocked Stripe: no Application error");
+  await ctx.close();
+}
+
 await browser.close();
 console.log(process.exitCode ? "REFRESH SAFETY FAILED" : "REFRESH SAFETY PASSED");

@@ -1,11 +1,31 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Elements, ExpressCheckoutElement, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe, Stripe } from "@stripe/stripe-js";
 
 let stripePromise: Promise<Stripe | null> | null = null;
 // developerTools off: hides Stripe's test-mode "stripe >" helper tab in the corner (Oscar, Nov 17).
-const getStripe = (pk: string) => (stripePromise ??= loadStripe(pk, { developerTools: { assistant: { enabled: false } } }));
+// Never rejects (ChatGPT QA GPT-F1, Nov 19): if Stripe's script is blocked (content blocker, strict network) this
+// resolves to null and the guest sees a clear message with Try again, instead of a broken page.
+const getStripe = (pk: string) => (stripePromise ??= loadStripe(pk, { developerTools: { assistant: { enabled: false } } }).catch(() => { stripePromise = null; return null; }));
+
+/** Anything Stripe's form throws stays inside the payment box. */
+class CardBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { err: boolean }> {
+  state = { err: false };
+  static getDerivedStateFromError() { return { err: true }; }
+  componentDidCatch(e: unknown) { console.error("[checkout] payment form error", e); }
+  render() { return this.state.err ? this.props.fallback : this.props.children; }
+}
+
+function CardUnavailable({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="err" role="alert">
+      <p style={{ margin: 0 }}>We couldn&apos;t load the secure payment form. Nothing was charged.</p>
+      <p style={{ margin: "6px 0 0" }}>Please check your connection, or pause ad or content blockers for this page, then try again.</p>
+      <button type="button" className="btn ghost" style={{ marginTop: 10 }} onClick={onRetry}>Try again</button>
+    </div>
+  );
+}
 
 export type CreatePm = (billing: { name: string; email: string; phone: string }) => Promise<{ id?: string; error?: string }>;
 type Billing = { name: string; email: string; phone: string };
@@ -21,14 +41,22 @@ export function StripeCard({ publishableKey, amount, saveForLater, onReady, canP
   publishableKey: string; amount: number; saveForLater: boolean; onReady: (fn: CreatePm | null) => void;
   canPay: boolean; billing: Billing; onExpress: (paymentMethodId: string) => void; onLockedTap: () => void;
 }) {
+  const [attempt, setAttempt] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const promise = useMemo(() => getStripe(publishableKey), [publishableKey, attempt]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { let on = true; setFailed(false); promise.then((s) => { if (on && !s) { setFailed(true); onReady(null); } }); return () => { on = false; }; }, [promise]); // eslint-disable-line react-hooks/exhaustive-deps
+  const retry = () => { setFailed(false); setAttempt((n) => n + 1); };
+  if (failed) return <CardUnavailable onRetry={retry} />;
   return (
-    <Elements stripe={getStripe(publishableKey)} options={{
+    <CardBoundary key={attempt} fallback={<CardUnavailable onRetry={retry} />}>
+    <Elements stripe={promise} options={{
       mode: "payment", amount, currency: "usd", captureMethod: "manual", paymentMethodCreation: "manual", allowedPaymentMethodTypes: ["card", "link"],
       ...(saveForLater ? { setupFutureUsage: "off_session" as const } : {}),
       appearance: { theme: "stripe", variables: { colorPrimary: "#111315", borderRadius: "12px", fontSizeBase: "16px" } },
     }}>
       <Inner onReady={onReady} canPay={canPay} billing={billing} onExpress={onExpress} onLockedTap={onLockedTap} />
     </Elements>
+    </CardBoundary>
   );
 }
 

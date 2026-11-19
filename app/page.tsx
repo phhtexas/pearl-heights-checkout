@@ -278,7 +278,7 @@ export default function Checkout() {
     // 3-D Secure: the bank asks the guest to confirm (Stripe's window), then the same booking continues with that hold.
     if (j.reason === "authentication_required" && j.action?.clientSecret && cfg.publishableKey) {
       const { loadStripe } = await import("@stripe/stripe-js");
-      const stripe = await loadStripe(cfg.publishableKey);
+      const stripe = await loadStripe(cfg.publishableKey).catch(() => null);
       const res = stripe ? await stripe.handleNextAction({ clientSecret: j.action.clientSecret }) : null;
       if (res?.paymentIntent?.status === "requires_capture") {
         r = await send({ authorizedPaymentIntentId: res.paymentIntent.id });
