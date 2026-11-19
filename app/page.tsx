@@ -123,6 +123,17 @@ export default function Checkout() {
     if (inf !== null) setInfants(inf);
     setReady(true);
     if (!(a && b && b > a)) setRevealed(true); // no dates in the link: the date picker is the first thing to show
+    // Preview of the confirmation screen with sample details (Oscar, Nov 18). Test site only: /preview/confirmation
+    // sends here, and on pearlheightshomes.com both the preview route and this page are closed (middleware).
+    if (q.get("preview") === "confirmation") {
+      setPreview(true);
+      setGuest({ firstName: "Alex", lastName: "Sample", email: "", phone: "" });
+      const due = new Date(Date.now() + 86_400_000).toLocaleString("en-US", { timeZone: "America/Chicago", weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+      setResult({ ok: true, bookingRef: "PH-SAMPLE", verification: { deadlineText: `${due} CT` } });
+      setStayUrl("#preview");
+      setStep("done");
+      setRevealed(true);
+    }
   }, []);
   useEffect(() => { if (!ready) return; const t = setTimeout(() => setRevealed(true), 8000); return () => clearTimeout(t); }, [ready]); // never stay hidden
   useEffect(() => { fetch("/api/config").then((r) => r.json()).then(setCfg).catch(() => undefined); }, []);
@@ -261,12 +272,14 @@ export default function Checkout() {
   }
   // After a confirmed booking, fetch the guest's private stay-page link (same browser session only; needs the database).
   const [stayUrl, setStayUrl] = useState("");
+  const [preview, setPreview] = useState(false);
   useEffect(() => {
+    if (preview) { setStayUrl("#preview"); return; }
     if (step !== "done" || !result?.ok || !result.bookingRef) { setStayUrl(""); return; }
     fetch("/api/stay-link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingRef: result.bookingRef }) })
       .then((r) => (r.ok ? r.json() : null)).then((j) => { if (j?.url) setStayUrl(j.url); }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, result?.ok ? result.bookingRef : ""]);
+  }, [step, preview, result?.ok ? result.bookingRef : ""]);
   const go = (s: Step) => { setErr(""); setStep(s); window.scrollTo(0, 0); };
   useEffect(() => {
     if (step === "pay" && quote) track("payment_step", { property: home, nights: quote.nights, check_in: ci!, check_out: co!, total_cents: quote.total }, "ps" + quoteId);
@@ -506,6 +519,7 @@ export default function Checkout() {
                 {stayFacts}
               </div>
             </section>
+            {preview && <div className="box">Preview with sample details. Nothing was booked.</div>}
             <div className="okmark" aria-hidden="true">✓</div>
             <h1>You're booked, {guest.firstName}!</h1>
             {stayUrl && <a className="btn stayBtn" href={stayUrl}>Sign the agreement and verify your ID</a>}
@@ -513,7 +527,7 @@ export default function Checkout() {
               {shared === "copied" && <span className="muted"> · Copied. Paste it in a text or email.</span>}
               {shared === "failed" && <span className="muted"> · Couldn't share from this browser.</span>}</p>
             <div className="box warm">To keep your reservation, please finish two quick steps by <b>{result.verification.deadlineText}</b>: sign the rental agreement and verify your ID.</div>
-            <div className="muted">Paid today: {money(quote!.plan.dueNow)}{quote!.plan.split ? ` · ${money(quote!.plan.scheduled!.amount)} on ${balance}` : ""}</div>
+            {quote && <div className="muted">Paid today: {money(quote.plan.dueNow)}{quote.plan.split ? ` · ${money(quote.plan.scheduled!.amount)} on ${balance}` : ""}</div>}
             <p className="followIg">Follow along on Instagram for local tips and new homes: <a href="https://www.instagram.com/pearlheightshomes" target="_blank" rel="noopener noreferrer" data-cta="confirmation_instagram">@pearlheightshomes</a></p>
             <div className="muted">Questions? <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
           </>)}

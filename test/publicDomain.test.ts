@@ -17,7 +17,7 @@ describe("public domain switch", () => {
     expect(r.status).toBe(307);
     expect(r.headers.get("location")).toContain("airbnb.com/rooms/681419907080223265?check_in=2026-12-23");
     expect(middleware(req("/", "pearlheightshomes.com")).headers.get("x-middleware-rewrite")).toContain("/all-homes/f");
-    for (const p of ["/api/checkout", "/api/stay-link", "/stay/demo", "/api/stay/abc/agreement", "/api/mock/reset"])
+    for (const p of ["/api/checkout", "/api/stay-link", "/stay/demo", "/api/stay/abc/agreement", "/api/mock/reset", "/preview/confirmation"])
       expect(middleware(req(p, "pearlheightshomes.com")).status).toBe(404);
     expect(middleware(req("/homes/752-myrtle", "pearlheightshomes.com")).status).toBe(200);
     expect(middleware(req("/api/quote", "pearlheightshomes.com")).status).toBe(200);
