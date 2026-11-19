@@ -39,7 +39,7 @@
 
 /* Home cards */
 .F-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 32px; }
-.F-card { background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.07); scroll-margin-top: 24px; transition: box-shadow .3s; }
+.F-card { position: relative; background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.07); scroll-margin-top: 24px; transition: box-shadow .3s; }
 .F-card.is-flash { box-shadow: 0 0 0 3px var(--acc), 0 10px 30px rgba(0,0,0,.1); }
 .F-photos { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 4px; scrollbar-width: none; }
 .F-photos:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; }
@@ -570,3 +570,12 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 /* "From $X / night" before dates (Oscar, Nov 17) */
 .F-page .F-price .F-from { display: block; font-size: 15px; }
 .F-page .F-price .F-from b { font-size: 18px; }
+
+/* Heart on each home card: saves the home in this browser (Oscar, Nov 19). */
+.F-heart { position: absolute; top: 12px; right: 12px; z-index: 2; width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); display: grid; place-items: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+.F-heart svg path { fill: rgba(0,0,0,.25); stroke: #222; stroke-width: 1.8; }
+.F-heart.is-on svg path { fill: #e0245e; stroke: #e0245e; }
+.F-heart:active { transform: scale(.92); }
+.F-savedBar { display: inline-flex; gap: 6px; margin: 14px 0 0; padding: 4px; border-radius: 999px; background: #f1f0ec; }
+.F-savedBar button { font: inherit; font-size: 15px; border: 0; background: none; padding: 8px 16px; border-radius: 999px; cursor: pointer; color: var(--ink); }
+.F-savedBar button[aria-pressed="true"] { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.12); font-weight: 600; }

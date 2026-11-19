@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { useSaved } from "@/client/saved";
 import type { HomeCard } from "@/content/allHomes";
 import { money, shortDate, useStays } from "../useStays";
 import { PinMapF as PinMap, type Area } from "./PinMapF";
@@ -110,6 +111,11 @@ export function HomesF({ homes, hero, points, reasons }: {
   const areaOf = (name: string): Area => ({ name, keys: homes.filter((h) => h.area === name).map((h) => h.key) });
   const [selected, setArea] = useState<Area>(() => areaOf(areas[0]!));
   const [hot, setHot] = useState<string | null>(null);
+  // Saved homes (hearts) in this browser; "Saved" shows only those (Oscar, Nov 19).
+  const [saved, toggleSaved] = useSaved(homes.map((h) => h.key));
+  const savedCount = homes.filter((h) => saved[h.key]).length;
+  const [onlySaved, setOnlySaved] = useState(false);
+  useEffect(() => { if (!savedCount) setOnlySaved(false); }, [savedCount]);
   const selArea = selected?.name;
   const mapRef = useRef<HTMLDivElement>(null);
   const pickArea = (name: string) => {
@@ -124,9 +130,14 @@ export function HomesF({ homes, hero, points, reasons }: {
   const card = (h: HomeCard, i: number) => {
     const r = s.results[h.key];
     const off = searched && r && !r.ok;
+    const on = !!saved[h.key];
     return (
       <li key={h.key} id={`home-${h.key}`} className={`F-card${off ? " is-off" : ""}`} data-reveal>
         <Photos h={h} href={s.href(h.slug)} first={i === 0} />
+        <button type="button" className={"F-heart" + (on ? " is-on" : "")} aria-pressed={on} aria-label={on ? `Saved: ${h.title}` : `Save ${h.title}`}
+          onClick={() => toggleSaved(h.key, "home_card")}>
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 20s-7-4.4-9.2-8.6C1.3 8.4 3.2 5 6.6 5c2 0 3.4 1.1 4.4 2.5C12 6.1 13.4 5 15.4 5c3.4 0 5.3 3.4 3.8 6.4C19 15.6 12 20 12 20z" /></svg>
+        </button>
         <div className="F-info">
           <p className="F-fit">{h.bestFit}</p>
           <p className="F-meta">{h.area} · {h.rating ? <span>★ {h.rating.value} <span className="F-dim">({h.rating.count} Airbnb guest reviews)</span></span> : <b>New home</b>}</p>
@@ -167,12 +178,18 @@ export function HomesF({ homes, hero, points, reasons }: {
       <section className="F-sec F-homes" id="homes" aria-labelledby="homes-h">
         <div className="F-head" data-reveal>
           <h2 id="homes-h">Choose your home</h2>
+          {savedCount > 0 && (
+            <div className="F-savedBar" role="group" aria-label="Show homes">
+              <button type="button" aria-pressed={!onlySaved} onClick={() => setOnlySaved(false)}>All homes</button>
+              <button type="button" aria-pressed={onlySaved} onClick={() => setOnlySaved(true)}>♥ Saved ({savedCount})</button>
+            </div>
+          )}
           <p aria-live="polite">{searched ? `${available} of 5 homes available ${shortDate(s.ci)} – ${shortDate(s.co)} for ${s.adults + s.children} guests. Totals include taxes and fees.` : "Add dates to see each home's exact total, taxes included."}</p>
         </div>
         <ul className="F-list">
           {/* Oscar, Nov 17: after a search, homes that fit the dates and guests move to the top (original order kept within
               each group); the rest stay visible, greyed, below a small divider. */}
-          {(searched ? [...homes].sort((x, y) => Number(!s.results[x.key]?.ok) - Number(!s.results[y.key]?.ok)) : homes).flatMap((h, i, list) => {
+          {(searched ? [...homes].sort((x, y) => Number(!s.results[x.key]?.ok) - Number(!s.results[y.key]?.ok)) : homes).filter((h) => !onlySaved || saved[h.key]).flatMap((h, i, list) => {
             const offAt = (k: HomeCard) => searched && !!s.results[k.key] && !s.results[k.key]!.ok;
             // divider only between the two groups (not when every home is unavailable)
             const divider = i > 0 && offAt(h) && !offAt(list[i - 1]!) ? [<li key="off-divider" className="F-offHead">Not available for these dates or guests</li>] : [];

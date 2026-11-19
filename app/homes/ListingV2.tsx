@@ -7,6 +7,7 @@ import type { HomeContent } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
 import { track } from "@/client/track";
 import { ShareSheet } from "./ShareSheet";
+import { useSaved } from "@/client/saved";
 import { Icon, iconFor } from "./icons";
 import { SiteNav } from "../SiteNav";
 import { TileMapV2 as TileMap } from "./TileMapV2";
@@ -83,7 +84,6 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
   const [slide, setSlide] = useState(0);
   const [more, setMore] = useState(false);
   const [tourFocus, setTourFocus] = useState<{ group: string; id: string } | null>(null); // photo tour opened from a room card
-  const [saved, setSaved] = useState(false);
   const [shared, setShared] = useState("");
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const heroRef = useRef<HTMLElement | null>(null);
@@ -117,7 +117,6 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
     return () => clearTimeout(t);
   }, [sheet, tourFocus]);
   useEffect(() => { track("property_viewed", { property: prop.key, variant: "v2" }, "pv"); }, [prop.key]);
-  useEffect(() => { try { setSaved(localStorage.getItem("ph-saved-" + prop.key) === "1"); } catch { /* no storage */ } }, [prop.key]);
   useEffect(() => {
     fetch(`/api/calendar?property=${prop.key}`, { cache: "no-store" }).then((r) => r.json())
       .then((j) => { if (j.days) setDays(j.days); else setCalErr(j.error ?? "Availability is temporarily unavailable."); })
@@ -193,10 +192,10 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
   // Share sheet like the Airbnb app (Oscar, Nov 19).
   const [shareOpen, setShareOpen] = useState(false);
   function share() { setShareOpen(true); }
-  function toggleSave() {
-    const v = !saved; setSaved(v);
-    try { localStorage.setItem("ph-saved-" + prop.key, v ? "1" : "0"); } catch { /* no storage */ }
-  }
+  // Heart = saved homes in this browser + an interest signal for retargeting (Oscar, Nov 19, option 2).
+  const [savedMap, toggleSaved] = useSaved([prop.key]);
+  const saved = !!savedMap[prop.key];
+  function toggleSave() { toggleSaved(prop.key, "home_page"); }
 
   const dayState = (iso: string) => {
     const d = byDate[iso];
