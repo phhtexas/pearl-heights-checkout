@@ -28,7 +28,7 @@ const iso = (d: unknown) => (d instanceof Date ? d.toISOString() : d == null ? n
 const day = (d: unknown) => (d instanceof Date ? d.toISOString().slice(0, 10) : String(d).slice(0, 10));
 
 /** Issue a new link for a confirmed booking, if `sessionId` is the browser session that requested its quote. */
-export async function issueStayLink(db: Db, o: { bookingRef: string; sessionId: string; channel: "confirmation" | "email" | "host"; now?: Date }): Promise<string | null> {
+export async function issueStayLink(db: Db, o: { bookingRef: string; sessionId: string; channel: "confirmation" | "email" | "host" | "sms"; now?: Date }): Promise<string | null> {
   const [b] = await db.query<any>(
     `SELECT b.id, q.check_out, q.session_id FROM bookings b JOIN quotes q ON q.id = b.quote_id AND q.version = b.quote_version
      WHERE b.booking_ref = $1 AND b.confirmed_at IS NOT NULL`, [o.bookingRef]);

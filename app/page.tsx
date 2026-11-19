@@ -247,7 +247,7 @@ export default function Checkout() {
 
   function restart() {
     setStep("review"); setCi(null); setCo(null); setQuote(null); setResult(null); setErr(""); setAgreed(false); setPlan("full");
-    setGuest({ firstName: "", lastName: "", email: "", phone: "" }); setMktEmail(false); setMktSms(false); setCalVersion((v) => v + 1);
+    setGuest({ firstName: "", lastName: "", email: "", phone: "" }); setMktEmail(true); setMktSms(false); setCalVersion((v) => v + 1);
   }
   // Same rules as the submit check; also drives the green check shown in each valid field (Oscar, Nov 17).
   const fieldOk = (k: "firstName" | "lastName" | "email" | "phone") =>
@@ -469,7 +469,7 @@ export default function Checkout() {
                   onChange={(e) => { setGuest({ ...guest, [k]: e.target.value }); if (fieldErr[k]) setFieldErr({ ...fieldErr, [k]: undefined }); }} />
                 {fieldOk(k) && !fieldErr[k] && <svg className="okIc" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#127A5E" /><path d="m7 12.5 3.2 3.2L17 9" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>}</span>
                 {fieldErr[k] && <span id={k + "-err"} className="err">{fieldErr[k]}</span>}</label>))}
-            <div className="muted">We use your phone for your stay details. Your private stay link is emailed after booking.</div>
+            <div className="muted">We'll text your booking confirmation and private stay link to this number. Message and data rates may apply.</div>
           </>)}
 
           {step === "pay" && quote && (<>

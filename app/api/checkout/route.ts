@@ -10,6 +10,7 @@ import { DbLedger } from "@/db/ledger";
 import type { MockFailure } from "@/adapters/mock";
 import { consentRecord } from "@/domain/consent";
 import { sendPurchase } from "@/services/metaCapi";
+import { textConfirmation } from "@/services/sms";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -49,13 +50,30 @@ export async function POST(req: Request) {
       return outcome;
     });
     getAdapters("none", process.env, session.id); // reset simulated failure
-    if ((view as { ok?: boolean }).ok) await afterBooking(req, b, input, q.quote, (view as { bookingRef?: string }).bookingRef ?? bookingRef);
+    if ((view as { ok?: boolean }).ok) {
+      const ref = (view as { bookingRef?: string }).bookingRef ?? bookingRef;
+      await afterBooking(req, b, input, q.quote, ref);
+      // Booking confirmation by text (Oscar, Nov 18). Off until GUEST_TEXTS=on + Twilio settings; never blocks.
+      const db = getDb();
+      const deadline = (view as { verification?: { deadlineText?: string } }).verification?.deadlineText;
+      if (db && deadline) {
+        const outcome = await textConfirmation(db, { bookingRef: ref, phone: input.guest.phone, homeName: getProperty(input.property).name,
+          dates: shortRange(input.checkIn, input.checkOut), deadline, origin: new URL(req.url).origin }).catch(() => "failed" as const);
+        console.info("[sms] booking", ref, outcome);
+      }
+    }
     return withSession(NextResponse.json({ mode, ...view }, { headers: noStore }), session);
   } catch (e) {
     if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400, headers: noStore });
     console.error("checkout error", redact(String((e as Error).message)));
     return NextResponse.json({ error: "Something went wrong. No charge was made." }, { status: 500, headers: noStore });
   }
+}
+
+/** "Jan 18–21" in one month, "Jan 30 – Feb 2" across months. */
+function shortRange(a: string, b: string) {
+  const d = (iso: string, o: Intl.DateTimeFormatOptions) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", ...o });
+  return a.slice(0, 7) === b.slice(0, 7) ? `${d(a, { month: "short", day: "numeric" })}–${d(b, { day: "numeric" })}` : `${d(a, { month: "short", day: "numeric" })} – ${d(b, { month: "short", day: "numeric" })}`;
 }
 
 /**
