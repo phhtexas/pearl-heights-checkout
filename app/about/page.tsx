@@ -42,7 +42,7 @@ export default async function Page() {
         <p className="G-kicker">About us</p>
         <h1>Meet your hosts, Oscar &amp; Fernanda</h1>
         <div className="AB-hero">
-          {h.photo && <img src={h.photo} alt="Oscar and Fernanda, the hosts of Pearl Heights Homes" width={320} height={320} />}
+          {h.photo && <img src="/homes/hosts/oscar-fernanda-about.jpg" alt="Oscar and Fernanda, the hosts of Pearl Heights Homes" width={320} height={320} />}
           <div>
             <p className="G-lead">We&apos;re a San Antonio family of four, and Pearl Heights Homes is our family business: five vacation homes near the Pearl, downtown and Alamo Heights, set up for families like ours.</p>
             <ul className="AB-facts">

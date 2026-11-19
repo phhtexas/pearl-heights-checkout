@@ -1,6 +1,6 @@
 /* About us page: builds on guides.css (G-*) */
 .AB-hero { display: grid; gap: 20px; grid-template-columns: 1fr; align-items: center; margin: 8px 0 8px; }
-.AB-hero img { width: 100%; max-width: 320px; aspect-ratio: 1; object-fit: cover; border-radius: 16px; display: block; background: var(--soft, #ecece9); }
+.AB-hero img { width: 100%; max-width: 320px; aspect-ratio: 1; object-fit: cover; border-radius: 16px; display: block; margin: 0 auto; background: var(--soft, #ecece9); }
 @media (min-width: 640px) { .AB-hero { grid-template-columns: 240px 1fr; } }
 .AB-facts { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 16px; }
 .AB-facts li::before { content: "✓"; color: var(--green, #1f6b3a); font-weight: 700; margin-right: 8px; }
