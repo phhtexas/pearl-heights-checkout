@@ -101,6 +101,43 @@ export function confirmationEmail(d: ConfirmationEmailData): { subject: string; 
   return { subject, html, text };
 }
 
+/**
+ * Shared layout for the follow-up notices (reminders, payment, check-in day, cancellation): same look as the
+ * confirmation. `paragraphs` are plain text (escaped here); `list` renders as bullets; `button` is the one action.
+ */
+export interface NoticeContent {
+  subject: string;
+  preheader: string;
+  heading: string;
+  paragraphs: string[];
+  list?: string[];
+  button?: { label: string; url: string };
+  afterButton?: string[];
+}
+
+export function noticeEmail(n: NoticeContent): { subject: string; html: string; text: string } {
+  const C = { ink: "#1D1D1F", dim: "#5E5E63", green: "#0F6B52", bg: "#F6F6F4" };
+  const p = (s: string) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.55">${esc(s)}</p>`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(n.subject)}</title></head>
+<body style="margin:0;padding:0;background:${C.bg};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${C.ink}">
+<div style="display:none;max-height:0;overflow:hidden">${esc(n.preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg}"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px"><tr><td style="padding:28px">
+<div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:${C.dim};margin-bottom:10px">Pearl Heights Homes</div>
+<h1 style="margin:0 0 14px;font-size:23px;line-height:1.3">${esc(n.heading)}</h1>
+${n.paragraphs.map(p).join("\n")}
+${n.list?.length ? `<ul style="margin:0 0 16px;padding-left:20px;font-size:15px;line-height:1.6">${n.list.map((li) => `<li>${esc(li)}</li>`).join("")}</ul>` : ""}
+${n.button ? `<p style="margin:6px 0 18px"><a href="${esc(n.button.url)}" style="display:inline-block;background:${C.green};color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:14px 22px;border-radius:10px">${esc(n.button.label)} &rarr;</a></p>` : ""}
+${(n.afterButton ?? []).map((s) => `<p style="margin:0 0 12px;font-size:14px;line-height:1.55;color:${C.dim}">${esc(s)}</p>`).join("\n")}
+<p style="margin:18px 0 0;font-size:14px;color:${C.dim}">Questions? Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:${C.green}">${REPLY_TO}</a>.</p>
+<p style="margin:22px 0 0;font-size:12px;color:${C.dim}">Pearl Heights Homes · San Antonio, Texas</p>
+</td></tr></table></td></tr></table></body></html>`;
+  const text = [n.heading, "", ...n.paragraphs, ...(n.list ?? []).map((l) => `- ${l}`),
+    ...(n.button ? ["", `${n.button.label}: ${n.button.url}`] : []), ...(n.afterButton?.length ? ["", ...n.afterButton] : []),
+    "", `Questions? Reply to this email or write to ${REPLY_TO}.`, "", "Pearl Heights Homes · San Antonio, Texas"].join("\n");
+  return { subject: n.subject, html, text };
+}
+
 export async function sendEmail(to: string, m: { subject: string; html: string; text: string }, idempotencyKey: string,
   env: NodeJS.ProcessEnv = process.env, fetchImpl: typeof fetch = fetch): Promise<string> {
   const res = await fetchImpl("https://api.resend.com/emails", {

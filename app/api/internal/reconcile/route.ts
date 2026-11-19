@@ -8,6 +8,7 @@ import { purgeOldRateLimits } from "@/server/rateLimit";
 import { getProperty } from "@/domain/properties";
 import { verificationDeadline } from "@/domain/verification";
 import { sweepCheckinMessages } from "@/services/checkinMessageSweep";
+import { sweepGuestNotices } from "@/services/guestNotices";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -30,7 +31,11 @@ async function handle(req: Request): Promise<Response> {
   const rateLimitWindowsPurged = await purgeOldRateLimits(getDb()!).catch(() => 0);
   // Once an hour (the cron runs every minute): make sure no direct booking still has a Hospitable door-code message.
   const checkinMessages = new Date().getUTCMinutes() === 7 ? await sweepCheckinMessages(getDb()!, hosp).catch(() => ({ checked: 0, cancelled: 0, failed: 1 })) : undefined;
-  const counts = { reconciliation, secondCharges, rateLimitWindowsPurged, ...(checkinMessages !== undefined ? { checkinMessages } : {}) };
+  // Every 5 minutes: guest reminders and notices (off until GUEST_EMAILS=on). Links use the public site address.
+  const guestNotices = new Date().getUTCMinutes() % 5 === 3
+    ? await sweepGuestNotices(getDb()!, process.env.PUBLIC_ORIGIN || "https://pearlheightshomes.com").catch((e) => { console.error("guest notices", String(e?.message ?? e)); return { checked: 0, sent: 0, failed: 1 }; })
+    : undefined;
+  const counts = { reconciliation, secondCharges, rateLimitWindowsPurged, ...(checkinMessages !== undefined ? { checkinMessages } : {}), ...(guestNotices !== undefined ? { guestNotices } : {}) };
   console.info("maintenance run", JSON.stringify(counts));
   return NextResponse.json(counts, { headers: noStore });
 }

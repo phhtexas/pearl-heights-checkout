@@ -472,7 +472,7 @@ export default function Checkout() {
                 {fieldOk(k) && !fieldErr[k] && <svg className="okIc" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#127A5E" /><path d="m7 12.5 3.2 3.2L17 9" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>}</span>
                 {fieldErr[k] && <span id={k + "-err"} className="err">{fieldErr[k]}</span>}</label>))}
             <label className="chk" data-optin="booking-text"><input type="checkbox" checked={textConfirm} onChange={(e) => setTextConfirm(e.target.checked)} />
-              <span>Text me my booking confirmation and private stay link at this number (optional). One text per booking. Message and data rates may apply. Reply HELP for help, STOP to opt out. See the <a href={POLICY_LINKS.websiteTerms} target="_blank" rel="noopener">Website Terms</a> and <a href={POLICY_LINKS.privacy} target="_blank" rel="noopener">Privacy Notice</a>.</span></label>
+              <span>Text me booking updates at this number (optional): my confirmation and private stay link, paperwork reminders if needed, and a check-in day message. Up to 4 texts per booking. Message and data rates may apply. Reply HELP for help, STOP to opt out. See the <a href={POLICY_LINKS.websiteTerms} target="_blank" rel="noopener">Website Terms</a> and <a href={POLICY_LINKS.privacy} target="_blank" rel="noopener">Privacy Notice</a>.</span></label>
           </>)}
 
           {step === "pay" && quote && (<>

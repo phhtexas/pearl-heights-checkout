@@ -45,8 +45,8 @@ describe.each(["GET", "POST"] as const)("%s /api/internal/reconcile", (method) =
     expect(charges).toHaveBeenCalledTimes(1);
     expect(r.headers.get("cache-control")).toBe("no-store");
     const body = await r.json();
-    // checkinMessages appears only on the hourly sweep minute (:07 UTC), so it's optional here.
-    expect(Object.keys(body).filter((k) => k !== "checkinMessages").sort()).toEqual(["rateLimitWindowsPurged", "reconciliation", "secondCharges"]);
+    // checkinMessages (hourly, :07 UTC) and guestNotices (every 5 min) appear only on their minutes, so optional here.
+    expect(Object.keys(body).filter((k) => k !== "checkinMessages" && k !== "guestNotices").sort()).toEqual(["rateLimitWindowsPurged", "reconciliation", "secondCharges"]);
     const leaves = (o: any): unknown[] => (typeof o === "object" ? Object.values(o).flatMap(leaves) : [o]);
     expect(leaves(body).every((v) => typeof v === "number")).toBe(true); // counts only
   });
