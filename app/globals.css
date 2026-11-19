@@ -369,3 +369,4 @@ input.f.bad { border-color: var(--bad); }
 .ck .miniHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
 .ck .miniHead .homeName { font-size: 17px; }
 .ck .bookedBanner h1 { font-size: 25px; line-height: 1.2; }
+.ck .nextStep .nsTime { margin: -2px 0 0; text-align: center; font-size: 14px; font-weight: 600; color: #1e4d35; }
