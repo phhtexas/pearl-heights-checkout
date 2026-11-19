@@ -115,6 +115,7 @@ describe("guest chat", () => {
     expect(s).toMatch(/^Pearl Heights: new message from Ana \(/);
     expect(s).toContain("https://h/t/1");
     expect(s.length).toBeLessThan(260);
+    expect(s).not.toMatch(/[\u2013\u2014\u2018\u2019\u201C\u201D\u2026]/); // GSM-safe: no en dash, curly quotes or ellipsis
   });
 
   it("emails the guest about a reply only when guest emails are on, with a fresh working stay link", async () => {

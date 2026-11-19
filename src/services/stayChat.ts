@@ -143,7 +143,9 @@ export function hostTextsOn(env: NodeJS.ProcessEnv = process.env) {
 }
 export function hostAlertText(t: ThreadInfo, body: string, url: string) {
   const first = t.guestName.split(" ")[0] || "A guest";
-  return `Pearl Heights: new message from ${first} (${homeName(t.propertyKey)}, ${shortRange(t.checkIn, t.checkOut)}): "${preview(body, 90)}" Reply in the inbox: ${url}`;
+  // Plain characters only (no en dash, curly quotes or ellipsis), so the text stays in the cheaper GSM encoding.
+  const gsm = (x: string) => x.replace(/[\u2013\u2014]/g, "-").replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/\u2026/g, "...");
+  return gsm(`Pearl Heights: new message from ${first} (${homeName(t.propertyKey)}, ${shortRange(t.checkIn, t.checkOut)}): "${preview(body, 90)}" Reply: ${url}`);
 }
 
 /** After a guest message: alert the host by email and, when on, by text (grouped per thread). Never throws. */
