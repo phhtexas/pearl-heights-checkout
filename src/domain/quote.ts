@@ -37,7 +37,7 @@ export interface Quote {
   /** The plan the guest chose (falls back to full when split is not offered). */
   plan: PaymentPlan;
   fullPlan: PaymentPlan;
-  /** Present only when check-in is more than 30 days away and the booking is refundable. */
+  /** Present only when the second charge (30 days before check-in) is at least 7 days after booking (check-in 37+ days away). */
   splitPlan?: PaymentPlan;
   /** Booked 7 days or less before the 4:00 PM check-in: pay in full, non-refundable (Oscar, Nov 15). */
   nonRefundable: boolean;
@@ -49,6 +49,8 @@ export class QuoteError extends Error {}
 
 const FULL_PAYMENT_WINDOW_DAYS = 30;
 export const NON_REFUNDABLE_WINDOW_DAYS = 7;
+/** Split is offered only when the balance date is at least this far after booking (Oscar, Nov 19, after Perplexity QA PX-T29). */
+export const SPLIT_MIN_LEAD_DAYS = 7;
 
 /** When flexible cancellation ends and the second payment is charged: 30 days before the 4:00 PM CT check-in (Oscar, Nov 15). */
 export const flexibleCutoff = (checkIn: string): Date => checkInInstant(addDaysISO(checkIn, -FULL_PAYMENT_WINDOW_DAYS));
@@ -87,8 +89,9 @@ export function buildQuote(q: QuoteInput): Quote {
   const fullPlan: PaymentPlan = { split: false, dueNow: total };
   let splitPlan: PaymentPlan | undefined;
   const cutoff = flexibleCutoff(q.checkIn);
-  // Split only when the cutoff is still ahead (strictly): the second charge runs at the cutoff instant.
-  if (!nonRefundable && q.now.getTime() < cutoff.getTime()) {
+  // Split only when the second charge (at the cutoff instant) is at least SPLIT_MIN_LEAD_DAYS after booking, so a guest
+  // is never charged the balance hours after paying the first half.
+  if (!nonRefundable && q.now.getTime() + SPLIT_MIN_LEAD_DAYS * 86_400_000 <= cutoff.getTime()) {
     const dueNow = Math.round(total / 2);
     splitPlan = { split: true, dueNow, scheduled: { amount: total - dueNow, chargeAt: cutoff } };
   }

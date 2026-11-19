@@ -1,4 +1,4 @@
-import { buildStay, demoStay, type StayData } from "@/content/stayDemo";
+import { buildStay, demoStay, stayPayments, type StayData } from "@/content/stayDemo";
 import { HOMES } from "@/content/homes";
 import { getDb } from "@/db/client";
 import { loadStay, type StayRow } from "@/services/stayLinks";
@@ -17,6 +17,8 @@ export async function stayForToken(token: string): Promise<StayData | null> {
       ...(r.agreementSignedAt ? { signedOn: r.agreementSignedAt, signedName: r.agreementSignedName ?? undefined, signDoc: r.signwellDocumentId ?? undefined } : {}),
       ...(r.idCheckedAt && r.idStatus === "verified" ? { verifiedOn: r.idCheckedAt } : {}),
     },
+    payments: stayPayments({ totalCents: r.totalCents, paidNowCents: r.paidNowCents ?? r.totalCents, paidAt: new Date(r.confirmedAt),
+      balance: r.balance ? { cents: r.balance.cents, dueAt: new Date(r.balance.dueAt), status: r.balance.status } : null }),
   });
 }
 

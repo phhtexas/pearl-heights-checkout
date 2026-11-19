@@ -408,3 +408,4 @@ input.f.bad { border-color: var(--bad); }
 
 /* Launch check (Nov 19): map credit links meet the 24px minimum target size (WCAG 2.5.8). */
 .TV-credit a, .C-credit a { display: inline-block; min-height: 24px; line-height: 24px; }
+.inclNote { margin: -4px 0 6px; }

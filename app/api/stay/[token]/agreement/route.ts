@@ -4,6 +4,7 @@ import { ESignUnavailable, createSigningDocument, getDocumentStatus } from "@/se
 import { getDb } from "@/db/client";
 import { paperworkFor, type PaperworkCtx } from "@/server/stay";
 import { recordAgreementSigned, recordSigningDocument } from "@/services/stayLinks";
+import { formatChicagoDateTime } from "@/domain/time";
 
 /**
  * Guest portal: rental agreement signing through SignWell (embedded).
@@ -45,7 +46,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   if (name.length < 1 || name.length > 80 || /[<>{}\[\]]/.test(name)) return NextResponse.json({ error: "Please enter your full name." }, { status: 400, headers: noStore });
   const stay = ctx.stay;
   const price = ctx.kind === "booking"
-    ? { total: money(ctx.row.totalCents), paidNow: ctx.row.paidNowCents == null ? money(ctx.row.totalCents) : money(ctx.row.paidNowCents) }
+    ? { total: money(ctx.row.totalCents), paidNow: ctx.row.paidNowCents == null ? money(ctx.row.totalCents) : money(ctx.row.paidNowCents),
+        // Split bookings (Perplexity PX-F1, Nov 19): the agreement states the scheduled balance and when it is charged.
+        ...(ctx.row.balance ? { balance: money(ctx.row.balance.cents), balanceDate: formatChicagoDateTime(new Date(ctx.row.balance.dueAt)) } : {}) }
     : { total: "TEST $0.00", paidNow: "TEST $0.00" };
   const live = isLive(ctx);
   const email = live && ctx.kind === "booking" ? ctx.row.guestEmail : TEST_EMAIL;

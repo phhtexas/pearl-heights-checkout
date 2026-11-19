@@ -22,6 +22,8 @@ export interface StayRow {
   agreementSignedAt: string | null; agreementSignedName: string | null; signwellDocumentId: string | null;
   idCheckedAt: string | null; idStatus: string; stripeSession: string | null;
   totalCents: number; paidNowCents: number | null; guestEmail: string;
+  /** Split bookings: the second payment (amount, when it is charged, and its status: scheduled, paid, failed_final…). */
+  balance: { cents: number; dueAt: string; status: string } | null;
   /** Paid in Stripe LIVE mode (pearlheightshomes.com); false = test. */
   livemode: boolean;
 }
@@ -52,12 +54,14 @@ export async function loadStay(db: Db, token: string, now = new Date()): Promise
             q.property_key, q.check_in, q.check_out, q.adults, q.children, q.infants,
             q.total_cents, q.livemode, g.first_name, g.last_name, g.email,
             (SELECT p.amount_cents FROM payments p WHERE p.booking_id = b.id AND p.kind = 'initial' LIMIT 1) AS paid_now,
+            s.amount_cents AS balance_cents, s.scheduled_for AS balance_at, s.status AS balance_status,
             v.agreement_signed_at, v.agreement_signed_name, v.signwell_document_id, v.id_checked_at, v.id_status, v.stripe_verification_session
        FROM stay_links l
        JOIN bookings b ON b.id = l.booking_id
        JOIN quotes q ON q.id = b.quote_id AND q.version = b.quote_version
        JOIN guests g ON g.id = b.guest_id
        LEFT JOIN verifications v ON v.booking_id = b.id
+       LEFT JOIN payments s ON s.booking_id = b.id AND s.kind = 'scheduled'
       WHERE l.token_hash = $1 AND l.revoked_at IS NULL AND l.expires_at > $2 AND b.confirmed_at IS NOT NULL`,
     [hashToken(token), now.toISOString()]);
   if (!r) return null;
@@ -68,6 +72,7 @@ export async function loadStay(db: Db, token: string, now = new Date()): Promise
     agreementSignedAt: iso(r.agreement_signed_at), agreementSignedName: r.agreement_signed_name ?? null, signwellDocumentId: r.signwell_document_id ?? null,
     idCheckedAt: iso(r.id_checked_at), idStatus: r.id_status ?? "pending", stripeSession: r.stripe_verification_session ?? null,
     totalCents: Number(r.total_cents), paidNowCents: r.paid_now == null ? null : Number(r.paid_now), guestEmail: r.email,
+    balance: r.balance_cents == null ? null : { cents: Number(r.balance_cents), dueAt: iso(r.balance_at)!, status: String(r.balance_status) },
     livemode: !!r.livemode,
   };
 }

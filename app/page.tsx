@@ -17,6 +17,21 @@ import { attribution, consent as cookieConsent, metaBrowserIds } from "@/client/
  */
 type Day = { date: string; available: boolean; price: number; minStay: number; closedForCheckin?: boolean; closedForCheckout?: boolean };
 type Step = "review" | "details" | "pay" | "done";
+
+/**
+ * Refresh safety (Perplexity PX-F2 / PX-F7, Nov 19), kept in sessionStorage: this tab only, gone when it closes.
+ *  - BOOKED: after a successful payment, a refresh shows the same confirmation again (the stay link is re-issued by
+ *    the server only to this browser session), never a new checkout for a paid trip.
+ *  - DRAFT: the guest's name, email, phone and choices, so a refresh or Back/Forward doesn't wipe them.
+ *    Card details are never stored (they live only in Stripe's field).
+ * Both apply only to the same checkout link (same home, dates and guests) and expire.
+ */
+const BOOKED_KEY = "ph_booked", DRAFT_KEY = "ph_checkout_draft";
+const ssGet = (k: string, maxAgeMs: number): any => {
+  try { const v = JSON.parse(sessionStorage.getItem(k) ?? "null"); return v && v.search === location.search && Date.now() - v.at < maxAgeMs ? v : null; } catch { return null; }
+};
+const ssSet = (k: string, v: object) => { try { sessionStorage.setItem(k, JSON.stringify({ ...v, search: location.search, at: Date.now() })); } catch { /* storage off */ } };
+const ssDel = (k: string) => { try { sessionStorage.removeItem(k); } catch { /* storage off */ } };
 type Sheet = null | "dates" | "guests" | "breakdown" | "policy";
 
 const money = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -88,6 +103,7 @@ export default function Checkout() {
   const [notice, setNotice] = useState("");
   const [fieldErr, setFieldErr] = useState<Partial<Record<"firstName" | "lastName" | "email" | "phone", string>>>({});
   const lastTotal = useRef<number | null>(null);
+  const resumeStep = useRef<Step | null>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const opener = useRef<HTMLElement | null>(null);
   const [cfg, setCfg] = useState<{ mode: string; publishableKey?: string }>({ mode: "loading" });
@@ -117,6 +133,25 @@ export default function Checkout() {
     if (ad !== null) setAdults(ad);
     if (ch !== null) setChildren(ch);
     if (inf !== null) setInfants(inf);
+    const booked = ssGet(BOOKED_KEY, 24 * 3600_000);
+    if (booked?.result?.ok) {
+      // Paid already: show the confirmation again (no new quote, no checkout).
+      setGuest((g) => ({ ...g, firstName: booked.firstName ?? "" }));
+      if (PROPERTIES.some((p) => p.key === booked.home)) setHome(booked.home);
+      if (booked.ci && booked.co) { setCi(booked.ci); setCo(booked.co); }
+      setAdults(booked.adults ?? 2); setChildren(booked.children ?? 0); setInfants(booked.infants ?? 0);
+      setQuote(booked.quote ?? null); setResult(booked.result); setStep("done"); setRevealed(true);
+    } else {
+      const d = ssGet(DRAFT_KEY, 2 * 3600_000);
+      if (d) {
+        if (d.guest) setGuest(d.guest);
+        if (d.plan === "split" || d.plan === "full") setPlan(d.plan);
+        if (typeof d.mktEmail === "boolean") setMktEmail(d.mktEmail);
+        if (typeof d.mktSms === "boolean") setMktSms(d.mktSms);
+        if (typeof d.textConfirm === "boolean") setTextConfirm(d.textConfirm);
+        if (d.step === "details" || d.step === "pay") resumeStep.current = d.step;
+      }
+    }
     setReady(true);
     if (!(a && b && b > a)) setRevealed(true); // no dates in the link: the date picker is the first thing to show
     // Preview of the confirmation screen with sample details (Oscar, Nov 18). Test site only: /preview/confirmation
@@ -179,7 +214,15 @@ export default function Checkout() {
     track("checkout_started", { property: home, nights: j.quote.nights, adults, children, infants, check_in: ci!, check_out: co!, total_cents: j.quote.total, page: "checkout" }, "cs" + home + ci + co + adults + "-" + children + "-" + infants);
     if (payPlan === "split" && !j.quote.splitPlan) setPlan("full");
   }, [ci, co, home, adults, children, infants, plan]);
-  useEffect(() => { if (ci && co) void getQuote(); }, [ci, co, home, adults, children, infants]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (ci && co && step !== "done") void getQuote(); }, [ci, co, home, adults, children, infants]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Keep the guest's typed details for this tab (never card details); cleared once they have paid.
+  useEffect(() => {
+    if (!ready || step === "done" || preview) return;
+    if (!guest.firstName && !guest.lastName && !guest.email && !guest.phone && step === "review") return;
+    ssSet(DRAFT_KEY, { guest, plan, mktEmail, mktSms, textConfirm, step });
+  }, [ready, step, guest, plan, mktEmail, mktSms, textConfirm]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Back to the step the guest was on before a refresh, once the fresh quote is in (the price is rechecked first).
+  useEffect(() => { if (quote && resumeStep.current) { const st = resumeStep.current; resumeStep.current = null; if (step === "review") setStep(st); } }, [quote]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sheets: focus moves in, Tab stays inside, Escape closes, focus returns to the button that opened it.
   useEffect(() => {
@@ -253,6 +296,7 @@ export default function Checkout() {
       // Booking value for ROAS = what we earn before taxes (nights + extra guests + cleaning + damage waiver).
       track("purchase", { property: home, booking_ref: j.bookingRef, nights: quote.nights, adults, children, check_in: ci!, check_out: co!,
         value_cents: quote.total - quote.tax, total_cents: undefined, tax_cents: quote.tax, paid_now_cents: quote.plan.dueNow }, "pu" + j.bookingRef, String(j.bookingRef));
+      ssSet(BOOKED_KEY, { result: j, quote, firstName: guest.firstName, home, ci, co, adults, children, infants }); ssDel(DRAFT_KEY);
       setResult(j); setStep("done"); window.scrollTo(0, 0); return;
     }
     if (j.reason === "dates_taken") {
@@ -265,6 +309,7 @@ export default function Checkout() {
   }
 
   function restart() {
+    ssDel(BOOKED_KEY); ssDel(DRAFT_KEY);
     setStep("review"); setCi(null); setCo(null); setQuote(null); setResult(null); setErr(""); setAgreed(false); setPlan("full");
     setGuest({ firstName: "", lastName: "", email: "", phone: "" }); setMktEmail(true); setMktSms(false); setTextConfirm(false); setCalVersion((v) => v + 1);
   }
@@ -361,6 +406,8 @@ export default function Checkout() {
 
   const priceRows = quote && (<>
     <div className="ln"><span>{quote.nights} {quote.nights === 1 ? "night" : "nights"} × {money(Math.round(folded / quote.nights))}</span><span>{money(folded)}</span></div>
+    {/* Oscar, Nov 19 (Perplexity PX-F6): the nightly price is all-in, so say what it includes. */}
+    <div className="muted small inclNote">Includes cleaning and damage waiver</div>
     <div className="ln"><span>Taxes</span><span>{money(quote.tax)}</span></div>
     <div className="ln total"><span>Total <u>USD</u></span><span>{money(quote.total)}</span></div>
     <button className="link tight" onClick={() => openSheet("breakdown")}>Price breakdown</button>

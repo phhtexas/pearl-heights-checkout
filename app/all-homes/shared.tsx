@@ -23,7 +23,7 @@ export const TRUST = [
 ] as const;
 
 export const STEPS = [
-  { title: "Choose your home and pay securely", text: "See your exact total first. Pay in full, or half now when your stay is more than 30 days away." },
+  { title: "Choose your home and pay securely", text: "See your exact total first. Pay in full, or half now when your stay is 37 or more days away." },
   { title: "Sign the agreement and verify", text: "The reservation holder signs the rental agreement and verifies their ID online." },
   { title: "Get your guest portal", text: "Your address and check-in steps appear in your stay page once you've signed and verified. Door codes arrive the morning of check-in day." },
 ];

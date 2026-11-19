@@ -450,6 +450,25 @@ export function Portal({ stay }: { stay: StayData }) {
         </section>
 
         {/* Step 4: during the stay */}
+        {/* Payments (Perplexity PX-F8, Nov 19): what was paid and, for split bookings, the second payment and its status. */}
+        {stay.payments && (() => {
+          const pm = stay.payments, b = pm.balance;
+          const tag = b && { scheduled: "Scheduled", paid: "Paid", attention: "Needs attention", cancelled: "Cancelled" }[b.state];
+          return (
+            <section className="ST-card" aria-labelledby="pay-h">
+              <h2 id="pay-h">Payments</h2>
+              <dl className="ST-pay">
+                <div><dt>{b ? "First payment" : "Paid in full"}<span>{pm.paidOnText}</span></dt><dd>{pm.paidText}<span className="ST-payTag is-paid">Paid</span></dd></div>
+                {b && <div><dt>Second payment<span>{b.state === "paid" ? "Charged" : "Charged automatically"} {b.dueText}</span></dt><dd>{b.amountText}<span className={`ST-payTag is-${b.state}`}>{tag}</span></dd></div>}
+                <div className="ST-payTotal"><dt>Total</dt><dd>{pm.totalText}</dd></div>
+              </dl>
+              {b?.state === "attention"
+                ? <p className="ST-dim ST-small" role="status">Your bank declined the second payment. <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a> and we&apos;ll send a secure link to update your card. Please never send card details in a message.</p>
+                : <p className="ST-dim ST-small">Charged to the card you booked with. Questions about a payment? <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a>.</p>}
+            </section>
+          );
+        })()}
+
         <section className="ST-card" aria-labelledby="know-h">
           <h2 id="know-h">House guide</h2>
           <p className="ST-dim">Everything you need during your stay: house rules, the washer, appliances, parking, trash and our favorite places nearby.</p>

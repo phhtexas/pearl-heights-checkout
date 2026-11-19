@@ -38,12 +38,16 @@ describe("payment plan choice", () => {
     expect(flexibleCutoff("2027-04-05").toISOString()).toBe("2027-03-06T22:00:00.000Z"); // CST cutoff, CDT check-in
   });
 
-  it("no split once the cutoff has passed (or at the exact instant)", () => {
+  it("split only when the balance date is at least 7 days after booking (Oscar, Nov 19)", () => {
     const cutoff = flexibleCutoff("2027-01-05");
-    expect(quoteAt("2027-01-05", "2027-01-07", new Date(cutoff.getTime() - S), "split").plan.split).toBe(true);
-    const q = quoteAt("2027-01-05", "2027-01-07", cutoff, "split");
-    expect(q.plan.split).toBe(false);
-    expect(q.splitPlan).toBeUndefined();
+    const WEEK = 7 * 86_400_000;
+    expect(quoteAt("2027-01-05", "2027-01-07", new Date(cutoff.getTime() - WEEK), "split").plan.split).toBe(true);
+    // Exactly 30 days out (balance due hours later) or anything under a week before the balance date: full only.
+    for (const at of [new Date(cutoff.getTime() - WEEK + S), new Date(cutoff.getTime() - S), cutoff]) {
+      const q = quoteAt("2027-01-05", "2027-01-07", at, "split");
+      expect(q.plan.split).toBe(false);
+      expect(q.splitPlan).toBeUndefined();
+    }
   });
 
   it("7 days or less before check-in: non-refundable, pay in full only", () => {

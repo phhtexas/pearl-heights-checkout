@@ -177,3 +177,20 @@
 .ST-chatTxt strong { display: flex; align-items: center; gap: 8px; }
 .ST-chatTxt span { color: var(--muted); font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ST-chatDot { background: var(--acc); color: #fff; font-size: 12px; border-radius: 999px; min-width: 20px; padding: 0 6px; text-align: center; }
+
+/* Payments card (PX-F8) */
+.ST-pay { margin: 12px 0 0; display: grid; }
+.ST-pay div { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.ST-pay div:first-child { border-top: 0; padding-top: 4px; }
+.ST-pay dt { font-weight: 600; }
+.ST-pay dt span { display: block; font-weight: 400; font-size: 13.5px; color: var(--muted); }
+.ST-pay dd { margin: 0; font-weight: 600; text-align: right; white-space: nowrap; }
+.ST-payTag { display: block; margin-top: 4px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.ST-payTag.is-paid { color: var(--acc); }
+.ST-payTag.is-attention { color: #A1291F; }
+.ST-payTotal { border-top: 1px solid var(--ink) !important; }
+/* Broken or expired stay link (PX-F9) */
+.ST-lost { padding-top: 32px; }
+.ST-lost h1 { font-size: 24px; margin: 0 0 8px; }
+.ST-lostActs { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 18px 0 0; }
+.ST-lostActs .ST-ask { color: #fff; }

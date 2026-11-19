@@ -54,6 +54,11 @@ describe("stay links", () => {
     const t = (await issueStayLink(db, { bookingRef: "PH-STAY01", sessionId: "sess-A", channel: "confirmation", now: NOW }))!;
     const s = await loadStay(db, t, NOW);
     expect(s).toMatchObject({ bookingRef: "PH-STAY01", propertyKey: "752", checkIn: "2027-04-12", checkOut: "2027-04-14", adults: 2, children: 1, firstName: "Ana", totalCents: quote.total, agreementSignedAt: null, idCheckedAt: null });
+    // Split booking (PX-F1): the scheduled balance and its date reach the stay page and the agreement.
+    expect(quote.plan.split).toBe(true);
+    expect(s!.paidNowCents).toBe(quote.plan.dueNow);
+    expect(s!.balance).toEqual({ cents: quote.plan.scheduled!.amount, dueAt: quote.plan.scheduled!.chargeAt.toISOString(), status: "scheduled" });
+    expect(s!.paidNowCents! + s!.balance!.cents).toBe(quote.total);
     expect(await loadStay(db, "x".repeat(43), NOW)).toBeNull();
     expect(await loadStay(db, "demo", NOW)).toBeNull();
     expect(await loadStay(db, t, new Date("2027-04-18T06:00:00Z"))).toBeNull(); // after check-out + 3 days
