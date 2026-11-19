@@ -447,15 +447,17 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
         </div>
       </footer>
 
-      <div className="V-bar">
+      {/* Phones (Oscar, Nov 19): with no price yet, "Add dates to see your total" stacks above a full-width button on
+          narrow screens; side by side where both fit. With a price, the compact side-by-side row as before. */}
+      <div className={"V-bar" + (quote || (ci && co) ? "" : " is-empty")}>
         <div className="V-barRow">
         <div className="V-barL">
           {quote
             ? <b>{money(quote.total)} <small>total</small></b>
-            : <b>{qState === "loading" ? "Checking…" : "Add dates"}</b>}
+            : ci && co ? <b>{qState === "loading" ? "Checking…" : "Add dates"}</b> : <b className="V-barAdd">{qState === "loading" ? "Checking…" : "Add dates to see your total"}</b>}
           {ci && co
             ? <span className="V-barLinks"><button onClick={() => open("dates")}>{range(ci, co)}</button> · <button onClick={() => open("guests")}>{guests} {guests === 1 ? "guest" : "guests"}</button></span>
-            : <span className="V-barSub">for the full price</span>}
+            : null}
           {(qState === "unavailable" || qState === "error") && <span className="V-barErr" role="alert">{qErr}</span>}
         </div>
         {quote ? <button className="V-cta" onClick={() => reserve("sticky_bar")}>Reserve</button> : <button className="V-cta" data-cta="sticky_bar_availability" data-cta-home={prop.key} onClick={() => open("dates")}>Check availability</button>}

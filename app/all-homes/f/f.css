@@ -585,3 +585,20 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
 .F-page .F-top:not(.is-solid) .F-ask { color: #fff; }
 .F-page .F-ask:hover, .F-page .F-top:not(.is-solid) .F-ask:hover { background: rgba(127,127,127,.12); transform: none; }
 @media (max-width: 760px) { .F-page .F-ask, .F-page .F-top:not(.is-solid) .F-ask { padding: 8px 12px; } }
+
+/* Phones (Oscar, Nov 19): a shorter hero so the dates and guests sit close under the headline, and a "Browse all 5
+   homes" link under the search card that goes straight to the home cards (no dates needed). */
+.F-browseAll { display: none; }
+@media (max-width: 760px) {
+  .F-page .F-hero { min-height: 0; }
+  .F-page .F-heroText { padding: 92px 20px 72px; }
+  .F-page .F-hero h1 { font-size: 31px; }
+  .F-page .F-eyebrow { margin-bottom: 8px; }
+  .F-browseAll { display: block; text-align: center; margin: 14px 0 0; }
+  .F-browseAll a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; font-size: 16px; font-weight: 600; color: var(--ink); text-decoration: underline; text-underline-offset: 4px; border-radius: 6px; }
+  .F-browseAll a:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+}
+@media (max-width: 760px) and (max-height: 700px) {
+  .F-page .F-heroText { padding: 84px 20px 64px; }
+  .F-page .F-hero h1 { font-size: 28px; }
+}

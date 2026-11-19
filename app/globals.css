@@ -251,7 +251,7 @@ input.f.bad { border-color: var(--bad); }
 .SN-nav a { font-size: 14.5px; font-weight: 500; color: #6b635a; text-decoration: none; padding: 6px 0; transition: color .3s ease; }
 .SN-nav a:hover { color: #1d1a17; text-decoration: underline; text-underline-offset: 6px; }
 .SN-right { display: flex; align-items: center; gap: 8px; flex: none; }
-.SN-ask { flex: none; color: #1d1a17; background: transparent; border: 1.5px solid #1d1a17; text-decoration: none; font-weight: 600; font-size: 14px; padding: 9.5px 16px; border-radius: 8px; transition: background .35s ease; }
+.SN-ask { flex: none; color: #1d1a17; background: transparent; border: 1px solid #cfc7bb; text-decoration: none; font-weight: 600; font-size: 14px; padding: 9.5px 16px; border-radius: 8px; transition: background .35s ease; }
 .SN-ask:hover { background: #f3efe9; }
 .SN-ask:focus-visible, .SN-nav a:focus-visible, .SN-brand:focus-visible { outline: 3px solid #1d1a17; outline-offset: 3px; border-radius: 4px; }
 @media (max-width: 760px) {
@@ -389,8 +389,8 @@ input.f.bad { border-color: var(--bad); }
 .LN-brandMob { display: none; }
 .LN-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 4px; color: #1d1a17; font-weight: 600; font-size: 15px; text-decoration: none; white-space: nowrap; border-radius: 6px; }
 .LN-back:hover { text-decoration: underline; text-underline-offset: 4px; }
-.LN-ask { margin-left: auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; color: #1d1a17; background: transparent; border: 1.5px solid #1d1a17; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; }
-.LN-ask:hover { background: #f3efe9; }
+.LN-ask { margin-left: auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; color: #1d1a17; background: transparent; border: 1px solid #cfc7bb; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; }
+.LN-ask:hover { background: #f3efe9; border-color: #a99f92; }
 .LN-back:focus-visible, .LN-ask:focus-visible, .LN-brand:focus-visible { outline: 3px solid #1d1a17; outline-offset: 2px; }
 @media (max-width: 760px) {
   .LN-in { height: 60px; padding: 0 12px; gap: 8px; display: grid; grid-template-columns: 1fr auto 1fr; }

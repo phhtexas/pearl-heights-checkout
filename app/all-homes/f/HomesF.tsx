@@ -198,6 +198,8 @@ export function HomesF({ homes, hero, points, reasons }: {
         </div>
       </section>
       <div className="F-searchWrap F-up F-d3" ref={searchRef}><SearchBarF s={s} ref={bar} /></div>
+      {/* Phones (Oscar, Nov 19): a way to look at the homes without entering dates. */}
+      <p className="F-browseAll"><a href="#homes" data-cta="hero_browse_all">Browse all 5 homes <span aria-hidden="true">↓</span></a></p>
 
       {reasons}
 
