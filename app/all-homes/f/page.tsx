@@ -1,3 +1,5 @@
+import { TestOnly } from "../../TestOnly";
+import { LAUNCHED } from "@/launch";
 import Image from "next/image";
 import { EVERY_HOME, guestReviews, homeCards, mapPoints, sharedFaq } from "@/content/allHomes";
 import { HOMES } from "@/content/homes";
@@ -86,7 +88,7 @@ export default function Page() {
   return (
     <div className="F-page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(siteJsonLd(["736", "752", "indianola", "edgewood", "claywell"].map((k) => HOMES[k]!))) }} />
-      <aside className="F-mock" aria-label="Prototype label">Mockup F · prototype, not linked from the site</aside>
+      <TestOnly><aside className="F-mock" aria-label="Prototype label">Mockup F · prototype, not linked from the site</aside></TestOnly>
       {/* Oscar, Nov 19: logo + Browse homes · Map · Reviews · FAQ; "Ask a question" as a light outlined button so it doesn't compete with search. */}
       <Reveal />
       <SiteHeader>
@@ -199,7 +201,7 @@ export default function Page() {
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><path d="M17.5 6.5h.01" /></svg>
         </a>
         <p>Hosted by Oscar &amp; Fernanda · San Antonio, Texas · <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></p>
-        <p className="F-legal"><a href="/guides">Local guides</a> · Terms of service (coming soon) · Privacy policy (coming soon) · <CookieChoices /></p>
+        <p className="F-legal"><a href="/guides">Local guides</a> · {LAUNCHED ? <><a href="/terms">Terms of service</a> · <a href="/privacy">Privacy policy</a></> : <>Terms of service (coming soon) · Privacy policy (coming soon)</>} · <CookieChoices /></p>
         <p className="F-note">Ratings and reviews are from Airbnb guests who stayed in our homes.</p>
       </footer>
     </div>

@@ -7,6 +7,8 @@ import type { HomeContent } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
 import { track } from "@/client/track";
 import { ShareSheet } from "./ShareSheet";
+import { TestOnly } from "../TestOnly";
+import { LAUNCHED } from "@/launch";
 import { useSaved } from "@/client/saved";
 import { Icon, iconFor } from "./icons";
 import { ALL_HOMES, ListingNav } from "../SiteNav";
@@ -269,7 +271,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
 
   return (
     <div className="V-page">
-      <div className="V-test">Test site · nothing is booked or charged</div>
+      <TestOnly><div className="V-test">Test site · nothing is booked or charged</div></TestOnly>
       {/* Oscar, Nov 19: a simpler header on property pages (back to the results, ask about THIS home). */}
       <ListingNav backHref={backHref} askHref={`mailto:${CONTACT.email}?subject=${encodeURIComponent("Question about " + home.title)}`} />
       {shared && <div className="V-toast" role="status">{shared}</div>}
@@ -439,8 +441,9 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
           <ul className="V-footLinks">
             <li><a href="/policies/cancellation">Cancellation policy</a></li>
             {GUIDES.filter((g) => g.approved && g.homes.some((h) => h.key === home.key)).map((g) => <li key={g.slug}><a href={`/guides/${g.slug}`}>Local guide: {g.title}</a></li>)}
-            <li><span>Terms of service <em>(coming soon)</em></span></li>
-            <li><span>Privacy policy <em>(coming soon)</em></span></li>
+            {LAUNCHED
+              ? <><li><a href="/terms">Terms of service</a></li><li><a href="/privacy">Privacy policy</a></li></>
+              : <><li><span>Terms of service <em>(coming soon)</em></span></li><li><span>Privacy policy <em>(coming soon)</em></span></li></>}
             <li><CookieChoices /></li>
           </ul>
           <p className="V-footSmall">{home.registration && <>City short-term rental registration {home.registration} · </>}© {new Date().getFullYear()} Pearl Heights Homes</p>

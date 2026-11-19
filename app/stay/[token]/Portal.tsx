@@ -16,8 +16,17 @@ import { checkInInstant, todayChicago } from "@/domain/time";
 type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; idSession?: string; allSetSeen?: boolean; simDay?: "morning" | "checkin"; messages: { from: "guest" | "note"; text: string; at: string; iso?: string; reaction?: Reaction | null }[] };
 const fresh = (): State => ({ messages: [] });
 const KEY = (t: string) => `ph-stay-${t}`;
-/** Sandbox labels render only when NEXT_PUBLIC_SANDBOX=true (inlined at build); never in a production build without it. */
-const SANDBOX = process.env.NEXT_PUBLIC_SANDBOX === "true";
+/**
+ * Sandbox labels render only when NEXT_PUBLIC_SANDBOX=true (inlined at build) AND never on pearlheightshomes.com: the test
+ * site and the real domain share one build, so real guests must never see "Sandbox mode" or "test document" notes
+ * (launch check, Nov 19). Decided after mount, so the real domain never flashes them.
+ */
+const SANDBOX_BUILD = process.env.NEXT_PUBLIC_SANDBOX === "true";
+function useSandbox() {
+  const [on, setOn] = useState(false);
+  useEffect(() => { setOn(SANDBOX_BUILD && !/(^|\.)pearlheightshomes\.com$/.test(location.hostname)); }, []);
+  return on;
+}
 const signedDate = (iso?: string) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "long", day: "numeric", year: "numeric" }).format(iso ? new Date(iso) : new Date());
 const fmtDay = (iso: string, o: Intl.DateTimeFormatOptions) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { ...o, timeZone: "UTC" });
 const nowText = (at: Date = new Date()) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(at);
@@ -59,6 +68,7 @@ const GUIDE_IC: Record<string, string> = {
 };
 
 export function Portal({ stay }: { stay: StayData }) {
+  const SANDBOX = useSandbox();
   const [s, setS] = useState<State>(fresh);
   const sRef = useRef(s); sRef.current = s;
   const [ready, setReady] = useState(false);

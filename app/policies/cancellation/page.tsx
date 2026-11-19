@@ -1,3 +1,4 @@
+import { LAUNCHED } from "@/launch";
 import type { Metadata } from "next";
 import { policyOverview } from "@/domain/policy";
 import "./policy.css";
@@ -17,7 +18,7 @@ export default function Page() {
         <ul className="P-list">{lines.map((l) => <li key={l}>{l}</li>)}</ul>
         <h2>If we can&apos;t complete your booking</h2>
         <p>If your rental agreement and ID check aren&apos;t completed, or if we have to cancel your stay, you get everything back with no fee.</p>
-        <p className="P-note">Times are San Antonio time (Central). The full Terms of service are coming soon.</p>
+        <p className="P-note">Times are San Antonio time (Central). {LAUNCHED ? <>Full details are in the <a href="/terms">Direct Booking Terms</a>.</> : "The full Terms of service are coming soon."}</p>
       </main>
     </div>
   );

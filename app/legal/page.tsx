@@ -1,3 +1,4 @@
+import { ALL_HOMES } from "../SiteNav";
 import { legalDocs } from "@/content/legal";
 import { Shell, draftMeta } from "./parts";
 
@@ -12,7 +13,7 @@ export const dynamic = "force-static";
 export default function LegalHub() {
   const docs = legalDocs();
   return (
-    <Shell crumbs={[{ label: "Home", href: "/homes/736-myrtle" }, { label: "Terms and policies" }]}>
+    <Shell crumbs={[{ label: "Home", href: ALL_HOMES }, { label: "Terms and policies" }]}>
       <p className="L-eyebrow">Legal terms</p>
       <h1>Terms and policies</h1>
 

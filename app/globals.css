@@ -266,7 +266,7 @@ input.f.bad { border-color: var(--bad); }
 .ck .bars .on i { background: var(--ck-blue); }
 .ck .bars .on span { color: var(--ck-blue); font-weight: 700; }
 .ck .bars .done i { background: var(--ck-blue); opacity: .35; }
-.ck .bars .done > span { color: #8a8f93; font-weight: 500; display: inline-flex; align-items: center; gap: 3px; }
+.ck .bars .done > span { color: #62676b; font-weight: 500; display: inline-flex; align-items: center; gap: 3px; }
 .ck .bars .done .stepChk { color: var(--ck-blue); opacity: .7; }
 @media (min-width: 960px) {
   .ck .progress li.now { color: var(--ck-blue); }
@@ -326,7 +326,7 @@ input.f.bad { border-color: var(--bad); }
 .PH-consent div { display: flex; gap: 8px; }
 .PH-consent button { min-height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid #1f2933; background: #fff; color: #1f2933; font: 600 14px Inter, system-ui, sans-serif; cursor: pointer; }
 .PH-consent button + button { background: #1f2933; color: #fff; }
-.PH-cookieLink { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+.PH-cookieLink { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; min-height: 24px; }
 /* Confirmation (Oscar, Nov 18): home card on top, then the message. */
 .ck .doneCard { border: 1px solid #e6dfd5; border-radius: 16px; overflow: hidden; background: #fff; }
 .ck .doneCard .photoImg, .ck .doneCard .photo { width: 100%; object-fit: cover; display: block; }
@@ -405,3 +405,6 @@ input.f.bad { border-color: var(--bad); }
   .LN-in { grid-template-columns: 1fr auto; }
   .LN-brandMob { display: none; }
 }
+
+/* Launch check (Nov 19): map credit links meet the 24px minimum target size (WCAG 2.5.8). */
+.TV-credit a, .C-credit a { display: inline-block; min-height: 24px; line-height: 24px; }

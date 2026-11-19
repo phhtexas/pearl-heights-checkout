@@ -1,4 +1,5 @@
-import { SiteNav } from "../SiteNav";
+import { ALL_HOMES, SiteNav } from "../SiteNav";
+import { LAUNCHED } from "@/launch";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { LEGAL_UPDATED, LEGAL_VERSION, OPERATOR, legalDoc, searchIndex, type Block } from "@/content/legal";
@@ -6,7 +7,9 @@ import LegalSearch from "./LegalSearch";
 import "./legal.css";
 
 /** Shared pieces for the draft legal pages (/legal hub + one page per document). DRAFT: noindex + banner. */
-export const draftMeta = (title: string): Metadata => ({ title: `${title} (draft) | Pearl Heights Homes`, robots: { index: false, follow: false } });
+export const draftMeta = (title: string): Metadata => (LAUNCHED
+  ? { title: `${title} | Pearl Heights Homes`, robots: { index: false, follow: true } }
+  : { title: `${title} (draft) | Pearl Heights Homes`, robots: { index: false, follow: false } });
 
 /** Emails become links; [bracketed] text is a placeholder still to be filled in. */
 function inline(text: string): ReactNode[] {
@@ -43,7 +46,7 @@ export function Shell({ crumbs, children }: { crumbs: { label: string; href?: st
         <nav aria-label="Breadcrumb" className="L-crumbs">
           <ol>{crumbs.map((c) => <li key={c.label} aria-current={c.href ? undefined : "page"}>{c.href ? <a href={c.href}>{c.label}</a> : c.label}</li>)}</ol>
         </nav>
-        <p className="L-draft" role="note"><strong>Draft — not for real bookings.</strong> These documents are under attorney review and are not in effect yet.</p>
+        {!LAUNCHED && <p className="L-draft" role="note"><strong>Draft — not for real bookings.</strong> These documents are under attorney review and are not in effect yet.</p>}
         <LegalSearch entries={searchIndex()} />
         {children}
         <p className="L-foot">Questions about these terms? Email <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a>. Times are Central Time (San Antonio).</p>
@@ -56,12 +59,12 @@ export function DocPage({ id }: { id: string }) {
   const d = legalDoc(id);
   const sections = d.blocks.filter((b): b is Extract<Block, { t: "h" }> => b.t === "h");
   return (
-    <Shell crumbs={[{ label: "Home", href: "/homes/736-myrtle" }, { label: "Terms and policies", href: "/legal" }, { label: d.title }]}>
+    <Shell crumbs={[{ label: "Home", href: ALL_HOMES }, { label: "Terms and policies", href: "/legal" }, { label: d.title }]}>
       <article className="L-doc" aria-labelledby="doc-title">
         <p className="L-eyebrow">Legal terms</p>
         <h1 id="doc-title">{d.title}</h1>
         <dl className="L-meta">
-          <div><dt>Version</dt><dd>{LEGAL_VERSION} (draft)</dd></div>
+          <div><dt>Version</dt><dd>{LEGAL_VERSION}{LAUNCHED ? "" : " (draft)"}</dd></div>
           <div><dt>Effective</dt><dd>Upon publication</dd></div>
           <div><dt>Last updated</dt><dd>{LEGAL_UPDATED}</dd></div>
           <div><dt>Operator</dt><dd>{OPERATOR}</dd></div>
