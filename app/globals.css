@@ -335,3 +335,4 @@ input.f.bad { border-color: var(--bad); }
 .ck .followIg { margin: 4px 0 0; color: #3a3f44; }
 .ck .followIg a { color: inherit; font-weight: 600; }
 .ck .shareTrip { margin: 0; } .ck .shareTrip .link { font-weight: 600; text-decoration: underline; }
+.ck .nowrap { white-space: nowrap; } .ck a.btn.stayBtn { text-align: center; line-height: 1.3; padding-left: 16px; padding-right: 16px; }

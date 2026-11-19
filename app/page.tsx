@@ -502,7 +502,7 @@ export default function Checkout() {
               {photoEl(200)}
               <div className="doneBody">
                 <div className="homeName">{homeTitle}</div>
-                <div className="muted">{areaLine} · Booking {result.bookingRef}</div>
+                <div className="muted">{areaLine} · <span className="nowrap">Booking {result.bookingRef}</span></div>
                 {stayFacts}
               </div>
             </section>
