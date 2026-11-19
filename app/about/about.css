@@ -10,3 +10,5 @@
 .AB-homes span { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px; font-size: 15px; line-height: 1.35; }
 .AB-homes small { color: var(--muted, #55595d); font-size: 13px; }
 .AB-biz { font-size: 15px; color: var(--ink2, #3a3f44); }
+.AB-sign { font-style: italic; }
+.AB-sign span { display: inline-block; margin-top: 6px; font-family: "Marcellus", Georgia, serif; font-style: normal; font-size: 22px; }

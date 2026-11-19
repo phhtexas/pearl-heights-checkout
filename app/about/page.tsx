@@ -9,8 +9,8 @@ import "./about.css";
 
 /**
  * About us (Oscar, Nov 19: "an about us to give people more confidence to book"). Every line comes from something
- * already sourced: Oscar & Fernanda's Airbnb host profile (homes.ts HOSTS, Nov 15–16), their Edgewood guest book
- * "Meet your hosts" page (Canva p.3, read Nov 18), the Condé Nast Traveler feature (link from Oscar, Nov 17), real
+ * already sourced: Oscar & Fernanda's Airbnb host profile (homes.ts HOSTS, Nov 15–16), their 752 Myrtle and Edgewood guest books
+ * "Meet your hosts" pages (Canva p.3, read Nov 18–19), the Condé Nast Traveler feature (link from Oscar, Nov 17), real
  * guest reviews (homes.ts), and the business details in the Booking Terms. Draft until Oscar approves: hidden on
  * pearlheightshomes.com, visible on the test site.
  */
@@ -55,9 +55,12 @@ export default async function Page() {
           </div>
         </div>
 
-        <h2>How it started</h2>
-        <p>Being hosts was a long-time dream for us. Our Alamo Heights home on Edgewood was first the house we bought to live in. When our family grew and we moved, we fully remodeled it with guests in mind and poured our hearts into every detail. That home is still very special to us.</p>
+        <h2>Our story</h2>
+        {/* In Oscar & Fernanda's own words: "Meet your hosts" pages of the 752 Myrtle and Edgewood Canva guest books (read Nov 18–19, 2026) */}
+        <p>Being hosts of a short-term rental was a long-time dream of ours, and that dream has finally come true. We fully remodeled each of our homes with our guests&apos; needs in mind, and we poured our hearts into every little detail.</p>
+        <p>Our Alamo Heights home on Edgewood is extra special to us: we first bought it to live in, until our family started to grow and we had to move. And on Myrtle, next to the Pearl, we&apos;re completely in love with the location, right in the center of everything.</p>
         <p>We love to travel with our own kids, so we know what makes a stay easy. We set up every home to feel like a place we&apos;d want our own family to stay: clean, cozy, well-equipped and welcoming.</p>
+        <p className="AB-sign">We really hope you enjoy your stay and that you come back and visit us over and over again!<br /><span>Fernanda y Oscar</span></p>
 
         <h2>How we host</h2>
         <ul className="G-list">
