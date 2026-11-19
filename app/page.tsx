@@ -535,7 +535,7 @@ export default function Checkout() {
             <section className="nextStep" aria-labelledby="nextStepTitle">
               <h2 id="nextStepTitle">Complete your paperwork</h2>
               <p>Sign the rental agreement and verify your ID by <b>{result.verification.deadlineText}</b>.</p>
-              {stayUrl && <a ref={nextBtn} className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign">Sign &amp; verify ID</a>}
+              {stayUrl && <a ref={nextBtn} className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign">Complete required steps →</a>}
               <p className="nsAfter">Once both are complete, you'll get your check-in details in your guest portal.</p>
             </section>
             <section className="miniHome">
@@ -558,7 +558,7 @@ export default function Checkout() {
             {quote && <div className="muted">Paid today: {money(quote.plan.dueNow)}{quote.plan.split ? ` · ${money(quote.plan.scheduled!.amount)} on ${balance}` : ""}</div>}
             <p className="followIg">Follow along on Instagram for local tips and new homes: <a href="https://www.instagram.com/pearlheightshomes" target="_blank" rel="noopener noreferrer" data-cta="confirmation_instagram">@pearlheightshomes</a></p>
             <div className="muted">Questions? <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
-            {stayUrl && !nextInView && <div className="stickySign"><a className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign_sticky">Sign &amp; verify ID</a></div>}
+            {stayUrl && !nextInView && <div className="stickySign"><a className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign_sticky">Complete required steps →</a></div>}
           </>)}
 
           {err && !preview && <div className="err" role="alert">{err}</div>}
