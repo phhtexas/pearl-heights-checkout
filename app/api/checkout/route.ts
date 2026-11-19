@@ -50,7 +50,9 @@ export async function POST(req: Request) {
     const { hosp, pay, mode } = getAdapters(live ? "none" : ((b.simulate ?? "none") as MockFailure), env, session.id);
     const bookingRef = newRef();
     const now = new Date();
-    const request = { ...input, property: getProperty(input.property), bookingRef, now, lockedQuote: q.quote, consent: consentRecord(now) };
+    // 3-D Secure resume: the browser completed the bank check on the PaymentIntent from the previous attempt.
+    const authorizedPaymentIntentId = typeof b.authorizedPaymentIntentId === "string" && /^pi_[A-Za-z0-9_]{8,80}$/.test(b.authorizedPaymentIntentId) ? b.authorizedPaymentIntentId : undefined;
+    const request = { ...input, property: getProperty(input.property), bookingRef, now, lockedQuote: q.quote, consent: consentRecord(now), quoteId: q.id, authorizedPaymentIntentId };
     const view = await ledger.runAttempt(input.attemptKey, q, bookingRef, async () => {
       const outcome = await bookingAttempt(ledger instanceof DbLedger ? ledger : null, q, request, hosp, pay);
       console.info("checkout", bookingRef, outcome.state, outcome.log.join(" | "));

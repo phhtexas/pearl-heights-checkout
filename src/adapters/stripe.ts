@@ -6,8 +6,8 @@ import { AdapterError, PaymentsAdapter } from "./types";
  * PaymentMethod the browser created. Capture happens only after Hospitable confirms the reservation.
  *
  * Guard: in CHECKOUT_MODE=test the keys must be test keys (sk_test_/pk_test_); a live key refuses to start.
- * Not yet handled (gate before live): 3-D Secure "requires_action" (returned as card_declined with a clear code),
- * webhooks, and DB-backed idempotency.
+ * 3-D Secure: "requires_action" returns the client secret to the browser (stripe.handleNextAction), then checkout
+ * resumes with adoptAuthorized.
  */
 export function assertTestKeys(env: NodeJS.ProcessEnv): { secret: string; publishable: string } {
   const secret = env.STRIPE_SECRET_KEY ?? "", publishable = env.STRIPE_PUBLISHABLE_KEY ?? "";
@@ -58,9 +58,16 @@ export class StripePayments implements PaymentsAdapter {
         description: i.description, metadata: i.metadata,
         ...(customer ? { customer, setup_future_usage: "off_session" as const } : {}),
       }, { idempotencyKey: i.idempotencyKey });
+      if (pi.status === "requires_action" && pi.client_secret) {
+        // 3-D Secure: the guest completes the bank check in the browser, then checkout resumes with this PaymentIntent
+        // (adoptAuthorized). Nothing is charged until then; an abandoned check never becomes a charge.
+        const err = new AdapterError("Card requires authentication (3-D Secure)", "authentication_required");
+        err.action = { paymentIntentId: pi.id, clientSecret: pi.client_secret };
+        throw err;
+      }
       if (pi.status === "requires_action") {
         await this.stripe.paymentIntents.cancel(pi.id).catch(() => undefined);
-        throw new AdapterError("Card requires authentication (3-D Secure), not supported yet", "authentication_required");
+        throw new AdapterError("Card requires authentication (3-D Secure)", "authentication_required");
       }
       if (pi.status !== "requires_capture") throw new AdapterError(`Unexpected payment status ${pi.status}`, "card_declined");
       return { paymentIntentId: pi.id };
@@ -74,6 +81,17 @@ export class StripePayments implements PaymentsAdapter {
       if (err.type === "StripeCardError") throw new AdapterError(err.message ?? "Card declined", "card_declined");
       throw new AdapterError("Payment service error", "upstream_error");
     }
+  }
+
+  async adoptAuthorized(id: string, o: { amount: number; quoteId: string; bookingRef: string; description: string }) {
+    if (!/^pi_[A-Za-z0-9]{8,64}$/.test(id)) throw new AdapterError("bad id", "authentication_required");
+    const pi = await this.stripe.paymentIntents.retrieve(id);
+    if (pi.status === "requires_payment_method" || pi.status === "requires_action" || pi.status === "canceled")
+      throw new AdapterError(`bank check not completed (${pi.status})`, "authentication_required");
+    if (pi.status !== "requires_capture" || pi.amount !== o.amount || pi.metadata?.quote_id !== o.quoteId || pi.capture_method !== "manual")
+      throw new AdapterError("authorization does not match this booking", "card_declined");
+    await this.stripe.paymentIntents.update(id, { description: o.description, metadata: { ...pi.metadata, booking_ref: o.bookingRef } });
+    return { paymentIntentId: id };
   }
 
   async capture(id: string) {

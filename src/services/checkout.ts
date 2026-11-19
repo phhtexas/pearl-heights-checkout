@@ -17,6 +17,10 @@ export interface CheckoutRequest {
   bookingRef: string;
   acceptedTotal: number; // the total the guest saw and accepted (cents)
   paymentMethodId?: string; // Stripe PaymentMethod from the browser (test/live)
+  /** 3-D Secure resume: the PaymentIntent the guest's bank just approved in the browser (from an earlier attempt). */
+  authorizedPaymentIntentId?: string;
+  /** The saved quote's id (stamped on the PaymentIntent so a 3-D Secure resume can only pay for the same quote). */
+  quoteId?: string;
   /** Checkbox wording + policy versions accepted, with the server time (saved on the booking row). */
   consent?: ConsentRecord;
   /** Optional marketing opt-ins (separate from the booking consent; saved, nothing sent yet). */
@@ -29,7 +33,9 @@ export type CheckoutOutcome =
       /** Set when the 15-minute price lock was honored over a different live price (note 135: persisted to audit_log). */
       priceLock?: { locked: number; live: number; absorbed: number } }
   | { ok: false; state: BookingState; reason: "price_changed" | "dates_taken" | "card_declined" | "authentication_required" | "unsupported_method" | "reservation_failed" | "capture_failed" | "processing" | "retryable_error";
-      guestMessage: string; newTotal?: number; log: string[]; reconcile?: Reconcile };
+      guestMessage: string; newTotal?: number; log: string[]; reconcile?: Reconcile;
+      /** 3-D Secure: the browser runs the bank check with this client secret, then retries with the PaymentIntent. */
+      action?: { clientSecret: string } };
 
 /** IDs needed to finish or unwind a checkout that stopped after a side effect. No guest PII. */
 export interface Reconcile {
@@ -106,19 +112,25 @@ export async function runCheckout(req: CheckoutRequest, hosp: HospitableAdapter,
   // 2. Authorize the amount due now (hold only). A definite decline is final; anything else may have created a hold.
   let pi: string;
   try {
-    ({ paymentIntentId: pi } = await pay.authorize({
+    if (req.authorizedPaymentIntentId) ({ paymentIntentId: pi } = await pay.adoptAuthorized(req.authorizedPaymentIntentId, {
+      amount: quote.plan.dueNow, quoteId: req.quoteId ?? "", bookingRef: req.bookingRef,
+      description: `${req.property.name} ${req.checkIn} to ${req.checkOut} (${req.bookingRef})` }));
+    else ({ paymentIntentId: pi } = await pay.authorize({
       amount: quote.plan.dueNow, idempotencyKey: `${req.bookingRef}:initial`,
       description: `${req.property.name} ${req.checkIn} to ${req.checkOut} (${req.bookingRef})`, savePaymentMethod: quote.plan.split,
       paymentMethodId: req.paymentMethodId,
       customer: { name: `${req.guest.firstName} ${req.guest.lastName}`, email: req.guest.email, phone: req.guest.phone },
-      metadata: { booking_ref: req.bookingRef, property: req.property.key, check_in: req.checkIn, check_out: req.checkOut },
+      metadata: { booking_ref: req.bookingRef, property: req.property.key, check_in: req.checkIn, check_out: req.checkOut, ...(req.quoteId ? { quote_id: req.quoteId } : {}) },
     }));
   } catch (e) {
     const c = code(e);
     if (!DEFINITE_AUTH_FAIL.has(c)) return processing("authorize_unknown", {}, `authorization outcome unknown (${c})`);
     step("AUTH_FAILED", `authorization failed (${c})`);
-    if (c === "authentication_required")
-      return { ok: false, state, reason: "authentication_required", guestMessage: "This card needs an extra security check from your bank, which our test checkout doesn't support yet. No charge was made. Please try a different card.", log };
+    if (c === "authentication_required") {
+      const action = e instanceof AdapterError && e.action && !req.authorizedPaymentIntentId ? { clientSecret: e.action.clientSecret } : undefined;
+      return { ok: false, state, reason: "authentication_required", log, ...(action ? { action } : {}),
+        guestMessage: action ? "Your bank needs to confirm this payment." : "Your bank's security check wasn't completed, so no charge was made. Please try again or use a different card." };
+    }
     if (c === "unsupported_method")
       return { ok: false, state, reason: "unsupported_method", guestMessage: "Please pay with a credit or debit card. No charge was made.", log };
     return { ok: false, state, reason: "card_declined", guestMessage: "Your bank declined the card, so no charge was made. Please try another card.", log };

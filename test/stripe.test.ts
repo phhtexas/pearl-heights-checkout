@@ -13,11 +13,12 @@ function fakeStripe(behavior: { status?: string; cardError?: boolean; authErrorT
         calls.push(["create", p, o]);
         if (behavior.cardError) throw Object.assign(new Error("Your card was declined."), { type: "StripeCardError" });
         if (behavior.authErrorThrown) { pis.set("pi_auth", "requires_payment_method"); throw Object.assign(new Error("auth"), { type: "StripeCardError", code: "authentication_required", payment_intent: { id: "pi_auth" } }); }
-        const id = "pi_" + calls.length; pis.set(id, behavior.status ?? "requires_capture"); return { id, status: pis.get(id) };
+        const id = "pi_fake0000" + calls.length; pis.set(id, behavior.status ?? "requires_capture"); return { id, status: pis.get(id), client_secret: id + "_secret_x" };
       },
       capture: async (id: string, _p: any, o: any) => { calls.push(["capture", id, o]); pis.set(id, "succeeded"); return { id, status: "succeeded" }; },
       cancel: async (id: string) => { calls.push(["cancel", id]); pis.set(id, "canceled"); return { id, status: "canceled" }; },
-      retrieve: async (id: string) => ({ id, status: pis.get(id) }),
+      retrieve: async (id: string) => ({ id, status: pis.get(id), amount: 45290, capture_method: "manual", metadata: { quote_id: "q-1", booking_ref: "PH-OLD001" } }),
+      update: async (id: string, p: any) => { calls.push(["update", id, p]); return { id }; },
     },
   };
   return { stripe, calls };
@@ -45,10 +46,23 @@ describe("Stripe test-mode adapter", () => {
     const { stripe } = fakeStripe({ cardError: true });
     await expect(new StripePayments(stripe).authorize(input)).rejects.toMatchObject({ code: "card_declined" });
   });
-  it("3-D Secure (requires_action) is cancelled and reported as authentication_required, not a decline", async () => {
+  it("3-D Secure (requires_action) hands the bank check to the browser: client secret returned, nothing cancelled or captured", async () => {
     const { stripe, calls } = fakeStripe({ status: "requires_action" });
-    await expect(new StripePayments(stripe).authorize(input)).rejects.toMatchObject({ code: "authentication_required" });
-    expect(calls.some((c) => c[0] === "cancel")).toBe(true);
+    await expect(new StripePayments(stripe).authorize(input)).rejects.toMatchObject({ code: "authentication_required", action: { clientSecret: expect.stringMatching(/^pi_fake\d+_secret_x$/) } });
+    expect(calls.some((c) => c[0] === "cancel" || c[0] === "capture")).toBe(false);
+  });
+  it("after the bank check, adopts the hold only if it matches the quote and amount, relabelled with the new booking ref", async () => {
+    const { stripe, calls } = fakeStripe({ status: "requires_capture" });
+    const s = new StripePayments(stripe);
+    const { paymentIntentId } = await s.authorize(input);
+    expect(await s.adoptAuthorized(paymentIntentId, { amount: 45290, quoteId: "q-1", bookingRef: "PH-NEW001", description: "d" })).toEqual({ paymentIntentId });
+    expect(calls.find((c) => c[0] === "update")[2].metadata).toMatchObject({ booking_ref: "PH-NEW001", quote_id: "q-1" });
+    await expect(s.adoptAuthorized(paymentIntentId, { amount: 100, quoteId: "q-1", bookingRef: "PH-NEW002", description: "d" })).rejects.toMatchObject({ code: "card_declined" });
+    await expect(s.adoptAuthorized(paymentIntentId, { amount: 45290, quoteId: "q-2", bookingRef: "PH-NEW002", description: "d" })).rejects.toMatchObject({ code: "card_declined" });
+    const pending = fakeStripe({ status: "requires_action" });
+    const s2 = new StripePayments(pending.stripe);
+    const e = await s2.authorize(input).catch((x) => x);
+    await expect(s2.adoptAuthorized(e.action.paymentIntentId, { amount: 45290, quoteId: "q-1", bookingRef: "PH-NEW003", description: "d" })).rejects.toMatchObject({ code: "authentication_required" });
   });
   it("3-D Secure raised as an error is cancelled and reported as authentication_required", async () => {
     const { stripe, calls } = fakeStripe({ authErrorThrown: true });
@@ -93,7 +107,7 @@ describe("key guards", () => {
 });
 
 describe("3-D Secure through the full checkout", () => {
-  it("final PaymentIntent canceled; zero reservations; zero captures; guest told it is authentication, not a decline", async () => {
+  it("no reservation and no capture until the bank check; the guest is asked to confirm, not told it was declined", async () => {
     const { MockHospitable } = await import("../src/adapters/mock");
     const { runCheckout } = await import("../src/services/checkout");
     const { getProperty } = await import("../src/domain/properties");
@@ -104,15 +118,14 @@ describe("3-D Secure through the full checkout", () => {
     const stay = { property, checkIn: "2027-04-05", checkOut: "2027-04-07", adults: 2, children: 0, infants: 0, payPlan: "split" as const, now: new Date("2026-11-14T20:00:00Z") };
     const cal = await h.getCalendar(property.hospitableUuid, stay.checkIn, stay.checkOut);
     const q = buildQuote({ ...stay, nightlyRates: Object.fromEntries(cal.filter((d) => d.date < stay.checkOut).map((d) => [d.date, d.price])) });
-    const r = await runCheckout({ ...stay, guest: { firstName: "T", lastName: "G", email: "t@example.com", phone: "2105550100" }, bookingRef: "PH-3DS001", acceptedTotal: q.total, paymentMethodId: "pm_card_threeDSecure2Required" }, h, new StripePayments(stripe));
+    const r = await runCheckout({ ...stay, guest: { firstName: "T", lastName: "G", email: "t@example.com", phone: "2105550100" }, bookingRef: "PH-3DS001", acceptedTotal: q.total, paymentMethodId: "pm_card_threeDSecure2Required", quoteId: "q-1" }, h, new StripePayments(stripe));
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.reason).toBe("authentication_required");
-    expect(r.guestMessage).toMatch(/extra security check/);
+    expect(r.action?.clientSecret).toMatch(/_secret_/);
+    expect(r.guestMessage).toMatch(/bank needs to confirm/);
     expect(r.guestMessage).not.toMatch(/declined/);
-    const cancels = calls.filter((c) => c[0] === "cancel");
-    expect(cancels).toHaveLength(1);
-    expect((await stripe.paymentIntents.retrieve(cancels[0][1])).status).toBe("canceled");
+    expect(calls.find((c) => c[0] === "create")[1].metadata).toMatchObject({ quote_id: "q-1", booking_ref: "PH-3DS001" });
     expect(calls.some((c) => c[0] === "capture")).toBe(false);
     expect(h.reservationCount).toBe(0);
   });

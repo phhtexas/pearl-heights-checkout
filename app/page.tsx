@@ -228,9 +228,24 @@ export default function Checkout() {
       if (pm.error || !pm.id) { setBusy(false); setPayErr({ msg: pm.error ?? "Please check your card details.", change: true }); return; }
       paymentMethodId = pm.id;
     }
-    const r = await fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, consentId: CONSENT_ID, marketingEmail: mktEmail, marketingSms: mktSms, textConfirmation: textConfirm, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId,
-      analytics: { consent: cookieConsent() === "granted", attribution: attribution(), ...metaBrowserIds(), url: location.href } }) });
-    const j = await r.json().catch(() => ({}));
+    const send = (extra: Record<string, unknown>) => fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, consentId: CONSENT_ID, marketingEmail: mktEmail, marketingSms: mktSms, textConfirmation: textConfirm, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId,
+      analytics: { consent: cookieConsent() === "granted", attribution: attribution(), ...metaBrowserIds(), url: location.href }, ...extra }) });
+    let r = await send({});
+    let j = await r.json().catch(() => ({}));
+    // 3-D Secure: the bank asks the guest to confirm (Stripe's window), then the same booking continues with that hold.
+    if (j.reason === "authentication_required" && j.action?.clientSecret && cfg.publishableKey) {
+      const { loadStripe } = await import("@stripe/stripe-js");
+      const stripe = await loadStripe(cfg.publishableKey);
+      const res = stripe ? await stripe.handleNextAction({ clientSecret: j.action.clientSecret }) : null;
+      if (res?.paymentIntent?.status === "requires_capture") {
+        r = await send({ authorizedPaymentIntentId: res.paymentIntent.id });
+        j = await r.json().catch(() => ({}));
+      } else {
+        setBusy(false);
+        setPayErr({ msg: res?.error?.message ? `${res.error.message} No charge was made.` : "Your bank's security check wasn't completed, so no charge was made. Please try again or use a different card.", change: true });
+        return;
+      }
+    }
     setBusy(false);
     if (j.reason === "quote_expired") { await getQuote(); setPayErr({ msg: j.guestMessage, change: false }); return; }
     if (!r.ok) { setPayErr({ msg: j.error ?? j.guestMessage ?? "Something went wrong. No charge was made.", change: false }); return; }

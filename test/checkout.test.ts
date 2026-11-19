@@ -110,3 +110,29 @@ describe("checkout orchestration (mock Hospitable + Stripe)", () => {
     expect(second.ok).toBe(false);
   });
 });
+
+describe("3-D Secure (Oscar, Nov 19: fix before launch)", () => {
+  it("returns the bank check to the browser, then books with that same hold once the guest passes it", async () => {
+    const h = new MockHospitable(), p = new MockPayments();
+    p.needsBankCheck = true;
+    const first = await runCheckout(await request(h, "PH-3DS1", { quoteId: "q-1" }), h, p);
+    expect(first).toMatchObject({ ok: false, reason: "authentication_required", action: { clientSecret: "pi_mock_PH-3DS1:initial_secret_mock" } });
+    // Nothing reserved yet; the dates are still free.
+    expect((await h.getCalendar(edgewood.hospitableUuid, "2027-04-05", "2027-04-06")).every((d) => d.available)).toBe(true);
+    p.needsBankCheck = false;
+    // Guest hasn't finished the check: no booking, no second prompt.
+    const early = await runCheckout(await request(h, "PH-3DS2", { quoteId: "q-1", authorizedPaymentIntentId: "pi_mock_PH-3DS1:initial" }), h, p);
+    expect(early).toMatchObject({ ok: false, reason: "authentication_required" });
+    expect((early as { action?: unknown }).action).toBeUndefined();
+    p.completeBankCheck("pi_mock_PH-3DS1:initial");
+    // A different quote can't use this hold.
+    expect(await runCheckout(await request(h, "PH-3DS3", { quoteId: "q-OTHER", authorizedPaymentIntentId: "pi_mock_PH-3DS1:initial" }), h, p))
+      .toMatchObject({ ok: false, reason: "card_declined" });
+    const done = await runCheckout(await request(h, "PH-3DS4", { quoteId: "q-1", authorizedPaymentIntentId: "pi_mock_PH-3DS1:initial" }), h, p);
+    expect(done.ok).toBe(true);
+    expect(p.intents.get("pi_mock_PH-3DS1:initial")?.status).toBe("captured");
+    // Once captured, the hold can't be reused for another booking.
+    expect(await runCheckout(await request(new MockHospitable(), "PH-3DS5", { quoteId: "q-1", authorizedPaymentIntentId: "pi_mock_PH-3DS1:initial" }), new MockHospitable(), p))
+      .toMatchObject({ ok: false });
+  });
+});

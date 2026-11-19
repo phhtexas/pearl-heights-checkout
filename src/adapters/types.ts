@@ -39,6 +39,12 @@ export interface PaymentsAdapter {
     customer?: { name: string; email: string; phone?: string };
     metadata?: Record<string, string>;
   }): Promise<{ paymentIntentId: string }>;
+  /**
+   * 3-D Secure resume: after the guest's bank check in the browser, take over that authorization for this booking.
+   * Must be on hold (requires_capture) for exactly `amount`, created for the same quote; relabels it with the booking ref.
+   * Throws AdapterError "authentication_required" if the check didn't complete.
+   */
+  adoptAuthorized(paymentIntentId: string, o: { amount: number; quoteId: string; bookingRef: string; description: string }): Promise<{ paymentIntentId: string }>;
   capture(paymentIntentId: string): Promise<void>;
   voidAuthorization(paymentIntentId: string): Promise<void>;
   /** Reconciliation: current status of a PaymentIntent. */
@@ -56,5 +62,7 @@ export interface PaymentsAdapter {
 }
 
 export class AdapterError extends Error {
+  /** 3-D Secure: the PaymentIntent waiting for the guest's bank check, and its client secret for the browser. */
+  public action?: { paymentIntentId: string; clientSecret: string };
   constructor(message: string, public readonly code: string) { super(message); }
 }

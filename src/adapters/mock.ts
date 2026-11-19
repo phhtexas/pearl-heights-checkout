@@ -95,12 +95,28 @@ export class MockHospitable implements HospitableAdapter {
 }
 
 export class MockPayments implements PaymentsAdapter {
-  intents = new Map<string, { amount: number; status: "authorized" | "captured" | "voided" }>();
+  intents = new Map<string, { amount: number; status: "authorized" | "captured" | "voided" | "requires_action"; quoteId?: string; ref?: string }>();
+  /** Test switch: the next authorizations need a 3-D Secure check (completeBankCheck simulates the guest passing it). */
+  needsBankCheck = false;
+  completeBankCheck(id: string) { const pi = this.intents.get(id); if (pi?.status === "requires_action") pi.status = "authorized"; }
+  async adoptAuthorized(id: string, o: { amount: number; quoteId: string; bookingRef: string }) {
+    const pi = this.intents.get(id);
+    if (!pi || pi.status === "requires_action" || pi.status === "voided") throw new AdapterError("bank check not completed", "authentication_required");
+    if (pi.status !== "authorized" || pi.amount !== o.amount || pi.quoteId !== o.quoteId) throw new AdapterError("authorization does not match", "card_declined");
+    pi.ref = o.bookingRef;
+    return { paymentIntentId: id };
+  }
   constructor(public failure: MockFailure = "none") {}
-  async authorize(i: { amount: number; idempotencyKey: string }) {
+  async authorize(i: { amount: number; idempotencyKey: string; metadata?: Record<string, string> }) {
     if (this.failure === "card_declined") throw new AdapterError("Your card was declined.", "card_declined");
     const id = `pi_mock_${i.idempotencyKey}`;
-    if (!this.intents.has(id)) this.intents.set(id, { amount: i.amount, status: "authorized" });
+    if (this.needsBankCheck) {
+      this.intents.set(id, { amount: i.amount, status: "requires_action", quoteId: i.metadata?.quote_id });
+      const e = new AdapterError("Card requires authentication", "authentication_required");
+      e.action = { paymentIntentId: id, clientSecret: `${id}_secret_mock` };
+      throw e;
+    }
+    if (!this.intents.has(id)) this.intents.set(id, { amount: i.amount, status: "authorized", quoteId: i.metadata?.quote_id });
     if (this.authorizeThenTimeout) throw new AdapterError("Stripe timeout", "upstream_error");
     return { paymentIntentId: id };
   }
@@ -139,7 +155,7 @@ export class MockPayments implements PaymentsAdapter {
   }
   async status(id: string) {
     const pi = this.intents.get(id);
-    return pi ? pi.status : "failed";
+    return !pi || pi.status === "requires_action" ? ("failed" as const) : pi.status;
   }
   async findByRef(ref: string) {
     return [...this.intents.keys()].filter((k) => k.startsWith(`pi_mock_${ref}:`));
