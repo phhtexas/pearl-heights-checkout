@@ -95,23 +95,6 @@ export default function Checkout() {
     ? { src: `/_next/image?url=${encodeURIComponent(listing.photoBase + listing.photos[0].id + ".jpg")}&w=828&q=75`, alt: listing.photos[0].alt }
     : PHOTOS[home];
   const homeTitle = listing?.title ?? `${prop.name} — ${prop.area}`;
-  // Share trip details with the group (Oscar, Nov 18). Only public details: never the address, booking number,
-  // stay-page link or codes. Uses the phone's share sheet when there is one, else copies the text.
-  const [shared, setShared] = useState<"" | "copied" | "failed">("");
-  async function shareTrip() {
-    if (!ci || !co) return;
-    const url = listing ? `https://pearlheightshomes.com/homes/${listing.slug}` : "https://pearlheightshomes.com";
-    const text = `We're staying at ${homeTitle} in ${listing?.neighborhood ?? "San Antonio"}, San Antonio. ` +
-      `Check-in ${fmtDay(ci, true)} after 4:00 PM, check-out ${fmtDay(co, true)} by 10:00 AM. ${guests} ${guests === 1 ? "guest" : "guests"}.`;
-    track("cta_click", { cta: "confirmation_share", property: home });
-    try {
-      if (typeof navigator.share === "function") { await navigator.share({ title: homeTitle, text, url }); return; }
-      await navigator.clipboard.writeText(`${text} ${url}`);
-      setShared("copied");
-    } catch (e) {
-      if ((e as Error)?.name !== "AbortError") setShared("failed");
-    }
-  }
 
   // Pre-selected home and stay from the home's page: ?home=claywell&checkIn=2027-01-05&checkOut=2027-01-07&adults=4
   useEffect(() => {
@@ -543,20 +526,13 @@ export default function Checkout() {
               <div className="miniBody">
                 <div className="miniHead">
                   <div className="homeName">{prop.name}</div>
-                  <button type="button" className="shareBtn" onClick={shareTrip} aria-label="Share trip details with friends">
-                    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 4a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM6 9.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM18 15a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    <span>Share</span>
-                  </button>
                 </div>
                 <div className="muted"><span className="nowrap">Booking {result.bookingRef}</span></div>
                 {ci && co && <div>{shortRange(ci, co)} · {guests} {guests === 1 ? "guest" : "guests"}</div>}
                 <div className="muted small">Check-in after 4:00 PM · Check-out by 10:00 AM</div>
-                {shared === "copied" && <div className="shareNote">Copied. Paste it in a text or email.</div>}
-                {shared === "failed" && <div className="shareNote">Couldn't share from this browser.</div>}
               </div>
             </section>
             {quote && <div className="muted">Paid today: {money(quote.plan.dueNow)}{quote.plan.split ? ` · ${money(quote.plan.scheduled!.amount)} on ${balance}` : ""}</div>}
-            <p className="followIg">Follow along on Instagram for local tips and new homes: <a href="https://www.instagram.com/pearlheightshomes" target="_blank" rel="noopener noreferrer" data-cta="confirmation_instagram">@pearlheightshomes</a></p>
             <div className="muted">Questions? <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
             {stayUrl && !nextInView && <div className="stickySign"><a className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign_sticky">Complete required steps →</a></div>}
           </>)}
