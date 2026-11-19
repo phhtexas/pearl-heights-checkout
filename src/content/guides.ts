@@ -69,7 +69,7 @@ export interface Guide {
 export const GUIDES: Guide[] = [
   {
     slug: "pearl-with-kids",
-    approved: false,
+    approved: true, // Oscar approved Nov 18, 2026
     title: "Staying near the Pearl with kids",
     description: "Two family homes in Tobin Hill, about a 3-minute walk to the Pearl and the River Walk, with playrooms, cribs and fenced backyards.",
     updated: "2026-11-18",
@@ -244,7 +244,7 @@ export const GUIDES: Guide[] = [
   },
   {
     slug: "alamo-heights-with-kids",
-    approved: false,
+    approved: true, // Oscar approved Nov 18, 2026
     title: "Alamo Heights with kids",
     description: "Two family homes on quiet Alamo Heights streets, near the Zoo, the DoSeum and Brackenridge Park, with playrooms, cribs and fenced backyards.",
     updated: "2026-11-18",

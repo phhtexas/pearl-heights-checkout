@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { CookieChoices } from "../CookieChoices";
+import { GUIDES } from "@/content/guides";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { HomeContent } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
@@ -426,6 +427,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
           </ul>
           <ul className="V-footLinks">
             <li><a href="/policies/cancellation">Cancellation policy</a></li>
+            {GUIDES.filter((g) => g.approved && g.homes.some((h) => h.key === home.key)).map((g) => <li key={g.slug}><a href={`/guides/${g.slug}`}>Local guide: {g.title}</a></li>)}
             <li><span>Terms of service <em>(coming soon)</em></span></li>
             <li><span>Privacy policy <em>(coming soon)</em></span></li>
             <li><CookieChoices /></li>
