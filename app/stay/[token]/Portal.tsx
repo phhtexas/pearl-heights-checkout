@@ -215,7 +215,35 @@ export function Portal({ stay }: { stay: StayData }) {
       error: () => { setEsign("error"); setEsignMsg("Something went wrong in the signing window."); },
     } }).open();
   };
-  const send = () => { const t = draft.trim(); if (!t) return; save({ ...s, messages: [...s.messages, { from: "guest", text: t, at: nowText() }] }); setDraft(""); };
+  // Guest chat (Oscar, Nov 19): real bookings use the server thread (Oscar & Fernanda reply from the host inbox);
+  // the sample portal keeps messages in this browser only.
+  const live = stay.mode === "booking";
+  type ChatMsg = { id: string; sender: "guest" | "host"; body: string; at: string };
+  const [chat, setChat] = useState<ChatMsg[] | null>(null), [chatBusy, setChatBusy] = useState(false), [chatErr, setChatErr] = useState("");
+  const loadChat = async () => {
+    const j = await fetch(`/api/stay/${stay.token}/messages`, { cache: "no-store" }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+    if (j?.messages) setChat(j.messages);
+  };
+  useEffect(() => {
+    if (!live) return;
+    loadChat();
+    const t = setInterval(() => { if (!document.hidden) loadChat(); }, 20_000);
+    const v = () => { if (!document.hidden) loadChat(); };
+    document.addEventListener("visibilitychange", v);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", v); };
+  }, [live, stay.token]);
+  const chatTime = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+  const send = async () => {
+    const t = draft.trim(); if (!t) return;
+    if (!live) { save({ ...s, messages: [...s.messages, { from: "guest", text: t, at: nowText() }] }); setDraft(""); return; }
+    if (chatBusy) return;
+    setChatBusy(true); setChatErr("");
+    const r = await fetch(`/api/stay/${stay.token}/messages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ body: t }) }).catch(() => null);
+    const j = await r?.json().catch(() => null);
+    setChatBusy(false);
+    if (!r?.ok) { setChatErr(j?.error ?? "Your message wasn't sent. Please try again."); return; }
+    setDraft(""); loadChat();
+  };
 
   return (
     <div className="ST">
@@ -408,15 +436,24 @@ export function Portal({ stay }: { stay: StayData }) {
         <section className="ST-card" id="messages" aria-labelledby="msg-h">
           <h2 id="msg-h">Messages</h2>
           <p className="ST-dim">Questions go straight to Oscar and Fernanda. We usually reply within an hour. For an emergency, call 911.</p>
-          <ul className="ST-thread" aria-live="polite">
-            {s.messages.length === 0 && <li className="ST-empty">No messages yet.</li>}
-            {s.messages.map((m, i) => <li key={i} className="ST-msg"><p>{m.text}</p><span>{m.at}{SANDBOX ? " · sandbox, not sent" : ""}</span></li>)}
-          </ul>
+          {live ? (
+            <ul className="ST-thread" aria-live="polite">
+              {chat === null && <li className="ST-empty">Loading messages…</li>}
+              {chat?.length === 0 && <li className="ST-empty">No messages yet.</li>}
+              {chat?.map((m) => <li key={m.id} className={m.sender === "host" ? "ST-msg ST-msgHost" : "ST-msg"}><p>{m.body}</p><span>{m.sender === "host" ? "Oscar & Fernanda" : "You"} · {chatTime(m.at)}</span></li>)}
+            </ul>
+          ) : (
+            <ul className="ST-thread" aria-live="polite">
+              {s.messages.length === 0 && <li className="ST-empty">No messages yet.</li>}
+              {s.messages.map((m, i) => <li key={i} className="ST-msg"><p>{m.text}</p><span>{m.at}{SANDBOX ? " · sandbox, not sent" : ""}</span></li>)}
+            </ul>
+          )}
           <form className="ST-send" onSubmit={(e) => { e.preventDefault(); send(); }}>
             <label className="sr-only" htmlFor="st-msg">Message</label>
-            <textarea id="st-msg" rows={2} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Write a message" />
-            <button className="ST-btn" type="submit" disabled={!draft.trim()}>Send</button>
+            <textarea id="st-msg" rows={2} maxLength={2000} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Write a message" />
+            <button className="ST-btn" type="submit" disabled={!draft.trim() || chatBusy}>{chatBusy ? "Sending…" : "Send"}</button>
           </form>
+          {chatErr && <p className="ST-err" role="alert">{chatErr}</p>}
         </section>
 
         {/* Test site only: walk through the whole flow in seconds (Oscar, Nov 17). */}
