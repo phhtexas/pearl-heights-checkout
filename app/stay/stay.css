@@ -194,3 +194,5 @@
 .ST-lost h1 { font-size: 24px; margin: 0 0 8px; }
 .ST-lostActs { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 18px 0 0; }
 .ST-lostActs .ST-ask { color: #fff; }
+/* Real check-in message (F1) */
+.ST-checkinMsg { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 6px; background: var(--soft); border-radius: 14px; padding: 14px 16px; line-height: 1.55; }

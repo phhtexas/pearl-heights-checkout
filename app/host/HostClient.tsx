@@ -70,6 +70,7 @@ export function Inbox() {
   return (
     <div className="H-wrap">
       <header className="H-top"><h1>Guest messages</h1><SignOut /></header>
+      <p><a className="H-navLink" href="/host/checkin">Check-in details for each home →</a></p>
       {rows === null ? <p className="H-dim">Loading…</p> : rows.length === 0 ? <p className="H-dim">No guest messages yet.</p> : (
         <ul className="H-list">
           {rows.map((r) => (

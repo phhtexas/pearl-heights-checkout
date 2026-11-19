@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { maybeDoorCodeAlert } from "@/services/checkinDetails";
 import { agreementHtml } from "@/services/esign/agreement";
 import { ESignUnavailable, createSigningDocument, getDocumentStatus } from "@/services/esign/signwell";
 import { getDb } from "@/db/client";
@@ -85,7 +86,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ token: s
     const nameEdited = !!legalName && !!s.metadata?.holder && legalName.toLowerCase() !== String(s.metadata.holder).trim().toLowerCase();
     if (s.completed && ctx.kind === "booking") {
       const db = getDb();
-      if (db) await recordAgreementSigned(db, ctx.row.bookingId, { documentId: doc, signedAt: s.signedAt ?? new Date().toISOString(), signedName: legalName ?? ctx.stay.holder });
+      if (db) { await recordAgreementSigned(db, ctx.row.bookingId, { documentId: doc, signedAt: s.signedAt ?? new Date().toISOString(), signedName: legalName ?? ctx.stay.holder }); await maybeDoorCodeAlert(db, ctx.row.bookingId).catch(() => false); }
     }
     return NextResponse.json({ completed: s.completed, status: s.status, signedAt: s.completed ? s.signedAt : undefined, legalName, nameEdited }, { headers: noStore });
   } catch (e) {

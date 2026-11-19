@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { maybeDoorCodeAlert } from "@/services/checkinDetails";
 import { getDb } from "@/db/client";
 import { paperworkFor, type PaperworkCtx } from "@/server/stay";
 import { recordIdVerified } from "@/services/stayLinks";
@@ -63,7 +64,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ token: s
     if ((s.metadata?.stay ?? (s.metadata?.token === "demo" ? "demo" : undefined)) !== owner(ctx) || s.testMode === isLive(ctx)) return NextResponse.json({ error: "Not found" }, { status: 404, headers: noStore });
     if (s.status === "verified" && ctx.kind === "booking") {
       const db = getDb();
-      if (db) await recordIdVerified(db, ctx.row.bookingId, { sessionId: vs, checkedAt: new Date().toISOString(), checkoutISO: ctx.row.checkOut });
+      if (db) { await recordIdVerified(db, ctx.row.bookingId, { sessionId: vs, checkedAt: new Date().toISOString(), checkoutISO: ctx.row.checkOut }); await maybeDoorCodeAlert(db, ctx.row.bookingId).catch(() => false); }
     }
     return NextResponse.json({ status: s.status, lastError: s.lastError }, { headers: noStore });
   } catch (e) {

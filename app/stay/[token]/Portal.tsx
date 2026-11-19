@@ -169,6 +169,19 @@ export function Portal({ stay }: { stay: StayData }) {
   const isCheckinTime = s.simDay === "checkin" || (now !== null && now >= checkInInstant(stay.checkIn).getTime());
   const released = unlocked && isCheckinDay;
   const step = !unlocked ? 2 : isCheckinTime ? 4 : 3;
+  // Real bookings (audit F1, Oscar Nov 19): the server decides what may be shown (address after paperwork, the full
+  // check-in message from 8:00 AM CT on check-in day, nothing real for test bookings). Rechecked every few minutes.
+  type Arrival = { state: "locked" } | { state: "test" } | { state: "missing" } | { state: "address"; address: string; releaseText: string } | { state: "full"; address: string; message: string };
+  const [arrival, setArrival] = useState<Arrival | null>(null);
+  useEffect(() => {
+    if (stay.mode !== "booking" || !unlocked) { setArrival(null); return; }
+    let on = true;
+    const load = () => fetch(`/api/stay/${stay.token}/arrival`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => { if (on && j?.state) setArrival(j); }).catch(() => {});
+    load();
+    const t = setInterval(load, 5 * 60_000);
+    return () => { on = false; clearInterval(t); };
+  }, [stay.mode, stay.token, unlocked]);
+  const realArrival = arrival && (arrival.state === "address" || arrival.state === "full" || arrival.state === "missing") ? arrival : null;
   const ci = fmtDay(stay.checkIn, { weekday: "short", month: "short", day: "numeric" });
   const co = fmtDay(stay.checkOut, { weekday: "short", month: "short", day: "numeric" });
   const ciMorning = fmtDay(stay.checkIn, { weekday: "long", month: "long", day: "numeric" });
@@ -428,7 +441,22 @@ export function Portal({ stay }: { stay: StayData }) {
             <h2 id="arrive-h">Get ready for arrival</h2>
             {!unlocked && <p className="ST-lockNote"><Ico d={I.lock} size={16} /> Unlocks after you sign and verify</p>}
           </div>
-          {unlocked ? (
+          {unlocked && realArrival ? (
+            <ul className="ST-info">
+              {realArrival.state === "missing" ? (
+                <li><span className="ST-infoIc"><Ico d={I.door} /></span><div><h3>Check-in details</h3><p>We&apos;re getting your check-in details ready. They&apos;ll be here by the morning of {ciMorning}. Questions? <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a>.</p></div></li>
+              ) : (<>
+                <li><span className="ST-infoIc"><Ico d={I.pin} /></span><div><h3>Address</h3><p>{realArrival.address}</p>
+                  <a className="ST-dir" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(realArrival.address)}`} target="_blank" rel="noopener noreferrer"><Ico d={I.nav} size={16} /> Get directions</a></div></li>
+                {realArrival.state === "full" ? (
+                  <li className="ST-code ST-msgItem"><span className="ST-infoIc"><Ico d={I.key} /></span><div><h3>Your check-in details</h3>
+                    <div className="ST-checkinMsg">{linkify(realArrival.message)}</div></div></li>
+                ) : (
+                  <li className="ST-code"><span className="ST-infoIc"><Ico d={I.key} /></span><div><h3>Entry steps, door code and Wi-Fi</h3><p>Arrive on check-in morning: {realArrival.releaseText}. Your door code will be the last 4 digits of the phone number on your booking.</p></div></li>
+                )}
+              </>)}
+            </ul>
+          ) : unlocked ? (
             <ul className="ST-info">
               <li><span className="ST-infoIc"><Ico d={I.pin} /></span><div><h3>Address</h3><p>Test address (the real one appears here)</p>
                 {/* Oscar, Nov 17: Google Maps directions from wherever the guest is. Real stays link to the home's address
@@ -526,4 +554,10 @@ export function Portal({ stay }: { stay: StayData }) {
       </main>
     </div>
   );
+}
+
+/** Plain text with web links made clickable (check-in messages pasted from Hospitable). */
+function linkify(text: string) {
+  return text.split(/(https?:\/\/[^\s)]+)/g).map((part, i) =>
+    i % 2 ? <a key={i} href={part} target="_blank" rel="noopener noreferrer">{part}</a> : part);
 }

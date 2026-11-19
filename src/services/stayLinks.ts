@@ -21,7 +21,7 @@ export interface StayRow {
   confirmedAt: string; deadlineAt: string | null;
   agreementSignedAt: string | null; agreementSignedName: string | null; signwellDocumentId: string | null;
   idCheckedAt: string | null; idStatus: string; stripeSession: string | null;
-  totalCents: number; paidNowCents: number | null; guestEmail: string;
+  totalCents: number; paidNowCents: number | null; guestEmail: string; guestPhone: string;
   /** Split bookings: the second payment (amount, when it is charged, and its status: scheduled, paid, failed_final…). */
   balance: { cents: number; dueAt: string; status: string } | null;
   /** Paid in Stripe LIVE mode (pearlheightshomes.com); false = test. */
@@ -52,7 +52,7 @@ export async function loadStay(db: Db, token: string, now = new Date()): Promise
   const [r] = await db.query<any>(
     `SELECT b.id, b.booking_ref, b.confirmed_at, b.verification_deadline_at,
             q.property_key, q.check_in, q.check_out, q.adults, q.children, q.infants,
-            q.total_cents, q.livemode, g.first_name, g.last_name, g.email,
+            q.total_cents, q.livemode, g.first_name, g.last_name, g.email, g.phone,
             (SELECT p.amount_cents FROM payments p WHERE p.booking_id = b.id AND p.kind = 'initial' LIMIT 1) AS paid_now,
             s.amount_cents AS balance_cents, s.scheduled_for AS balance_at, s.status AS balance_status,
             v.agreement_signed_at, v.agreement_signed_name, v.signwell_document_id, v.id_checked_at, v.id_status, v.stripe_verification_session
@@ -71,7 +71,7 @@ export async function loadStay(db: Db, token: string, now = new Date()): Promise
     confirmedAt: iso(r.confirmed_at)!, deadlineAt: iso(r.verification_deadline_at),
     agreementSignedAt: iso(r.agreement_signed_at), agreementSignedName: r.agreement_signed_name ?? null, signwellDocumentId: r.signwell_document_id ?? null,
     idCheckedAt: iso(r.id_checked_at), idStatus: r.id_status ?? "pending", stripeSession: r.stripe_verification_session ?? null,
-    totalCents: Number(r.total_cents), paidNowCents: r.paid_now == null ? null : Number(r.paid_now), guestEmail: r.email,
+    totalCents: Number(r.total_cents), paidNowCents: r.paid_now == null ? null : Number(r.paid_now), guestEmail: r.email, guestPhone: r.phone ?? "",
     balance: r.balance_cents == null ? null : { cents: Number(r.balance_cents), dueAt: iso(r.balance_at)!, status: String(r.balance_status) },
     livemode: !!r.livemode,
   };

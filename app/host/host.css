@@ -31,3 +31,12 @@ body:has(.H) { margin: 0; background: #F6F6F4; }
 .H-send textarea { resize: vertical; min-height: 48px; }
 .H-note { font-size: 13.5px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Check-in details editor (F1) */
+.H-ci { background: #fff; border-radius: 16px; padding: 18px; margin-top: 14px; display: grid; gap: 10px; }
+.H-ci h2 { font-size: 18px; margin: 0; }
+.H-ci label { display: grid; gap: 6px; font-size: 14px; color: #5E5E63; }
+.H-ci input, .H-ci textarea { font: inherit; font-size: 16px; color: #1D1D1F; padding: 11px 12px; border: 1px solid #cfc6b9; border-radius: 12px; background: #fff; }
+.H-ci textarea { resize: vertical; line-height: 1.45; }
+.H-ciActs { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.H-ciPreview pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 15px; background: #F6F6F4; border-radius: 12px; padding: 12px 14px; margin: 6px 0 0; }
+.H-navLink { color: #0F6B52; font-weight: 600; text-decoration: none; }
