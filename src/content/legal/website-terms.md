@@ -123,4 +123,4 @@ Operator: PR Portfolio Properties LLC, doing business as Pearl Heights Homes
 
 Email: bookings@pearlheightshomes.com
 
-Mailing address: [Commercial mailing address to be inserted before publication]
+Mailing address: PR Portfolio Properties LLC, 7700 Broadway #124, San Antonio, TX 78209

@@ -153,6 +153,6 @@ Operator: PR Portfolio Properties LLC, doing business as Pearl Heights Homes
 
 Support and written cancellation email: bookings@pearlheightshomes.com
 
-Mailing address: [Commercial mailing address to be inserted before publication]
+Mailing address: PR Portfolio Properties LLC, 7700 Broadway #124, San Antonio, TX 78209
 
 A legal notice is effective when delivered through a method that provides reasonable evidence of receipt. Routine reservation messages may be delivered by email, text or the guest portal.

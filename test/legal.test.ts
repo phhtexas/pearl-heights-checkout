@@ -19,7 +19,8 @@ describe("draft legal documents (V1.2)", () => {
   });
   it("never makes banned claims or names the waiver vendor", () => {
     const all = JSON.stringify(docs).toLowerCase();
-    for (const bad of ["no fees", "skip the cleaning fee", "best rate", "5% less", "cheaper than airbnb", "waivo", "#1", "1515"]) expect(all).not.toContain(bad);
+    for (const bad of ["no fees", "skip the cleaning fee", "best rate", "5% less", "cheaper than airbnb", "waivo", "1515"]) expect(all).not.toContain(bad);
+    expect(all).not.toMatch(/#1(?!\d)/); // "#1" claims (the mailbox "#124" is fine)
   });
   it("parses tables, bullets and subsections", () => {
     const b = parseLegal("x", "## 1 One\n\n### Sub\n\n- a\n- b\n\n| H1 | H2 |\n| r1 | v1 |\n\nPara");

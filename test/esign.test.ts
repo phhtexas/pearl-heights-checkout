@@ -25,7 +25,7 @@ describe("rental agreement HTML for SignWell", () => {
   it("live mode never produces an agreement with gaps (blocked or complete, never partial)", () => {
     for (const key of ["736", "752", "indianola", "edgewood", "claywell"]) {
       let html = "";
-      try { html = agreementHtml({ ...base, propertyKey: key, urgentContact: "(210) 400-2540", testMode: false }); } catch (e) { expect(String(e)).toMatch(/blocked|Unfilled/i); continue; }
+      try { html = agreementHtml({ ...base, bookingId: "PH-A7K2QX", propertyKey: key, urgentContact: "(210) 400-2540", testMode: false }); } catch (e) { expect(String(e)).toMatch(/blocked|Unfilled/i); continue; }
       expect(html).not.toMatch(/\[[^\]]{2,60}\]/);
       expect(html).not.toContain("TEST");
     }
