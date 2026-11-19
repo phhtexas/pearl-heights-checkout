@@ -334,3 +334,4 @@ input.f.bad { border-color: var(--bad); }
 .ck .doneCard .psFacts { margin-top: 12px; }
 .ck .followIg { margin: 4px 0 0; color: #3a3f44; }
 .ck .followIg a { color: inherit; font-weight: 600; }
+.ck .shareTrip { margin: 0; } .ck .shareTrip .link { font-weight: 600; text-decoration: underline; }

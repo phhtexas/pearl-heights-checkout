@@ -90,6 +90,23 @@ export default function Checkout() {
     ? { src: `/_next/image?url=${encodeURIComponent(listing.photoBase + listing.photos[0].id + ".jpg")}&w=828&q=75`, alt: listing.photos[0].alt }
     : PHOTOS[home];
   const homeTitle = listing?.title ?? `${prop.name} — ${prop.area}`;
+  // Share trip details with the group (Oscar, Nov 18). Only public details: never the address, booking number,
+  // stay-page link or codes. Uses the phone's share sheet when there is one, else copies the text.
+  const [shared, setShared] = useState<"" | "copied" | "failed">("");
+  async function shareTrip() {
+    if (!ci || !co) return;
+    const url = listing ? `https://pearlheightshomes.com/homes/${listing.slug}` : "https://pearlheightshomes.com";
+    const text = `We're staying at ${homeTitle} in ${listing?.neighborhood ?? "San Antonio"}, San Antonio. ` +
+      `Check-in ${fmtDay(ci, true)} after 4:00 PM, check-out ${fmtDay(co, true)} by 10:00 AM. ${guests} ${guests === 1 ? "guest" : "guests"}.`;
+    track("cta_click", { cta: "confirmation_share", property: home });
+    try {
+      if (typeof navigator.share === "function") { await navigator.share({ title: homeTitle, text, url }); return; }
+      await navigator.clipboard.writeText(`${text} ${url}`);
+      setShared("copied");
+    } catch (e) {
+      if ((e as Error)?.name !== "AbortError") setShared("failed");
+    }
+  }
 
   // Pre-selected home and stay from the home's page: ?home=claywell&checkIn=2027-01-05&checkOut=2027-01-07&adults=4
   useEffect(() => {
@@ -492,6 +509,9 @@ export default function Checkout() {
             <div className="okmark" aria-hidden="true">✓</div>
             <h1>You're booked, {guest.firstName}!</h1>
             {stayUrl && <a className="btn stayBtn" href={stayUrl}>Sign the agreement and verify your ID</a>}
+            <p className="shareTrip"><button type="button" className="link inline" onClick={shareTrip}>Share trip details with your group</button>
+              {shared === "copied" && <span className="muted"> · Copied. Paste it in a text or email.</span>}
+              {shared === "failed" && <span className="muted"> · Couldn't share from this browser.</span>}</p>
             <div className="box warm">To keep your reservation, please finish two quick steps by <b>{result.verification.deadlineText}</b>: sign the rental agreement and verify your ID.</div>
             <div className="muted">Paid today: {money(quote!.plan.dueNow)}{quote!.plan.split ? ` · ${money(quote!.plan.scheduled!.amount)} on ${balance}` : ""}</div>
             <p className="followIg">Follow along on Instagram for local tips and new homes: <a href="https://www.instagram.com/pearlheightshomes" target="_blank" rel="noopener noreferrer" data-cta="confirmation_instagram">@pearlheightshomes</a></p>
