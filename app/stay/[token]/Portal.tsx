@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { type Reaction } from "../../host/Reactions";
+import { ChatScreen, fullRange, guestLine, initials, type ChatMsg } from "../../host/ChatScreen";
 import type { StayData } from "@/content/stayDemo";
 import { loadStripe } from "@stripe/stripe-js";
 import { checkInInstant, todayChicago } from "@/domain/time";
@@ -11,7 +13,7 @@ import { checkInInstant, todayChicago } from "@/domain/time";
  *  ->  4 Enjoy your stay (house rules, messages).
  * In this test version the state lives in this browser only (localStorage), and nothing is sent or charged.
  */
-type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; idSession?: string; allSetSeen?: boolean; simDay?: "morning" | "checkin"; messages: { from: "guest" | "note"; text: string; at: string }[] };
+type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; idSession?: string; allSetSeen?: boolean; simDay?: "morning" | "checkin"; messages: { from: "guest" | "note"; text: string; at: string; iso?: string; reaction?: Reaction | null }[] };
 const fresh = (): State => ({ messages: [] });
 const KEY = (t: string) => `ph-stay-${t}`;
 /** Sandbox labels render only when NEXT_PUBLIC_SANDBOX=true (inlined at build); never in a production build without it. */
@@ -218,7 +220,6 @@ export function Portal({ stay }: { stay: StayData }) {
   // Guest chat (Oscar, Nov 19): real bookings use the server thread (Oscar & Fernanda reply from the host inbox);
   // the sample portal keeps messages in this browser only.
   const live = stay.mode === "booking";
-  type ChatMsg = { id: string; sender: "guest" | "host"; body: string; at: string };
   const [chat, setChat] = useState<ChatMsg[] | null>(null), [chatBusy, setChatBusy] = useState(false), [chatErr, setChatErr] = useState("");
   const loadChat = async () => {
     const j = await fetch(`/api/stay/${stay.token}/messages`, { cache: "no-store" }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
@@ -233,9 +234,30 @@ export function Portal({ stay }: { stay: StayData }) {
     return () => { clearInterval(t); document.removeEventListener("visibilitychange", v); };
   }, [live, stay.token]);
   const chatTime = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+  const react = async (m: ChatMsg, emoji: Reaction | null) => {
+    if (!live) { const i = Number(m.id.slice(1)); save({ ...sRef.current, messages: sRef.current.messages.map((x, j) => (j === i ? { ...x, reaction: emoji } : x)) }); return; }
+    setChat((cur) => cur?.map((x) => (x.id === m.id ? { ...x, guestReaction: emoji } : x)) ?? cur);
+    const r = await fetch(`/api/stay/${stay.token}/messages`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: m.id, emoji }) }).catch(() => null);
+    if (!r?.ok) loadChat();
+  };
+  // Full-screen chat like the Airbnb app (Oscar, Nov 19). #chat in the address, so the phone's back button closes it;
+  // links from emails (#messages) open it.
+  const [chatOpen, setChatOpen] = useState(false);
+  useEffect(() => {
+    const sync = () => setChatOpen(location.hash === "#chat" || location.hash === "#messages");
+    sync(); addEventListener("popstate", sync); addEventListener("hashchange", sync);
+    return () => { removeEventListener("popstate", sync); removeEventListener("hashchange", sync); };
+  }, []);
+  useEffect(() => { document.body.style.overflow = chatOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [chatOpen]);
+  const openChat = () => { history.pushState(null, "", "#chat"); setChatOpen(true); };
+  const closeChat = () => { if (location.hash === "#chat") history.back(); else { history.replaceState(null, "", location.pathname + location.search); setChatOpen(false); } };
+  const localMsgs: ChatMsg[] = s.messages.map((m, i) => ({ id: "l" + i, sender: m.from === "guest" ? "guest" : "host", body: m.text, at: m.iso ?? new Date().toISOString(), readAt: null, guestReaction: m.reaction ?? null, hostReaction: null }));
+  const shownMsgs = live ? chat : localMsgs;
+  const unreadFromUs = (chat ?? []).filter((m) => m.sender === "host" && !m.readAt).length;
+  const lastMsg = shownMsgs && shownMsgs.length ? shownMsgs[shownMsgs.length - 1] : null;
   const send = async () => {
     const t = draft.trim(); if (!t) return;
-    if (!live) { save({ ...s, messages: [...s.messages, { from: "guest", text: t, at: nowText() }] }); setDraft(""); return; }
+    if (!live) { save({ ...s, messages: [...s.messages, { from: "guest", text: t, at: nowText(), iso: new Date().toISOString() }] }); setDraft(""); return; }
     if (chatBusy) return;
     setChatBusy(true); setChatErr("");
     const r = await fetch(`/api/stay/${stay.token}/messages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ body: t }) }).catch(() => null);
@@ -250,7 +272,7 @@ export function Portal({ stay }: { stay: StayData }) {
       {SANDBOX && <p className="ST-test" role="note"><b>Sandbox mode</b> · sample reservation · nothing here is real, sent or charged</p>}
       <header className="ST-top">
         <a href="/all-homes/f" className="ST-brand"><img src="/brand/logo-dark.webp" alt="Pearl Heights Homes" width={200} height={174} /></a>
-        <a className="ST-ask" href="#messages">Message us</a>
+        <a className="ST-ask" href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a>
       </header>
 
       <main className="ST-main">
@@ -423,7 +445,7 @@ export function Portal({ stay }: { stay: StayData }) {
             <input type="search" value={gq} onChange={(e) => setGq(e.target.value)} placeholder="Search the house guide" aria-label="Search the house guide" enterKeyHint="search" />
             {gq && <button type="button" className="ST-gClear" onClick={() => setGq("")} aria-label="Clear search">×</button>}
           </div>
-          {gq.trim() && <p className="ST-dim ST-gCount" aria-live="polite">{guideHits.length ? `${guideHits.reduce((n, g) => n + g.items.length, 0)} result${guideHits.reduce((n, g) => n + g.items.length, 0) === 1 ? "" : "s"}` : <>No results for “{gq.trim()}”. <a href="#messages">Ask us</a> and we&apos;ll help.</>}</p>}
+          {gq.trim() && <p className="ST-dim ST-gCount" aria-live="polite">{guideHits.length ? `${guideHits.reduce((n, g) => n + g.items.length, 0)} result${guideHits.reduce((n, g) => n + g.items.length, 0) === 1 ? "" : "s"}` : <>No results for “{gq.trim()}”. <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Ask us</a> and we&apos;ll help.</>}</p>}
           {(gq.trim() ? guideHits : stay.thingsToKnow).map((g) => (
             <details key={g.title + (gq.trim() ? ":q" : "")} className="ST-know" open={gq.trim() ? true : g.title === "Check-in and check-out"}>
               <summary><span className="ST-kIc" aria-hidden="true"><Ico d={GUIDE_IC[g.title] ?? I.doc} size={20} /></span><span className="ST-kT">{hl(g.title)}</span></summary>
@@ -435,26 +457,25 @@ export function Portal({ stay }: { stay: StayData }) {
 
         <section className="ST-card" id="messages" aria-labelledby="msg-h">
           <h2 id="msg-h">Messages</h2>
-          <p className="ST-dim">Questions go straight to Oscar and Fernanda. We usually reply within an hour. For an emergency, call 911.</p>
-          {live ? (
-            <ul className="ST-thread" aria-live="polite">
-              {chat === null && <li className="ST-empty">Loading messages…</li>}
-              {chat?.length === 0 && <li className="ST-empty">No messages yet.</li>}
-              {chat?.map((m) => <li key={m.id} className={m.sender === "host" ? "ST-msg ST-msgHost" : "ST-msg"}><p>{m.body}</p><span>{m.sender === "host" ? "Oscar & Fernanda" : "You"} · {chatTime(m.at)}</span></li>)}
-            </ul>
-          ) : (
-            <ul className="ST-thread" aria-live="polite">
-              {s.messages.length === 0 && <li className="ST-empty">No messages yet.</li>}
-              {s.messages.map((m, i) => <li key={i} className="ST-msg"><p>{m.text}</p><span>{m.at}{SANDBOX ? " · sandbox, not sent" : ""}</span></li>)}
-            </ul>
-          )}
-          <form className="ST-send" onSubmit={(e) => { e.preventDefault(); send(); }}>
-            <label className="sr-only" htmlFor="st-msg">Message</label>
-            <textarea id="st-msg" rows={2} maxLength={2000} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Write a message" />
-            <button className="ST-btn" type="submit" disabled={!draft.trim() || chatBusy}>{chatBusy ? "Sending…" : "Send"}</button>
-          </form>
-          {chatErr && <p className="ST-err" role="alert">{chatErr}</p>}
+          <button type="button" className="ST-chatEntry" onClick={openChat}>
+            <img src="/homes/hosts/oscar-fernanda-about.jpg" alt="" />
+            <span className="ST-chatTxt">
+              <strong>Oscar &amp; Fernanda{unreadFromUs > 0 && <b className="ST-chatDot" aria-label={`${unreadFromUs} new`}>{unreadFromUs}</b>}</strong>
+              <span>{lastMsg ? (lastMsg.sender === "guest" ? "You: " : "") + lastMsg.body : "Questions about your stay? Message us here."}</span>
+            </span>
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+          <p className="ST-dim ST-small">We usually reply within an hour. For an emergency, call 911.</p>
         </section>
+        {chatOpen && (
+          <ChatScreen me="guest" otherName="Oscar & Fernanda"
+            avatars={[{ src: "/homes/hosts/oscar-fernanda-about.jpg", alt: "Oscar & Fernanda" }, { initials: initials(stay.holder), alt: stay.holder }]}
+            title="Oscar & Fernanda" subtitle={stay.home.title}
+            onBack={closeChat} backLabel="Back to your stay" onDetails={() => { closeChat(); setTimeout(() => scrollTo({ top: 0, behavior: "smooth" }), 50); }}
+            confirmed={{ at: stay.paidAtISO, text: `Booking confirmed · ${guestLine(stay.guests.adults + stay.guests.children)}, ${fullRange(stay.checkIn, stay.checkOut)}` }}
+            messages={shownMsgs} draft={draft} setDraft={setDraft} onSend={send} busy={chatBusy} error={chatErr}
+            note={!live && SANDBOX ? "Sandbox: messages stay in this browser and aren't sent." : undefined} onReact={react} />
+        )}
 
         {/* Test site only: walk through the whole flow in seconds (Oscar, Nov 17). */}
         {SANDBOX && stay.mode === "demo" && (

@@ -66,8 +66,10 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok(/Test address/.test(await body()), `${tag}: progress kept on reload (this browser)`);
   ok((await page.locator(".ST-paper").count()) === 0 && /Paperwork complete/.test(await page.locator(".ST-paperDone").innerText()), `${tag}: later visits: paperwork section gone, "Paperwork complete" line in the stay card`);
   // messages
-  await page.fill("#st-msg", "What time is check-in?"); await page.click('.ST-send button');
-  ok(/What time is check-in\?/.test(await page.locator(".ST-thread").innerText()) && /sandbox, not sent/.test(await page.locator(".ST-thread").innerText()), `${tag}: message shows in the thread, marked test`);
+  await page.click(".ST-chatEntry"); await page.fill("#ch-msg", "What time is check-in?"); await page.click(".CH-go");
+  ok(/What time is check-in\?/.test(await page.locator(".CH-body").innerText()) && /aren't sent/.test(await page.locator(".CH-send").innerText()), `${tag}: message shows in the full-screen chat, marked sandbox`);
+  await page.click(".CH-back"); await page.waitForTimeout(200);
+  ok((await page.locator(".CH").count()) === 0 && /You: What time is check-in\?/.test(await page.locator(".ST-chatEntry").innerText()), `${tag}: back closes the chat; the card shows the last message`);
   ok((await page.locator(".ST-know").count()) >= 2 && /Quiet hours/.test(await page.locator(".ST-know").allTextContents().then((t) => t.join(" "))), `${tag}: house rules from the listing`);
   const guide = await page.locator(".ST-know summary").allInnerTexts();
   ok(/House guide/.test(await page.locator("#know-h").innerText()) && guide.includes("Washer and dryer") && guide.includes("Parking") && guide.at(-1) === "Safety and property", `${tag}: house guide with the 752 Guest Book topics`);

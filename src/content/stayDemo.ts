@@ -16,6 +16,8 @@ export interface StayData {
   guests: { adults: number; children: number };
   holder: string;
   paidAtText: string;
+  /** When the booking was confirmed (ISO), for the chat's "Booking confirmed" line. */
+  paidAtISO: string;
   deadlineText: string;
   thingsToKnow: { title: string; items: string[] }[];
   /** "demo" = the sample portal (paperwork kept in the browser); "booking" = a real booking (paperwork saved on the server). */
@@ -40,6 +42,7 @@ export function buildStay(o: { token: string; code: string; homeKey: string; che
     guests: { adults: o.adults, children: o.children },
     holder: o.holder,
     paidAtText: fmtCT(o.paidAt),
+    paidAtISO: o.paidAt.toISOString(),
     deadlineText,
     // House guide (Oscar, Nov 17): check-in and house rules from the listing (source of truth), then the home's Guest
     // Book topics (houseGuides.ts), then safety from the listing.

@@ -1,0 +1,43 @@
+/* Full-screen chat like the Airbnb app (shared by the stay page and the host inbox). */
+.CH { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; background: #fff; color: #222; font-family: "Inter", -apple-system, system-ui, sans-serif; }
+.CH-top { display: grid; grid-template-columns: 48px 1fr auto; align-items: start; gap: 8px; padding: 10px 16px 12px; padding-top: max(10px, env(safe-area-inset-top)); border-bottom: 1px solid #ebebeb; }
+.CH-back { background: none; border: 0; padding: 8px; margin: 6px 0 0 -8px; color: #222; cursor: pointer; border-radius: 999px; }
+.CH-who { display: grid; justify-items: center; text-align: center; gap: 2px; min-width: 0; }
+.CH-who strong { font-size: 16px; margin-top: 4px; }
+.CH-sub { font-size: 14px; color: #6a6a6a; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.CH-faces { position: relative; width: 74px; height: 50px; }
+.CH-av { position: absolute; width: 26px; height: 26px; border-radius: 50%; object-fit: cover; right: 0; bottom: 0; border: 2px solid #fff; background: #ddd; }
+.CH-avBig { width: 48px; height: 48px; left: 4px; right: auto; top: 0; bottom: auto; border: 0; }
+.CH-avTxt { display: grid; place-items: center; background: #0F6B52; color: #fff; font-weight: 600; font-size: 11px; }
+.CH-avBig.CH-avTxt { font-size: 18px; }
+.CH-details { font: inherit; font-size: 14px; font-weight: 600; background: #f2f2f2; color: #222; border: 0; border-radius: 999px; padding: 9px 16px; margin-top: 6px; cursor: pointer; }
+.CH-body { flex: 1; overflow-y: auto; padding: 8px 16px 20px; display: grid; align-content: start; gap: 6px; -webkit-overflow-scrolling: touch; }
+.CH-day { text-align: center; font-weight: 600; font-size: 14px; margin: 18px 0 4px; }
+.CH-sys { text-align: center; color: #6a6a6a; font-size: 14px; line-height: 1.45; margin: 0 auto 8px; max-width: 340px; }
+.CH-sys button { font: inherit; color: #222; background: none; border: 0; padding: 2px 0; text-decoration: underline; font-weight: 600; cursor: pointer; }
+.CH-time { font-size: 12.5px; color: #6a6a6a; margin: 10px 0 0; }
+.CH-timeMe { text-align: right; }
+.CH-msg { background: #f2f2f2; color: #222; border-radius: 22px; padding: 11px 16px; }
+.CH-mine { background: #222; color: #fff; }
+.CH-msg p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 16px; line-height: 1.4; }
+.CH-send { border-top: 1px solid #ebebeb; padding: 10px 16px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: #fff; }
+.CH-box { display: flex; align-items: flex-end; gap: 8px; border: 1px solid #ddd; border-radius: 24px; padding: 6px 6px 6px 16px; }
+.CH-box textarea { flex: 1; font: inherit; font-size: 16px; border: 0; outline: none; resize: none; padding: 7px 0; max-height: 140px; background: transparent; }
+.CH-go { width: 36px; height: 36px; border-radius: 50%; border: 0; background: #222; color: #fff; display: grid; place-items: center; cursor: pointer; flex: none; }
+.CH-go:disabled { background: #e6e6e6; color: #fff; cursor: default; }
+.CH-err, .CH-note { font-size: 13.5px; margin: 0 4px 8px; }
+.CH-err { color: #A1291F; }
+.CH-note { color: #6a6a6a; }
+.CH .RX-shown { bottom: -10px; }
+@media (min-width: 760px) { .CH-top, .CH-body, .CH-send { padding-left: calc(50% - 340px); padding-right: calc(50% - 340px); } }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Details sheet (reservation) */
+.CH-sheet { position: fixed; inset: 0; z-index: 50; display: grid; align-items: end; background: rgba(0,0,0,.35); }
+.CH-sheetIn { background: #fff; border-radius: 20px 20px 0 0; padding: 20px 20px max(20px, env(safe-area-inset-bottom)); max-width: 640px; width: 100%; margin: 0 auto; display: grid; gap: 10px; }
+.CH-sheetIn h2 { margin: 0; font-size: 19px; }
+.CH-sheetIn dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; font-size: 15px; }
+.CH-sheetIn dt { color: #6a6a6a; }
+.CH-sheetIn dd { margin: 0; }
+.CH-sheetIn img { width: 100%; height: 150px; object-fit: cover; border-radius: 14px; }
+.CH-close { font: inherit; font-weight: 600; background: #222; color: #fff; border: 0; border-radius: 12px; padding: 12px; cursor: pointer; margin-top: 6px; }

@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { type Reaction } from "./Reactions";
+import { ChatScreen, fullRange, guestLine, initials, type ChatMsg } from "./ChatScreen";
 
 /** Host inbox UI (Oscar, Nov 19): sign-in by email link, the list of guest threads, and one thread with a reply box. */
 const when = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
@@ -84,23 +86,21 @@ export function Inbox() {
   );
 }
 
-type Msg = { id: string; sender: "guest" | "host"; body: string; at: string; readAt: string | null };
+type Info = { bookingId: string; bookingRef: string; propertyKey: string; checkIn: string; checkOut: string; guestName: string; guests?: number; confirmedAt?: string; agreementSigned?: boolean; idVerified?: boolean };
 export function Thread({ id }: { id: string }) {
-  const [msgs, setMsgs] = useState<Msg[] | null>(null), [info, setInfo] = useState<Omit<Row, "lastBody" | "lastSender" | "lastAt" | "unread"> | null>(null);
-  const [draft, setDraft] = useState(""), [busy, setBusy] = useState(false), [err, setErr] = useState(""), [note, setNote] = useState("");
-  const end = useRef<HTMLDivElement>(null), count = useRef(0);
+  const [msgs, setMsgs] = useState<ChatMsg[] | null>(null), [info, setInfo] = useState<Info | null>(null), [homeInfo, setHome] = useState<{ title: string; photo: string | null } | null>(null);
+  const [draft, setDraft] = useState(""), [busy, setBusy] = useState(false), [err, setErr] = useState(""), [note, setNote] = useState(""), [details, setDetails] = useState(false);
   const load = async () => {
     const r = await fetch(`/api/host/threads/${id}`, { cache: "no-store" }).catch(() => null);
     if (r?.status === 401) { location.replace("/host"); return; }
     const j = await r?.json().catch(() => null);
-    if (j?.messages) { setMsgs(j.messages); setInfo(j.thread); }
+    if (j?.messages) { setMsgs(j.messages); setInfo(j.thread); setHome(j.home); }
     else if (r?.status === 404) setErr("This conversation wasn't found.");
   };
   useEffect(() => {
     load(); const t = setInterval(() => { if (!document.hidden) load(); }, 15_000);
     return () => clearInterval(t);
   }, [id]);
-  useEffect(() => { if (msgs && msgs.length !== count.current) { count.current = msgs.length; end.current?.scrollIntoView({ block: "end" }); } }, [msgs]);
   const send = async () => {
     const body = draft.trim(); if (!body || busy) return;
     setBusy(true); setErr(""); setNote("");
@@ -108,26 +108,41 @@ export function Thread({ id }: { id: string }) {
     const j = await r?.json().catch(() => null);
     setBusy(false);
     if (!r?.ok) { setErr(j?.error ?? "Not sent. Please try again."); return; }
-    setDraft(""); setNote(j.guestEmailed ? "Sent. We emailed the guest a link to the chat." : "Sent. It shows in the guest's chat on their stay page.");
+    setDraft(""); setNote(j.guestEmailed ? "Sent. We emailed the guest a link to the chat." : "");
     load();
   };
+  const react = async (m: ChatMsg, emoji: Reaction | null) => {
+    setMsgs((cur) => cur?.map((x) => (x.id === m.id ? { ...x, hostReaction: emoji } : x)) ?? cur);
+    const r = await fetch(`/api/host/threads/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: m.id, emoji }) }).catch(() => null);
+    if (!r?.ok) load();
+  };
+  const first = info?.guestName.split(" ")[0] || "Guest", n = info?.guests ?? 0;
   return (
-    <div className="H-wrap H-threadWrap">
-      <header className="H-top"><a href="/host" className="H-back">‹ All messages</a></header>
-      {info && <div className="H-head"><h1>{info.guestName}</h1><p className="H-dim">{home(info.propertyKey)} · {range(info.checkIn, info.checkOut)} · {info.bookingRef}</p></div>}
-      {err && <p className="H-err">{err}</p>}
-      <div className="H-thread" aria-live="polite">
-        {msgs?.length === 0 && <p className="H-dim">No messages yet.</p>}
-        {msgs?.map((m) => <div key={m.id} className={m.sender === "host" ? "H-msg H-me" : "H-msg"}><p>{m.body}</p><span>{m.sender === "host" ? "You" : info?.guestName.split(" ")[0]} · {when(m.at)}{m.sender === "host" && m.readAt ? " · Seen" : ""}</span></div>)}
-        <div ref={end} />
-      </div>
-      <form className="H-send" onSubmit={(e) => { e.preventDefault(); send(); }}>
-        <label className="sr-only" htmlFor="h-reply">Reply</label>
-        <textarea id="h-reply" rows={2} maxLength={2000} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Write a reply" />
-        <button className="H-btn" type="submit" disabled={busy || !draft.trim()}>{busy ? "Sending…" : "Send"}</button>
-      </form>
-      {note && <p className="H-dim H-note">{note}</p>}
-    </div>
+    <>
+      <ChatScreen me="host" otherName={first}
+        avatars={[{ initials: initials(info?.guestName ?? ""), alt: info?.guestName ?? "Guest" }, { src: "/homes/hosts/oscar-fernanda-about.jpg", alt: "Oscar & Fernanda" }]}
+        title={info ? (n > 1 ? `${first}'s group of ${n}` : info.guestName) : "Loading…"} subtitle={homeInfo?.title ?? (info ? home(info.propertyKey) : "")}
+        onBack={() => location.assign("/host")} backLabel="All messages" onDetails={() => setDetails(true)}
+        confirmed={{ at: info?.confirmedAt ?? new Date().toISOString(), text: info ? `Booking confirmed · ${guestLine(n)}, ${fullRange(info.checkIn, info.checkOut)}` : "" }}
+        messages={info ? msgs : null} draft={draft} setDraft={setDraft} onSend={send} busy={busy} error={err} note={note} onReact={react} />
+      {details && info && (
+        <div className="CH-sheet" onClick={() => setDetails(false)}>
+          <div className="CH-sheetIn" role="dialog" aria-label="Reservation" onClick={(e) => e.stopPropagation()}>
+            {homeInfo?.photo && <img src={homeInfo.photo} alt="" />}
+            <h2>{homeInfo?.title ?? home(info.propertyKey)}</h2>
+            <dl>
+              <dt>Guest</dt><dd>{info.guestName}</dd>
+              <dt>Dates</dt><dd>{fullRange(info.checkIn, info.checkOut)}</dd>
+              <dt>Guests</dt><dd>{guestLine(n)}</dd>
+              <dt>Booking</dt><dd>{info.bookingRef}</dd>
+              <dt>Agreement</dt><dd>{info.agreementSigned ? "Signed" : "Not signed yet"}</dd>
+              <dt>ID check</dt><dd>{info.idVerified ? "Verified" : "Not verified yet"}</dd>
+            </dl>
+            <button type="button" className="CH-close" onClick={() => setDetails(false)}>Close</button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

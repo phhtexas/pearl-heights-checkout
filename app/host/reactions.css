@@ -1,0 +1,23 @@
+/* Message actions like the Airbnb app: press-and-hold -> reactions + menu (shared with the stay page) */
+.RX { display: grid; justify-items: start; max-width: 85%; justify-self: start; position: relative; }
+.RX-mine { justify-items: end; justify-self: end; }
+.RX-bubble { position: relative; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+@media (hover: hover) { .RX-bubble { user-select: text; -webkit-user-select: text; } }
+.RX-bubble > :first-child { max-width: 100% !important; }
+.RX-shown { position: absolute; bottom: -12px; right: 10px; font-size: 14px; background: #fff; border: 1px solid #e4ded5; border-radius: 999px; padding: 0 6px; line-height: 1.6; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.RX-mine .RX-shown { right: auto; left: 10px; }
+.RX:has(.RX-shown) { margin-bottom: 12px; }
+.RX-add { position: absolute; top: 50%; transform: translateY(-50%); right: -34px; background: none; border: 0; color: #8a8178; padding: 5px; cursor: pointer; border-radius: 999px; display: none; }
+.RX-mine .RX-add { right: auto; left: -34px; }
+@media (hover: hover) { .RX:hover .RX-add, .RX-add:focus-visible, .RX-open .RX-add { display: grid; place-items: center; } }
+.RX-add:hover { color: #0F6B52; background: rgba(15,107,82,.08); }
+.RX-back { position: fixed; inset: 0; background: rgba(240,240,240,.72); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 40; }
+.RX-open .RX-bubble, .RX-pop { position: relative; z-index: 41; }
+.RX-pop { display: grid; gap: 8px; margin-top: 8px; justify-items: inherit; }
+.RX-bar { display: flex; gap: 4px; background: #fff; border-radius: 999px; padding: 6px 10px; box-shadow: 0 6px 22px rgba(0,0,0,.14); }
+.RX-bar button { font-size: 27px; background: none; border: 0; padding: 4px 6px; cursor: pointer; border-radius: 999px; line-height: 1; transition: transform .12s; }
+.RX-bar button:active { transform: scale(1.25); }
+.RX-bar .RX-on { background: #E3F0EA; }
+.RX-menu { background: #fff; border-radius: 16px; box-shadow: 0 6px 22px rgba(0,0,0,.12); min-width: 220px; overflow: hidden; }
+.RX-menu button, .RX-seen { display: flex; align-items: center; gap: 12px; width: 100%; font: inherit; font-size: 16px; color: #1d1d1f; background: none; border: 0; padding: 13px 18px; margin: 0; text-align: left; cursor: pointer; }
+.RX-seen { border-top: 1px solid #eee; cursor: default; color: #5E5E63; font-size: 15px; }

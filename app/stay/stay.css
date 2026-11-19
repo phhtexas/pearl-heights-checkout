@@ -169,3 +169,11 @@
 .ST-dir:hover { background: var(--sage); }
 .ST-dir + .ST-testLine { display: block; margin-top: 4px; }
 @media (max-width: 560px) { .ST-know ul { padding-left: 20px; } }
+
+.ST-msgRow { display: grid; list-style: none; }
+.ST-chatEntry { display: grid; grid-template-columns: 48px 1fr auto; gap: 12px; align-items: center; width: 100%; text-align: left; font: inherit; color: inherit; background: var(--soft); border: 0; border-radius: 16px; padding: 12px 14px; margin: 12px 0 4px; cursor: pointer; }
+.ST-chatEntry img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+.ST-chatTxt { display: grid; min-width: 0; }
+.ST-chatTxt strong { display: flex; align-items: center; gap: 8px; }
+.ST-chatTxt span { color: var(--muted); font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ST-chatDot { background: var(--acc); color: #fff; font-size: 12px; border-radius: 999px; min-width: 20px; padding: 0 6px; text-align: center; }

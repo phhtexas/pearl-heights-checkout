@@ -10,7 +10,7 @@ import { getProperty } from "../src/domain/properties";
 import { buildQuote } from "../src/domain/quote";
 import { runMigrations } from "../scripts/migrate.mjs";
 import { issueStayLink, loadStay } from "../src/services/stayLinks";
-import { addMessage, alertGuest, alertHost, cleanBody, hostAlertText, hostForSession, inbox, issueLoginToken, listMessages, markRead, redeemLoginToken, threadInfo, ALERT_GAP_MS } from "../src/services/stayChat";
+import { setReaction, addMessage, alertGuest, alertHost, cleanBody, hostAlertText, hostForSession, inbox, issueLoginToken, listMessages, markRead, redeemLoginToken, threadInfo, ALERT_GAP_MS } from "../src/services/stayChat";
 
 function wrap(pg: PGlite): Db {
   return {
@@ -45,7 +45,7 @@ function fakeFetch() {
   }) as unknown as typeof fetch;
   return { f, calls };
 }
-const ENV = { RESEND_API_KEY: "re_test" } as NodeJS.ProcessEnv;
+const ENV = { RESEND_API_KEY: "re_test" } as unknown as NodeJS.ProcessEnv;
 
 describe("guest chat", () => {
   it("cleans message text: trims, keeps line breaks, rejects empty and too long", () => {
@@ -80,7 +80,7 @@ describe("guest chat", () => {
     await markRead(db, id, "host", new Date(NOW.getTime() + 120_000));
     const later = new Date(NOW.getTime() + 180_000);
     await addMessage(db, id, "guest", "Thanks", later);
-    const textEnv = { ...ENV, HOST_TEXT_ALERTS: "on", TWILIO_ACCOUNT_SID: "AC1", TWILIO_AUTH_TOKEN: "x", TWILIO_FROM: "+18444485500" } as NodeJS.ProcessEnv;
+    const textEnv = { ...ENV, HOST_TEXT_ALERTS: "on", TWILIO_ACCOUNT_SID: "AC1", TWILIO_AUTH_TOKEN: "x", TWILIO_FROM: "+18444485500" } as unknown as NodeJS.ProcessEnv;
     expect(await alertHost(db, id, "Thanks", "https://test.example", textEnv, f, later)).toBe("sent:email+text");
     const sms = calls.find((c) => c.url.includes("twilio"))!;
     expect(sms.body.To).toBe("+12104002540");
@@ -89,6 +89,23 @@ describe("guest chat", () => {
     const much = new Date(later.getTime() + ALERT_GAP_MS + 1000);
     await addMessage(db, id, "guest", "Hello?", much);
     expect(await alertHost(db, id, "Hello?", "https://test.example", ENV, f, much)).toBe("sent:email");
+  });
+
+  it("reactions: Airbnb's five only, one per side per message, removable", async () => {
+    const id = await book(), other = "00000000-0000-4000-8000-000000000000";
+    const g = await addMessage(db, id, "guest", "Early check-in?", NOW);
+    const h = await addMessage(db, id, "host", "Yes!", new Date(NOW.getTime() + 1000));
+    expect(await setReaction(db, id, h.id, "guest", "👍")).toBe(true);
+    expect(await setReaction(db, id, h.id, "guest", "❤️")).toBe(true);      // replaces
+    expect(await setReaction(db, id, g.id, "host", "🤣")).toBe(true);
+    expect(await setReaction(db, id, h.id, "guest", "🔥")).toBe(false);      // not in the set
+    expect(await setReaction(db, id, h.id, "guest", "😂")).toBe(false);      // not Airbnb's laugh
+    expect(await setReaction(db, other, h.id, "guest", "👍")).toBe(false);   // another booking's thread
+    let m = await listMessages(db, id);
+    expect(m.map((x) => [x.guestReaction, x.hostReaction])).toEqual([[null, "🤣"], ["❤️", null]]);
+    expect(await setReaction(db, id, h.id, "guest", null)).toBe(true);
+    m = await listMessages(db, id);
+    expect(m[1]!.guestReaction).toBeNull();
   });
 
   it("host alert text names the guest, home and dates and links to the thread", async () => {
@@ -104,7 +121,7 @@ describe("guest chat", () => {
     const id = await book();
     const { f, calls } = fakeFetch();
     expect(await alertGuest(db, id, "Yes!", "https://test.example", ENV, f, NOW)).toBe("off");
-    const on = { ...ENV, GUEST_EMAILS: "on" } as NodeJS.ProcessEnv;
+    const on = { ...ENV, GUEST_EMAILS: "on" } as unknown as NodeJS.ProcessEnv;
     expect(await alertGuest(db, id, "Yes!", "https://test.example", on, f, NOW)).toBe("sent");
     expect(calls[0]!.body.to).toEqual(["ana@example.com"]);
     const link = /https:\/\/test\.example\/stay\/([A-Za-z0-9_-]+)#messages/.exec(calls[0]!.body.text)![1]!;

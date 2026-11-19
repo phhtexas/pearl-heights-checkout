@@ -19,9 +19,25 @@ export const MAX_LEN = 2000;
 export const ALERT_GAP_MS = 10 * 60_000;
 export const HOST_EMAIL_DEFAULT = "bookings@pearlheightshomes.com";
 
-export interface ChatMessage { id: string; sender: "guest" | "host"; body: string; at: string; readAt: string | null }
+/** Airbnb's reaction set (Airbnb Help article 3558, and the Airbnb app as Oscar showed it, Nov 19: 😊 ❤️ 👍 👏 🤣). */
+export const REACTIONS = ["😊", "❤️", "👍", "👏", "🤣"] as const;
+export type Reaction = (typeof REACTIONS)[number];
+export interface ChatMessage { id: string; sender: "guest" | "host"; body: string; at: string; readAt: string | null; guestReaction: Reaction | null; hostReaction: Reaction | null }
 const iso = (d: unknown) => (d instanceof Date ? d.toISOString() : d == null ? null : String(d));
-const toMsg = (r: any): ChatMessage => ({ id: r.id, sender: r.sender, body: r.body, at: iso(r.created_at)!, readAt: iso(r.read_at) });
+const toMsg = (r: any): ChatMessage => ({ id: r.id, sender: r.sender, body: r.body, at: iso(r.created_at)!, readAt: iso(r.read_at), guestReaction: r.guest_reaction ?? null, hostReaction: r.host_reaction ?? null });
+const COLS = "id, sender, body, created_at, read_at, guest_reaction, host_reaction";
+
+/**
+ * Sets (or clears, with null) `by`'s reaction on a message in this thread (any message, as in the Airbnb app).
+ * Returns false if the message isn't in the thread or the emoji isn't one of Airbnb's five.
+ */
+export async function setReaction(db: Db, bookingId: string, messageId: string, by: "guest" | "host", emoji: unknown): Promise<boolean> {
+  if (emoji !== null && !REACTIONS.includes(emoji as Reaction)) return false;
+  if (!/^[0-9a-f-]{36}$/i.test(messageId)) return false;
+  const col = by === "guest" ? "guest_reaction" : "host_reaction";
+  const rows = await db.query(`UPDATE stay_chat_messages SET ${col} = $3 WHERE id = $1 AND booking_id = $2 RETURNING 1`, [messageId, bookingId, emoji]);
+  return rows.length > 0;
+}
 
 /** Trim, normalise line breaks, cap blank lines; null if empty or too long. */
 export function cleanBody(raw: unknown): string | null {
@@ -31,13 +47,13 @@ export function cleanBody(raw: unknown): string | null {
 }
 
 export async function listMessages(db: Db, bookingId: string): Promise<ChatMessage[]> {
-  const rows = await db.query(`SELECT id, sender, body, created_at, read_at FROM stay_chat_messages WHERE booking_id = $1 ORDER BY created_at, id`, [bookingId]);
+  const rows = await db.query(`SELECT ${COLS} FROM stay_chat_messages WHERE booking_id = $1 ORDER BY created_at, id`, [bookingId]);
   return rows.map(toMsg);
 }
 
 export async function addMessage(db: Db, bookingId: string, sender: "guest" | "host", body: string, now = new Date()): Promise<ChatMessage> {
   const [r] = await db.query(`INSERT INTO stay_chat_messages (booking_id, sender, body, created_at) VALUES ($1, $2, $3, $4)
-    RETURNING id, sender, body, created_at, read_at`, [bookingId, sender, body, now.toISOString()]);
+    RETURNING ${COLS}`, [bookingId, sender, body, now.toISOString()]);
   return toMsg(r);
 }
 
@@ -60,17 +76,22 @@ async function claimAlert(db: Db, bookingId: string, audience: "host" | "guest",
   return rows.length > 0;
 }
 
-export interface ThreadInfo { bookingId: string; bookingRef: string; propertyKey: string; checkIn: string; checkOut: string; guestName: string; guestEmail: string }
+export interface ThreadInfo { bookingId: string; bookingRef: string; propertyKey: string; checkIn: string; checkOut: string; guestName: string; guestEmail: string;
+  guests?: number; confirmedAt?: string; agreementSigned?: boolean; idVerified?: boolean }
 const day = (d: unknown) => (d instanceof Date ? d.toISOString().slice(0, 10) : String(d).slice(0, 10));
 
 export async function threadInfo(db: Db, bookingId: string): Promise<ThreadInfo | null> {
   if (!/^[0-9a-f-]{36}$/i.test(bookingId)) return null;
   const [r] = await db.query<any>(
-    `SELECT b.id, b.booking_ref, q.property_key, q.check_in, q.check_out, g.first_name, g.last_name, g.email
+    `SELECT b.id, b.booking_ref, b.confirmed_at, q.property_key, q.check_in, q.check_out, q.adults, q.children, q.infants,
+            g.first_name, g.last_name, g.email, v.agreement_signed_at, v.id_status
        FROM bookings b JOIN quotes q ON q.id = b.quote_id AND q.version = b.quote_version JOIN guests g ON g.id = b.guest_id
+       LEFT JOIN verifications v ON v.booking_id = b.id
       WHERE b.id = $1 AND b.confirmed_at IS NOT NULL`, [bookingId]);
   return r ? { bookingId: r.id, bookingRef: r.booking_ref, propertyKey: r.property_key, checkIn: day(r.check_in), checkOut: day(r.check_out),
-    guestName: `${r.first_name} ${r.last_name}`.trim(), guestEmail: r.email } : null;
+    guestName: `${r.first_name} ${r.last_name}`.trim(), guestEmail: r.email,
+    guests: Number(r.adults) + Number(r.children) + Number(r.infants ?? 0), confirmedAt: iso(r.confirmed_at)!,
+    agreementSigned: !!r.agreement_signed_at, idVerified: r.id_status === "verified" } : null;
 }
 
 export interface InboxRow extends ThreadInfo { lastBody: string; lastSender: "guest" | "host"; lastAt: string; unread: number }
