@@ -103,7 +103,7 @@ export async function maybeDoorCodeAlert(db: Db, bookingId: string, env: NodeJS.
     `UPDATE verifications v SET door_alert_at = now()
       WHERE v.booking_id = $1 AND v.door_alert_at IS NULL AND v.agreement_signed_at IS NOT NULL AND v.id_checked_at IS NOT NULL AND v.id_status = 'verified'
       RETURNING (SELECT json_build_object('ref', b.booking_ref, 'home', q.property_key, 'ci', q.check_in, 'co', q.check_out, 'first', g.first_name, 'last', g.last_name,
-                 'phone', g.phone, 'live', q.livemode)
+                 'phone', g.phone, 'live', q.livemode, 'gear', b.baby_gear)
                  FROM bookings b JOIN quotes q ON q.id = b.quote_id AND q.version = b.quote_version JOIN guests g ON g.id = b.guest_id WHERE b.id = v.booking_id) AS info`,
     [bookingId]);
   const i = r?.info && (typeof r.info === "string" ? JSON.parse(r.info) : r.info);
@@ -111,12 +111,14 @@ export async function maybeDoorCodeAlert(db: Db, bookingId: string, env: NodeJS.
   // Homes whose check-in message uses one fixed code (e.g. 613 Indianola) have nothing to set per guest: no alert.
   // If the home isn't set up yet, alert anyway so the lock is ready either way.
   const d = await getDetails(db, i.home).catch(() => null);
-  if (d?.message && !d.message.toLowerCase().includes("%guest_phone_last4%")) return false;
+  const perGuestCode = !(d?.message && !d.message.toLowerCase().includes("%guest_phone_last4%"));
+  if (!perGuestCode && !i.gear) return false;
   const iso = (d: unknown) => (d instanceof Date ? d.toISOString() : String(d)).slice(0, 10);
   const home = HOMES[i.home]?.title ?? i.home, code = phoneLast4(i.phone), tag = i.live ? "" : "TEST · ";
   const dates = `${day(iso(i.ci))} – ${day(iso(i.co))}`;
-  const subject = `${tag}Set door code ${code} · ${home} · ${dates}`;
-  const text = `${i.first} ${String(i.last).slice(0, 1)}. finished their paperwork for booking ${i.ref}.\n\nPlease set door code ${code} (last 4 digits of their phone) on the lock at ${home} for ${dates}.\n\nThe stay page shows their check-in details from 8:00 AM CT on check-in day.`;
+  const todo = [perGuestCode ? `set door code ${code} (last 4 digits of their phone) on the lock` : "", i.gear ? "set up the crib and high chair" : ""].filter(Boolean);
+  const subject = `${tag}${perGuestCode ? `Set door code ${code}` : "Set up crib and high chair"}${perGuestCode && i.gear ? " + crib/high chair" : ""} · ${home} · ${dates}`;
+  const text = `${i.first} ${String(i.last).slice(0, 1)}. finished their paperwork for booking ${i.ref}.\n\nPlease ${todo.join(" and ")} at ${home} for ${dates}.\n\nThe stay page shows their check-in details from 8:00 AM CT on check-in day.`;
   const html = `<p>${text.split("\n\n").map((p) => p.replace(/&/g, "&amp;").replace(/</g, "&lt;")).join("</p><p>")}</p>`;
   try { await sendEmail(env.HOST_ALERT_EMAIL || HOST_EMAIL_DEFAULT, { subject, text, html }, `door-code-${bookingId}`, env, fetchImpl); return true; }
   catch (e) {

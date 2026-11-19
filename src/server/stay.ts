@@ -17,6 +17,7 @@ export async function stayForToken(token: string): Promise<StayData | null> {
       ...(r.agreementSignedAt ? { signedOn: r.agreementSignedAt, signedName: r.agreementSignedName ?? undefined, signDoc: r.signwellDocumentId ?? undefined } : {}),
       ...(r.idCheckedAt && r.idStatus === "verified" ? { verifiedOn: r.idCheckedAt } : {}),
     },
+    babyGear: r.babyGear,
     payments: stayPayments({ totalCents: r.totalCents, paidNowCents: r.paidNowCents ?? r.totalCents, paidAt: new Date(r.confirmedAt),
       balance: r.balance ? { cents: r.balance.cents, dueAt: new Date(r.balance.dueAt), status: r.balance.status } : null }),
   });

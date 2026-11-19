@@ -20,23 +20,25 @@ export function useStays(variant: "a" | "b" | "c" | "e" | "f") {
   const min = todayCT();
 
   const run = useCallback(async (a: string, b: string, ad: number, ch: number) => {
-    if (!a || !b) { setError("Add your check-in and check-out dates."); setState("error"); return; }
-    if (b <= a) { setError("Check-out must be after check-in."); setState("error"); return; }
+    if (!a || !b) { setError("Add your check-in and check-out dates."); setState("error"); return false; }
+    if (b <= a) { setError("Check-out must be after check-in."); setState("error"); return false; }
     const id = ++req.current;
     setState("loading"); setError("");
     try {
       const r = await fetch(`/api/availability?checkIn=${a}&checkOut=${b}&adults=${ad}&children=${ch}`, { cache: "no-store" });
       const j = await r.json();
-      if (id !== req.current) return;
-      if (!r.ok) { setError(j.error ?? "We couldn't check these dates."); setState("error"); return; }
+      if (id !== req.current) return false;
+      if (!r.ok) { setError(j.error ?? "We couldn't check these dates."); setState("error"); return false; }
       setResults(Object.fromEntries((j.homes as Result[]).map((h) => [h.key, h])));
       setState("done");
       const u = new URL(location.href);
       for (const [k, v] of Object.entries({ checkIn: a, checkOut: b, adults: String(ad), children: String(ch) })) u.searchParams.set(k, v);
       history.replaceState(null, "", u);
       track("all_homes_search", { variant, nights: (Date.parse(b) - Date.parse(a)) / 864e5, guests: ad + ch, adults: ad, children: ch, check_in: a, check_out: b, available_homes: (j.homes as Result[]).filter((h) => (h as { available?: boolean }).available).length }, "ahs" + a + b + ad + "-" + ch);
+      return true;
     } catch {
       if (id === req.current) { setError("We couldn't reach our booking system. Please try again."); setState("error"); }
+      return false;
     }
   }, [variant]);
 

@@ -103,37 +103,9 @@ export default function Page() {
         </div>
       </SiteHeader>
       <main id="top">
-        <HomesF homes={homes} hero={hero} points={mapPoints()} reasons={reasons} />
-
-        <section className="F-sec F-band" aria-labelledby="inc-h">
-          <div className="F-head" data-reveal>
-            <h2 id="inc-h">Every booking includes</h2>
-            <p>The same at all five homes.</p>
-          </div>
-          <ul className="F-checks" data-reveal>
-            {/* Oscar, Nov 17: same rows; tapping one opens a short explanation. Each explanation repeats what the site
-                already says elsewhere (waiver note, booking-day and stay steps, Stripe Payment Element, reply time). */}
-            {/* Oscar, Nov 17: first row open on load; one open at a time; a chevron shows each row opens */}
-            {INCLUDES.map(([t, more], i) => (
-              <li key={t}>
-                <details className="F-inc" name="includes" open={i === 0}>
-                  <summary><span>{t}</span><span className="F-incIcons"><Ico name="check" /><i className="F-incChev" aria-hidden="true"><Ico name="chev" /></i></span></summary>
-                  <p>{more}</p>
-                </details>
-              </li>
-            ))}
-          </ul>
-          <p className="F-fine">The damage waiver covers accidental damage during your stay, up to $5,000, subject to the provider&apos;s terms and exclusions. It isn&apos;t a security deposit.</p>
-        </section>
-
-        <section className="F-sec" aria-labelledby="every-h">
-          <div className="F-head" data-reveal>
-            <h2 id="every-h">Every home has</h2>
-            <p>Checked against each home&apos;s amenity list.</p>
-          </div>
-          <ul className="F-amen">{EVERY_HOME.map((a, i) => <li key={a.label} data-reveal style={{ ["--d" as string]: `${(i % 4) * 70}ms` }}><Ico name={a.icon} /><span>{a.label}</span></li>)}</ul>
-        </section>
-
+        {/* Oscar, Nov 19 (his wife's test): reviews and the two "Every…" sections come right after the homes; the map moves
+            below them (HomesF renders these between the homes list and the map). */}
+        <HomesF homes={homes} hero={hero} points={mapPoints()} reasons={reasons} afterHomes={<>
         <section className="F-sec F-band" id="reviews" aria-labelledby="love-h">
           <div className="F-head" data-reveal>
             <h2 id="love-h">What guests say</h2>
@@ -162,6 +134,37 @@ export default function Page() {
             </div>
           </ReviewLoop>
         </section>
+
+        <section className="F-sec" aria-labelledby="inc-h">
+          <div className="F-head" data-reveal>
+            <h2 id="inc-h">Every booking includes</h2>
+            <p>The same at all five homes.</p>
+          </div>
+          <ul className="F-checks" data-reveal>
+            {/* Oscar, Nov 17: same rows; tapping one opens a short explanation. Each explanation repeats what the site
+                already says elsewhere (waiver note, booking-day and stay steps, Stripe Payment Element, reply time). */}
+            {/* Oscar, Nov 17: first row open on load; one open at a time; a chevron shows each row opens */}
+            {INCLUDES.map(([t, more], i) => (
+              <li key={t}>
+                <details className="F-inc" name="includes" open={i === 0}>
+                  <summary><span>{t}</span><span className="F-incIcons"><Ico name="check" /><i className="F-incChev" aria-hidden="true"><Ico name="chev" /></i></span></summary>
+                  <p>{more}</p>
+                </details>
+              </li>
+            ))}
+          </ul>
+          <p className="F-fine">The damage waiver covers accidental damage during your stay, up to $5,000, subject to the provider&apos;s terms and exclusions. It isn&apos;t a security deposit.</p>
+        </section>
+
+        <section className="F-sec F-band" aria-labelledby="every-h">
+          <div className="F-head" data-reveal>
+            <h2 id="every-h">Every home has</h2>
+            <p>Checked against each home&apos;s amenity list.</p>
+          </div>
+          <ul className="F-amen">{EVERY_HOME.map((a, i) => <li key={a.label} data-reveal style={{ ["--d" as string]: `${(i % 4) * 70}ms` }}><Ico name={a.icon} /><span>{a.label}</span></li>)}</ul>
+        </section>
+
+        </>} />
 
         <section className="F-sec" aria-labelledby="steps-h">
           <div className="F-head" data-reveal><h2 id="steps-h">Booking directly is simple</h2><p>From the day you book to the day you leave.</p></div>

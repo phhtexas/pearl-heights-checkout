@@ -119,4 +119,21 @@ describe("check-in details", () => {
     expect(await maybeDoorCodeAlert(db, id, { RESEND_API_KEY: "re_test" } as unknown as NodeJS.ProcessEnv, fetchImpl)).toBe(false);
     expect(sent).toHaveLength(0);
   });
+
+  it("fixed-code home + crib requested: the host is still asked to set up the crib and high chair", async () => {
+    await book();
+    const t = (await issueStayLink(db, { bookingRef: "PH-STAY01", sessionId: "sess-A", channel: "confirmation", now: NOW }))!;
+    const id = (await loadStay(db, t, NOW))!.bookingId;
+    await db.query(`UPDATE bookings SET baby_gear = true WHERE id = $1`, [id]);
+    expect((await loadStay(db, t, NOW))!.babyGear).toBe(true);
+    await saveDetails(db, "752", { address: "1 Sample St", message: "Same code 0000 for everyone." }, "h");
+    await recordAgreementSigned(db, id, { documentId: "11111111-2222-4333-8444-555555555555", signedAt: "2026-11-15T10:00:00Z", signedName: "Ana Guest" });
+    await recordIdVerified(db, id, { sessionId: "vs_test123456", checkedAt: "2026-11-15T10:05:00Z", checkoutISO: "2027-04-14" });
+    const sent: any[] = [];
+    const fetchImpl = (async (_u: string, init: any) => { sent.push(JSON.parse(init.body)); return new Response(JSON.stringify({ id: "em_2" }), { status: 200 }); }) as unknown as typeof fetch;
+    expect(await maybeDoorCodeAlert(db, id, { RESEND_API_KEY: "re_test" } as unknown as NodeJS.ProcessEnv, fetchImpl)).toBe(true);
+    expect(sent[0].subject).toMatch(/^TEST · Set up crib and high chair · /);
+    expect(sent[0].text).toContain("set up the crib and high chair");
+    expect(sent[0].text).not.toContain("door code");
+  });
 });

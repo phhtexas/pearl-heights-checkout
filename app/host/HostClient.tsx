@@ -88,7 +88,7 @@ export function Inbox() {
   );
 }
 
-type Info = { bookingId: string; bookingRef: string; propertyKey: string; checkIn: string; checkOut: string; guestName: string; guests?: number; confirmedAt?: string; agreementSigned?: boolean; idVerified?: boolean };
+type Info = { bookingId: string; bookingRef: string; propertyKey: string; checkIn: string; checkOut: string; guestName: string; guests?: number; confirmedAt?: string; agreementSigned?: boolean; idVerified?: boolean; babyGear?: boolean };
 export function Thread({ id }: { id: string }) {
   const [msgs, setMsgs] = useState<ChatMsg[] | null>(null), [info, setInfo] = useState<Info | null>(null), [homeInfo, setHome] = useState<{ title: string; photo: string | null } | null>(null);
   const [draft, setDraft] = useState(""), [busy, setBusy] = useState(false), [err, setErr] = useState(""), [note, setNote] = useState(""), [details, setDetails] = useState(false);
@@ -139,6 +139,7 @@ export function Thread({ id }: { id: string }) {
               <dt>Guest</dt><dd>{info.guestName}</dd>
               <dt>Dates</dt><dd>{fullRange(info.checkIn, info.checkOut)}</dd>
               <dt>Guests</dt><dd>{guestLine(n)}</dd>
+              {info?.babyGear && <><dt>Set up</dt><dd>Crib and high chair</dd></>}
               <dt>Booking</dt><dd>{info.bookingRef}</dd>
               <dt>Agreement</dt><dd>{info.agreementSigned ? "Signed" : "Not signed yet"}</dd>
               <dt>ID check</dt><dd>{info.idVerified ? "Verified" : "Not verified yet"}</dd>

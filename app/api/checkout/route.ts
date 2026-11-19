@@ -62,6 +62,9 @@ export async function POST(req: Request) {
     if ((view as { ok?: boolean }).ok) {
       const ref = (view as { bookingRef?: string }).bookingRef ?? bookingRef;
       await afterBooking(req, b, input, q.quote, ref, env);
+      // Crib and high chair request (Oscar, Nov 19): only when the stay includes a child or infant.
+      if (b.babyGear === true && input.children + input.infants > 0)
+        await getDb()?.query(`UPDATE bookings SET baby_gear = true WHERE booking_ref = $1`, [ref]).catch(() => undefined);
       // Booking confirmation by text (Oscar, Nov 18). Only when the guest ticked the box on the details step (Twilio
       // toll-free verification requires an unchecked consent box). Off until GUEST_TEXTS=on + Twilio settings; never blocks.
       const db = getDb();

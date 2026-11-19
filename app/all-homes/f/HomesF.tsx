@@ -5,6 +5,7 @@ import { useSaved } from "@/client/saved";
 import type { HomeCard } from "@/content/allHomes";
 import { money, shortDate, useStays } from "../useStays";
 import { PinMapF as PinMap, type Area } from "./PinMapF";
+import { AREA_LABEL } from "./areas";
 import { SearchBarF, type SearchBarFHandle } from "./SearchBarF";
 
 /**
@@ -12,6 +13,7 @@ import { SearchBarF, type SearchBarFHandle } from "./SearchBarF";
  * wide cards, map in a list-left / map-right layout, sticky phone search. Live totals via /api/availability.
  */
 const AREA_NOTE: Record<string, string> = { "Tobin Hill": "walk to the Pearl", Lavaca: "walk downtown" };
+
 
 /**
  * A home's photos (Oscar, Nov 17): on phones the same treatment as the listing page: one full-width photo at a time,
@@ -76,8 +78,9 @@ const PRESS: Record<string, { label: string; href: string }> = {
   edgewood: { label: "Featured in Condé Nast Traveler", href: "https://www.cntraveler.com/gallery/best-airbnbs-in-san-antonio" },
 };
 
-export function HomesF({ homes, hero, points, reasons }: {
+export function HomesF({ homes, hero, points, reasons, afterHomes }: {
   homes: HomeCard[]; hero: { src: string; alt: string }; points: { key: string; lat: number; lon: number }[]; reasons: React.ReactNode;
+  afterHomes?: React.ReactNode;
 }) {
   const s = useStays("f");
   // "From $X / night" before dates (Oscar, Nov 17): per night incl. cleaning and damage waiver, before taxes.
@@ -226,6 +229,8 @@ export function HomesF({ homes, hero, points, reasons }: {
         </ul>
       </section>
 
+      {afterHomes}
+
       {/* Oscar: map in the list-left / map-right layout (as on E) */}
       <section className="F-sec F-mapSec" id="locations" aria-labelledby="map-h">
         <div className="F-mapGrid">
@@ -244,7 +249,7 @@ export function HomesF({ homes, hero, points, reasons }: {
                     onClick={(e) => { if (!(e.target as HTMLElement).closest("a, button")) pickArea(area); }}>
                     <div>
                       <h3><button type="button" className="F-hoodBtn" aria-pressed={area === sel} onClick={() => pickArea(area)}>
-                        {area}<span className="sr-only">: show on map</span>
+                        {AREA_LABEL[area] ?? area}<span className="sr-only">: show on map</span>
                       </button></h3>
                       <p className="F-dim">{list.length} home{list.length > 1 ? "s" : ""}{AREA_NOTE[area] ? ` · ${AREA_NOTE[area]}` : ""}</p>
                     </div>

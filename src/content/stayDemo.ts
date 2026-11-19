@@ -26,6 +26,8 @@ export interface StayData {
   done?: { signedOn?: string; signedName?: string; signDoc?: string; verifiedOn?: string };
   /** Payments card (Perplexity PX-F8, Nov 19): what was paid and, for split bookings, the balance and its status. */
   payments?: StayPayments;
+  /** The guest asked for the crib and high chair (Oscar, Nov 19). */
+  babyGear?: boolean;
 }
 export interface StayPayments {
   totalText: string; paidText: string; paidOnText: string;
@@ -47,7 +49,7 @@ const fmtCT = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: "America
 
 /** Portal data for a home + dates + party (shared by the demo and real bookings). */
 export function buildStay(o: { token: string; code: string; homeKey: string; checkIn: string; checkOut: string; adults: number; children: number;
-  holder: string; paidAt: Date; deadline?: Date | null; mode: StayData["mode"]; done?: StayData["done"]; payments?: StayPayments }): StayData {
+  holder: string; paidAt: Date; deadline?: Date | null; mode: StayData["mode"]; done?: StayData["done"]; payments?: StayPayments; babyGear?: boolean }): StayData {
   const h = HOMES[o.homeKey]!;
   const p = h.photos[0]!;
   const nights = Math.round((Date.parse(o.checkOut) - Date.parse(o.checkIn)) / 864e5);
@@ -71,6 +73,7 @@ export function buildStay(o: { token: string; code: string; homeKey: string; che
     mode: o.mode,
     ...(o.done ? { done: o.done } : {}),
     ...(o.payments ? { payments: o.payments } : {}),
+    ...(o.babyGear ? { babyGear: true } : {}),
   };
 }
 

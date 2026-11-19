@@ -77,13 +77,13 @@ async function claimAlert(db: Db, bookingId: string, audience: "host" | "guest",
 }
 
 export interface ThreadInfo { bookingId: string; bookingRef: string; propertyKey: string; checkIn: string; checkOut: string; guestName: string; guestEmail: string;
-  guests?: number; confirmedAt?: string; agreementSigned?: boolean; idVerified?: boolean }
+  guests?: number; confirmedAt?: string; agreementSigned?: boolean; idVerified?: boolean; babyGear?: boolean }
 const day = (d: unknown) => (d instanceof Date ? d.toISOString().slice(0, 10) : String(d).slice(0, 10));
 
 export async function threadInfo(db: Db, bookingId: string): Promise<ThreadInfo | null> {
   if (!/^[0-9a-f-]{36}$/i.test(bookingId)) return null;
   const [r] = await db.query<any>(
-    `SELECT b.id, b.booking_ref, b.confirmed_at, q.property_key, q.check_in, q.check_out, q.adults, q.children, q.infants,
+    `SELECT b.id, b.booking_ref, b.confirmed_at, b.baby_gear, q.property_key, q.check_in, q.check_out, q.adults, q.children, q.infants,
             g.first_name, g.last_name, g.email, v.agreement_signed_at, v.id_status
        FROM bookings b JOIN quotes q ON q.id = b.quote_id AND q.version = b.quote_version JOIN guests g ON g.id = b.guest_id
        LEFT JOIN verifications v ON v.booking_id = b.id
@@ -91,7 +91,7 @@ export async function threadInfo(db: Db, bookingId: string): Promise<ThreadInfo 
   return r ? { bookingId: r.id, bookingRef: r.booking_ref, propertyKey: r.property_key, checkIn: day(r.check_in), checkOut: day(r.check_out),
     guestName: `${r.first_name} ${r.last_name}`.trim(), guestEmail: r.email,
     guests: Number(r.adults) + Number(r.children) + Number(r.infants ?? 0), confirmedAt: iso(r.confirmed_at)!,
-    agreementSigned: !!r.agreement_signed_at, idVerified: r.id_status === "verified" } : null;
+    agreementSigned: !!r.agreement_signed_at, idVerified: r.id_status === "verified", babyGear: !!r.baby_gear } : null;
 }
 
 export interface InboxRow extends ThreadInfo { lastBody: string; lastSender: "guest" | "host"; lastAt: string; unread: number }

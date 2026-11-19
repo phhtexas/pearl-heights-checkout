@@ -91,6 +91,8 @@ export default function Checkout() {
   const [mktSms, setMktSms] = useState(false);
   // Booking text consent (Twilio toll-free verification, Nov 18): unchecked; the confirmation text goes only to guests who tick it.
   const [textConfirm, setTextConfirm] = useState(false);
+  // Oscar, Nov 19 (his wife's test): families can ask for the crib and high chair (every home has both).
+  const [babyGear, setBabyGear] = useState(false);
   const [sim, setSim] = useState("none");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -149,6 +151,7 @@ export default function Checkout() {
         if (typeof d.mktEmail === "boolean") setMktEmail(d.mktEmail);
         if (typeof d.mktSms === "boolean") setMktSms(d.mktSms);
         if (typeof d.textConfirm === "boolean") setTextConfirm(d.textConfirm);
+        if (typeof d.babyGear === "boolean") setBabyGear(d.babyGear);
         if (d.step === "details" || d.step === "pay") resumeStep.current = d.step;
       }
     }
@@ -219,8 +222,8 @@ export default function Checkout() {
   useEffect(() => {
     if (!ready || step === "done" || preview) return;
     if (!guest.firstName && !guest.lastName && !guest.email && !guest.phone && step === "review") return;
-    ssSet(DRAFT_KEY, { guest, plan, mktEmail, mktSms, textConfirm, step });
-  }, [ready, step, guest, plan, mktEmail, mktSms, textConfirm]); // eslint-disable-line react-hooks/exhaustive-deps
+    ssSet(DRAFT_KEY, { guest, plan, mktEmail, mktSms, textConfirm, babyGear, step });
+  }, [ready, step, guest, plan, mktEmail, mktSms, textConfirm, babyGear]); // eslint-disable-line react-hooks/exhaustive-deps
   // Back to the step the guest was on before a refresh, once the fresh quote is in (the price is rechecked first).
   useEffect(() => { if (quote && resumeStep.current) { const st = resumeStep.current; resumeStep.current = null; if (step === "review") setStep(st); } }, [quote]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -271,7 +274,7 @@ export default function Checkout() {
       if (pm.error || !pm.id) { setBusy(false); setPayErr({ msg: pm.error ?? "Please check your card details.", change: true }); return; }
       paymentMethodId = pm.id;
     }
-    const send = (extra: Record<string, unknown>) => fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, consentId: CONSENT_ID, marketingEmail: mktEmail, marketingSms: mktSms, textConfirmation: textConfirm, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId,
+    const send = (extra: Record<string, unknown>) => fetch("/api/checkout", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan: quote.plan.split ? "split" : "full", guest, agreed, consentId: CONSENT_ID, marketingEmail: mktEmail, marketingSms: mktSms, textConfirmation: textConfirm, babyGear: babyGear && children + infants > 0, acceptedTotal: quote.total, quoteId, attemptKey: crypto.randomUUID(), simulate: sim, paymentMethodId,
       analytics: { consent: cookieConsent() === "granted", attribution: attribution(), ...metaBrowserIds(), url: location.href }, ...extra }) });
     let r = await send({});
     let j = await r.json().catch(() => ({}));
@@ -535,6 +538,10 @@ export default function Checkout() {
                   onChange={(e) => { setGuest({ ...guest, [k]: e.target.value }); if (fieldErr[k]) setFieldErr({ ...fieldErr, [k]: undefined }); }} />
                 {fieldOk(k) && !fieldErr[k] && <svg className="okIc" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#127A5E" /><path d="m7 12.5 3.2 3.2L17 9" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>}</span>
                 {fieldErr[k] && <span id={k + "-err"} className="err">{fieldErr[k]}</span>}</label>))}
+            {children + infants > 0 && (
+              <label className="chk" data-babygear><input type="checkbox" checked={babyGear} onChange={(e) => setBabyGear(e.target.checked)} />
+                <span>Please set up the crib and high chair for us (optional, included at every home).</span></label>
+            )}
             <label className="chk" data-optin="booking-text"><input type="checkbox" checked={textConfirm} onChange={(e) => setTextConfirm(e.target.checked)} />
               <span>Text me booking updates at this number (optional): my confirmation and private stay link, paperwork reminders if needed, and a check-in day message. Up to 4 texts per booking. Message and data rates may apply. Reply HELP for help, STOP to opt out. See the <a href={POLICY_LINKS.websiteTerms} target="_blank" rel="noopener">Website Terms</a> and <a href={POLICY_LINKS.privacy} target="_blank" rel="noopener">Privacy Notice</a>.</span></label>
           </>)}

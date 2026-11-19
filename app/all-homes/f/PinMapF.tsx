@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { AREA_LABEL } from "./areas";
 
 /**
  * F copy of C's PinMap (C unchanged). All five homes on one map (OpenStreetMap tiles, no map library, same look as the listing map). Each pin sits on the
@@ -129,7 +130,7 @@ export function PinMapF({ pins, zoom: baseZoom = 12, area = null, hot = null }: 
           className={`C-pin${s.off ? " is-off" : ""}${area?.keys.includes(s.key) ? " is-area" : ""}${hot === s.key ? " is-hot" : ""}`} style={at(s.left, s.top)}
           onClick={() => go(s.key)} aria-label={`${s.title}: ${s.label}. Show this home`}>{s.label}</button>
       ))}
-      <p className="sr-only" aria-live="polite">{area ? `${area.name}: ${area.keys.length} home${area.keys.length > 1 ? "s" : ""} circled on the map.` : ""}</p>
+      <p className="sr-only" aria-live="polite">{area ? `${AREA_LABEL[area.name] ?? area.name}: ${area.keys.length} home${area.keys.length > 1 ? "s" : ""} circled on the map.` : ""}</p>
       <p className="C-mapNote">Circles show approximate areas, not exact addresses.</p>
       <span className="C-credit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>{CARTO_KEY && <> · <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">© CARTO</a></>}</span>
     </div>

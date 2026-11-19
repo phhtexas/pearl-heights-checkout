@@ -27,7 +27,13 @@ export const SearchBarF = forwardRef<SearchBarFHandle, { s: ReturnType<typeof us
   }, [guestsOpen]);
   const guests = s.adults + s.children;
   const closeCal = () => { setCal(false); setTimeout(() => ciBtn.current?.focus({ preventScroll: true }), 0); };
-  const doneCal = () => { setCal(false); if (s.ci && s.co) void s.search(); };
+  // Fernanda's test (Nov 19): after a search the guest expects to land on the results, so scroll to the homes list.
+  const searchAndShow = async () => {
+    if (!(await s.search())) return;
+    const el = document.getElementById("homes");
+    if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }));
+  };
+  const doneCal = () => { setCal(false); if (s.ci && s.co) void searchAndShow(); };
   const step = (label: string, sub: string, v: number, set: (n: number) => void, lo: number) => (
     <div className="S-step">
       <div><b>{label}</b><small>{sub}</small></div>
@@ -40,7 +46,7 @@ export const SearchBarF = forwardRef<SearchBarFHandle, { s: ReturnType<typeof us
   );
   return (
     <div className="FS-wrap">
-      <form className="S-bar F-search" role="search" aria-label="Find available homes" onSubmit={(e) => { e.preventDefault(); setCal(false); setGuestsOpen(false); void s.search(); }}>
+      <form className="S-bar F-search" role="search" aria-label="Find available homes" onSubmit={(e) => { e.preventDefault(); setCal(false); setGuestsOpen(false); void searchAndShow(); }}>
         <div className="S-field">
           <span><Cal />Check-in</span>
           <button type="button" ref={ciBtn} className={`FS-date${cal && !s.ci ? " is-active" : ""}`} aria-haspopup="dialog" aria-expanded={cal} aria-label={`Check-in date: ${s.ci ? short(s.ci) : "add date"}`} onClick={() => { setGuestsOpen(false); setCal(true); }}>
