@@ -394,7 +394,8 @@ export const GUIDES: Guide[] = [
       own("indianola", "Aerial view of downtown at dusk with nearby attractions labeled", "Downtown at dusk"),
     ],
     intro: [
-      "Our home at 613 Indianola is in historic Lavaca, right next to downtown San Antonio. You can walk to the Tower of the Americas in about 2 minutes, the Alamodome in 4, Hemisfair and the Convention Center in 5, the River Walk in 8 and the Alamo in about 10.", // indianola location + highlights
+      "Our home at 613 Indianola is in historic Lavaca, right next to downtown San Antonio and Hemisfair Park. You can walk to the Tower of the Americas in about 2 minutes, the Alamodome in 4, Hemisfair and the Convention Center in 5, the River Walk in 8 and the Alamo in about 10.", // indianola location + highlights
+      "That means you can park once and walk everywhere: Hemisfair's playgrounds, a concert or game at the Alamodome, La Villita, the River Walk and the Alamo.",
       "We're Oscar & Fernanda, parents of two young kids. We set the house up for families and groups: a king bed in every bedroom, a game room, and a deck with views of the Tower.",
     ],
     homes: [
@@ -424,15 +425,22 @@ export const GUIDES: Guide[] = [
         ],
       },
       {
-        heading: "Game days and conventions",
+        heading: "Concerts, games and conventions",
         paragraphs: [
-          "The Alamodome is about a 4-minute walk and the Convention Center about 5, so you can park once at the house and walk to the event.",
+          "The Alamodome, home to big concerts, UTSA football and the Valero Alamo Bowl, is about a 4-minute walk, and the Convention Center about 5. Park once at the house and walk to the show, with no event parking or traffic.", // alamodome.com news "Fans encouraged to plan ahead for fall events" (read Nov 18, 2026)
         ],
       },
       {
         heading: "La Villita and the River Walk",
         paragraphs: [
           "The River Walk is about an 8-minute walk. La Villita, a historic village of art galleries, shops and restaurants, is open Monday to Saturday 10 AM to 6 PM and Sunday 11 AM to 4 PM. It has no public parking of its own, so walking from the house is easiest.",
+        ],
+      },
+      {
+        heading: "About Lavaca, one of San Antonio's oldest neighborhoods",
+        paragraphs: [
+          "Lavaca sits just south of downtown, next to Hemisfair and the King William district. Its oldest surviving houses date to just after the Civil War, and its early residents included many of the craftsmen, stonemasons and carpenters, of German, Mexican and African descent, who built King William's mansions.", // LNF Weekly "Lavaca 101" (Feb 15, 2022); Texas Time Travel
+          "The houses are modest compared with King William's: early stone and adobe homes, then Craftsman bungalows and Classical Revival houses from the early 1900s. Part of the neighborhood was listed on the National Register of Historic Places in 2000 as the Lavaca Historic District, and it's also one of the City of San Antonio's local historic districts.", // Texas Time Travel; THC Atlas (NR listing July 5, 2000; styles); sa.gov OHP districts list
         ],
       },
       {
@@ -503,6 +511,11 @@ export const GUIDES: Guide[] = [
       { q: "How far is the airport?", a: "About a 10-minute drive." },
     ],
     sources: [
+      { label: "Alamodome: Fans encouraged to plan ahead for fall events", url: "https://www.alamodome.com/news/detail/alamodome-fans-encouraged-to-plan-ahead-for-fall-events", read: "2026-11-18" },
+      { label: "LNF Weekly: Lavaca 101", url: "https://www.lnfweekly.info/stories/lavaca-101-220215", read: "2026-11-18" },
+      { label: "Texas Time Travel: King William and Lavaca Historic Districts", url: "https://texastimetravel.com/directory/king-william-and-lavaca-historic-districts/", read: "2026-11-18" },
+      { label: "Texas Historical Commission Atlas: Lavaca Neighborhood Historic District", url: "https://atlas.thc.texas.gov/Details/2000000773", read: "2026-11-18" },
+      { label: "City of San Antonio OHP: Historic Districts", url: "https://www.sa.gov/Directory/Departments/OHP/Landmarks-Heritage/Landmarks-Districts/Districts", read: "2026-11-18" },
       { label: "Hemisfair: Eat", url: "https://hemisfair.org/eat/", read: "2026-11-18" },
       { label: "Hemisfair: Play at Hemisfair", url: "https://hemisfair.org/play/", read: "2026-11-18" },
       { label: "City of San Antonio: Hemisfair", url: "https://www.sa.gov/Directory/Departments/Parks/Parks-Facilities/Parks/Directory/Hemisfair", read: "2026-11-18" },
