@@ -509,8 +509,9 @@ export default function Checkout() {
           </>)}
 
           {step === "done" && result?.ok && (<>
-            {/* Oscar, Nov 18: the home card from the payment page (photo + check-in/out) on top, then the confirmation,
+            {/* Oscar, Nov 18: "You're booked" first, then the home card from the payment page (photo + check-in/out),
                 one button (the stay page), the deadline under it, and an Instagram text link (no button). */}
+            <div className="bookedRow"><div className="okmark" aria-hidden="true">✓</div><h1>You're booked, {guest.firstName}!</h1></div>
             <section className="doneCard">
               {photoEl(200)}
               <div className="doneBody">
@@ -528,13 +529,12 @@ export default function Checkout() {
                 {stayFacts}
               </div>
             </section>
-            {preview && <div className="box">Preview with sample details. Nothing was booked.</div>}
-            <div className="bookedRow"><div className="okmark" aria-hidden="true">✓</div><h1>You're booked, {guest.firstName}!</h1></div>
             {stayUrl && <a className="btn stayBtn" href={stayUrl}>Sign the agreement and verify your ID</a>}
             <div className="box warm">To keep your reservation, please finish two quick steps by <b>{result.verification.deadlineText}</b>: sign the rental agreement and verify your ID.</div>
             {quote && <div className="muted">Paid today: {money(quote.plan.dueNow)}{quote.plan.split ? ` · ${money(quote.plan.scheduled!.amount)} on ${balance}` : ""}</div>}
             <p className="followIg">Follow along on Instagram for local tips and new homes: <a href="https://www.instagram.com/pearlheightshomes" target="_blank" rel="noopener noreferrer" data-cta="confirmation_instagram">@pearlheightshomes</a></p>
             <div className="muted">Questions? <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
+            {preview && <div className="box">Preview with sample details. Nothing was booked.</div>}
           </>)}
 
           {err && !preview && <div className="err" role="alert">{err}</div>}
