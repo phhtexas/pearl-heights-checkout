@@ -64,7 +64,7 @@ export function Inbox() {
       const j = await r?.json().catch(() => null);
       if (live && j?.threads) setRows(j.threads);
     };
-    load(); const t = setInterval(load, 20_000); document.addEventListener("visibilitychange", load);
+    load(); const t = setInterval(load, 10_000); document.addEventListener("visibilitychange", load);
     return () => { live = false; clearInterval(t); document.removeEventListener("visibilitychange", load); };
   }, []);
   return (
@@ -98,8 +98,10 @@ export function Thread({ id }: { id: string }) {
     else if (r?.status === 404) setErr("This conversation wasn't found.");
   };
   useEffect(() => {
-    load(); const t = setInterval(() => { if (!document.hidden) load(); }, 15_000);
-    return () => clearInterval(t);
+    const v = () => { if (!document.hidden) load(); };
+    load(); const t = setInterval(v, 4_000);
+    document.addEventListener("visibilitychange", v); window.addEventListener("focus", v);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", v); window.removeEventListener("focus", v); };
   }, [id]);
   const send = async () => {
     const body = draft.trim(); if (!body || busy) return;

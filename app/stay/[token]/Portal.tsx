@@ -220,6 +220,7 @@ export function Portal({ stay }: { stay: StayData }) {
   // Guest chat (Oscar, Nov 19): real bookings use the server thread (Oscar & Fernanda reply from the host inbox);
   // the sample portal keeps messages in this browser only.
   const live = stay.mode === "booking";
+  const chatOpenRef = useRef(false);
   const [chat, setChat] = useState<ChatMsg[] | null>(null), [chatBusy, setChatBusy] = useState(false), [chatErr, setChatErr] = useState("");
   const loadChat = async () => {
     const j = await fetch(`/api/stay/${stay.token}/messages`, { cache: "no-store" }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
@@ -228,10 +229,12 @@ export function Portal({ stay }: { stay: StayData }) {
   useEffect(() => {
     if (!live) return;
     loadChat();
-    const t = setInterval(() => { if (!document.hidden) loadChat(); }, 20_000);
+    // New replies show without a refresh: every 4 s while the chat is open, every 30 s otherwise, and on return to the tab.
+    let tick = 0;
+    const t = setInterval(() => { tick++; if (!document.hidden && (chatOpenRef.current || tick % 8 === 0)) loadChat(); }, 4_000);
     const v = () => { if (!document.hidden) loadChat(); };
-    document.addEventListener("visibilitychange", v);
-    return () => { clearInterval(t); document.removeEventListener("visibilitychange", v); };
+    document.addEventListener("visibilitychange", v); window.addEventListener("focus", v);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", v); window.removeEventListener("focus", v); };
   }, [live, stay.token]);
   const chatTime = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
   const react = async (m: ChatMsg, emoji: Reaction | null) => {
@@ -243,13 +246,14 @@ export function Portal({ stay }: { stay: StayData }) {
   // Full-screen chat like the Airbnb app (Oscar, Nov 19). #chat in the address, so the phone's back button closes it;
   // links from emails (#messages) open it.
   const [chatOpen, setChatOpen] = useState(false);
+  chatOpenRef.current = chatOpen;
   useEffect(() => {
     const sync = () => setChatOpen(location.hash === "#chat" || location.hash === "#messages");
     sync(); addEventListener("popstate", sync); addEventListener("hashchange", sync);
     return () => { removeEventListener("popstate", sync); removeEventListener("hashchange", sync); };
   }, []);
   useEffect(() => { document.body.style.overflow = chatOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [chatOpen]);
-  const openChat = () => { history.pushState(null, "", "#chat"); setChatOpen(true); };
+  const openChat = () => { history.pushState(null, "", "#chat"); setChatOpen(true); if (live) loadChat(); };
   const closeChat = () => { if (location.hash === "#chat") history.back(); else { history.replaceState(null, "", location.pathname + location.search); setChatOpen(false); } };
   const localMsgs: ChatMsg[] = s.messages.map((m, i) => ({ id: "l" + i, sender: m.from === "guest" ? "guest" : "host", body: m.text, at: m.iso ?? new Date().toISOString(), readAt: null, guestReaction: m.reaction ?? null, hostReaction: null }));
   const shownMsgs = live ? chat : localMsgs;
