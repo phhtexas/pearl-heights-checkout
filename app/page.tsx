@@ -469,7 +469,7 @@ export default function Checkout() {
                   onChange={(e) => { setGuest({ ...guest, [k]: e.target.value }); if (fieldErr[k]) setFieldErr({ ...fieldErr, [k]: undefined }); }} />
                 {fieldOk(k) && !fieldErr[k] && <svg className="okIc" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#127A5E" /><path d="m7 12.5 3.2 3.2L17 9" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>}</span>
                 {fieldErr[k] && <span id={k + "-err"} className="err">{fieldErr[k]}</span>}</label>))}
-            <div className="muted">We'll text your booking confirmation and private stay link to this number. Message and data rates may apply.</div>
+            <div className="muted">We'll text your booking confirmation and private stay link to this number. Message and data rates may apply. Reply STOP to opt out.</div>
           </>)}
 
           {step === "pay" && quote && (<>
