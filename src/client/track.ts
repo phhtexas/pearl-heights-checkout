@@ -10,7 +10,7 @@ import { analyticsIds, consent, loadTrackers, trackingConfigured } from "./conse
 
 export type FunnelEvent =
   | "all_homes_search" | "property_viewed" | "dates_selected" | "availability_searched" | "quote_viewed"
-  | "book_click" | "checkout_started" | "guest_details_done" | "payment_step" | "purchase" | "cta_click";
+  | "book_click" | "checkout_started" | "guest_details_done" | "payment_step" | "purchase" | "cta_click" | "share";
 
 /** Our event -> GA4 name and Meta name (standard event where one fits, else custom). */
 const MAP: Record<FunnelEvent, { ga: string; meta?: [standard: boolean, name: string] }> = {
@@ -25,6 +25,7 @@ const MAP: Record<FunnelEvent, { ga: string; meta?: [standard: boolean, name: st
   payment_step: { ga: "add_payment_info", meta: [true, "AddPaymentInfo"] },
   purchase: { ga: "purchase", meta: [true, "Purchase"] },
   cta_click: { ga: "cta_click" },
+  share: { ga: "share", meta: [false, "Share"] },
 };
 
 type Params = Record<string, string | number | boolean | undefined>;

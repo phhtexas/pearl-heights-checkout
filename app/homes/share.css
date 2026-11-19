@@ -1,0 +1,14 @@
+/* Share sheet (like the Airbnb app): bottom sheet on phones, centered dialog on computers. */
+.SH-back { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.45); display: grid; align-items: end; justify-items: center; }
+.SH { position: relative; background: #fff; color: #222; width: 100%; max-width: 560px; border-radius: 24px 24px 0 0; padding: 28px 24px max(24px, env(safe-area-inset-bottom)); max-height: 92vh; overflow-y: auto; }
+@media (min-width: 744px) { .SH-back { align-items: center; } .SH { border-radius: 16px; } }
+.SH h2 { font-size: 26px; font-weight: 600; margin: 8px 0 20px; }
+.SH-x { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: none; color: #222; cursor: pointer; display: grid; place-items: center; }
+.SH-x:hover { background: #f2f2f2; }
+.SH-home { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+.SH-home img { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; flex: none; }
+.SH-home p { margin: 0; font-size: 16px; line-height: 1.35; }
+.SH-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.SH-grid a, .SH-grid button { display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 0 18px; border: 1px solid #ddd; border-radius: 12px; background: #fff; color: #222; font: inherit; font-size: 16px; font-weight: 600; text-decoration: none; cursor: pointer; text-align: left; }
+.SH-grid a:hover, .SH-grid button:hover { border-color: #222; background: #fafafa; }
+@media (max-width: 380px) { .SH-grid { gap: 10px; } .SH-grid a, .SH-grid button { padding: 0 12px; gap: 10px; font-size: 15px; } }

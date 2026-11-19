@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { HomeContent } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
 import { track } from "@/client/track";
+import { ShareSheet } from "./ShareSheet";
 import { Icon, iconFor } from "./icons";
 import { SiteNav } from "../SiteNav";
 import { TileMapV2 as TileMap } from "./TileMapV2";
@@ -189,14 +190,9 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
     if (destination === "checkout") track("checkout_started", { property: prop.key, nights: quote.nights, adults, children, infants, check_in: ci, check_out: co, total_cents: quote.total, variant: "v2" }, "cs" + ci + co + adults + "-" + children + "-" + infants);
     location.href = `/?home=${prop.key}&checkIn=${ci}&checkOut=${co}&adults=${adults}&children=${children}&infants=${infants}`;
   }
-  async function share() {
-    const url = location.href.split("?")[0]!;
-    try {
-      if (navigator.share) { await navigator.share({ title: home.title, url }); return; }
-      await navigator.clipboard.writeText(url); setShared("Link copied");
-    } catch { setShared(""); }
-    setTimeout(() => setShared(""), 2500);
-  }
+  // Share sheet like the Airbnb app (Oscar, Nov 19).
+  const [shareOpen, setShareOpen] = useState(false);
+  function share() { setShareOpen(true); }
   function toggleSave() {
     const v = !saved; setSaved(v);
     try { localStorage.setItem("ph-saved-" + prop.key, v ? "1" : "0"); } catch { /* no storage */ }
@@ -269,6 +265,8 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
         <button className={"V-round" + (saved ? " V-saved" : "")} onClick={toggleSave} aria-pressed={saved} aria-label={saved ? "Saved" : "Save this home"}><Icon name="heart" size={18} /></button>
       </>} />
       {shared && <div className="V-toast" role="status">{shared}</div>}
+      <ShareSheet open={shareOpen} onClose={() => setShareOpen(false)} url={typeof location !== "undefined" ? location.origin + location.pathname : ""}
+        title={home.title} photo={src(home.photos[0]!.id)} photoAlt={home.photos[0]!.alt} rating={home.rating ?? undefined} area={`${home.neighborhood}, San Antonio`} propertyKey={prop.key} />
 
       <section ref={heroRef} className="V-hero" aria-label="Photos">
         <div ref={carRef} className="V-carousel" tabIndex={0} role="region" aria-roledescription="carousel" aria-label={`Photos, ${slide + 1} of ${home.photos.length}. Use the left and right arrow keys to browse; press Enter for the photo tour.`}
