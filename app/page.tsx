@@ -514,18 +514,23 @@ export default function Checkout() {
             <section className="doneCard">
               {photoEl(200)}
               <div className="doneBody">
-                <div className="homeName">{homeTitle}</div>
+                {/* Oscar, Nov 18: share icon with "Share with friends" in the card's top-right corner. */}
+                <div className="doneHead">
+                  <div className="homeName">{homeTitle}</div>
+                  <button type="button" className="shareBtn" onClick={shareTrip} aria-label="Share trip details with friends">
+                    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 4a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM6 9.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM18 15a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    <span>Share with friends</span>
+                  </button>
+                </div>
+                {shared === "copied" && <div className="shareNote">Copied. Paste it in a text or email.</div>}
+                {shared === "failed" && <div className="shareNote">Couldn't share from this browser.</div>}
                 <div className="muted">{areaLine} · <span className="nowrap">Booking {result.bookingRef}</span></div>
                 {stayFacts}
               </div>
             </section>
             {preview && <div className="box">Preview with sample details. Nothing was booked.</div>}
-            <div className="okmark" aria-hidden="true">✓</div>
-            <h1>You're booked, {guest.firstName}!</h1>
+            <div className="bookedRow"><div className="okmark" aria-hidden="true">✓</div><h1>You're booked, {guest.firstName}!</h1></div>
             {stayUrl && <a className="btn stayBtn" href={stayUrl}>Sign the agreement and verify your ID</a>}
-            <p className="shareTrip"><button type="button" className="link inline" onClick={shareTrip}>Share trip details with your group</button>
-              {shared === "copied" && <span className="muted"> · Copied. Paste it in a text or email.</span>}
-              {shared === "failed" && <span className="muted"> · Couldn't share from this browser.</span>}</p>
             <div className="box warm">To keep your reservation, please finish two quick steps by <b>{result.verification.deadlineText}</b>: sign the rental agreement and verify your ID.</div>
             {quote && <div className="muted">Paid today: {money(quote.plan.dueNow)}{quote.plan.split ? ` · ${money(quote.plan.scheduled!.amount)} on ${balance}` : ""}</div>}
             <p className="followIg">Follow along on Instagram for local tips and new homes: <a href="https://www.instagram.com/pearlheightshomes" target="_blank" rel="noopener noreferrer" data-cta="confirmation_instagram">@pearlheightshomes</a></p>
