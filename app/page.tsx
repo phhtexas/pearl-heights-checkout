@@ -23,6 +23,11 @@ const money = (c: number) => (c / 100).toLocaleString("en-US", { style: "currenc
 const fmtDay = (iso: string, withYear = false) =>
   new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", weekday: "short", month: "short", day: "numeric", ...(withYear ? { year: "numeric" } : {}) });
 const fmtRange = (a: string, b: string) => `${fmtDay(a)} – ${fmtDay(b, true)}`;
+/** "Jan 18–21" in one month, "Jan 30 – Feb 2" across months. */
+const shortRange = (a: string, b: string) => {
+  const d = (iso: string, o: Intl.DateTimeFormatOptions) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", ...o });
+  return a.slice(0, 7) === b.slice(0, 7) ? `${d(a, { month: "short", day: "numeric" })}–${d(b, { day: "numeric" })}` : `${d(a, { month: "short", day: "numeric" })} – ${d(b, { month: "short", day: "numeric" })}`;
+};
 const chargeDay = (iso: string | Date) =>
   new Date(iso).toLocaleDateString("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric" });
 const addDays = (iso: string, n: number) => new Date(Date.parse(iso + "T00:00:00Z") + n * 86_400_000).toISOString().slice(0, 10);
@@ -519,38 +524,42 @@ export default function Checkout() {
           </>)}
 
           {step === "done" && result?.ok && (<>
-            {/* Oscar, Nov 18: "You're booked" first, then the home card from the payment page (photo + check-in/out),
-                one button (the stay page), the deadline under it, and an Instagram text link (no button). */}
-            <div className="bookedRow"><div className="okmark" aria-hidden="true">✓</div><h1>You're booked, {guest.firstName}!</h1></div>
-            {/* Oscar, Nov 18: the sign-and-verify step is the one thing guests must do, so it sits right under the
-                heading as a highlighted card, and its button stays pinned at the bottom once the card scrolls away. */}
-            <section className="nextStep" aria-labelledby="nextStepTitle">
-              <div className="nsCap" id="nextStepTitle">One more step to keep your reservation</div>
-              <p>Sign the rental agreement and verify your ID by <b>{result.verification.deadlineText}</b>. Each takes about 2 minutes.</p>
-              {stayUrl && <a ref={nextBtn} className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign">Sign the agreement and verify your ID</a>}
+            {/* Oscar, Nov 18 (option 2 of his mockups): booked banner, then the paperwork card with its one button
+                (pinned at the bottom once it scrolls away), the cancellation note, then a compact home card.
+                Cancellation wording matches the approved terms (A3): we MAY cancel with a full refund. */}
+            {preview && <div className="previewChip">Preview · Sample booking</div>}
+            <section className="bookedBanner">
+              <div className="okmark" aria-hidden="true">✓</div>
+              <div><h1>You're booked, {guest.firstName}!</h1><p>Payment received. Your dates are reserved.</p></div>
             </section>
-            <section className="doneCard">
-              {photoEl(200)}
-              <div className="doneBody">
-                {/* Oscar, Nov 18: share icon with "Share with friends" in the card's top-right corner. */}
-                <div className="doneHead">
-                  <div className="homeName">{homeTitle}</div>
+            <section className="nextStep" aria-labelledby="nextStepTitle">
+              <h2 id="nextStepTitle">Complete your paperwork</h2>
+              <p>Sign the rental agreement and verify your ID by <b>{result.verification.deadlineText}</b>.</p>
+              {stayUrl && <a ref={nextBtn} className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign">Sign &amp; verify ID</a>}
+              <p className="nsAfter">Once both are complete, you'll get your check-in details in your guest portal.</p>
+            </section>
+            <p className="missNote">If you miss the deadline, we may cancel your reservation with a full refund.</p>
+            <section className="miniHome">
+              <div className="miniPhoto">{photoEl(96)}</div>
+              <div className="miniBody">
+                <div className="miniHead">
+                  <div className="homeName">{prop.name}</div>
                   <button type="button" className="shareBtn" onClick={shareTrip} aria-label="Share trip details with friends">
                     <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 4a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM6 9.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM18 15a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    <span>Share with friends</span>
+                    <span>Share</span>
                   </button>
                 </div>
+                <div className="muted"><span className="nowrap">Booking {result.bookingRef}</span></div>
+                {ci && co && <div>{shortRange(ci, co)} · {guests} {guests === 1 ? "guest" : "guests"}</div>}
+                <div className="muted small">Check-in after 4:00 PM · Check-out by 10:00 AM</div>
                 {shared === "copied" && <div className="shareNote">Copied. Paste it in a text or email.</div>}
                 {shared === "failed" && <div className="shareNote">Couldn't share from this browser.</div>}
-                <div className="muted">{areaLine} · <span className="nowrap">Booking {result.bookingRef}</span></div>
-                {stayFacts}
               </div>
             </section>
             {quote && <div className="muted">Paid today: {money(quote.plan.dueNow)}{quote.plan.split ? ` · ${money(quote.plan.scheduled!.amount)} on ${balance}` : ""}</div>}
             <p className="followIg">Follow along on Instagram for local tips and new homes: <a href="https://www.instagram.com/pearlheightshomes" target="_blank" rel="noopener noreferrer" data-cta="confirmation_instagram">@pearlheightshomes</a></p>
             <div className="muted">Questions? <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
-            {preview && <div className="box">Preview with sample details. Nothing was booked.</div>}
-            {stayUrl && !nextInView && <div className="stickySign"><a className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign_sticky">Sign the agreement and verify your ID</a></div>}
+            {stayUrl && !nextInView && <div className="stickySign"><a className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign_sticky">Sign &amp; verify ID</a></div>}
           </>)}
 
           {err && !preview && <div className="err" role="alert">{err}</div>}
