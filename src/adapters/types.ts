@@ -58,6 +58,8 @@ export interface PaymentsAdapter {
    * Definite outcomes: resolves { status: "succeeded" } or throws card_declined / authentication_required.
    * Any other error is ambiguous: retry later with the SAME key (Stripe returns the original result).
    */
+  /** Refund part or all of a captured PaymentIntent. Idempotent on `idempotencyKey`. Host cancel tool (F3). */
+  refund?(paymentIntentId: string, amount: number, idempotencyKey: string, metadata: Record<string, string>): Promise<{ refundId: string }>;
   chargeSaved(input: { customerId: string; paymentMethodId: string; amount: number; idempotencyKey: string; description: string; metadata: Record<string, string> }): Promise<{ paymentIntentId: string; status: "succeeded" }>;
 }
 

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { type Reaction } from "./Reactions";
 import { ChatScreen, fullRange, guestLine, initials, type ChatMsg } from "./ChatScreen";
+import { CancelPanel } from "./CancelPanel";
 
 /** Host inbox UI (Oscar, Nov 19): sign-in by email link, the list of guest threads, and one thread with a reply box. */
 const when = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
@@ -91,6 +92,7 @@ type Info = { bookingId: string; bookingRef: string; propertyKey: string; checkI
 export function Thread({ id }: { id: string }) {
   const [msgs, setMsgs] = useState<ChatMsg[] | null>(null), [info, setInfo] = useState<Info | null>(null), [homeInfo, setHome] = useState<{ title: string; photo: string | null } | null>(null);
   const [draft, setDraft] = useState(""), [busy, setBusy] = useState(false), [err, setErr] = useState(""), [note, setNote] = useState(""), [details, setDetails] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
   const load = async () => {
     const r = await fetch(`/api/host/threads/${id}`, { cache: "no-store" }).catch(() => null);
     if (r?.status === 401) { location.replace("/host"); return; }
@@ -141,10 +143,12 @@ export function Thread({ id }: { id: string }) {
               <dt>Agreement</dt><dd>{info.agreementSigned ? "Signed" : "Not signed yet"}</dd>
               <dt>ID check</dt><dd>{info.idVerified ? "Verified" : "Not verified yet"}</dd>
             </dl>
+            <button type="button" className="H-link H-cancelLink" onClick={() => { setDetails(false); setCancelOpen(true); }}>Cancel booking…</button>
             <button type="button" className="CH-close" onClick={() => setDetails(false)}>Close</button>
           </div>
         </div>
       )}
+      {cancelOpen && <CancelPanel bookingId={id} onClose={() => setCancelOpen(false)} />}
     </>
   );
 }

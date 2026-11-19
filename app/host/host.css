@@ -40,3 +40,10 @@ body:has(.H) { margin: 0; background: #F6F6F4; }
 .H-ciActs { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
 .H-ciPreview pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 15px; background: #F6F6F4; border-radius: 12px; padding: 12px 14px; margin: 6px 0 0; }
 .H-navLink { color: #0F6B52; font-weight: 600; text-decoration: none; }
+/* Cancel tool (F3) */
+.H-cancel label { display: grid; gap: 6px; font-size: 14px; color: #5E5E63; }
+.H-cancel select, .H-cancel input { font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid #cfc6b9; border-radius: 12px; background: #fff; color: #1D1D1F; }
+.H-danger { background: #A1291F; }
+.H-cancelLink { color: #A1291F; justify-self: start; }
+.H-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 15px; }
+.H-steps .is-bad { color: #A1291F; }

@@ -26,7 +26,7 @@ export function assertLiveKeys(env: NodeJS.ProcessEnv): { secret: string; publis
 
 export const ACCEPTED_PM_TYPES: string[] = ["card", "link"];
 
-type StripeLike = Pick<Stripe, "paymentIntents" | "customers" | "paymentMethods">;
+type StripeLike = Pick<Stripe, "paymentIntents" | "customers" | "paymentMethods"> & Partial<Pick<Stripe, "refunds">>;
 
 export class StripePayments implements PaymentsAdapter {
   constructor(private stripe: StripeLike) {}
@@ -92,6 +92,19 @@ export class StripePayments implements PaymentsAdapter {
       throw new AdapterError("authorization does not match this booking", "card_declined");
     await this.stripe.paymentIntents.update(id, { description: o.description, metadata: { ...pi.metadata, booking_ref: o.bookingRef } });
     return { paymentIntentId: id };
+  }
+
+  async refund(id: string, amount: number, idempotencyKey: string, metadata: Record<string, string>) {
+    if (!this.stripe.refunds) throw new AdapterError("Refunds unavailable", "upstream_error");
+    if (!Number.isInteger(amount) || amount <= 0) throw new AdapterError("Invalid refund amount", "rejected");
+    try {
+      const r = await this.stripe.refunds.create({ payment_intent: id, amount, metadata }, { idempotencyKey });
+      if (r.status === "failed" || r.status === "canceled") throw new AdapterError(`Refund ${r.status}`, "refund_failed");
+      return { refundId: r.id };
+    } catch (e) {
+      if (e instanceof AdapterError) throw e;
+      throw new AdapterError(`Refund failed: ${(e as { message?: string }).message ?? "Stripe error"}`.slice(0, 200), "refund_failed");
+    }
   }
 
   async capture(id: string) {

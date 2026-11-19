@@ -52,7 +52,7 @@ export async function runDueSecondCharges(db: Db, pay: PaymentsAdapter, limit = 
 type Result = "paid" | "retry_scheduled" | "failed_final" | "skipped" | "ambiguous" | "manual_review";
 
 /** Payment states that must never be charged again; a reclaimed job just gets the matching terminal status. */
-const TERMINAL: Record<string, string> = { paid: "done", refunded: "done", partially_refunded: "done", failed_final: "failed", manual_review: "manual_review", requires_action: "manual_review" };
+const TERMINAL: Record<string, string> = { cancelled: "done", paid: "done", refunded: "done", partially_refunded: "done", failed_final: "failed", manual_review: "manual_review", requires_action: "manual_review" };
 const ONCE_AUDIT = `ON CONFLICT (booking_id, action) WHERE action IN ('second_payment_paid', 'second_payment_failed_final', 'second_payment_manual_review') DO NOTHING`;
 
 async function chargeOne(db: Db, pay: PaymentsAdapter, jobId: string, bookingId: string, token: string): Promise<Result> {

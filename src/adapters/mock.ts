@@ -127,6 +127,15 @@ export class MockPayments implements PaymentsAdapter {
     pi.status = "captured";
     if (this.captureThenTimeout) throw new AdapterError("Stripe timeout", "upstream_error");
   }
+  refunds: { id: string; amount: number; key: string }[] = [];
+  refundFails = false;
+  async refund(id: string, amount: number, key: string) {
+    if (this.refundFails) throw new AdapterError("Stripe unavailable", "refund_failed");
+    const prior = this.refunds.find((r) => r.key === key);
+    if (prior) return { refundId: prior.id };
+    const r = { id: `re_mock_${this.refunds.length + 1}`, amount, key }; this.refunds.push(r);
+    return { refundId: r.id };
+  }
   async voidAuthorization(id: string) {
     if (this.voidFails) throw new AdapterError("Stripe unavailable", "upstream_error");
     const pi = this.intents.get(id);
