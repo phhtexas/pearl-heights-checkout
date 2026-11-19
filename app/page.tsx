@@ -538,7 +538,6 @@ export default function Checkout() {
               {stayUrl && <a ref={nextBtn} className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign">Sign &amp; verify ID</a>}
               <p className="nsAfter">Once both are complete, you'll get your check-in details in your guest portal.</p>
             </section>
-            <p className="missNote">If you miss the deadline, we may cancel your reservation with a full refund.</p>
             <section className="miniHome">
               <div className="miniPhoto">{photoEl(96)}</div>
               <div className="miniBody">
