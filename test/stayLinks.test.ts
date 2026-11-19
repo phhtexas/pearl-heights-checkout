@@ -78,3 +78,26 @@ describe("stay links", () => {
     expect(new Date(v.redact_after).toISOString().slice(0, 10)).toBe("2027-08-12");
   });
 });
+
+describe("ID redaction after 120 days (Privacy Notice §4, §10)", () => {
+  it("redacts the Stripe session once when due, deletes our reference, skips legal holds, retries failures", async () => {
+    const { redactDueVerifications } = await import("../src/services/idRedaction");
+    await book();
+    const t = (await issueStayLink(db, { bookingRef: "PH-STAY01", sessionId: "sess-A", channel: "confirmation", now: NOW }))!;
+    const id = (await loadStay(db, t, NOW))!.bookingId;
+    await recordIdVerified(db, id, { sessionId: "vs_test123456", checkedAt: "2026-11-15T10:05:00Z", checkoutISO: "2027-04-14" });
+    const calls: [string, boolean][] = [];
+    const ok = async (s: string, live: boolean) => { calls.push([s, live]); };
+    expect(await redactDueVerifications(db, new Date("2027-08-01T00:00:00Z"), ok)).toMatchObject({ due: 0 }); // not yet due
+    await db.query(`UPDATE verifications SET legal_hold = true`);
+    expect(await redactDueVerifications(db, new Date("2027-08-13T00:00:00Z"), ok)).toMatchObject({ due: 0 }); // hold
+    await db.query(`UPDATE verifications SET legal_hold = false`);
+    expect(await redactDueVerifications(db, new Date("2027-08-13T00:00:00Z"), async () => { throw new Error("stripe down"); })).toMatchObject({ due: 1, failed: 1 });
+    expect(await redactDueVerifications(db, new Date("2027-08-13T00:00:00Z"), ok)).toMatchObject({ due: 1, redacted: 1 });
+    expect(calls).toEqual([["vs_test123456", false]]);
+    const v = (await db.query<any>(`SELECT stripe_verification_session, redacted_at FROM verifications WHERE booking_id = $1`, [id]))[0];
+    expect(v.stripe_verification_session).toBeNull();
+    expect(v.redacted_at).not.toBeNull();
+    expect(await redactDueVerifications(db, new Date("2027-09-01T00:00:00Z"), ok)).toMatchObject({ due: 0 }); // once
+  });
+});
