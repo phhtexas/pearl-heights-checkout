@@ -143,6 +143,7 @@ export function Thread({ id }: { id: string }) {
               <dt>Agreement</dt><dd>{info.agreementSigned ? "Signed" : "Not signed yet"}</dd>
               <dt>ID check</dt><dd>{info.idVerified ? "Verified" : "Not verified yet"}</dd>
             </dl>
+            <TestBalance id={id} />
             <button type="button" className="H-link H-cancelLink" onClick={() => { setDetails(false); setCancelOpen(true); }}>Cancel booking…</button>
             <button type="button" className="CH-close" onClick={() => setDetails(false)}>Close</button>
           </div>
@@ -155,4 +156,24 @@ export function Thread({ id }: { id: string }) {
 
 function SignOut() {
   return <button className="H-link" type="button" onClick={async () => { await fetch("/api/host/session", { method: "DELETE" }).catch(() => null); location.replace("/host"); }}>Sign out</button>;
+}
+
+/** Test site only (step 16): run a test booking's second payment now. Hidden on pearlheightshomes.com. */
+function TestBalance({ id }: { id: string }) {
+  const [show, setShow] = useState(false), [busy, setBusy] = useState(false), [out, setOut] = useState("");
+  useEffect(() => { setShow(!/(^|\.)pearlheightshomes\.com$/.test(location.hostname)); }, []);
+  if (!show) return null;
+  const run = async () => {
+    setBusy(true); setOut("");
+    const r = await fetch(`/api/host/bookings/${id}/charge-balance`, { method: "POST" }).catch(() => null);
+    const j = r ? await r.json().catch(() => ({})) : {};
+    setBusy(false);
+    setOut(!r?.ok ? (j.error ?? "Failed.") : j.note ?? `Second payment: ${j.status}${j.lastError ? ` (${j.lastError})` : ""}${j.declines ? ` · declines: ${j.declines}` : ""}`);
+  };
+  return (
+    <div className="H-testBal">
+      <button type="button" className="H-link" disabled={busy} onClick={run}>{busy ? "Charging…" : "Test: charge the balance now"}</button>
+      {out && <p className="H-dim" role="status">{out}</p>}
+    </div>
+  );
 }
