@@ -19,6 +19,8 @@ function dayLabel(iso: string) {
   const k = dayKey(iso), today = dayKey(new Date().toISOString()), yest = dayKey(new Date(Date.now() - 864e5).toISOString());
   if (k === today) return "Today";
   if (k === yest) return "Yesterday";
+  // Within the last week: the day of the week, like the Airbnb app ("Monday").
+  if (Date.parse(today) - Date.parse(k) < 7 * 864e5) return new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long" }).format(new Date(iso));
   const sameYear = k.slice(0, 4) === today.slice(0, 4);
   return new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short", day: "numeric", ...(sameYear ? {} : { year: "numeric" }) }).format(new Date(iso));
 }
@@ -55,7 +57,7 @@ export function ChatScreen(p: {
     if (d !== lastDay) { rows.push(<p key={"d" + m.id} className="CH-day">{dayLabel(m.at)}</p>); lastDay = d; lastAt = 0; }
     const mine = m.sender === p.me;
     const newGroup = t - lastAt > 10 * 60_000 || m.sender !== lastSender;
-    if (newGroup) rows.push(<p key={"t" + m.id} className={mine ? "CH-time CH-timeMe" : "CH-time CH-timeThem"}>{mine ? time(m.at) : <><b>{p.otherName}</b> · {p.otherRole} · {time(m.at)}</>}</p>);
+    if (newGroup) rows.push(<p key={"t" + m.id} className={mine ? "CH-time CH-timeMe" : "CH-time CH-timeThem"}>{mine ? time(m.at) : <><span className="CH-who2">{p.otherName} · {p.otherRole}</span> {time(m.at)}</>}</p>);
     lastAt = t; lastSender = m.sender;
     // Like the Airbnb app: the other side's photo sits beside the last message of each of their groups.
     const next = list[i + 1];
