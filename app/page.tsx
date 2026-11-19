@@ -273,6 +273,16 @@ export default function Checkout() {
   // After a confirmed booking, fetch the guest's private stay-page link (same browser session only; needs the database).
   const [stayUrl, setStayUrl] = useState("");
   const [preview, setPreview] = useState(false);
+  // Pinned sign button (Oscar, Nov 18): shown only while the card's own button is off screen.
+  const nextBtn = useRef<HTMLAnchorElement | null>(null);
+  const [nextInView, setNextInView] = useState(true);
+  useEffect(() => {
+    const el = nextBtn.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => setNextInView(!!e?.isIntersecting), { threshold: 0.1 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [stayUrl, step]);
   useEffect(() => {
     if (preview) { setStayUrl("#preview"); return; }
     if (step !== "done" || !result?.ok || !result.bookingRef) { setStayUrl(""); return; }
@@ -512,6 +522,13 @@ export default function Checkout() {
             {/* Oscar, Nov 18: "You're booked" first, then the home card from the payment page (photo + check-in/out),
                 one button (the stay page), the deadline under it, and an Instagram text link (no button). */}
             <div className="bookedRow"><div className="okmark" aria-hidden="true">✓</div><h1>You're booked, {guest.firstName}!</h1></div>
+            {/* Oscar, Nov 18: the sign-and-verify step is the one thing guests must do, so it sits right under the
+                heading as a highlighted card, and its button stays pinned at the bottom once the card scrolls away. */}
+            <section className="nextStep" aria-labelledby="nextStepTitle">
+              <div className="nsCap" id="nextStepTitle">One more step to keep your reservation</div>
+              <p>Sign the rental agreement and verify your ID by <b>{result.verification.deadlineText}</b>. Each takes about 2 minutes.</p>
+              {stayUrl && <a ref={nextBtn} className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign">Sign the agreement and verify your ID</a>}
+            </section>
             <section className="doneCard">
               {photoEl(200)}
               <div className="doneBody">
@@ -529,12 +546,11 @@ export default function Checkout() {
                 {stayFacts}
               </div>
             </section>
-            {stayUrl && <a className="btn stayBtn" href={stayUrl}>Sign the agreement and verify your ID</a>}
-            <div className="box warm">To keep your reservation, please finish two quick steps by <b>{result.verification.deadlineText}</b>: sign the rental agreement and verify your ID.</div>
             {quote && <div className="muted">Paid today: {money(quote.plan.dueNow)}{quote.plan.split ? ` · ${money(quote.plan.scheduled!.amount)} on ${balance}` : ""}</div>}
             <p className="followIg">Follow along on Instagram for local tips and new homes: <a href="https://www.instagram.com/pearlheightshomes" target="_blank" rel="noopener noreferrer" data-cta="confirmation_instagram">@pearlheightshomes</a></p>
             <div className="muted">Questions? <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></div>
             {preview && <div className="box">Preview with sample details. Nothing was booked.</div>}
+            {stayUrl && !nextInView && <div className="stickySign"><a className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign_sticky">Sign the agreement and verify your ID</a></div>}
           </>)}
 
           {err && !preview && <div className="err" role="alert">{err}</div>}
