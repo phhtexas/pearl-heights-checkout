@@ -121,7 +121,7 @@ export function Thread({ id }: { id: string }) {
   const first = info?.guestName.split(" ")[0] || "Guest", n = info?.guests ?? 0;
   return (
     <>
-      <ChatScreen me="host" otherName={first}
+      <ChatScreen me="host" otherName={first} otherRole="Guest"
         avatars={[{ initials: initials(info?.guestName ?? ""), alt: info?.guestName ?? "Guest" }, { src: "/homes/hosts/oscar-fernanda-about.jpg", alt: "Oscar & Fernanda" }]}
         title={info ? (n > 1 ? `${first}'s group of ${n}` : info.guestName) : "Loading…"} subtitle={homeInfo?.title ?? (info ? home(info.propertyKey) : "")}
         onBack={() => location.assign("/host")} backLabel="All messages" onDetails={() => setDetails(true)}

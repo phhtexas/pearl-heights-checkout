@@ -472,7 +472,7 @@ export function Portal({ stay }: { stay: StayData }) {
           <p className="ST-dim ST-small">We usually reply within an hour. For an emergency, call 911.</p>
         </section>
         {chatOpen && (
-          <ChatScreen me="guest" otherName="Oscar & Fernanda"
+          <ChatScreen me="guest" otherName="Oscar & Fernanda" otherRole="Hosts"
             avatars={[{ src: "/homes/hosts/oscar-fernanda-about.jpg", alt: "Oscar & Fernanda" }, { initials: initials(stay.holder), alt: stay.holder }]}
             title="Oscar & Fernanda" subtitle={stay.home.title}
             onBack={closeChat} backLabel="Back to your stay" onDetails={() => { closeChat(); setTimeout(() => scrollTo({ top: 0, behavior: "smooth" }), 50); }}

@@ -41,3 +41,10 @@
 .CH-sheetIn dd { margin: 0; }
 .CH-sheetIn img { width: 100%; height: 150px; object-fit: cover; border-radius: 14px; }
 .CH-close { font: inherit; font-weight: 600; background: #222; color: #fff; border: 0; border-radius: 12px; padding: 12px; cursor: pointer; margin-top: 6px; }
+.CH-them { display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: end; }
+.CH-them .RX { max-width: 100%; }
+.CH-themAv { width: 34px; height: 34px; position: relative; }
+.CH-themAv .CH-av { position: static; width: 34px; height: 34px; border: 0; }
+.CH-themAv .CH-avTxt { font-size: 12px; }
+.CH-timeThem { margin-left: 42px; }
+.CH-timeThem b { font-weight: 600; color: #444; }

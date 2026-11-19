@@ -38,7 +38,7 @@ export function ChatScreen(p: {
   messages: ChatMsg[] | null;
   draft: string; setDraft: (s: string) => void; onSend: () => void; busy: boolean; error?: string; note?: string;
   onReact: (m: ChatMsg, e: Reaction | null) => void;
-  otherName: string; footer?: ReactNode;
+  otherName: string; otherRole: string; footer?: ReactNode;
 }) {
   const end = useRef<HTMLDivElement>(null), count = useRef(-1), ta = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
@@ -48,20 +48,31 @@ export function ChatScreen(p: {
   useEffect(() => { const t = ta.current; if (t) { t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 140) + "px"; } }, [p.draft]);
 
   const rows: ReactNode[] = [];
+  const list = p.messages ?? [];
   let lastDay = dayKey(p.confirmed.at), lastAt = 0, lastSender = "";
-  for (const m of p.messages ?? []) {
+  list.forEach((m, i) => {
     const d = dayKey(m.at), t = Date.parse(m.at);
     if (d !== lastDay) { rows.push(<p key={"d" + m.id} className="CH-day">{dayLabel(m.at)}</p>); lastDay = d; lastAt = 0; }
     const mine = m.sender === p.me;
-    if (t - lastAt > 10 * 60_000 || m.sender !== lastSender) rows.push(<p key={"t" + m.id} className={mine ? "CH-time CH-timeMe" : "CH-time"}>{mine ? time(m.at) : `${p.otherName} · ${time(m.at)}`}</p>);
+    const newGroup = t - lastAt > 10 * 60_000 || m.sender !== lastSender;
+    if (newGroup) rows.push(<p key={"t" + m.id} className={mine ? "CH-time CH-timeMe" : "CH-time CH-timeThem"}>{mine ? time(m.at) : <><b>{p.otherName}</b> · {p.otherRole} · {time(m.at)}</>}</p>);
     lastAt = t; lastSender = m.sender;
-    rows.push(
+    // Like the Airbnb app: the other side's photo sits beside the last message of each of their groups.
+    const next = list[i + 1];
+    const lastOfGroup = !next || next.sender !== m.sender || Date.parse(next.at) - t > 10 * 60_000 || dayKey(next.at) !== d;
+    const bubble = (
       <MessageActions key={m.id} mineSide={mine} text={m.body} seen={mine && m.readAt ? stamp(m.readAt) : null}
         shown={[m.guestReaction, m.hostReaction]} mine={p.me === "guest" ? m.guestReaction : m.hostReaction} onPick={(e) => p.onReact(m, e)}>
         <div className={mine ? "CH-msg CH-mine" : "CH-msg"}><p>{m.body}</p></div>
-      </MessageActions>,
+      </MessageActions>
     );
-  }
+    rows.push(mine ? bubble : (
+      <div key={"r" + m.id} className="CH-them">
+        <span className="CH-themAv">{lastOfGroup && <Face a={p.avatars[0]} />}</span>
+        {bubble}
+      </div>
+    ));
+  });
 
   return (
     <div className="CH" role="dialog" aria-label={`Chat with ${p.title}`}>
