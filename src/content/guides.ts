@@ -454,6 +454,31 @@ export const GUIDES: Guide[] = [
         ],
       },
     ],
+    eat: { // Hemisfair's own "Eat" page (hemisfair.org/eat, read Nov 18, 2026); descriptions shortened from the venues' listings there
+      heading: "Where to eat at Hemisfair",
+      intro: "Hemisfair, about a 5-minute walk from the house, has cafes, casual spots and treats right next to the playgrounds, plus restaurants at The Monarch hotel by Civic Park. A few by type of meal:",
+      groups: [
+        { name: "Breakfast and coffee", places: [
+          { name: "Box Street All Day", what: "Brunch-inspired menu with an espresso bar", web: "https://boxstallday.com/", map: mapq("Box Street All Day Hemisfair San Antonio") },
+          { name: "CommonWealth Coffeehouse & Bakery", what: "Coffee and French pastries", web: "https://www.coffeecw.com", map: mapq("CommonWealth Coffeehouse Hemisfair San Antonio") },
+          { name: "Nectarie", what: "Pastries, artisan coffee and morning fare, at The Monarch", web: "https://themonarchsa.com/nectarie-cafe", map: mapq("Nectarie The Monarch San Antonio") },
+        ] },
+        { name: "Lunch and casual", places: [
+          { name: "Dough Pizzeria Napoletana", what: "Neapolitan-style pizza with local, farm-fresh ingredients", web: "https://www.doughpizzeria.com/", map: mapq("Dough Pizzeria Hemisfair San Antonio") },
+          { name: "Park @ 510", what: "Deli and market: made-to-order sandwiches, bowls and fresh juices", web: "https://www.parkeats.co/", map: mapq("Park 510 Hemisfair San Antonio") },
+          { name: "Bombay Bicycle Club", what: "American restaurant with burgers and drinks", web: "https://bombaybicycleclubsa.com/", map: mapq("Bombay Bicycle Club Hemisfair San Antonio") },
+        ] },
+        { name: "Treats", places: [
+          { name: "Paleteria San Antonio", what: "Family-run shop for artisanal ice pops", web: "https://www.paleteriasanantonio.com/", map: mapq("Paleteria San Antonio Hemisfair") },
+          { name: "Lick Honest Ice Creams", what: "Artisanal ice cream", web: "https://www.ilikelick.com/", map: mapq("Lick Honest Ice Creams Hemisfair San Antonio") },
+        ] },
+        { name: "Dinner", places: [
+          { name: "Oak & Amber", what: "Modern Texas steakhouse, at The Monarch", web: "https://themonarchsa.com/oak-amber", map: mapq("Oak and Amber The Monarch San Antonio") },
+          { name: "Aleteo", what: "Rooftop dining at The Monarch", web: "https://themonarchsa.com/aleteo", map: mapq("Aleteo The Monarch San Antonio") },
+        ] },
+      ],
+      note: "These are the places Hemisfair lists on its own website; descriptions are shortened from those listings. Hours and menus change, so check before you go. For more of our own favorites, see our Pearl guide: the Pearl is a short drive away.",
+    },
     todo: {
       heading: "Things to do nearby",
       items: [
@@ -478,6 +503,7 @@ export const GUIDES: Guide[] = [
       { q: "How far is the airport?", a: "About a 10-minute drive." },
     ],
     sources: [
+      { label: "Hemisfair: Eat", url: "https://hemisfair.org/eat/", read: "2026-11-18" },
       { label: "Hemisfair: Play at Hemisfair", url: "https://hemisfair.org/play/", read: "2026-11-18" },
       { label: "City of San Antonio: Hemisfair", url: "https://www.sa.gov/Directory/Departments/Parks/Parks-Facilities/Parks/Directory/Hemisfair", read: "2026-11-18" },
       { label: "KSAT: Yanaguana Garden among the 10 best public playgrounds", url: "https://www.ksat.com/news/local/2025/04/17/hemisfairs-yanaguana-garden-ranked-among-the-10-best-public-playgrounds-in-us", read: "2026-11-18" },
