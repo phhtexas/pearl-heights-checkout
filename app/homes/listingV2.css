@@ -372,15 +372,26 @@ button.V-room { display: flex; flex-direction: column; justify-content: flex-sta
 .AH-stay > b { display: block; font-size: 15px; margin-bottom: 10px; }
 .AH-dates, .AH-guests { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
 .AH-guests { grid-template-columns: repeat(3, 1fr); margin-top: 10px; }
-.AH-dates label, .AH-guests label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: #3b3f43; }
-.AH-dates label span { font-weight: 400; color: #5f6367; }
-.AH-dates input, .AH-guests select { min-height: 44px; width: 100%; box-sizing: border-box; border: 1px solid #cfc7bb; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 15px; background: #fff; color: #17191b; }
+.AH-guests label, .AH-dateF > span { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: #3b3f43; }
+.AH-dateF { display: grid; gap: 4px; }
+.AH-dateF i { font-style: normal; font-weight: 400; color: #5f6367; }
+.AH-dateBtn { min-height: 44px; width: 100%; border: 1px solid #cfc7bb; border-radius: 8px; padding: 0 12px; font: inherit; font-size: 15px; text-align: left; background: #fff; color: #17191b; cursor: pointer; }
+.AH-dateBtn:focus-visible { outline: 2px solid #17191b; outline-offset: 1px; }
+.AH-ph { color: #5f6367; }
+.AH-sum { display: grid; gap: 2px; }
+.AH-sum > b { margin-bottom: 4px; }
+.AH-sum span { font-size: 15px; color: #3b3f43; }
+/* The homepage calendar, opened from the form: above the form, centered on desktop, full screen on phones. */
+.F-page.AH-calLayer { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: rgba(17, 19, 21, .35); padding: 16px; }
+.AH-calLayer .DR-pop { position: relative; top: auto; left: auto; transform: none; animation: none; width: min(820px, calc(100vw - 32px)); }
+.ah-open .DR-sheet { z-index: 95; }
+.AH-guests select { min-height: 44px; width: 100%; box-sizing: border-box; border: 1px solid #cfc7bb; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 15px; background: #fff; color: #17191b; }
 .AH-total { margin: 10px 0 0; font-size: 14px; color: #3b3f43; }
 .AH-f { display: grid; gap: 6px; margin-bottom: 14px; font-size: 14px; font-weight: 600; color: #3b3f43; }
 .AH-f input, .AH-f textarea { width: 100%; box-sizing: border-box; border: 1px solid #cfc7bb; border-radius: 10px; padding: 12px; font: inherit; font-size: 16px; font-weight: 400; color: #17191b; background: #fff; }
 .AH-f input { min-height: 48px; }
 .AH-f textarea { resize: vertical; min-height: 110px; }
-.AH-f input:focus, .AH-f textarea:focus, .AH-dates input:focus, .AH-guests select:focus { outline: 2px solid #17191b; outline-offset: 1px; }
+.AH-f input:focus, .AH-f textarea:focus, .AH-guests select:focus { outline: 2px solid #17191b; outline-offset: 1px; }
 .AH-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .AH-err { color: #b3261e; font-size: 14px; margin: 0 0 10px; }
 .AH-cta { width: 100%; display: flex; align-items: center; justify-content: center; text-decoration: none; }

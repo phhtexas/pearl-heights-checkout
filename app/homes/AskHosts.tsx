@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { track } from "@/client/track";
+import { DateRange } from "../all-homes/f/DateRange";
+import "../all-homes/f/f.css";
 
 /**
  * "Message Oscar & Fernanda" (Oscar, Nov 19): a question before booking, like Airbnb. Opens from the chat icon on the
@@ -15,7 +18,6 @@ type Props = {
 };
 
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
-const addDay = (iso: string) => new Date(Date.parse(iso + "T00:00:00Z") + 864e5).toISOString().slice(0, 10);
 const money = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 const KEY = "ph_inquiries";
 
@@ -24,13 +26,16 @@ export function AskHosts(p: Props) {
   const [adults, setAdults] = useState(2), [children, setChildren] = useState(0), [infants, setInfants] = useState(0);
   const [name, setName] = useState(""), [email, setEmail] = useState(""), [msg, setMsg] = useState(""), [hp, setHp] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle"), [err, setErr] = useState(""), [link, setLink] = useState(""), [emailed, setEmailed] = useState(false);
-  const box = useRef<HTMLDivElement>(null), opener = useRef<Element | null>(null);
+  const [picked, setPicked] = useState(false), [cal, setCal] = useState(false);
+  const box = useRef<HTMLDivElement>(null), opener = useRef<Element | null>(null), dateBtn = useRef<HTMLButtonElement>(null);
+  const calOpen = useRef(false); calOpen.current = cal;
 
   // Each time it opens: take the dates and guests from the page (if any).
   useEffect(() => {
     if (!p.open) return;
     opener.current = document.activeElement;
     setCi(p.ci ?? ""); setCo(p.co ?? ""); setAdults(p.adults); setChildren(p.children); setInfants(p.infants);
+    setPicked(!!(p.ci && p.co)); setCal(false);
     if (state === "sent") { setState("idle"); setMsg(""); setLink(""); }
     setErr("");
     try { const s = JSON.parse(localStorage.getItem("ph_guest_contact") ?? "null"); if (s?.name) setName(s.name); if (s?.email) setEmail(s.email); } catch { /* storage off */ }
@@ -39,6 +44,7 @@ export function AskHosts(p: Props) {
   useEffect(() => {
     if (!p.open) return;
     const onKey = (e: KeyboardEvent) => {
+      if (calOpen.current) return; // the calendar handles its own keys
       if (e.key === "Escape") close();
       if (e.key !== "Tab" || !box.current) return;
       const f = [...box.current.querySelectorAll<HTMLElement>("button:not([disabled]), a[href], input:not([tabindex='-1']), textarea, select")];
@@ -50,11 +56,15 @@ export function AskHosts(p: Props) {
     const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
   }, [p.open]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The calendar unlocks page scrolling when it closes; keep it locked while the form is still open.
+  useEffect(() => { if (p.open && !cal) document.body.style.overflow = "hidden"; }, [cal, p.open]);
+  useEffect(() => { document.documentElement.classList.toggle("ah-open", p.open); return () => document.documentElement.classList.remove("ah-open"); }, [p.open]);
   if (!p.open) return null;
+  const closeCal = () => { setCal(false); setTimeout(() => dateBtn.current?.focus({ preventScroll: true }), 0); };
   function close() { p.onClose(); (opener.current as HTMLElement | null)?.focus?.(); }
 
   const datesOk = (!ci && !co) || (!!ci && !!co && co > ci);
-  const samePageStay = !!ci && ci === p.ci && co === p.co && adults === p.adults && children === p.children && infants === p.infants;
+  const samePageStay = picked;
   const send = async () => {
     if (state === "sending") return;
     if (!datesOk) { setErr(ci && !co ? "Add a check-out date, or clear the dates." : !ci && co ? "Add a check-in date, or clear the dates." : "Check-out must be after check-in."); return; }
@@ -91,20 +101,31 @@ export function AskHosts(p: Props) {
           </div>
         ) : (
           <form onSubmit={(e) => { e.preventDefault(); void send(); }} noValidate>
-            <div className="AH-stay">
-              <b>{p.home.title}</b>
-              <div className="AH-dates">
-                <label>Check-in <span>(optional)</span><input type="date" value={ci} min={today()} onChange={(e) => { setCi(e.target.value); if (co && e.target.value && co <= e.target.value) setCo(""); }} /></label>
-                <label>Check-out <span>(optional)</span><input type="date" value={co} min={ci ? addDay(ci) : today()} onChange={(e) => setCo(e.target.value)} /></label>
+            {picked ? (
+              <div className="AH-stay AH-sum">
+                <b>{p.home.title}</b>
+                <span>{shortRange(ci, co)} · {guests} {guests === 1 ? "guest" : "guests"}{infants ? ` + ${infants} ${infants === 1 ? "infant" : "infants"}` : ""}</span>
+                {p.total ? <span>{money(p.total)} total</span> : null}
               </div>
-              {(ci || co) && <button type="button" className="AH-link AH-clear" onClick={() => { setCi(""); setCo(""); }}>Clear dates</button>}
-              <div className="AH-guests">
-                <label>Adults<select value={adults} onChange={(e) => setAdults(Number(e.target.value))}>{range(1, Math.max(1, p.home.maxGuests - children)).map((n) => <option key={n}>{n}</option>)}</select></label>
-                <label>Children<select value={children} onChange={(e) => setChildren(Number(e.target.value))}>{range(0, Math.max(0, p.home.maxGuests - adults)).map((n) => <option key={n}>{n}</option>)}</select></label>
-                <label>Infants<select value={infants} onChange={(e) => setInfants(Number(e.target.value))}>{range(0, 6).map((n) => <option key={n}>{n}</option>)}</select></label>
+            ) : (
+              <div className="AH-stay">
+                <b>{p.home.title}</b>
+                <div className="AH-dates">
+                  <div className="AH-dateF"><span>Check-in <i>(optional)</i></span>
+                    <button type="button" ref={dateBtn} className="AH-dateBtn" aria-haspopup="dialog" aria-expanded={cal} aria-label={`Check-in date: ${ci ? shortDay(ci) : "add date"}`} onClick={() => setCal(true)}>
+                      {ci ? shortDay(ci) : <span className="AH-ph">Add dates</span>}</button></div>
+                  <div className="AH-dateF"><span>Check-out <i>(optional)</i></span>
+                    <button type="button" className="AH-dateBtn" aria-haspopup="dialog" aria-expanded={cal} aria-label={`Check-out date: ${co ? shortDay(co) : "add date"}`} onClick={() => setCal(true)}>
+                      {co ? shortDay(co) : <span className="AH-ph">Add dates</span>}</button></div>
+                </div>
+                {(ci || co) && <button type="button" className="AH-link AH-clear" onClick={() => { setCi(""); setCo(""); }}>Clear dates</button>}
+                <div className="AH-guests">
+                  <label>Adults<select value={adults} onChange={(e) => setAdults(Number(e.target.value))}>{range(1, Math.max(1, p.home.maxGuests - children)).map((n) => <option key={n}>{n}</option>)}</select></label>
+                  <label>Children<select value={children} onChange={(e) => setChildren(Number(e.target.value))}>{range(0, Math.max(0, p.home.maxGuests - adults)).map((n) => <option key={n}>{n}</option>)}</select></label>
+                  <label>Infants<select value={infants} onChange={(e) => setInfants(Number(e.target.value))}>{range(0, 6).map((n) => <option key={n}>{n}</option>)}</select></label>
+                </div>
               </div>
-              {samePageStay && p.total ? <p className="AH-total">{money(p.total)} total for {guests} {guests === 1 ? "guest" : "guests"}</p> : null}
-            </div>
+            )}
             <label className="AH-f">Your name<input autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} required /></label>
             <label className="AH-f">Email<input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={120} required /></label>
             <label className="AH-f">Message<textarea rows={4} maxLength={2000} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Ask about these dates, the home or the area." required /></label>
@@ -115,10 +136,16 @@ export function AskHosts(p: Props) {
           </form>
         )}
       </div>
+      {cal && createPortal(
+        <div className="F-page AH-calLayer" onClick={(e) => { if (e.target === e.currentTarget) closeCal(); }}>
+          <DateRange ci={ci} co={co} min={today()} onChange={(a, b) => { setCi(a); setCo(b); }} onClose={closeCal} onDone={closeCal} />
+        </div>, document.body)}
     </div>
   );
 }
 
+const shortDay = (d: string) => new Date(d + "T00:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric" });
+const shortRange = (a: string, b: string) => (a.slice(0, 7) === b.slice(0, 7) ? `${shortDay(a)}–${Number(b.slice(8))}` : `${shortDay(a)} – ${shortDay(b)}`);
 const range = (a: number, b: number) => Array.from({ length: Math.max(0, b - a + 1) }, (_, i) => a + i);
 
 export function ChatIcon({ size = 22 }: { size?: number }) {
