@@ -62,7 +62,7 @@ We disclose information only as reasonably necessary for the purposes above, inc
 - government, tax, regulatory or law-enforcement authorities when disclosure is legally required or reasonably necessary to protect rights and safety; and
 - a buyer or successor in a merger, financing, reorganization or transfer, subject to appropriate confidentiality and legal requirements.
 
-Service providers may use information only under their agreements and applicable law. Some providers also act as independent businesses for limited purposes described in their own notices. We do not rent personal information. We do not sell personal information for money.
+Service providers may use information only under their agreements and applicable law. Some providers also act as independent businesses for limited purposes described in their own notices. We do not rent personal information. We do not sell personal information for money. We do not share, sell or rent mobile phone numbers, text-message opt-in data or consent with third parties or affiliates for their marketing or promotional purposes. Text opt-in data and consent are excluded from every sharing category in this Notice.
 
 ## 7 Cookies, analytics and advertising
 
@@ -86,7 +86,7 @@ You may opt out through the Site's cookie or privacy settings and by sending a r
 
 ## 9 Marketing choices
 
-Marketing email and marketing text consent are separate, optional choices and are not required to book. Marketing texts may use automated technology where disclosed. You may unsubscribe from email through its link. You may revoke marketing-text consent by replying STOP or using another reasonable method that clearly communicates revocation. Reply HELP or contact us for assistance. Message and data rates may apply.
+Marketing email and marketing text consent are separate, optional choices and are not required to book. Marketing texts may use automated technology where disclosed. You may unsubscribe from email through its link. You may revoke marketing-text consent by replying STOP or using another reasonable method that clearly communicates revocation. Reply HELP or contact us for assistance. Message and data rates may apply. Your mobile number and text opt-in data are never shared with third parties or affiliates for their marketing or promotional purposes.
 
 We may continue sending non-marketing reservation and safety communications when needed to perform a booking and legally permitted. We keep a limited suppression record after an opt-out to honor the request.
 

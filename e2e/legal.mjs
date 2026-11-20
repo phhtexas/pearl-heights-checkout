@@ -23,8 +23,8 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1280, height: 900 
     ok((await page.textContent("h1"))?.trim() === title, `${w} ${path}: title`);
     ok(/noindex/.test(await page.getAttribute('meta[name="robots"]', "content")), `${w} ${path}: noindex`);
     const text = await page.evaluate(() => document.body.innerText);
-    ok(text.includes("Draft — not for real bookings"), `${w} ${path}: DRAFT label`);
-    if (path !== "/legal") ok(text.includes("1.2 (draft)"), `${w} ${path}: version 1.2`);
+    if (path !== "/privacy") ok(text.includes("Draft — not for real bookings"), `${w} ${path}: DRAFT label`);
+    if (path !== "/legal") ok(path === "/privacy" ? text.includes("1.2") && !text.includes("(draft)") && !/Draft — not for real bookings/.test(text) : text.includes("1.2 (draft)"), `${w} ${path}: version 1.2${path === "/privacy" ? " (final, no draft label)" : " (draft)"}`);
     ok(!/cheaper|less than airbnb|best rate|no fees/i.test(text), `${w} ${path}: no price comparison`);
     const broken = await page.$$eval('a[href^="#"]', (as) => as.map((a) => a.getAttribute("href").slice(1)).filter((id) => id && !document.getElementById(id)));
     ok(broken.length === 0, `${w} ${path}: contents links have targets ${broken.join(",")}`);
