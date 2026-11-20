@@ -127,3 +127,16 @@ describe("notice sweep (database)", () => {
     expect(f).not.toHaveBeenCalled();
   });
 });
+
+describe("second payment received (Oscar, Nov 20: our own receipt; Stripe receipts off)", () => {
+  it("is due once the second payment is paid, and says paid in full", () => {
+    const paid = { ...base, balance: { cents: 70300, status: "paid", scheduledFor: new Date("2027-01-06T15:00:00Z"), cureDeadline: null, declined: false } };
+    expect(dueNotices(paid, at("2027-01-06T16:00:00Z"))).toContain("balance_paid");
+    expect(dueNotices({ ...paid, balance: { ...paid.balance, status: "scheduled" } }, at("2027-01-06T16:00:00Z"))).not.toContain("balance_paid");
+    expect(dueNotices({ ...paid, state: "cancelled" }, at("2027-01-06T16:00:00Z"))).not.toContain("balance_paid");
+    const c = noticeContent("balance_paid", paid, "https://x.test/stay/abc");
+    expect(c.subject).toMatch(/^Payment received: your stay at .+ is paid in full$/);
+    expect(c.paragraphs.join(" ")).toContain("$703.00");
+    expect(c.paragraphs.join(" ")).toContain("Nothing more is due");
+  });
+});

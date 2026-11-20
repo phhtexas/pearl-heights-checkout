@@ -18,10 +18,12 @@ import { sendSms, smsEnabled, toE164 } from "./sms";
  *  - balance_upcoming: split plans, 3 days before the second charge (skipped if they booked inside that window).
  *  - balance_failed: the second charge was declined; states the 72-hour cure deadline (Booking Terms §6).
  *  - balance_approval: the bank asked the guest to approve the second charge (F17): button to approve on the stay page.
+ *  - balance_paid: the second charge went through. Our own receipt (Oscar, Nov 20: Stripe's receipt emails stay off; the
+ *    booking confirmation and the cancellation email already carry the first payment and refunds).
  *  - checkin_day: 8:00 AM CT on check-in day: portal button (or the paperwork button if still not done). Email + text.
  *  - cancellation: booking cancelled; refund amount when Stripe has recorded it.
  */
-export type NoticeKind = "paperwork_reminder_1" | "paperwork_reminder_2" | "balance_upcoming" | "balance_failed" | "balance_approval" | "checkin_day" | "cancellation";
+export type NoticeKind = "paperwork_reminder_1" | "paperwork_reminder_2" | "balance_upcoming" | "balance_failed" | "balance_approval" | "balance_paid" | "checkin_day" | "cancellation";
 
 const ACTIVE = new Set(["confirmed", "verified", "access_released"]);
 const CANCELLED = new Set(["cancelled", "cancelled_unverified", "closed"]);
@@ -61,6 +63,7 @@ export function dueNotices(r: NoticeRow, now: Date): NoticeKind[] {
     }
     if (b && b.declined && b.status === "retrying" && b.cureDeadline && t < b.cureDeadline.getTime()) out.push("balance_failed");
     if (b && b.status === "requires_action" && b.cureDeadline && t < b.cureDeadline.getTime()) out.push("balance_approval");
+    if (b && b.status === "paid") out.push("balance_paid");
     const eight = chicagoInstant(r.checkIn, 8).getTime();
     if (todayChicago(now) === r.checkIn && t >= eight && r.confirmedAt.getTime() < chicagoInstant(r.checkIn, 0).getTime()) out.push("checkin_day");
   }
@@ -110,6 +113,16 @@ export function noticeContent(kind: NoticeKind, r: NoticeRow, link: string | nul
         paragraphs: [`Hi ${r.firstName}, your bank wants you to confirm the ${usd(r.balance!.cents)} second payment for your stay at ${home} (${dates}, booking ${r.ref}). Nothing has been charged yet.`,
           `To keep your reservation, please open your guest portal and tap Approve payment by ${formatChicagoDateTime(r.balance!.cureDeadline!)}. It takes a minute and goes through your bank's usual check.`],
         button: { label: "Approve payment", url: link ?? "" },
+      };
+    case "balance_paid":
+      return {
+        subject: `Payment received: your stay at ${home} is paid in full`,
+        preheader: `We received your second payment of ${usd(r.balance!.cents)}.`,
+        heading: "Your second payment went through",
+        paragraphs: [`Hi ${r.firstName}, we received your second payment of ${usd(r.balance!.cents)} for your stay at ${home} (${dates}, booking ${r.ref}), charged to the card you used at checkout.`,
+          "Your booking is now paid in full. Nothing more is due."],
+        button: { label: "View my stay", url: link ?? "" },
+        afterButton: ["Keep this email as your receipt for the second payment."],
       };
     case "checkin_day": {
       const done = r.agreementDone && r.idDone;
