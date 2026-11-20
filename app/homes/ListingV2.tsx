@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { HomeContent } from "@/content/homes";
 import type { Quote } from "@/domain/quote";
 import { track } from "@/client/track";
+import { dayTip, tipSide } from "@/client/dayTip";
 import { ShareSheet } from "./ShareSheet";
 import { TestOnly } from "../TestOnly";
 import { LAUNCHED } from "@/launch";
@@ -188,7 +189,9 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
     setSheet(s);
   }, [ci, co, adults, children, infants]);
 
+  const [tipHover, setTipHover] = useState(""), [tipLast, setTipLast] = useState("");
   function pickDay(iso: string) {
+    setTipLast(iso);
     if (!draft.ci || draft.co || iso <= draft.ci) { setDraft({ ci: iso, co: null }); return; }
     setDraft({ ci: draft.ci, co: iso });
   }
@@ -232,20 +235,24 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
   };
   const shift = (k: number) => { const [y, m] = month.split("-").map(Number) as [number, number]; setMonth(new Date(Date.UTC(y, m - 1 + k, 1)).toISOString().slice(0, 7)); };
   const minNights = draft.ci ? byDate[draft.ci]?.minStay ?? 2 : 2;
+  const tip = dayTip(draft.ci, draft.co, tipHover, tipLast, minNights);
   const renderMonth = (m: string) => {
     const g = monthGrid(m);
     return (
       <div className="L-month" key={m}>
         <div className="L-monthName">{new Date(m + "-15T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "long", year: "numeric" })}</div>
-        <div className="grid">
+        <div className="grid" onMouseLeave={() => setTipHover("")}>
           {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => <div key={d} className="dow">{d}</div>)}
           {Array.from({ length: g.pad }, (_, i) => <div key={"p" + i} />)}
-          {g.list.map((iso) => {
+          {g.list.map((iso, idx) => {
             const s = dayState(iso);
-            const cls = "day" + (iso === draft.ci || iso === draft.co ? " sel" : draft.ci && draft.co && iso > draft.ci && iso < draft.co ? " in" : "");
+            const tipText = tip?.d === iso ? tip.text : "";
+            const cls = "day" + (iso === draft.ci || iso === draft.co ? " sel" : draft.ci && draft.co && iso > draft.ci && iso < draft.co ? " in" : "") + (tipText ? " has-tip" : "");
             const why = !byDate[iso] ? "not available" : !s.ok ? (draft.ci && !draft.co && iso > draft.ci ? "not available as check-out (booked night or under the minimum stay)" : "booked or not available for check-in") : s.price ? s.price + " per night" : "available";
             return <button key={iso} className={cls} disabled={!s.ok} onClick={() => pickDay(iso)} aria-pressed={iso === draft.ci || iso === draft.co}
-              aria-label={`${new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", weekday: "short", month: "short", day: "numeric", year: "numeric" })}, ${why}`}>{Number(iso.slice(8))}<small>{s.price}</small></button>;
+              onMouseEnter={() => setTipHover(iso)} onFocus={() => setTipHover(iso)}
+              aria-label={`${new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", weekday: "short", month: "short", day: "numeric", year: "numeric" })}, ${why}`}>{Number(iso.slice(8))}<small>{s.price}</small>
+              {tipText && <i className={"day-tip" + tipSide((g.pad + idx) % 7)} aria-hidden="true">{tipText}</i>}</button>;
           })}
         </div>
       </div>

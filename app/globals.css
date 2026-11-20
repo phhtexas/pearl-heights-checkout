@@ -125,6 +125,14 @@ input.f, select.f { width: 100%; min-height: 52px; border: 1.5px solid #c8c8c2; 
 .day:disabled { color: #b8bbbd; text-decoration: line-through; cursor: default; }
 .day.sel { background: var(--ink); color: #fff; } .day.sel small { color: #fff; }
 .day.in { background: #f1f1ef; border-radius: 6px; }
+/* Airbnb-style labels above calendar days (Oscar, Nov 20): src/client/dayTip.ts. */
+.day { position: relative; }
+.day-tip { position: absolute; z-index: 4; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none; font-style: normal;
+  font-size: 13px; font-weight: 500; line-height: 1.2; color: #1d1a17; background: #fff; border: 1px solid #e3ddd4; border-radius: 6px; padding: 6px 10px; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.day-tip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border: 6px solid transparent; border-top-color: #fff; filter: drop-shadow(0 1px 0 #e3ddd4); }
+.day-tip.tipL { left: 0; transform: none; } .day-tip.tipL::after { left: 20px; }
+.day-tip.tipR { left: auto; right: 0; transform: none; } .day-tip.tipR::after { left: auto; right: 14px; }
+.day.sel.has-tip { box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px var(--ink); }
 .stepper { display: flex; align-items: center; gap: 14px; }
 .stepper button { width: 40px; height: 40px; border-radius: 20px; border: 1px solid #8a8e92; background: #fff; font-size: 20px; cursor: pointer; }
 .stepper button:disabled { opacity: .3; cursor: default; }
@@ -214,6 +222,7 @@ input.f.bad { border-color: var(--bad); }
 .ck .btn:not(:disabled):not(.ghost) { background: var(--ck-blue); }
 .ck .btn:not(:disabled):not(.ghost):hover { background: #0e6650; } /* darker teal on hover (was the old blue) */
 .ck .day.sel { background: var(--ck-blue); }
+.ck .day.sel.has-tip { box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px var(--ck-blue); }
 .ck .day.in { background: var(--ck-blueSoft); }
 .ck .plan.on { border-color: var(--ck-blue); }
 .ck .plan.on .radio { border-color: var(--ck-blue); }

@@ -7,6 +7,7 @@ import type { Quote } from "@/domain/quote";
 import type { StayPolicy } from "@/domain/policy";
 import { CONSENT_ID, POLICY_LINKS, marketingEmailText, marketingSmsBody } from "@/domain/consent";
 import { track } from "@/client/track";
+import { dayTip, tipSide } from "@/client/dayTip";
 import { attribution, consent as cookieConsent, metaBrowserIds } from "@/client/consent";
 
 /**
@@ -253,7 +254,9 @@ export default function Checkout() {
 
   function choosePlan(p: "full" | "split") { if (p === plan && quote && quote.plan.split === (p === "split")) return; setPlan(p); void getQuote(p); }
   function openDates() { if (!opener.current) opener.current = document.activeElement as HTMLElement; setDraft({ ci, co }); if (ci) setMonth(ci.slice(0, 7)); setSheet("dates"); }
+  const [tipHover, setTipHover] = useState(""), [tipLast, setTipLast] = useState("");
   function pickDay(iso: string) {
+    setTipLast(iso);
     if (!draft.ci || draft.co || iso <= draft.ci) { setDraft({ ci: iso, co: null }); return; }
     setDraft({ ci: draft.ci, co: iso });
   }
@@ -662,14 +665,17 @@ export default function Checkout() {
               <div className="row"><button className="nav" aria-label="Previous month" onClick={() => shiftMonth(-1)}>‹</button>
                 <div className="center"><b>{new Date(month + "-15T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "long", year: "numeric" })}</b><div className="muted small">{draftMin}-night minimum</div></div>
                 <button className="nav" aria-label="Next month" onClick={() => shiftMonth(1)}>›</button></div>
-              <div className="grid">
+              <div className="grid" onMouseLeave={() => setTipHover("")}>
                 {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => <div key={d} className="dow">{d}</div>)}
                 {Array.from({ length: monthDays.pad }, (_, i) => <div key={"p" + i} />)}
-                {monthDays.list.map((iso) => {
+                {monthDays.list.map((iso, idx) => {
                   const s = dayState(iso);
-                  const cls = "day" + (iso === draft.ci || iso === draft.co ? " sel" : draft.ci && draft.co && iso > draft.ci && iso < draft.co ? " in" : "");
+                  const tip = dayTip(draft.ci, draft.co, tipHover, tipLast, draftMin), tipText = tip?.d === iso ? tip.text : "";
+                  const cls = "day" + (iso === draft.ci || iso === draft.co ? " sel" : draft.ci && draft.co && iso > draft.ci && iso < draft.co ? " in" : "") + (tipText ? " has-tip" : "");
                   const why = !byDate[iso] ? "not available" : draft.ci && !draft.co && iso > draft.ci && !s.ok ? "not available as check-out (booked night or under the minimum stay)" : !s.ok ? "booked or not available for check-in" : s.price ? s.price + " per night" : "available";
-                  return <button key={iso} className={cls} disabled={!s.ok} onClick={() => pickDay(iso)} aria-label={`${fmtDay(iso, true)}, ${why}`} aria-pressed={iso === draft.ci || iso === draft.co}>{Number(iso.slice(8))}<small>{s.price}</small></button>;
+                  return <button key={iso} className={cls} disabled={!s.ok} onClick={() => pickDay(iso)} onMouseEnter={() => setTipHover(iso)} onFocus={() => setTipHover(iso)}
+                    aria-label={`${fmtDay(iso, true)}, ${why}`} aria-pressed={iso === draft.ci || iso === draft.co}>{Number(iso.slice(8))}<small>{s.price}</small>
+                    {tipText && <i className={"day-tip" + tipSide((monthDays.pad + idx) % 7)} aria-hidden="true">{tipText}</i>}</button>;
                 })}
               </div>
               {days.length === 0 && <div className="muted" role="status">Loading availability and prices…</div>}
