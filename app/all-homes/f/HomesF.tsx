@@ -197,7 +197,8 @@ export function HomesF({ homes, hero, points, reasons, afterHomes }: {
         <div className="F-heroText">
           <p className="F-eyebrow F-up">San Antonio, Texas</p>
           <h1 className="F-up F-d1">Find your San Antonio stay</h1>
-          <p className="F-up F-d2">Five family-friendly homes hosted by Oscar &amp; Fernanda.</p>
+          {/* Oscar, Nov 19 (his wife): lead with where, not the count. */}
+          <p className="F-up F-d2">Family-friendly homes near the Pearl, downtown and in Alamo Heights.</p>
         </div>
       </section>
       <div className="F-searchWrap F-up F-d3" ref={searchRef}><SearchBarF s={s} ref={bar} /></div>
