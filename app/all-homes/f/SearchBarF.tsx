@@ -33,7 +33,9 @@ export const SearchBarF = forwardRef<SearchBarFHandle, { s: ReturnType<typeof us
     const el = document.getElementById("homes");
     if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }));
   };
-  const doneCal = () => { setCal(false); if (s.ci && s.co) void searchAndShow(); };
+  // Oscar, Nov 19: finishing the calendar updates prices but doesn't move the page (guests may still need setting);
+  // only the Search homes button scrolls to the results.
+  const doneCal = () => { setCal(false); if (s.ci && s.co) void s.search(); };
   const step = (label: string, sub: string, v: number, set: (n: number) => void, lo: number) => (
     <div className="S-step">
       <div><b>{label}</b><small>{sub}</small></div>
