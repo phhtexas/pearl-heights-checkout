@@ -4,12 +4,16 @@ import type { HomeCard } from "@/content/allHomes";
 import { HOMES } from "@/content/homes";
 
 /** Pieces both All Homes mockups share. Server-rendered (no client JS). Facts come from the approved home content. */
+/** Homepage search description (Oscar, Nov 20: no 'five homes'; matches the hero line). */
+const HOME_DESC = "Family-friendly homes near the Pearl, downtown and in Alamo Heights, hosted by Oscar & Fernanda. Book directly; your total, upfront.";
 export const mockMeta = (v: string): Metadata => v === "F"
-  ? publicMeta("/", { title: "Pearl Heights Homes | Family homes in San Antonio", description: "Five family-friendly San Antonio homes hosted by Oscar & Fernanda. Book directly; your total, upfront." })
+  ? publicMeta("/", { title: "Pearl Heights Homes | Family homes in San Antonio", description: HOME_DESC,
+      // Share picture (Oscar, Nov 20 SEO check): the homepage hero photo (613 Indianola).
+      openGraph: { images: [HOMES.indianola!.photoBase + HOMES.indianola!.photos[0]!.id + ".jpg"] } })
   : ({
   // F is the home page on pearlheightshomes.com (Oscar, Nov 18), so it carries the brand title; the others stay labeled mockups.
   title: v === "F" ? "Pearl Heights Homes | Family homes in San Antonio" : `All homes — mockup ${v} | Pearl Heights Homes`,
-  description: "Five family-friendly San Antonio homes hosted by Oscar & Fernanda. Book directly; your total, upfront.",
+  description: HOME_DESC,
   robots: { index: false, follow: false },
 });
 

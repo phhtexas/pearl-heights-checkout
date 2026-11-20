@@ -37,7 +37,7 @@ function Photos({ h, href, first }: { h: HomeCard; href: string; first: boolean 
         {photos.map((p, j) => (
           <a className="F-photo" key={p.src} href={href} data-cta="home_card_photo" data-cta-home={h.key} draggable={false} tabIndex={j === 0 ? 0 : -1}
             aria-label={j === 0 ? `${h.title}: view home` : undefined} aria-hidden={j === 0 ? undefined : true}>
-            {Math.abs(j - at) <= 1 && <Image src={p.src} alt={j === 0 ? "" : p.alt} fill sizes="(min-width: 900px) 500px, 100vw" priority={first && j === 0} draggable={false} />}
+            {Math.abs(j - at) <= 1 && <Image src={p.src} alt={p.alt} fill sizes="(min-width: 900px) 500px, 100vw" priority={first && j === 0} draggable={false} />}
           </a>
         ))}
       </div>

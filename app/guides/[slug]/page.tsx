@@ -7,6 +7,7 @@ import { guideVisible } from "@/guidesAccess";
 import { SiteNav } from "../../SiteNav";
 import { TileMapV2 } from "../../homes/TileMapV2";
 import "../../homes/listingV2.css";
+import Image from "next/image";
 import "../guides.css";
 
 export const dynamic = "force-dynamic";
@@ -14,15 +15,25 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const g = guideBySlug((await params).slug);
   if (!g) return {};
-  const m = publicMeta(`/guides/${g.slug}`, { title: `${g.title} | Pearl Heights Homes`, description: g.description });
+  const m = publicMeta(`/guides/${g.slug}`, { title: `${g.title} | Pearl Heights Homes`, description: g.description, openGraph: { images: [g.hero.src] } });
   return g.approved ? m : { ...m, robots: { index: false, follow: false } };
+}
+
+/**
+ * Guide photos through Vercel's image optimizer (Oscar, Nov 20 SEO check): resized WebP/AVIF instead of full-size JPEGs,
+ * with width/height so the page doesn't jump. The box's shape still comes from the CSS aspect-ratio of each slot.
+ */
+function GImg({ src, alt, sizes, eager }: { src: string; alt: string; sizes: string; eager?: boolean }) {
+  // Wikimedia photos load straight from Wikimedia (already 1280px; their servers can refuse automated fetchers).
+  if (!src.startsWith("https://assets.hospitable.com/")) return <img src={src} alt={alt} width={1280} height={853} loading={eager ? "eager" : "lazy"} decoding="async" />;
+  return <Image src={src} alt={alt} width={1280} height={853} sizes={sizes} priority={!!eager} quality={75} style={{ height: "auto" }} />;
 }
 
 /** A photo with its caption and, for Creative Commons photos, the required credit (author, license, source link). */
 function Photo({ p, className, eager }: { p: GuidePhoto; className?: string; eager?: boolean }) {
   return (
     <figure className={`G-fig ${className ?? ""}`}>
-      <img src={p.src} alt={p.alt} loading={eager ? "eager" : "lazy"} />
+      <GImg src={p.src} alt={p.alt} eager={eager} sizes={className === "G-slide" ? "(min-width: 760px) 360px, 80vw" : "(min-width: 760px) 720px, 100vw"} />
       <figcaption>
         {p.caption}
         {p.credit && <span className="G-credit"> · Photo: <a href={p.credit.page} target="_blank" rel="noopener noreferrer">{p.credit.author}</a>, <a href={p.credit.licenseUrl} target="_blank" rel="noopener noreferrer">{p.credit.license}</a></span>}
@@ -68,7 +79,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             const h = HOMES[x.key]!;
             return (
               <article key={x.key} className="G-home">
-                <img src={h.photoBase + h.photos[0]!.id + ".jpg"} alt={h.photos[0]!.alt} loading="lazy" />
+                <GImg src={h.photoBase + h.photos[0]!.id + ".jpg"} alt={h.photos[0]!.alt} sizes="(min-width: 760px) 360px, 100vw" />
                 <div className="G-homeBody">
                   <h3>{h.title}</h3>
                   <p className="G-fit">{x.fit}</p>
@@ -130,7 +141,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             <div className="G-todo">
               {g.todo.items.map((t) => (
                 <article key={t.name} className={`G-todoCard${t.photo ? "" : " G-todoPlain"}`}>
-                  {t.photo && <img src={t.photo.src} alt={t.photo.alt} loading="lazy" />}
+                  {t.photo && <GImg src={t.photo.src} alt={t.photo.alt} sizes="(min-width: 760px) 360px, 100vw" />}
                   <div>
                     <h3>{t.name}</h3>
                     {t.what && <p>{t.what}</p>}

@@ -7,7 +7,7 @@ import { SITE, indexingOn } from "@/seo";
  * Claude's search crawler, PerplexityBot...) may read the public pages; private and test areas stay closed.
  */
 export default function robots(): MetadataRoute.Robots {
-  const closed = ["/api/", "/stay/", "/mockups/", "/all-homes/archive/", "/legal"];
+  const closed = ["/api/", "/stay/", "/m/", "/host", "/mockups/", "/all-homes/archive/", "/legal"]; // /m/ = private guest conversations
   return indexingOn()
     ? { rules: [{ userAgent: "*", allow: "/", disallow: closed }], sitemap: `${SITE}/sitemap.xml`, host: SITE }
     : { rules: [{ userAgent: "*", allow: "/", disallow: closed }] };
