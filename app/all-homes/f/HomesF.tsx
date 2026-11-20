@@ -78,6 +78,12 @@ const PRESS: Record<string, { label: string; href: string }> = {
   edgewood: { label: "Featured in Condé Nast Traveler", href: "https://www.cntraveler.com/gallery/best-airbnbs-in-san-antonio" },
 };
 
+/** "Nov 26–28", or "Nov 30 – Dec 2" across months. */
+const stayRange = (a: string, b: string) => {
+  const [ma, da] = shortDate(a).split(" "), [mb, db] = shortDate(b).split(" ");
+  return ma === mb ? `${ma} ${da}–${db}` : `${shortDate(a)} – ${shortDate(b)}`;
+};
+
 export function HomesF({ homes, hero, points, reasons, afterHomes }: {
   homes: HomeCard[]; hero: { src: string; alt: string }; points: { key: string; lat: number; lon: number }[]; reasons: React.ReactNode;
   afterHomes?: React.ReactNode;
@@ -155,13 +161,21 @@ export function HomesF({ homes, hero, points, reasons, afterHomes }: {
   const card = (h: HomeCard, i: number) => {
     const r = s.results[h.key];
     const off = searched && r && !r.ok;
+    // Oscar, Nov 19: a booked home gets a "Booked for <dates>" banner above its photos (everything else unchanged).
+    const booked = off && r!.reason === "Booked for these dates";
     const on = !!saved[h.key];
     return (
-      <li key={h.key} id={`home-${h.key}`} className={`F-card${off ? " is-off" : ""}`} data-reveal onClickCapture={(e) => {
+      <li key={h.key} id={`home-${h.key}`} className={`F-card${off ? " is-off" : ""}${booked ? " has-booked" : ""}`} data-reveal onClickCapture={(e) => {
         // Remember which card was opened in this page's own URL, so the browser Back button also returns to it.
         if (!(e.target as HTMLElement).closest("a[href^='/homes/']")) return;
         const u = new URL(location.href); u.searchParams.set("card", h.key); history.replaceState(history.state, "", u);
       }}>
+        {booked && (
+          <p className="F-booked">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" /><path d="M3.5 10h17M8 3v4M16 3v4M10 13.5l4 4M14 13.5l-4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+            Booked for {stayRange(s.ci, s.co)}
+          </p>
+        )}
         <Photos h={h} href={link(h.slug)} first={i === 0} />
         <button type="button" className={"F-heart" + (on ? " is-on" : "")} aria-pressed={on} aria-label={on ? `Saved: ${h.title}` : `Save ${h.title}`}
           onClick={() => toggleSaved(h.key, "home_card")}>

@@ -604,3 +604,8 @@ html.rv-ready .F-page [data-reveal]:not(.is-in) { opacity: 0; transform: transla
   .F-page .F-heroText { padding: 84px 20px 64px; }
   .F-page .F-hero h1 { font-size: 28px; }
 }
+/* Oscar, Nov 19: "Booked for <dates>" banner above a booked home's photos. */
+.F-booked { display: flex; align-items: center; gap: 12px; margin: 0; padding: 14px 20px; background: #FCEEDD; color: #6B3E12; font-weight: 700; font-size: 17px; border-bottom: 1px solid #F1DCC2; }
+.F-booked svg { flex: none; }
+.F-card.has-booked .F-heart { top: 64px; }
+@media (min-width: 900px) { .F-card.has-booked .F-booked { grid-column: 1 / -1; } }
