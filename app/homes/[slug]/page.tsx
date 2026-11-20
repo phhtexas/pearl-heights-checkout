@@ -12,7 +12,7 @@ export function generateStaticParams() { return Object.values(HOMES).map((h) => 
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const h = bySlug((await params).slug);
-  return h ? publicMeta(`/homes/${h.slug}`, { title: `${h.title} | Pearl Heights Homes`, description: h.summary, openGraph: { images: [h.photoBase + h.photos[0]!.id + ".jpg"] } }) : {};
+  return h ? publicMeta(`/homes/${h.slug}`, { title: `${h.title} | Pearl Heights Homes`, description: h.searchDescription ?? h.summary, openGraph: { images: [h.photoBase + h.photos[0]!.id + ".jpg"] } }) : {};
 }
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {

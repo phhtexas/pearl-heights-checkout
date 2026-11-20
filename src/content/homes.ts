@@ -18,6 +18,8 @@ export interface HomeContent {
   rating?: { value: number; count: number; source: string; categories: [string, number][] };
   highlights: { title: string; text: string; source: string }[];
   summary: string;
+  /** Google/link-preview description, about 150 characters (Oscar approved, Nov 20). The page shows `summary`. */
+  searchDescription?: string;
   sleeping: { room: string; beds: string }[];
   amenityGroups: { group: string; items: string[] }[];
   topAmenities: string[];
@@ -138,6 +140,7 @@ export const HOMES: Record<string, HomeContent> = {
       { title: "Backyard and bonus room", text: "Fenced backyard with lounge seating and string lights, plus a bonus room with TV, workspace and kids' area.", source: "H/A listing" },
     ],
     summary: "A redesigned 5-bedroom, 3.5-bath home for families and groups of up to 10, close to the Pearl and the Museum Reach of the River Walk. Open kitchen with an island, living room with a smart TV, a dedicated workspace, a playroom, and a large backyard with lounge seating.",
+    searchDescription: "5-bedroom, 3.5-bath family home for up to 10 near the Pearl and the River Walk, with a playroom, open kitchen and large backyard. Book direct in San Antonio.",
     sleeping: [
       { room: "Bedroom 1 (primary suite)", beds: "1 king bed, 1 crib · private bathroom" },
       { room: "Bedroom 2", beds: "1 queen bed · private bathroom" },
@@ -268,6 +271,7 @@ export const HOMES: Record<string, HomeContent> = {
       { title: "Fenced backyard and patio", text: "A private, fully fenced backyard with a basketball hoop, a patio and outdoor furniture.", source: "A amenities" },
     ],
     summary: "A newly remodeled 2-bedroom home for up to 8 guests on a quiet street in Alamo Heights. Living room with a 65-inch TV and an electric fireplace, a children's playroom, a dedicated workspace with fast WiFi, and a fully fenced backyard with a patio.",
+    searchDescription: "Remodeled 2-bedroom home for up to 8 on a quiet Alamo Heights street, with a children's playroom, workspace and fenced backyard. Book direct in San Antonio.",
     sleeping: [
       { room: "Bedroom 1", beds: "1 queen bed" },
       { room: "Bedroom 2 (primary)", beds: "1 king bed" },
@@ -389,6 +393,7 @@ export const HOMES: Record<string, HomeContent> = {
       { title: "Fenced backyard and patio", text: "A private, fully fenced backyard with patio seating.", source: "A amenities + highlights" },
     ],
     summary: "An updated 3-bedroom, 2-bath home for up to 8 guests in Tobin Hill, about a 3-minute walk to the Pearl and the River Walk. Remodeled kitchen, living room with a 65-inch smart TV, a dedicated workspace, a bonus room by the entrance that works as a reading nook or kids' play area, and a fenced backyard with patio seating.",
+    searchDescription: "3-bedroom family home for up to 8 in Tobin Hill, a 3-minute walk to the Pearl and the River Walk. Kids' play area, fenced backyard, crib on request.",
     sleeping: [
       { room: "Bedroom 1 (primary)", beds: "1 king bed" },
       { room: "Bedroom 2", beds: "1 queen bed" },
@@ -532,6 +537,7 @@ export const HOMES: Record<string, HomeContent> = {
       { title: "Game room", text: "Arcade games, shuffleboard and board games upstairs.", source: "H/A description" },
     ],
     summary: "A 3-bedroom, 2-bath house for up to 8 guests in historic Lavaca, a short walk from the Tower of the Americas, the Alamodome, Hemisfair, the Convention Center and the River Walk. A king bed and TV in every bedroom, a 65-inch smart TV in the living room, a dedicated workspace, an upstairs game room and deck, and free gated parking.",
+    searchDescription: "3-bedroom downtown house for up to 8 in historic Lavaca, a short walk to the Tower of the Americas, the Alamodome and Hemisfair. A king bed in every bedroom.",
     sleeping: [
       { room: "Bedroom 1 (primary suite)", beds: "1 king bed · private bathroom · walk-in closet" },
       { room: "Bedroom 2", beds: "1 king bed" },
@@ -646,6 +652,7 @@ export const HOMES: Record<string, HomeContent> = {
       { title: "Full kitchen, laundry and arcade", text: "A full kitchen with a dishwasher, an in-unit washer and dryer, and an arcade machine.", source: "A listing highlights" },
     ],
     summary: "A spacious family home for up to 8 guests in Alamo Heights, known for its tree-lined streets, charming homes and local restaurants. Plenty of room to gather, a large private backyard, and minutes from the Pearl, downtown, the airport, the San Antonio Zoo, shopping and dining.",
+    searchDescription: "Spacious family home for up to 8 in Alamo Heights with a large private backyard, minutes from the Pearl, downtown, the San Antonio Zoo and the airport.",
     sleeping: [
       { room: "Bedroom 1 (primary)", beds: "1 king bed, 1 toddler bed, 1 crib" },
       { room: "Bedroom 2", beds: "1 queen bed" },
