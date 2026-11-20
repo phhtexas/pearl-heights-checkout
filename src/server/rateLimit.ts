@@ -20,6 +20,8 @@ export const LIMITS = {
   mockReset: { bucket: "mock_reset", max: 5, windowS: 60 },
   testEmail: { bucket: "test_email", max: 3, windowS: 3600 },
   chatSend: { bucket: "chat_send", max: 20, windowS: 600 },
+  inquiryNew: { bucket: "inquiry_new", max: 5, windowS: 3600 },
+  inquirySend: { bucket: "inquiry_send", max: 20, windowS: 600 },
   hostLogin: { bucket: "host_login", max: 5, windowS: 3600 },
   hostApi: { bucket: "host_api", max: 240, windowS: 600 },
 } satisfies Record<string, Limit>;

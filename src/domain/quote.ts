@@ -43,6 +43,8 @@ export interface Quote {
   nonRefundable: boolean;
   /** Base for the 5% cancellation processing fee: nights + extra guests + cleaning, before taxes. */
   processingFeeBase: Cents;
+  /** A host's special offer applied to this quote (Oscar, Nov 19): the regular total and the offer it came from. */
+  specialOffer?: { id: string; regularTotal: Cents; savings: Cents };
 }
 
 export class QuoteError extends Error {}
@@ -102,4 +104,22 @@ export function buildQuote(q: QuoteInput): Quote {
     taxableBase, tax, taxRate: p.provisionalTaxRate, total, plan, fullPlan, ...(splitPlan ? { splitPlan } : {}), nonRefundable,
     processingFeeBase: lodging + extraGuestFee + cleaning,
   };
+}
+
+/**
+ * Special offers (Oscar, Nov 19): the host sets a new all-in total. The saving comes off the nightly rate (before
+ * taxes), so taxes are still charged on what the guest pays. Returns the nightly discount that makes the total equal
+ * the target (to the cent when the rounding of taxes allows, otherwise the closest total below it), or 0 when the
+ * regular total is already at or under the target.
+ */
+export function discountForTotal(q: QuoteInput, target: Cents): Cents {
+  const base = buildQuote({ ...q, nightlyDiscount: 0 });
+  if (base.total <= target) return 0;
+  const minTotal = base.total - base.lodging - roundCents(base.lodging * base.taxRate) - 1;
+  if (target < minTotal) throw new QuoteError("That total is lower than the cleaning, damage waiver and taxes alone.");
+  const totalWith = (d: Cents) => buildQuote({ ...q, nightlyDiscount: d }).total;
+  let d = Math.min(base.lodging, Math.max(0, Math.round((base.total - target) / (1 + base.taxRate))));
+  for (let i = 0; i < 6 && totalWith(d) > target && d < base.lodging; i++) d++;
+  for (let i = 0; i < 6 && d > 0 && totalWith(d - 1) <= target; i++) d--;
+  return d;
 }

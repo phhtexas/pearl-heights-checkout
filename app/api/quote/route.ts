@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { checkLimit, LIMITS, tooMany } from "@/server/rateLimit";
 import { getDb } from "@/db/client";
 import { getProperty } from "@/domain/properties";
-import { buildQuote, QuoteError } from "@/domain/quote";
+import { buildQuote, discountForTotal, QuoteError } from "@/domain/quote";
+import { offerForCheckout } from "@/services/inquiries";
 import { getAdapters, getLedger } from "@/server/adapters";
 import { parseStay, ValidationError } from "@/server/validate";
 import { readSession, withSession } from "@/server/session";
@@ -18,7 +19,8 @@ export async function POST(req: Request) {
   if (!rl.ok) return tooMany(rl.retryAfterS);
   const session = readSession(req);
   try {
-    const s = parseStay(await req.json());
+    const body = await req.json();
+    const s = parseStay(body);
     const property = getProperty(s.property);
     const now = new Date();
     if (s.checkIn < earliestCheckIn(now)) return NextResponse.json({ error: "Same-day bookings close at 12 PM Central. Please choose a later check-in date." }, { status: 400, headers: noStore });
@@ -30,13 +32,26 @@ export async function POST(req: Request) {
     if (cal.find((d) => d.date === s.checkOut)?.closedForCheckout) return NextResponse.json({ error: "Check-out isn't available on that date. Please choose another day." }, { status: 400, headers: noStore });
     const min = nights[0]?.minStay ?? 2;
     if (nights.length < min) return NextResponse.json({ error: `Minimum stay is ${min} nights from this date.` }, { status: 400, headers: noStore });
-    const quote = buildQuote({ ...s, property, nightlyRates: Object.fromEntries(nights.map((d) => [d.date, d.price])), now });
+    const input = { ...s, property, nightlyRates: Object.fromEntries(nights.map((d) => [d.date, d.price])), now };
+    let quote = buildQuote(input);
     // The quote the guest sees is saved; checkout must name it (persisted quote acceptance).
     // The quote remembers its Stripe mode (live only on pearlheightshomes.com with LIVE_CHECKOUT=on), so it can only be
     // paid in that mode. Prices and availability are the same real calendar either way.
     const livemode = modeForHost(hostOf(req)) === "live";
+    // Special offer (Oscar, Nov 19): only through the guest's private conversation link, for exactly the offered home
+    // and dates, within 24 hours. The price comes from the saved offer, never from the URL.
+    let offerNote: string | undefined;
+    if (body.offer != null) {
+      const db = getDb();
+      const o = db ? await offerForCheckout(db, body.offer, s, livemode, now).catch(() => null) : null;
+      if (o) {
+        const regularTotal = quote.total;
+        quote = buildQuote({ ...input, nightlyDiscount: discountForTotal(input, o.total) });
+        if (quote.total < regularTotal) quote.specialOffer = { id: o.id, regularTotal, savings: regularTotal - quote.total };
+      } else offerNote = "The special offer has ended or doesn't match these dates and guests, so this is the regular price.";
+    }
     const saved = await getLedger(process.env, session.id).ledger.saveQuote({ ...s, property: property.key }, quote, session.id, now, livemode);
-    return withSession(NextResponse.json({ quote, quoteId: saved.id, expiresAt: saved.expiresAt.getTime(), policy: stayPolicy(s.checkIn, now, { exactGrace: false }) }, { headers: noStore }), session);
+    return withSession(NextResponse.json({ quote, quoteId: saved.id, expiresAt: saved.expiresAt.getTime(), policy: stayPolicy(s.checkIn, now, { exactGrace: false }), ...(offerNote ? { offerNote } : {}) }, { headers: noStore }), session);
   } catch (e) {
     const status = e instanceof QuoteError || e instanceof ValidationError ? 400 : 500;
     if (status === 500) console.error("quote error", (e as Error).message);

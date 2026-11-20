@@ -355,3 +355,38 @@ button.V-room { display: flex; flex-direction: column; justify-content: flex-sta
   .V-bar.is-empty .V-cta { width: 100%; min-height: 48px; }
 }
 @media (max-width: 479px) and (max-height: 600px) { .V-bar .V-barTrust { display: none; } .V-bar { padding-top: 8px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); } }
+
+/* "Message Oscar & Fernanda" (Oscar, Nov 19): round chat icon on the Hosted by row, button in Meet your hosts, form. */
+.V-host > div { min-width: 0; }
+.V-msgIcon { margin-left: auto; flex: none; width: 46px; height: 46px; border-radius: 50%; border: 1px solid #cfc7bb; background: #fff; color: #17191b; display: grid; place-items: center; cursor: pointer; }
+.V-msgIcon:hover { background: #f6f3ee; border-color: #a99f92; }
+.V-msgIcon:focus-visible, .V-msgBtn:focus-visible { outline: 3px solid #17191b; outline-offset: 2px; }
+.V-msgBtn { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; }
+.V-msgNote { margin: 10px 0 0; text-align: center; font-size: 14px; color: #6a6e72; }
+.AH-scrim { z-index: 80; }
+.AH { max-height: min(92vh, 860px); overflow-y: auto; }
+.AH-head { align-items: flex-start; }
+.AH-head h2 { margin: 0; }
+.AH-sub { margin: 2px 0 0; font-size: 14px; color: #6a6e72; }
+.AH-stay { background: #f5f3ef; border-radius: 12px; padding: 14px; margin: 4px 0 16px; }
+.AH-stay > b { display: block; font-size: 15px; margin-bottom: 10px; }
+.AH-dates, .AH-guests { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+.AH-guests { grid-template-columns: repeat(3, 1fr); margin-top: 10px; }
+.AH-dates label, .AH-guests label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: #3b3f43; }
+.AH-dates label span { font-weight: 400; color: #5f6367; }
+.AH-dates input, .AH-guests select { min-height: 44px; width: 100%; box-sizing: border-box; border: 1px solid #cfc7bb; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 15px; background: #fff; color: #17191b; }
+.AH-total { margin: 10px 0 0; font-size: 14px; color: #3b3f43; }
+.AH-f { display: grid; gap: 6px; margin-bottom: 14px; font-size: 14px; font-weight: 600; color: #3b3f43; }
+.AH-f input, .AH-f textarea { width: 100%; box-sizing: border-box; border: 1px solid #cfc7bb; border-radius: 10px; padding: 12px; font: inherit; font-size: 16px; font-weight: 400; color: #17191b; background: #fff; }
+.AH-f input { min-height: 48px; }
+.AH-f textarea { resize: vertical; min-height: 110px; }
+.AH-f input:focus, .AH-f textarea:focus, .AH-dates input:focus, .AH-guests select:focus { outline: 2px solid #17191b; outline-offset: 1px; }
+.AH-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.AH-err { color: #b3261e; font-size: 14px; margin: 0 0 10px; }
+.AH-cta { width: 100%; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.AH-fine { margin: 10px 0 0; text-align: center; font-size: 13px; color: #6a6e72; }
+.AH-link { background: none; border: 0; padding: 8px 0; font: inherit; font-size: 14px; color: #17191b; text-decoration: underline; cursor: pointer; }
+.AH-clear { margin-top: 4px; }
+.AH-done { text-align: center; padding: 10px 0 6px; }
+.AH-done h3 { margin: 4px 0 6px; font-size: 20px; }
+.AH-done p { color: #3b3f43; }

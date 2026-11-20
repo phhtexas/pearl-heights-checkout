@@ -14,6 +14,7 @@ import { textConfirmation } from "@/services/sms";
 import { emailConfirmation } from "@/services/email";
 import { HOMES } from "@/content/homes";
 import { envForRequest } from "@/server/mode";
+import { markOfferUsed } from "@/services/inquiries";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -62,6 +63,8 @@ export async function POST(req: Request) {
     if ((view as { ok?: boolean }).ok) {
       const ref = (view as { bookingRef?: string }).bookingRef ?? bookingRef;
       await afterBooking(req, b, input, q.quote, ref, env);
+      // A special offer is used once (Oscar, Nov 19).
+      if (q.quote.specialOffer) { const db0 = getDb(); if (db0) await markOfferUsed(db0, q.quote.specialOffer.id, ref).catch(() => undefined); }
       // Crib and high chair request (Oscar, Nov 19): only when the stay includes a child or infant.
       if (b.babyGear === true && input.children + input.infants > 0)
         await getDb()?.query(`UPDATE bookings SET baby_gear = true WHERE booking_ref = $1`, [ref]).catch(() => undefined);

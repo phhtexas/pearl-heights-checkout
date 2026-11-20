@@ -33,7 +33,7 @@ export function SiteNav({ extra, sticky = true }: { extra?: ReactNode; sticky?: 
  * Phones: back on the left, logo centered when it fits (hidden at very narrow widths), ask on the right. Two logo
  * copies so the tab order always matches what's on screen (the hidden one is display:none, out of the tab order).
  */
-export function ListingNav({ backHref, askHref }: { backHref: string; askHref: string }) {
+export function ListingNav({ backHref, askHref, onAsk }: { backHref: string; askHref: string; onAsk?: () => void }) {
   const logo = (cls: string) => (
     <a className={`LN-brand ${cls}`} href={ALL_HOMES} aria-label="Pearl Heights Homes, all homes">
       <img src="/brand/logo-dark.webp" alt="" width={200} height={174} />
@@ -47,7 +47,9 @@ export function ListingNav({ backHref, askHref }: { backHref: string; askHref: s
           <span aria-hidden="true">←</span> Back to all homes
         </a>
         {logo("LN-brandMob")}
-        <a className="LN-ask" href={askHref} data-cta="listing_header_ask">Ask a question</a>
+        {onAsk
+          ? <button type="button" className="LN-ask" onClick={onAsk} data-cta="listing_header_ask">Ask a question</button>
+          : <a className="LN-ask" href={askHref} data-cta="listing_header_ask">Ask a question</a>}
       </div>
     </header>
   );

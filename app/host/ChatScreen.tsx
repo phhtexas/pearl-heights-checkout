@@ -41,6 +41,8 @@ export function ChatScreen(p: {
   draft: string; setDraft: (s: string) => void; onSend: () => void; busy: boolean; error?: string; note?: string;
   onReact: (m: ChatMsg, e: Reaction | null) => void;
   otherName: string; otherRole: string; footer?: ReactNode;
+  /** Label of the button under the top line (default "Show reservation"); reactions off for pre-booking questions. */
+  sysAction?: string; reactions?: boolean;
 }) {
   const end = useRef<HTMLDivElement>(null), count = useRef(-1), ta = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
@@ -62,7 +64,9 @@ export function ChatScreen(p: {
     // Like the Airbnb app: the other side's photo sits beside the last message of each of their groups.
     const next = list[i + 1];
     const lastOfGroup = !next || next.sender !== m.sender || Date.parse(next.at) - t > 10 * 60_000 || dayKey(next.at) !== d;
-    const bubble = (
+    const bubble = p.reactions === false ? (
+      <div key={m.id} className={mine ? "CH-msg CH-mine" : "CH-msg"}><p>{m.body}</p>{mine && m.readAt && <span className="sr-only">Seen {stamp(m.readAt)}</span>}</div>
+    ) : (
       <MessageActions key={m.id} mineSide={mine} text={m.body} seen={mine && m.readAt ? stamp(m.readAt) : null}
         shown={[m.guestReaction, m.hostReaction]} mine={p.me === "guest" ? m.guestReaction : m.hostReaction} onPick={(e) => p.onReact(m, e)}>
         <div className={mine ? "CH-msg CH-mine" : "CH-msg"}><p>{m.body}</p></div>
@@ -91,7 +95,7 @@ export function ChatScreen(p: {
       </header>
       <div className="CH-body" aria-live="polite">
         <p className="CH-day">{dayLabel(p.confirmed.at)}</p>
-        <p className="CH-sys">{p.confirmed.text}<br /><button type="button" onClick={p.onDetails}>Show reservation</button></p>
+        <p className="CH-sys">{p.confirmed.text}<br /><button type="button" onClick={p.onDetails}>{p.sysAction ?? "Show reservation"}</button></p>
         {p.messages === null && <p className="CH-sys">Loading messages…</p>}
         {rows}
         {p.footer}

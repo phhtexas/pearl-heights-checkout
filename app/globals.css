@@ -63,6 +63,7 @@ h2 { margin: 0; font-size: 21px; font-weight: 600; }
 .priceSec { display: flex; flex-direction: column; gap: 11px; }
 .ln { display: flex; justify-content: space-between; gap: 12px; font-variant-numeric: tabular-nums; }
 .ln.total { font-weight: 700; font-size: 18px; border-top: 1px solid var(--line); padding-top: 13px; margin-top: 4px; }
+.ln.offerLn { color: #0f6b52; font-weight: 600; }
 .link { background: none; border: 0; padding: 0; min-height: 44px; font: inherit; font-size: 17px; font-weight: 600; text-decoration: underline; cursor: pointer; color: var(--ink); align-self: flex-start; }
 .link.tight { margin-top: -12px; }
 .link.inline { min-height: 0; font-weight: 400; font-size: inherit; color: inherit; }
@@ -389,7 +390,7 @@ input.f.bad { border-color: var(--bad); }
 .LN-brandMob { display: none; }
 .LN-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 4px; color: #1d1a17; font-weight: 600; font-size: 15px; text-decoration: none; white-space: nowrap; border-radius: 6px; }
 .LN-back:hover { text-decoration: underline; text-underline-offset: 4px; }
-.LN-ask { margin-left: auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; color: #1d1a17; background: transparent; border: 1px solid #cfc7bb; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; }
+.LN-ask { font: inherit; cursor: pointer; margin-left: auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; color: #1d1a17; background: transparent; border: 1px solid #cfc7bb; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; }
 .LN-ask:hover { background: #f3efe9; border-color: #a99f92; }
 .LN-back:focus-visible, .LN-ask:focus-visible, .LN-brand:focus-visible { outline: 3px solid #1d1a17; outline-offset: 2px; }
 @media (max-width: 760px) {

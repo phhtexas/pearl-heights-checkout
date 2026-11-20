@@ -48,3 +48,12 @@
 .CH-themAv .CH-avTxt { font-size: 12px; }
 .CH-timeThem { margin-left: 42px; }
 .CH-who2 { font-weight: 500; color: #555; }
+
+/* Special offer card in a pre-booking conversation (Oscar, Nov 19). */
+.CH-offer { margin: 14px auto 6px; max-width: 360px; border: 1px solid #d8d2c8; border-radius: 14px; padding: 16px; background: #fff; text-align: left; }
+.CH-offer p { margin: 0 0 4px; }
+.CH-offerTag { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #0f6b52; }
+.CH-offerPrice { font-size: 15px; } .CH-offerPrice b { font-size: 22px; } .CH-offerPrice s { color: #7a7e82; margin-left: 6px; }
+.CH-offerLine { font-size: 14px; color: #4a4e52; }
+.CH-offerBtn { display: flex; align-items: center; justify-content: center; min-height: 46px; margin-top: 12px; border-radius: 10px; background: #0f6b52; color: #fff; font-weight: 600; text-decoration: none; }
+.CH-offerBtn:focus-visible { outline: 3px solid #17191b; outline-offset: 2px; }

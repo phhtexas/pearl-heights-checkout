@@ -103,6 +103,8 @@ export default function Checkout() {
   const [quoting, setQuoting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [notice, setNotice] = useState("");
+  // Special offer from a pre-booking conversation (Oscar, Nov 19): the guest's private link, checked on the server.
+  const [offer, setOffer] = useState<string | null>(null), [offerNote, setOfferNote] = useState("");
   const [fieldErr, setFieldErr] = useState<Partial<Record<"firstName" | "lastName" | "email" | "phone", string>>>({});
   const lastTotal = useRef<number | null>(null);
   const resumeStep = useRef<Step | null>(null);
@@ -126,6 +128,8 @@ export default function Checkout() {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const h = q.get("home");
+    const of = q.get("offer");
+    if (of && /^[A-Za-z0-9_-]{20,100}$/.test(of)) setOffer(of);
     if (h && PROPERTIES.some((p) => p.key === h)) setHome(h);
     const a = q.get("checkIn"), b = q.get("checkOut");
     if (a && b && /^\d{4}-\d{2}-\d{2}$/.test(a) && /^\d{4}-\d{2}-\d{2}$/.test(b) && b > a) { setCi(a); setCo(b); setMonth(a.slice(0, 7)); }
@@ -202,8 +206,9 @@ export default function Checkout() {
   const getQuote = useCallback(async (payPlan: "full" | "split" = plan) => {
     if (!ci || !co) return;
     setErr(""); setQuoting(true);
-    const r = await fetch("/api/quote", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan }) });
+    const r = await fetch("/api/quote", { method: "POST", body: JSON.stringify({ property: home, checkIn: ci, checkOut: co, adults, children, infants, payPlan, ...(offer ? { offer } : {}) }) });
     const j = await r.json().catch(() => ({}));
+    setOfferNote(j.offerNote ?? "");
     setQuoting(false);
     setRevealed(true);
     if (!r.ok) { setQuote(null); setErr(j.error ?? "We couldn't price these dates. Please try other dates."); return; }
@@ -216,8 +221,8 @@ export default function Checkout() {
     setQuote(j.quote); setQuoteId(j.quoteId); setExpiresAt(j.expiresAt); setPolicy(j.policy ?? null);
     track("checkout_started", { property: home, nights: j.quote.nights, adults, children, infants, check_in: ci!, check_out: co!, total_cents: j.quote.total, page: "checkout" }, "cs" + home + ci + co + adults + "-" + children + "-" + infants);
     if (payPlan === "split" && !j.quote.splitPlan) setPlan("full");
-  }, [ci, co, home, adults, children, infants, plan]);
-  useEffect(() => { if (ci && co && step !== "done") void getQuote(); }, [ci, co, home, adults, children, infants]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ci, co, home, adults, children, infants, plan, offer]);
+  useEffect(() => { if (ci && co && step !== "done") void getQuote(); }, [ci, co, home, adults, children, infants, offer]); // eslint-disable-line react-hooks/exhaustive-deps
   // Keep the guest's typed details for this tab (never card details); cleared once they have paid.
   useEffect(() => {
     if (!ready || step === "done" || preview) return;
@@ -412,6 +417,8 @@ export default function Checkout() {
     {/* Oscar, Nov 19 (Perplexity PX-F6): the nightly price is all-in, so say what it includes. */}
     <div className="muted small inclNote">Includes cleaning and damage waiver</div>
     <div className="ln"><span>Taxes</span><span>{money(quote.tax)}</span></div>
+    {quote.specialOffer && <div className="ln offerLn"><span>Special offer from Oscar &amp; Fernanda</span><span>You save {money(quote.specialOffer.savings)}</span></div>}
+    {offerNote && <div className="muted small" role="status">{offerNote}</div>}
     <div className="ln total"><span>Total <u>USD</u></span><span>{money(quote.total)}</span></div>
     <button className="link tight" onClick={() => openSheet("breakdown")}>Price breakdown</button>
   </>);
@@ -682,6 +689,7 @@ export default function Checkout() {
 
             {sheet === "breakdown" && quote && (<>
               <div className="ln"><span>{quote.nights} nights</span><span>{money(quote.lodging)}</span></div>
+              {quote.specialOffer && <div className="muted small">Includes your special offer: {money(quote.specialOffer.savings)} off the regular total of {money(quote.specialOffer.regularTotal)}.</div>}
               {quote.extraGuestFee > 0 && <div className="ln"><span>Extra guests</span><span>{money(quote.extraGuestFee)}</span></div>}
               <div className="ln"><span>Cleaning</span><span>{money(quote.cleaning)}</span></div>
               <div className="ln"><span>Damage waiver — $5,000 coverage</span><span>{money(quote.protection)}</span></div>

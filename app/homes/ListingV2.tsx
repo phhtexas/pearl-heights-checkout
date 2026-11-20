@@ -13,6 +13,7 @@ import { useSaved } from "@/client/saved";
 import { Icon, iconFor } from "./icons";
 import { ALL_HOMES, ListingNav } from "../SiteNav";
 import { TileMapV2 as TileMap } from "./TileMapV2";
+import { AskHosts, ChatIcon } from "./AskHosts";
 import "./listing.css";
 import "./listingV2.css";
 
@@ -87,6 +88,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
   const [more, setMore] = useState(false);
   const [tourFocus, setTourFocus] = useState<{ group: string; id: string } | null>(null); // photo tour opened from a room card
   const [shared, setShared] = useState("");
+  const [ask, setAsk] = useState(false); // "Message Oscar & Fernanda" (Oscar, Nov 19)
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const heroRef = useRef<HTMLElement | null>(null);
   const carRef = useRef<HTMLDivElement | null>(null);
@@ -273,7 +275,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
     <div className="V-page">
       <TestOnly><div className="V-test">Test site · nothing is booked or charged</div></TestOnly>
       {/* Oscar, Nov 19: a simpler header on property pages (back to the results, ask about THIS home). */}
-      <ListingNav backHref={backHref} askHref={`mailto:${CONTACT.email}?subject=${encodeURIComponent("Question about " + home.title)}`} />
+      <ListingNav backHref={backHref} askHref={`mailto:${CONTACT.email}?subject=${encodeURIComponent("Question about " + home.title)}`} onAsk={() => setAsk(true)} />
       {shared && <div className="V-toast" role="status">{shared}</div>}
       <ShareSheet open={shareOpen} onClose={() => setShareOpen(false)} url={typeof location !== "undefined" ? location.origin + location.pathname : ""}
         title={home.title} photo={src(home.photos[0]!.id)} photoAlt={home.photos[0]!.alt} rating={home.rating ?? undefined} area={`${home.neighborhood}, San Antonio`} propertyKey={prop.key} />
@@ -311,6 +313,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
         <section className="V-host">
           <HostPhoto home={home} size={44} />
           <div><b>Hosted by {home.host.names}</b><span>{home.host.facts[0]} · {home.host.facts.find((f) => /reply/i.test(f)) ?? ""}</span></div>
+          <button type="button" className="V-msgIcon" aria-label={`Message ${home.host.names}`} data-cta="message_hosts_icon" onClick={() => setAsk(true)}><ChatIcon /></button>
         </section>
 
         <ul id="overview" className="V-high">{home.highlights.map((h) => <li key={h.title}><Icon name={iconFor(h.title)} size={28} /><div><b>{h.title}</b><span>{h.text}</span></div></li>)}</ul>
@@ -380,7 +383,8 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
             <div><b>{home.host.names}</b><ul>{home.host.facts.map((f) => <li key={f}>{f}</li>)}</ul></div>
           </div>
           <p className="V-p">{home.host.bio}</p>
-          <a className="V-outline" href={`mailto:${CONTACT.email}?subject=${encodeURIComponent("Question about " + home.title)}`}>Ask us a question</a>
+          <button type="button" className="V-outline V-msgBtn" data-cta="message_hosts" onClick={() => setAsk(true)}><ChatIcon size={20} />Message {home.host.names}</button>
+          <p className="V-msgNote">Ask about these dates, the home or the area. We usually reply within an hour.</p>
         </section>
 
         <section id="rules" className="V-sec">
@@ -513,6 +517,9 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
             <p className="V-note V-mapNote">{home.neighborhood} · Approximate location. {home.location.note}</p>
           </div>);
       })()}
+
+      <AskHosts open={ask} onClose={() => setAsk(false)} home={{ key: prop.key, title: home.title, maxGuests: prop.maxGuests }}
+        ci={ci} co={co} adults={adults} children={children} infants={infants} total={quote?.total ?? null} />
 
       {sheet && sheet !== "tour" && sheet !== "map" && (
         <div className="scrim" onClick={(e) => { if (e.target === e.currentTarget) setSheet(null); }}>
