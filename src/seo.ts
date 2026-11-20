@@ -23,7 +23,7 @@ export function publicMeta(path: string, m: Metadata): Metadata {
 }
 
 /** Public paths for the sitemap (the home pages are added from the home content). */
-export const PUBLIC_PATHS = ["/"];
+export const PUBLIC_PATHS = ["/", "/about"];
 
 /**
  * Structured data (schema.org) for a home page, so search engines and AI assistants can read the facts.

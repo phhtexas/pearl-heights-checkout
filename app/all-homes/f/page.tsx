@@ -204,7 +204,7 @@ export default function Page() {
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><path d="M17.5 6.5h.01" /></svg>
         </a>
         <p>Hosted by Oscar &amp; Fernanda · San Antonio, Texas · <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></p>
-        <p className="F-legal"><a href="/guides">Local guides</a> · {LAUNCHED ? <><a href="/terms">Terms of service</a> · <a href="/privacy">Privacy policy</a></> : <>Terms of service (coming soon) · Privacy policy (coming soon)</>} · <CookieChoices /></p>
+        <p className="F-legal"><a href="/about">About us</a> · <a href="/guides">Local guides</a> · {LAUNCHED ? <><a href="/terms">Terms of service</a> · <a href="/privacy">Privacy policy</a></> : <>Terms of service (coming soon) · Privacy policy (coming soon)</>} · <CookieChoices /></p>
         <p className="F-note">Ratings and reviews are from Airbnb guests who stayed in our homes.</p>
       </footer>
     </div>

@@ -450,6 +450,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
             <li>{CONTACT.managedBy}</li>
           </ul>
           <ul className="V-footLinks">
+            <li><a href="/about">About us</a></li>
             <li><a href="/policies/cancellation">Cancellation policy</a></li>
             {GUIDES.filter((g) => g.approved && g.homes.some((h) => h.key === home.key)).map((g) => <li key={g.slug}><a href={`/guides/${g.slug}`}>Local guide: {g.title}</a></li>)}
             {LAUNCHED

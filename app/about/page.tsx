@@ -11,10 +11,9 @@ import "./about.css";
  * About us (Oscar, Nov 19: "an about us to give people more confidence to book"). Every line comes from something
  * already sourced: Oscar & Fernanda's Airbnb host profile (homes.ts HOSTS, Nov 15–16), their 752 Myrtle and Edgewood guest books
  * "Meet your hosts" pages (Canva p.3, read Nov 18–19), the Condé Nast Traveler feature (link from Oscar, Nov 17), real
- * guest reviews (homes.ts), and the business details in the Booking Terms. Draft until Oscar approves: hidden on
- * pearlheightshomes.com, visible on the test site.
+ * guest reviews (homes.ts), and the business details in the Booking Terms. Approved by Oscar Nov 20: live on pearlheightshomes.com.
  */
-const ABOUT_APPROVED: boolean = false;
+const ABOUT_APPROVED: boolean = true;
 export const dynamic = "force-dynamic";
 const base = publicMeta("/about", {
   title: "About us | Pearl Heights Homes",
