@@ -162,7 +162,7 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   ok(!(await page.locator("header.F-top").getAttribute("class")).includes("is-solid"), `${tag}: header see-through over the photo`);
   ok((await page.locator('.F-logoWhite[src="/brand/logo-white.webp"]').count()) === 1 && (await page.locator('.F-logoDark[src="/brand/logo-dark.webp"]').count()) === 1, `${tag}: site logo (white over photo, dark when solid)`);
   ok(await page.evaluate(() => getComputedStyle(document.querySelector(".F-heroText")).textAlign === "center"), `${tag}: hero text centered`);
-  if (w > 760) ok((await page.locator(".F-nav a").allInnerTexts()).join(",") === "Browse homes,Map,Reviews,FAQ", `${tag}: nav Browse homes, Map, Reviews, FAQ`);
+  if (w > 760) ok((await page.locator(".F-nav a").allInnerTexts()).join(",") === "Browse homes,Reviews,Map,FAQ", `${tag}: nav Browse homes, Reviews, Map, FAQ`);
   for (const id of ["homes", "locations", "reviews", "faq"]) ok((await page.locator(`#${id}`).count()) === 1, `${tag}: nav target #${id}`);
   ok((await page.locator(".E-chip, .chip, select[aria-label='Sort homes']").count()) === 0, `${tag}: no filters or sort`);
   const t = await page.evaluate(() => document.body.innerText);
