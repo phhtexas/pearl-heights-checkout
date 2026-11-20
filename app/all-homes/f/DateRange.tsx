@@ -16,7 +16,7 @@ const addMonths = (m: string, n: number) => { const d = parse(m); d.setUTCMonth(
 const fmt = (s: string, o: Intl.DateTimeFormatOptions) => parse(s).toLocaleDateString("en-US", { ...o, timeZone: "UTC" });
 export const nightsBetween = (a: string, b: string) => Math.round((parse(b).getTime() - parse(a).getTime()) / 864e5);
 
-function Month({ m, ci, co, hover, min, minNights, onPick, onHover }: { m: string; ci: string; co: string; hover: string; min: string; minNights: number; onPick: (d: string) => void; onHover: (d: string) => void }) {
+function Month({ m, ci, co, hover, min, minNights, tip, onPick, onHover }: { m: string; ci: string; co: string; hover: string; min: string; minNights: number; tip: { d: string; text: string } | null; onPick: (d: string) => void; onHover: (d: string) => void }) {
   const first = parse(m); const lead = first.getUTCDay();
   const days = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
   const firstOut = ci ? addDays(ci, minNights) : "";
@@ -33,13 +33,16 @@ function Month({ m, ci, co, hover, min, minNights, onPick, onHover }: { m: strin
           const isStart = d === ci, isEnd = d === end && !!end;
           const inRange = !!ci && !!end && d > ci && d < end;
           const tooShort = !!ci && !co && d > ci && d < firstOut; // inside the 2-night minimum
-          const cls = ["DR-day", past && "is-past", isStart && "is-start", isEnd && "is-end", inRange && "is-in", (isStart && end) && "has-end", !co && isEnd && "is-preview", tooShort && "is-short"].filter(Boolean).join(" ");
+          const tipHere = tip?.d === d ? tip.text : "";
+          const cls = ["DR-day", past && "is-past", isStart && "is-start", isEnd && "is-end", inRange && "is-in", (isStart && end) && "has-end", !co && isEnd && "is-preview", tooShort && "is-short", tipHere && "has-tip"].filter(Boolean).join(" ");
           return (
             <button key={d} type="button" className={cls} data-date={d} disabled={past} tabIndex={d === (ci || min) ? 0 : -1}
               aria-label={`${fmt(d, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}${isStart ? ", check-in" : ""}${isEnd && co ? ", check-out" : ""}`}
               aria-pressed={isStart || (isEnd && !!co)} aria-disabled={tooShort || undefined} title={tooShort ? `${minNights}-night minimum` : undefined}
               onClick={() => onPick(d)} onMouseEnter={() => onHover(d)} onFocus={() => onHover(d)}>
               <span>{parse(d).getUTCDate()}</span>
+              {/* Airbnb-style label above the day (Oscar, Nov 20). Visual only: the same facts are in the heading and the day's name. */}
+              {tipHere && <i className={`DR-tip${i % 7 <= 1 ? " DR-tipL" : i % 7 >= 5 ? " DR-tipR" : ""}`} aria-hidden="true">{tipHere}</i>}
             </button>
           );
         })}
@@ -54,6 +57,7 @@ export function DateRange({ ci, co, min, minNights = 2, onChange, onClose, onDon
   const [mobile, setMobile] = useState(false);
   const [view, setView] = useState(monthStart(ci || min));
   const [hover, setHover] = useState("");
+  const [last, setLast] = useState(""); // the day picked last: phones have no hover, so its label shows there
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => { const mq = matchMedia("(max-width: 759px)"); const on = () => setMobile(mq.matches); on(); mq.addEventListener("change", on); return () => mq.removeEventListener("change", on); }, []);
   useEffect(() => {
@@ -75,10 +79,16 @@ export function DateRange({ ci, co, min, minNights = 2, onChange, onClose, onDon
   }, [mobile, onClose]);
 
   const pick = (d: string) => {
-    if (!ci || co || d <= ci) onChange(d, "");
+    if (!ci || co || d <= ci) { onChange(d, ""); setLast(d); }
     else if (nightsBetween(ci, d) < minNights) return; // all five homes have a 2-night minimum (Airbnb calendars)
-    else onChange(ci, d);
+    else { onChange(ci, d); setLast(d); }
   };
+  // Labels above the calendar days, like Airbnb: "2-night minimum" on check-in until check-out is picked; then
+  // "Check-in day" / "Checkout day" on the one being pointed at (or, on phones, the one just tapped).
+  const at = hover === ci || hover === co ? hover : last;
+  const tip = ci && !co ? { d: ci, text: `${minNights}-night minimum` }
+    : ci && co && at === ci ? { d: ci, text: "Check-in day" }
+    : ci && co && at === co ? { d: co, text: "Checkout day" } : null;
   const months = useMemo(() => (mobile ? Array.from({ length: 12 }, (_, i) => addMonths(monthStart(min), i)) : [view, addMonths(view, 1)]), [mobile, view, min]);
   const n = ci && co ? nightsBetween(ci, co) : 0;
   const heading = n ? `${n} night${n === 1 ? "" : "s"}` : ci ? "Select check-out date" : "Select check-in date";
@@ -111,7 +121,7 @@ export function DateRange({ ci, co, min, minNights = 2, onChange, onClose, onDon
           </>
         )}
         <div className="DR-months">
-          {months.map((m) => <Month key={m} m={m} ci={ci} co={co} hover={hover} min={min} minNights={minNights} onPick={pick} onHover={setHover} />)}
+          {months.map((m) => <Month key={m} m={m} ci={ci} co={co} hover={hover} min={min} minNights={minNights} tip={tip} onPick={pick} onHover={setHover} />)}
         </div>
       </div>
       <div className="DR-foot">

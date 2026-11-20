@@ -265,6 +265,14 @@
 .DR-dow { text-align: center; font-size: 12px; font-weight: 600; color: var(--muted); padding-bottom: 8px; }
 .DR-day { position: relative; aspect-ratio: 1; border: 0; background: none; padding: 0; font: inherit; font-size: 14.5px; font-weight: 500; color: var(--ink); cursor: pointer; display: grid; place-items: center; }
 .DR-day span { position: relative; z-index: 1; width: 44px; max-width: 100%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; transition: background .2s ease, color .2s ease, box-shadow .2s ease; }
+/* Airbnb-style labels above a day (Oscar, Nov 20): "2-night minimum", "Check-in day", "Checkout day". */
+.DR-tip { position: absolute; z-index: 4; bottom: calc(100% - 4px); left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none;
+  font-style: normal; font-size: 13.5px; font-weight: 500; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; box-shadow: 0 2px 8px rgba(0,0,0,.12); animation: DR-tipIn .15s ease-out both; }
+.DR-tip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border: 6px solid transparent; border-top-color: #fff; filter: drop-shadow(0 1px 0 var(--line)); }
+.DR-tipL { left: 0; transform: none; } .DR-tipL::after { left: 22px; }
+.DR-tipR { left: auto; right: 0; transform: none; } .DR-tipR::after { left: auto; right: 16px; }
+@keyframes DR-tipIn { from { opacity: 0; } to { opacity: 1; } }
+.DR .DR-day.has-tip.is-start span, .DR .DR-day.has-tip.is-end:not(.is-preview) span { box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px var(--ink); }
 .DR-day:hover:not(:disabled) span { box-shadow: inset 0 0 0 1.5px var(--ink); }
 .DR-day:disabled { color: #c9c4bd; cursor: default; text-decoration: line-through; text-decoration-color: #ddd8d0; }
 .DR-day.is-in::before, .DR-day.has-end::before, .DR-day.is-end::before { content: ""; position: absolute; top: 2px; bottom: 2px; left: 0; right: 0; background: var(--soft); }
