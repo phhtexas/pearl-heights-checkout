@@ -64,7 +64,7 @@ await browser.close();
   const below = await ph.evaluate(() => { const t = document.querySelector(".V-bar .V-barTrust").getBoundingClientRect(), c = document.querySelector(".V-bar .V-cta").getBoundingClientRect(); return t.top >= c.bottom - 1; });
   ok(below && (await trust.evaluate((e) => getComputedStyle(e).fontStyle)) === "italic", "phone: trust line is italic and below the button");
   const foot = await ph.textContent(".V-footer");
-  ok(foot.includes("bookings@pearlheightshomes.com") && foot.includes("Site managed by PR Portfolio Properties LLC | San Antonio, TX") && foot.includes("Cancellation policy"), "footer: email, managed-by line, cancellation link");
+  ok(foot.includes("bookings@pearlheightshomes.com") && foot.includes("Site managed by PR Portfolio Properties LLC (formerly Pena Revilla Properties LLC) | San Antonio, TX") && foot.includes("Cancellation policy"), "footer: email, managed-by line, cancellation link");
   ok(!foot.includes("400-2540") && !(await ph.locator('.V-footer a[href^="tel:"]').count()), "footer: no phone number (email only)");
   ok((await ph.locator('.V-footer .V-social a[href="https://www.instagram.com/pearlheightshomes"]').count()) === 1, "footer: Instagram icon links to instagram.com/pearlheightshomes");
   const ig = await ph.locator(".V-social").boundingBox(), lg = await ph.locator(".V-footBrand .V-brand").boundingBox();

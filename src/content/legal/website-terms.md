@@ -2,7 +2,7 @@ These Website Terms of Use govern access to the Pearl Heights Homes website, dir
 
 ## 1 Operator and scope
 
-The online services are operated by PR Portfolio Properties LLC, doing business as Pearl Heights Homes ("Pearl Heights Homes," "we," "us" or "our"). In these Terms, "Site" includes our public website, property pages, availability and quote tools, direct-booking checkout, secure guest portal and related online features.
+The online services are operated by PR Portfolio Properties LLC (formerly Pena Revilla Properties LLC), doing business as Pearl Heights Homes ("Pearl Heights Homes," "we," "us" or "our"). In these Terms, "Site" includes our public website, property pages, availability and quote tools, direct-booking checkout, secure guest portal and related online features.
 
 These Terms apply to direct interactions with Pearl Heights Homes. Reservations made through Airbnb, Vrbo or another marketplace remain subject to that marketplace's terms and the rules disclosed on that listing. These Website Terms do not override a marketplace contract.
 
@@ -119,7 +119,7 @@ If a provision is unenforceable, it will be enforced to the maximum lawful exten
 
 ## 19 Contact
 
-Operator: PR Portfolio Properties LLC, doing business as Pearl Heights Homes
+Operator: PR Portfolio Properties LLC (formerly Pena Revilla Properties LLC), doing business as Pearl Heights Homes
 
 Email: bookings@pearlheightshomes.com
 

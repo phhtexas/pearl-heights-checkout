@@ -2,7 +2,7 @@ This Notice applies when you visit our website, request a quote, make or manage 
 
 ## 1 Business responsible for the data
 
-PR Portfolio Properties LLC, doing business as Pearl Heights Homes is responsible for the personal information it determines how and why to process. In this Notice, "Pearl Heights Homes," "we," "us" and "our" refer to that business. Some service providers, including Stripe, also process certain information for their own legally disclosed purposes.
+PR Portfolio Properties LLC (formerly Pena Revilla Properties LLC), doing business as Pearl Heights Homes, is responsible for the personal information it determines how and why to process. In this Notice, "Pearl Heights Homes," "we," "us" and "our" refer to that business. Some service providers, including Stripe, also process certain information for their own legally disclosed purposes.
 
 This Notice covers direct-booking services. If you book through Airbnb, Vrbo or another marketplace, that marketplace's privacy notice also applies to information it collects and shares with us.
 
@@ -136,7 +136,7 @@ We may update this Notice to reflect service, provider or legal changes. The cur
 
 ## 17 Contact
 
-Privacy contact and operator: PR Portfolio Properties LLC, doing business as Pearl Heights Homes
+Privacy contact and operator: PR Portfolio Properties LLC (formerly Pena Revilla Properties LLC), doing business as Pearl Heights Homes
 
 Email: bookings@pearlheightshomes.com
 

@@ -95,7 +95,7 @@ export default async function Page() {
 
         <h2>Booking with us</h2>
         <p>When you book on our website, you book directly with us. You see your full total before you pay, payments are handled securely by Stripe, and your questions come straight to Oscar and Fernanda.</p>
-        <p className="AB-biz">Pearl Heights Homes is operated by PR Portfolio Properties LLC, San Antonio, Texas.<br />
+        <p className="AB-biz">Pearl Heights Homes is operated by PR Portfolio Properties LLC (formerly Pena Revilla Properties LLC), San Antonio, Texas.<br />
           Email <a href="mailto:bookings@pearlheightshomes.com">bookings@pearlheightshomes.com</a></p>
         <p><a className="G-link" href={ALL_HOMES}>See our homes</a></p>
       </main>
