@@ -52,7 +52,7 @@ export function agreementHtml(i: AgreementInput): string {
     "[Property address]": "shown in the guest portal after signing and ID verification",
     "[Full name] · [Email] · [Mobile]": [i.holder.name, i.holder.email, i.holder.mobile].filter(Boolean).join(" · "),
     "Check-in [date] after [time] CT · Check-out [date] before [time] CT": `Check-in ${day(i.checkIn)} after 4:00 PM CT · Check-out ${day(i.checkOut)} before 10:00 AM CT`,
-    "[Adults] adults · [Children] children · [Infants] infants · Maximum [occupancy]": `${i.guests.adults} adults · ${i.guests.children} children · ${i.guests.infants} infants · Maximum ${home.capacity.guests}`,
+    "[Adults] adults · [Children] children · [Infants] infants · Maximum [occupancy]": `${i.guests.adults} ${i.guests.adults === 1 ? "adult" : "adults"} · ${i.guests.children} ${i.guests.children === 1 ? "child" : "children"} · ${i.guests.infants} ${i.guests.infants === 1 ? "infant" : "infants"} · Maximum ${home.capacity.guests}`,
     "Total [total] · Paid now [amount] · Scheduled balance [amount] on [date]": `Total ${i.price.total} · Paid now ${i.price.paidNow}` + (i.price.balance ? ` · Scheduled balance ${i.price.balance} on ${i.price.balanceDate}` : " · No scheduled balance"),
     "Website Terms [version] · Booking Terms [version] · Privacy [version] · Agreement [version]": `Website Terms ${LEGAL_VERSION} · Booking Terms ${LEGAL_VERSION} · Privacy ${LEGAL_VERSION} · Agreement ${LEGAL_VERSION}`,
     "[Maximum occupancy and visitor rule]": s.maxOccupancy,

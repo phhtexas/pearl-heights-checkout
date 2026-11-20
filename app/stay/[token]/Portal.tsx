@@ -318,7 +318,7 @@ export function Portal({ stay }: { stay: StayData }) {
             <dl className="ST-facts">
               <div><dt>Check-in</dt><dd>{ci}<span>after 4:00 PM</span></dd></div>
               <div><dt>Check-out</dt><dd>{co}<span>by 10:00 AM</span></dd></div>
-              <div><dt>Guests</dt><dd>{stay.guests.adults + stay.guests.children}<span>{stay.guests.adults} adults · {stay.guests.children} children</span></dd></div>
+              <div><dt>Guests</dt><dd>{stay.guests.adults + stay.guests.children}<span>{stay.guests.adults} {stay.guests.adults === 1 ? "adult" : "adults"}{stay.guests.children ? ` · ${stay.guests.children} ${stay.guests.children === 1 ? "child" : "children"}` : ""}</span></dd></div>
             </dl>
             {stay.babyGear && <p className="ST-dim ST-small">Crib and high chair: we&apos;ll have them set up for you.</p>}
           </div>

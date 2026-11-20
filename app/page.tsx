@@ -382,10 +382,19 @@ export default function Checkout() {
   // Verification window: 24 hours when booked 48+ hours before check-in, otherwise 2 hours (Terms section 1).
   const deadlineWindow = ci && Date.parse(ci + "T22:00:00Z") - now >= 48 * 3_600_000 ? "24 hours" : "2 hours";
 
+  // Pay tapped before the authorization box is ticked (Oscar, Nov 20: "I had to scroll up to check that box"): jump to
+  // the box, flash it, and say why, instead of a dead button.
+  const [agreeHint, setAgreeHint] = useState(false);
+  const nudgeAgree = () => {
+    setAgreeHint(true);
+    const el = document.getElementById("agree-box");
+    el?.scrollIntoView({ block: "center", behavior: "smooth" }); el?.focus({ preventScroll: true });
+    const lb = el?.closest("label"); lb?.classList.remove("nudge"); void lb?.getBoundingClientRect(); lb?.classList.add("nudge");
+  };
   // The one main action per step (fixed footer on phones, inline on desktop).
-  const primary: { label: string; busy?: boolean; disabled: boolean; run: () => void } | null = step === "review" ? { label: "Continue to your details", disabled: !quote || quoting, run: () => go("details") }
+  const primary: { label: string; busy?: boolean; disabled: boolean; needsAgree?: boolean; run: () => void } | null = step === "review" ? { label: "Continue to your details", disabled: !quote || quoting, run: () => go("details") }
     : step === "details" ? { label: "Continue to payment", disabled: false, run: submitDetails }
-    : step === "pay" && quote ? { label: `Confirm and pay ${money(quote.plan.dueNow)}`, busy, disabled: !agreed || busy, run: () => void pay() }
+    : step === "pay" && quote ? { label: `Confirm and pay ${money(quote.plan.dueNow)}`, busy, disabled: busy, needsAgree: !agreed, run: () => (agreed ? void pay() : nudgeAgree()) }
     : null;
   // Processing state (Oscar, Nov 18): spinner + "Processing…", button keeps its color so it doesn't look broken.
   const btnLabel = primary?.busy ? <><span className="spin" aria-hidden="true" />Processing…</> : primary?.label;
@@ -590,7 +599,7 @@ export default function Checkout() {
               ? <><div id="card-box" tabIndex={-1} /><StripeCard publishableKey={cfg.publishableKey!} amount={quote.plan.dueNow} saveForLater={quote.plan.split} onReady={onCardReady}
                   canPay={agreed && !busy} billing={{ name: `${guest.firstName} ${guest.lastName}`.trim(), email: guest.email, phone: guest.phone }}
                   onExpress={(id) => void pay(id)}
-                  onLockedTap={() => { const el = document.getElementById("agree-box"); el?.scrollIntoView({ block: "center", behavior: "smooth" }); el?.focus({ preventScroll: true }); const lb = el?.closest("label"); lb?.classList.remove("nudge"); void lb?.getBoundingClientRect(); lb?.classList.add("nudge"); }} />
+                  onLockedTap={nudgeAgree} />
                   {!isLive && <div className="muted">Test mode: card 4242 4242 4242 4242, any future date, any CVC. Decline: 4000 0000 0000 0002.</div>}</>
               : <div className="cardForm" id="card-box" tabIndex={-1}>Secure card form (Stripe) appears here</div>}
             
@@ -642,7 +651,8 @@ export default function Checkout() {
 
           {err && !preview && <div className="err" role="alert">{err}</div>}
           {step === "pay" && payErr && <div className="desktopOnly">{payBar}</div>}
-          {primary && <button className={"btn desktopOnly" + (primary.busy ? " isBusy" : "")} disabled={primary.disabled} onClick={primary.run} aria-busy={primary.busy || undefined}>{btnLabel}</button>}
+          {primary && primary.needsAgree && <p className={"agreeHint desktopOnly" + (agreeHint ? " isOn" : "")} role={agreeHint ? "alert" : undefined}>{agreeHint ? "Please tick the authorization box above to continue." : "Tick the authorization box above to continue."}</p>}
+          {primary && <button className={"btn desktopOnly" + (primary.busy ? " isBusy" : "") + (primary.needsAgree ? " needsAgree" : "")} disabled={primary.disabled} onClick={primary.run} aria-busy={primary.busy || undefined}>{btnLabel}</button>}
         </main>
         {step !== "done" && <div className="side desktopOnly">{aside}</div>}
       </div>
@@ -653,7 +663,8 @@ export default function Checkout() {
             {STEPS.map(([k, , short], i) => <li key={k} className={i < stepIdx ? "done" : i === stepIdx ? "on" : ""} aria-current={i === stepIdx ? "step" : undefined}><i aria-hidden="true" /><span>{i < stepIdx ? <><svg className="stepChk" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>{short}<span className="sr"> (completed)</span></> : <>{i + 1} {short}</>}</span></li>)}
           </ol>
           {step === "pay" && payErr && payBar}
-          <button className={"btn" + (primary.busy ? " isBusy" : "")} disabled={primary.disabled} onClick={primary.run} aria-busy={primary.busy || undefined}>{btnLabel}</button>
+          {primary.needsAgree && <p className={"agreeHint" + (agreeHint ? " isOn" : "")} role={agreeHint ? "alert" : undefined}>{agreeHint ? "Please tick the authorization box above to continue." : "Tick the authorization box above to continue."}</p>}
+          <button className={"btn" + (primary.busy ? " isBusy" : "") + (primary.needsAgree ? " needsAgree" : "")} disabled={primary.disabled} onClick={primary.run} aria-busy={primary.busy || undefined}>{btnLabel}</button>
         </footer>
       )}
 
