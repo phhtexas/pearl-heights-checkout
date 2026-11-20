@@ -401,3 +401,28 @@ button.V-room { display: flex; flex-direction: column; justify-content: flex-sta
 .AH-done { text-align: center; padding: 10px 0 6px; }
 .AH-done h3 { margin: 4px 0 6px; font-size: 20px; }
 .AH-done p { color: #3b3f43; }
+/* No dates yet: the homepage search box look (Oscar, Nov 19). */
+.AH-pick { margin: 4px 0 16px; }
+.AH-pickHome { display: block; font-size: 15px; margin-bottom: 10px; }
+.AH-box { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #e6dfd5; border-radius: 18px; background: #fff; box-shadow: 0 6px 24px rgba(23, 25, 27, .08); }
+.AH-cell { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; min-width: 0; }
+.AH-cell:first-child { border-right: 1px solid #e6dfd5; }
+.AH-cell:not(.AH-gcell) { border-bottom: 1px solid #e6dfd5; }
+.AH-gcell { grid-column: 1 / -1; position: relative; flex-direction: row; align-items: center; justify-content: space-between; }
+.AH-lab { display: flex; align-items: center; font-size: 13px; font-weight: 600; color: #1d1a17; }
+.AH-ic { margin-right: 8px; color: #6b635a; flex: none; }
+.AH-val { font: inherit; font-size: 17px; color: #1d1a17; background: transparent; border: 0; padding: 2px 0; min-height: 32px; width: 100%; text-align: left; cursor: pointer; border-radius: 4px; }
+.AH-gcell .AH-val { width: auto; text-align: right; }
+.AH-val:focus-visible { outline: 2px solid #1d1a17; outline-offset: 2px; }
+.AH-ph { color: #6b635a; }
+.AH-opt { margin: 8px 2px 0; font-size: 13px; color: #5f6367; }
+.AH-opt .AH-link { padding: 0; font-size: 13px; }
+.AH-pop { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid #e6dfd5; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.16); padding: 6px 18px 14px; }
+.AH-step { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e6dfd5; }
+.AH-step b { display: block; font-size: 15px; } .AH-step small { color: #5f6367; font-size: 13px; }
+.AH-stepper { display: flex; align-items: center; gap: 14px; }
+.AH-stepper button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #8a8580; background: #fff; font-size: 18px; line-height: 1; cursor: pointer; color: #1d1a17; }
+.AH-stepper button:disabled { opacity: .3; cursor: not-allowed; }
+.AH-stepper span { min-width: 18px; text-align: center; font-variant-numeric: tabular-nums; }
+.AH-popNote { font-size: 13px; color: #5f6367; margin: 10px 0; }
+.AH-popDone { border: 0; background: #1d1a17; color: #fff; border-radius: 10px; padding: 10px 18px; font: inherit; font-weight: 600; cursor: pointer; float: right; }

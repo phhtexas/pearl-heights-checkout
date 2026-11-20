@@ -26,16 +26,17 @@ export function AskHosts(p: Props) {
   const [adults, setAdults] = useState(2), [children, setChildren] = useState(0), [infants, setInfants] = useState(0);
   const [name, setName] = useState(""), [email, setEmail] = useState(""), [msg, setMsg] = useState(""), [hp, setHp] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle"), [err, setErr] = useState(""), [link, setLink] = useState(""), [emailed, setEmailed] = useState(false);
-  const [picked, setPicked] = useState(false), [cal, setCal] = useState(false);
+  const [picked, setPicked] = useState(false), [cal, setCal] = useState(false), [gOpen, setGOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null), opener = useRef<Element | null>(null), dateBtn = useRef<HTMLButtonElement>(null);
   const calOpen = useRef(false); calOpen.current = cal;
+  const popOpen = useRef(false); popOpen.current = gOpen;
 
   // Each time it opens: take the dates and guests from the page (if any).
   useEffect(() => {
     if (!p.open) return;
     opener.current = document.activeElement;
     setCi(p.ci ?? ""); setCo(p.co ?? ""); setAdults(p.adults); setChildren(p.children); setInfants(p.infants);
-    setPicked(!!(p.ci && p.co)); setCal(false);
+    setPicked(!!(p.ci && p.co)); setCal(false); setGOpen(false);
     if (state === "sent") { setState("idle"); setMsg(""); setLink(""); }
     setErr("");
     try { const s = JSON.parse(localStorage.getItem("ph_guest_contact") ?? "null"); if (s?.name) setName(s.name); if (s?.email) setEmail(s.email); } catch { /* storage off */ }
@@ -45,7 +46,7 @@ export function AskHosts(p: Props) {
     if (!p.open) return;
     const onKey = (e: KeyboardEvent) => {
       if (calOpen.current) return; // the calendar handles its own keys
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") { if (popOpen.current) setGOpen(false); else close(); }
       if (e.key !== "Tab" || !box.current) return;
       const f = [...box.current.querySelectorAll<HTMLElement>("button:not([disabled]), a[href], input:not([tabindex='-1']), textarea, select")];
       if (!f.length) return;
@@ -84,6 +85,16 @@ export function AskHosts(p: Props) {
   };
 
   const guests = adults + children;
+  const stepper = (label: string, sub: string, v: number, set: (n: number) => void, lo: number, full: boolean) => (
+    <div className="AH-step">
+      <div><b>{label}</b><small>{sub}</small></div>
+      <div className="AH-stepper">
+        <button type="button" aria-label={`Fewer ${label.toLowerCase()}`} disabled={v <= lo} onClick={() => set(v - 1)}>−</button>
+        <span aria-live="polite">{v}</span>
+        <button type="button" aria-label={`More ${label.toLowerCase()}`} disabled={full} onClick={() => set(v + 1)}>+</button>
+      </div>
+    </div>
+  );
   return (
     <div className="scrim AH-scrim" onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
       <div ref={box} className="sheet AH" role="dialog" aria-modal="true" aria-labelledby="ah-title">
@@ -108,22 +119,36 @@ export function AskHosts(p: Props) {
                 {p.total ? <span>{money(p.total)} total</span> : null}
               </div>
             ) : (
-              <div className="AH-stay">
-                <b>{p.home.title}</b>
-                <div className="AH-dates">
-                  <div className="AH-dateF"><span>Check-in <i>(optional)</i></span>
-                    <button type="button" ref={dateBtn} className="AH-dateBtn" aria-haspopup="dialog" aria-expanded={cal} aria-label={`Check-in date: ${ci ? shortDay(ci) : "add date"}`} onClick={() => setCal(true)}>
-                      {ci ? shortDay(ci) : <span className="AH-ph">Add dates</span>}</button></div>
-                  <div className="AH-dateF"><span>Check-out <i>(optional)</i></span>
-                    <button type="button" className="AH-dateBtn" aria-haspopup="dialog" aria-expanded={cal} aria-label={`Check-out date: ${co ? shortDay(co) : "add date"}`} onClick={() => setCal(true)}>
-                      {co ? shortDay(co) : <span className="AH-ph">Add dates</span>}</button></div>
+              <div className="AH-pick">
+                <b className="AH-pickHome">{p.home.title}</b>
+                {/* Same look as the homepage search box (Oscar, Nov 19): dates side by side, guests below. */}
+                <div className="AH-box">
+                  <div className="AH-cell">
+                    <span className="AH-lab"><CalIc />Check-in</span>
+                    <button type="button" ref={dateBtn} className="AH-val" aria-haspopup="dialog" aria-expanded={cal} aria-label={`Check-in date (optional): ${ci ? shortDay(ci) : "add date"}`} onClick={() => { setGOpen(false); setCal(true); }}>
+                      {ci ? shortDay(ci) : <span className="AH-ph">Add dates</span>}</button>
+                  </div>
+                  <div className="AH-cell">
+                    <span className="AH-lab"><CalIc />Check-out</span>
+                    <button type="button" className="AH-val" aria-haspopup="dialog" aria-expanded={cal} aria-label={`Check-out date (optional): ${co ? shortDay(co) : "add date"}`} onClick={() => { setGOpen(false); setCal(true); }}>
+                      {co ? shortDay(co) : <span className="AH-ph">Add dates</span>}</button>
+                  </div>
+                  <div className="AH-cell AH-gcell">
+                    <span className="AH-lab" id="ah-g-lab"><PeopleIc />Guests</span>
+                    <button type="button" className="AH-val" aria-haspopup="dialog" aria-expanded={gOpen} aria-labelledby="ah-g-lab ah-g-val" onClick={() => setGOpen((o) => !o)}>
+                      <span id="ah-g-val">{guests} {guests === 1 ? "guest" : "guests"}{infants ? `, ${infants} ${infants === 1 ? "infant" : "infants"}` : ""}</span></button>
+                    {gOpen && (
+                      <div className="AH-pop" role="group" aria-label="Guests">
+                        {stepper("Adults", "Ages 13 or above", adults, setAdults, 1, guests >= p.home.maxGuests)}
+                        {stepper("Children", "Ages 2–12", children, setChildren, 0, guests >= p.home.maxGuests)}
+                        {stepper("Infants", "Under 2", infants, setInfants, 0, infants >= 6)}
+                        <p className="AH-popNote">Sleeps {p.home.maxGuests}. Infants don&apos;t count toward the limit.</p>
+                        <button type="button" className="AH-popDone" onClick={() => setGOpen(false)}>Done</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {(ci || co) && <button type="button" className="AH-link AH-clear" onClick={() => { setCi(""); setCo(""); }}>Clear dates</button>}
-                <div className="AH-guests">
-                  <label>Adults<select value={adults} onChange={(e) => setAdults(Number(e.target.value))}>{range(1, Math.max(1, p.home.maxGuests - children)).map((n) => <option key={n}>{n}</option>)}</select></label>
-                  <label>Children<select value={children} onChange={(e) => setChildren(Number(e.target.value))}>{range(0, Math.max(0, p.home.maxGuests - adults)).map((n) => <option key={n}>{n}</option>)}</select></label>
-                  <label>Infants<select value={infants} onChange={(e) => setInfants(Number(e.target.value))}>{range(0, 6).map((n) => <option key={n}>{n}</option>)}</select></label>
-                </div>
+                <p className="AH-opt">Dates are optional.{(ci || co) && <> <button type="button" className="AH-link" onClick={() => { setCi(""); setCo(""); }}>Clear dates</button></>}</p>
               </div>
             )}
             <label className="AH-f">Your name<input autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} required /></label>
@@ -146,7 +171,9 @@ export function AskHosts(p: Props) {
 
 const shortDay = (d: string) => new Date(d + "T00:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric" });
 const shortRange = (a: string, b: string) => (a.slice(0, 7) === b.slice(0, 7) ? `${shortDay(a)}–${Number(b.slice(8))}` : `${shortDay(a)} – ${shortDay(b)}`);
-const range = (a: number, b: number) => Array.from({ length: Math.max(0, b - a + 1) }, (_, i) => a + i);
+const ic = { viewBox: "0 0 24 24", width: 16, height: 16, fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true, className: "AH-ic" };
+const CalIc = () => <svg {...ic}><rect x="3.5" y="5" width="17" height="15.5" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>;
+const PeopleIc = () => <svg {...ic}><circle cx="9" cy="8" r="3.2" /><path d="M3 19.5c.6-3.3 3-5 6-5s5.4 1.7 6 5" /><path d="M16 5.3a3 3 0 0 1 0 5.6M18 14.8c1.6.6 2.7 2.2 3 4.7" /></svg>;
 
 export function ChatIcon({ size = 22 }: { size?: number }) {
   return (
