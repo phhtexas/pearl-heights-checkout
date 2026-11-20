@@ -33,16 +33,16 @@ export function CardTest() {
           <label className="H-dim" htmlFor="ct-e">Email for the receipt</label>
           <input id="ct-e" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <StripeCard publishableKey={pk} amount={100} saveForLater onReady={onReady} canPay={!busy} billing={{ name, email, phone: "" }} onExpress={() => {}} onLockedTap={() => {}} />
-          <button className="H-btn" type="button" onClick={go} disabled={busy}>{busy ? "Running…" : "Run the $1 live test"}</button>
+          <button className="H-btn" type="button" onClick={go} disabled={busy || !!result?.ok}>{busy ? "Running… (about 10 seconds)" : result?.ok ? "Done: all steps passed" : "Run the $1 live test"}</button>
+          {result && (
+            <div role="status">
+              <h2 style={{ margin: "8px 0 4px", fontSize: 18 }}>{result.ok ? "All steps passed" : "A step failed"}</h2>
+              <ul style={{ margin: 0, paddingLeft: 18 }}>{result.steps.map((s) => <li key={s.step}>{s.ok ? "✓" : "✗"} {s.step}{s.detail ? ` (${s.detail})` : ""}</li>)}</ul>
+            </div>
+          )}
         </div>
       )}
       <IdTest />
-      {result && (
-        <div className="H-card" style={{ margin: 0, maxWidth: "none" }}>
-          <h2 style={{ margin: 0, fontSize: 18 }}>{result.ok ? "All steps passed" : "A step failed"}</h2>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>{result.steps.map((s) => <li key={s.step}>{s.ok ? "✓" : "✗"} {s.step}{s.detail ? ` (${s.detail})` : ""}</li>)}</ul>
-        </div>
-      )}
     </div>
   );
 }

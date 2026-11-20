@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       type: "document",
       options: { document: { require_matching_selfie: true, require_live_capture: true } },
       metadata: { live_id_test: "true", note: "Pearl Heights live ID self-test, redacted after" },
-      return_url: `${origin}/host/card-test?vs={VERIFICATION_SESSION_ID}`,
+      return_url: `${origin}/host/card-test?vs=latest`, // Identity has no {ID} placeholder: GET finds the newest self-test
     });
     if (s.livemode !== true) return NextResponse.json({ error: "Stripe made a TEST session: the live key isn't a live key." }, { status: 503, headers: noStore });
     return NextResponse.json({ url: s.url, id: s.id }, { headers: noStore });
@@ -41,10 +41,16 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   if (!(await currentHost())) return NextResponse.json({ error: "Sign in" }, { status: 401, headers: noStore });
-  const id = new URL(req.url).searchParams.get("vs") ?? "";
-  if (!SESSION.test(id)) return NextResponse.json({ error: "Bad session" }, { status: 400, headers: noStore });
+  let id = new URL(req.url).searchParams.get("vs") ?? "";
   const env = envForMode("live");
   try {
+    if (!SESSION.test(id)) {
+      // Coming back from Stripe (?vs=latest): the newest live self-test session.
+      const list = await identityClient(env).verificationSessions.list({ limit: 20 });
+      const mine = list.data.find((x) => x.metadata?.live_id_test === "true");
+      if (!mine) return NextResponse.json({ error: "No live ID self-test found yet" }, { status: 404, headers: noStore });
+      id = mine.id;
+    }
     const st = await getIdState(id, identityClient(env));
     if (st.metadata.live_id_test !== "true") return NextResponse.json({ error: "Not a test session" }, { status: 400, headers: noStore });
     let redacted = false;
