@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSheet } from "@/client/useSheet";
 
 /**
  * Host cancel tool (audit F3, Oscar Nov 19). Shows what the cancellation policy refunds for the chosen reason, then
@@ -16,6 +17,7 @@ const TIER: Record<string, string> = {
 
 export function CancelPanel({ bookingId, onClose }: { bookingId: string; onClose: () => void }) {
   const [reason, setReason] = useState("guest");
+  const sheetRef = useSheet(true, onClose);
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [p, setP] = useState<Preview | null>(null);
   const [code, setCode] = useState(""), [busy, setBusy] = useState(false), [err, setErr] = useState("");
@@ -37,7 +39,7 @@ export function CancelPanel({ bookingId, onClose }: { bookingId: string; onClose
   const unfinished = p?.cancelled && p.plannedRefund != null && p.refundedSoFar < p.plannedRefund;
   return (
     <div className="CH-sheet" onClick={onClose}>
-      <div className="CH-sheetIn H-cancel" role="dialog" aria-label="Cancel booking" onClick={(e) => e.stopPropagation()}>
+      <div className="CH-sheetIn H-cancel" ref={sheetRef} role="dialog" aria-modal="true" aria-label="Cancel booking" onClick={(e) => e.stopPropagation()}>
         <h2>{p?.cancelled ? "Booking cancelled" : "Cancel this booking"}</h2>
         {p && !p.livemode && <p className="H-dim">Test booking: test refunds only; Hospitable isn&apos;t changed.</p>}
         {!p?.cancelled && (

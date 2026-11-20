@@ -251,7 +251,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
             const why = !byDate[iso] ? "not available" : !s.ok ? (draft.ci && !draft.co && iso > draft.ci ? "not available as check-out (booked night or under the minimum stay)" : "booked or not available for check-in") : s.price ? s.price + " per night" : "available";
             return <button key={iso} className={cls} disabled={!s.ok} onClick={() => pickDay(iso)} aria-pressed={iso === draft.ci || iso === draft.co}
               onMouseEnter={() => setTipHover(iso)} onFocus={() => setTipHover(iso)}
-              aria-label={`${new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", weekday: "short", month: "short", day: "numeric", year: "numeric" })}, ${why}`}>{Number(iso.slice(8))}<small>{s.price}</small>
+              aria-label={`${new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", weekday: "short", month: "short", day: "numeric", year: "numeric" })}${iso === draft.ci ? ", check-in" : ""}${iso === draft.co ? ", check-out" : ""}, ${why}`}>{Number(iso.slice(8))}<small>{s.price}</small>
               {tipText && <i className={"day-tip" + tipSide((g.pad + idx) % 7)} aria-hidden="true">{tipText}</i>}</button>;
           })}
         </div>
@@ -542,7 +542,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
                 <button className="nav" aria-label="Next month" onClick={() => shift(1)}>›</button></div>
               <div className="L-months">{renderMonth(month)}</div>
               {days.length === 0 && !calErr && <div className="muted" role="status">Loading availability and prices…</div>}
-              <div className="hint">{draft.ci && draft.co ? `${fmt(draft.ci)} – ${fmt(draft.co)} · ${nightsOf(draft.ci, draft.co)} nights` : draft.ci ? "Now choose your check-out date." : "Prices shown are per night before cleaning, waiver and taxes."}</div>
+              <div className="hint" role="status" aria-live="polite">{draft.ci && draft.co ? `${fmt(draft.ci)} – ${fmt(draft.co)} · ${nightsOf(draft.ci, draft.co)} nights` : draft.ci ? "Now choose your check-out date." : "Prices shown are per night before cleaning, waiver and taxes."}</div>
               <div className="row"><button className="link" onClick={() => setDraft({ ci: null, co: null })}>Clear dates</button>
                 <button className="btn L-save" disabled={!draft.ci || !draft.co} onClick={saveDates}>Save dates</button></div>
             </>)}

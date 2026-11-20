@@ -3,6 +3,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { type Reaction } from "./Reactions";
 import { ChatScreen, fullRange, guestLine, initials, type ChatMsg } from "./ChatScreen";
 import { CancelPanel } from "./CancelPanel";
+import { useSheet } from "@/client/useSheet";
 
 /** Host inbox UI (Oscar, Nov 19): sign-in by email link, the list of guest threads, and one thread with a reply box. */
 const when = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
@@ -104,6 +105,7 @@ export function Thread({ id }: { id: string }) {
   const [msgs, setMsgs] = useState<ChatMsg[] | null>(null), [info, setInfo] = useState<Info | null>(null), [homeInfo, setHome] = useState<{ title: string; photo: string | null } | null>(null);
   const [draft, setDraft] = useState(""), [busy, setBusy] = useState(false), [err, setErr] = useState(""), [note, setNote] = useState(""), [details, setDetails] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const sheetRef = useSheet(details, () => setDetails(false));
   const load = async () => {
     const r = await fetch(`/api/host/threads/${id}`, { cache: "no-store" }).catch(() => null);
     if (r?.status === 401) { location.replace("/host"); return; }
@@ -143,7 +145,7 @@ export function Thread({ id }: { id: string }) {
         messages={info ? msgs : null} draft={draft} setDraft={setDraft} onSend={send} busy={busy} error={err} note={note} onReact={react} />
       {details && info && (
         <div className="CH-sheet" onClick={() => setDetails(false)}>
-          <div className="CH-sheetIn" role="dialog" aria-label="Reservation" onClick={(e) => e.stopPropagation()}>
+          <div className="CH-sheetIn" ref={sheetRef} role="dialog" aria-modal="true" aria-label="Reservation" onClick={(e) => e.stopPropagation()}>
             {homeInfo?.photo && <img src={homeInfo.photo} alt="" />}
             <h2>{homeInfo?.title ?? home(info.propertyKey)}</h2>
             <dl>
@@ -202,6 +204,7 @@ export function InquiryThread({ id }: { id: string }) {
   const [homeInfo, setHome] = useState<{ title: string; photo: string | null } | null>(null);
   const [draft, setDraft] = useState(""), [busy, setBusy] = useState(false), [err, setErr] = useState(""), [note, setNote] = useState("");
   const [details, setDetails] = useState(false), [offerOpen, setOfferOpen] = useState(false);
+  const sheetRef = useSheet(details, () => setDetails(false));
   const load = async () => {
     const r = await fetch(`/api/host/inquiries/${id}`, { cache: "no-store" }).catch(() => null);
     if (r?.status === 401) { location.replace("/host"); return; }
@@ -249,7 +252,7 @@ export function InquiryThread({ id }: { id: string }) {
         messages={inq ? msgs : null} draft={draft} setDraft={setDraft} onSend={send} busy={busy} error={err} note={note} onReact={() => undefined} footer={inq ? footer : null} />
       {details && inq && (
         <div className="CH-sheet" onClick={() => setDetails(false)}>
-          <div className="CH-sheetIn" role="dialog" aria-label="Details" onClick={(e) => e.stopPropagation()}>
+          <div className="CH-sheetIn" ref={sheetRef} role="dialog" aria-modal="true" aria-label="Details" onClick={(e) => e.stopPropagation()}>
             {homeInfo?.photo && <img src={homeInfo.photo} alt="" />}
             <h2>{homeInfo?.title ?? home(inq.propertyKey)}</h2>
             <dl>
@@ -273,6 +276,7 @@ export function InquiryThread({ id }: { id: string }) {
 /** Special offer: pick the stay, see the regular price from the live calendar, set the new all-in total, send. */
 function OfferPanel({ inq, onClose, onSent }: { inq: Inq; onClose: () => void; onSent: () => void }) {
   const [ci, setCi] = useState(inq.checkIn ?? ""), [co, setCo] = useState(inq.checkOut ?? "");
+  const sheetRef = useSheet(true, onClose);
   const [adults, setAdults] = useState(Math.max(1, inq.adults)), [children, setChildren] = useState(inq.children), [infants, setInfants] = useState(inq.infants);
   const [regular, setRegular] = useState<number | null>(null), [total, setTotal] = useState(""), [busy, setBusy] = useState(false), [err, setErr] = useState("");
   const stay = { checkIn: ci, checkOut: co, adults, children, infants };
@@ -302,7 +306,7 @@ function OfferPanel({ inq, onClose, onSent }: { inq: Inq; onClose: () => void; o
   const nums = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
   return (
     <div className="CH-sheet" onClick={onClose}>
-      <div className="CH-sheetIn H-offerPanel" role="dialog" aria-label="Send a special offer" onClick={(e) => e.stopPropagation()}>
+      <div className="CH-sheetIn H-offerPanel" ref={sheetRef} role="dialog" aria-modal="true" aria-label="Send a special offer" onClick={(e) => e.stopPropagation()}>
         <h2>Send a special offer</h2>
         <p className="H-dim">A new all-in total for {inq.guestName.split(" ")[0]} only. It lasts 24 hours and is used once.</p>
         <div className="H-grid2">

@@ -225,12 +225,23 @@ export default function Checkout() {
     if (payPlan === "split" && !j.quote.splitPlan) setPlan("full");
   }, [ci, co, home, adults, children, infants, plan, offer]);
   useEffect(() => { if (ci && co && step !== "done") void getQuote(); }, [ci, co, home, adults, children, infants, offer]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The page address follows the trip as it's changed here (home, dates, guests), so a refresh or Back keeps the latest
+  // saved trip and its fresh quote, not the one the guest arrived with (Perplexity PX2-F2, Nov 20). Runs before the draft
+  // save below, so the saved details stay matched to the new address.
+  useEffect(() => {
+    if (!ready || step === "done" || preview) return;
+    const u = new URL(location.href), q = u.searchParams;
+    q.set("home", home);
+    if (ci && co) { q.set("checkIn", ci); q.set("checkOut", co); } else { q.delete("checkIn"); q.delete("checkOut"); }
+    q.set("adults", String(adults)); q.set("children", String(children)); q.set("infants", String(infants));
+    if (u.href !== location.href) history.replaceState(history.state, "", u.pathname + u.search + u.hash);
+  }, [ready, home, ci, co, adults, children, infants]); // eslint-disable-line react-hooks/exhaustive-deps
   // Keep the guest's typed details for this tab (never card details); cleared once they have paid.
   useEffect(() => {
     if (!ready || step === "done" || preview) return;
     if (!guest.firstName && !guest.lastName && !guest.email && !guest.phone && step === "review") return;
     ssSet(DRAFT_KEY, { guest, plan, mktEmail, mktSms, textConfirm, babyGear, step });
-  }, [ready, step, guest, plan, mktEmail, mktSms, textConfirm, babyGear]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ready, step, guest, plan, mktEmail, mktSms, textConfirm, babyGear, home, ci, co, adults, children, infants]); // eslint-disable-line react-hooks/exhaustive-deps
   // Back to the step the guest was on before a refresh, once the fresh quote is in (the price is rechecked first).
   useEffect(() => { if (quote && resumeStep.current) { const st = resumeStep.current; resumeStep.current = null; if (step === "review") setStep(st); } }, [quote]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -687,12 +698,12 @@ export default function Checkout() {
                   const cls = "day" + (iso === draft.ci || iso === draft.co ? " sel" : draft.ci && draft.co && iso > draft.ci && iso < draft.co ? " in" : "") + (tipText ? " has-tip" : "");
                   const why = !byDate[iso] ? "not available" : draft.ci && !draft.co && iso > draft.ci && !s.ok ? "not available as check-out (booked night or under the minimum stay)" : !s.ok ? "booked or not available for check-in" : s.price ? s.price + " per night" : "available";
                   return <button key={iso} className={cls} disabled={!s.ok} onClick={() => pickDay(iso)} onMouseEnter={() => setTipHover(iso)} onFocus={() => setTipHover(iso)}
-                    aria-label={`${fmtDay(iso, true)}, ${why}`} aria-pressed={iso === draft.ci || iso === draft.co}>{Number(iso.slice(8))}<small>{s.price}</small>
+                    aria-label={`${fmtDay(iso, true)}${iso === draft.ci ? ", check-in" : ""}${iso === draft.co ? ", check-out" : ""}, ${why}`} aria-pressed={iso === draft.ci || iso === draft.co}>{Number(iso.slice(8))}<small>{s.price}</small>
                     {tipText && <i className={"day-tip" + tipSide((monthDays.pad + idx) % 7)} aria-hidden="true">{tipText}</i>}</button>;
                 })}
               </div>
               {days.length === 0 && <div className="muted" role="status">Loading availability and prices…</div>}
-              <div className="hint">{draft.ci && draft.co ? `${fmtRange(draft.ci, draft.co)} · ${nightsOf(draft.ci, draft.co)} nights` : draft.ci ? "Now choose your check-out date." : "Choose your check-in date."}</div>
+              <div className="hint" role="status" aria-live="polite">{draft.ci && draft.co ? `${fmtRange(draft.ci, draft.co)} · ${nightsOf(draft.ci, draft.co)} nights` : draft.ci ? "Now choose your check-out date." : "Choose your check-in date."}</div>
               <div className="muted small">Crossed-out days are already booked or not available for check-in. The minimum stay comes from each home's settings.</div>
               <button className="btn" disabled={!draft.ci || !draft.co} onClick={saveDates}>Save dates</button>
             </>)}

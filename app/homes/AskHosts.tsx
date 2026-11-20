@@ -84,7 +84,7 @@ export function AskHosts(p: Props) {
     } catch { /* storage off */ }
     track("inquiry_sent", { property: p.home.key, has_dates: !!ci }, "inq" + Date.now());
     setLink(j.url ?? ""); setEmailed(!!j.emailed); setState("sent");
-    setSentAt(new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date()));
+    setSentAt(new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "2-digit" }).format(new Date()) + " CT"); // same clock as the conversation (PX2-F6)
   };
 
   const guests = adults + children;

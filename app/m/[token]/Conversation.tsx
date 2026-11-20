@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Countdown } from "@/client/Countdown";
+import { useSheet } from "@/client/useSheet";
 import { ChatScreen, fullRange, guestLine, initials, type ChatMsg } from "../../host/ChatScreen";
 
 /** The guest's side of a question before booking: our replies, their answers, and any 24-hour special offer. */
@@ -13,6 +14,7 @@ export function Conversation({ token }: { token: string }) {
   const [inq, setInq] = useState<Inq | null>(null), [msgs, setMsgs] = useState<ChatMsg[] | null>(null);
   const [home, setHome] = useState<{ title: string; slug: string | null; photo: string | null } | null>(null), [offer, setOffer] = useState<Offer | null>(null);
   const [draft, setDraft] = useState(""), [busy, setBusy] = useState(false), [err, setErr] = useState(""), [details, setDetails] = useState(false);
+  const sheetRef = useSheet(details, () => setDetails(false));
   const load = async () => {
     const r = await fetch(`/api/inquiries/${token}`, { cache: "no-store" }).catch(() => null);
     const j = await r?.json().catch(() => null);
@@ -56,7 +58,7 @@ export function Conversation({ token }: { token: string }) {
         messages={inq ? msgs : null} draft={draft} setDraft={setDraft} onSend={send} busy={busy} error={err} onReact={() => undefined} footer={offerCard} />
       {details && inq && (
         <div className="CH-sheet" onClick={() => setDetails(false)}>
-          <div className="CH-sheetIn" role="dialog" aria-label="Details" onClick={(e) => e.stopPropagation()}>
+          <div className="CH-sheetIn" ref={sheetRef} role="dialog" aria-modal="true" aria-label="Details" onClick={(e) => e.stopPropagation()}>
             {home?.photo && <img src={home.photo} alt="" />}
             <h2>{home?.title}</h2>
             <dl>

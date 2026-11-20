@@ -147,6 +147,29 @@ export function HomesF({ homes, hero, points, reasons, afterHomes }: {
     });
   }, [s.state]);
   const link = (slug: string) => s.href(slug, onlySaved ? { saved: "1" } : {});
+  // A map or review link to a home hidden by the Saved filter shows all homes first, then goes to its card (PX2-F3).
+  const jumpTo = useRef<string | null>(null);
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement | null)?.closest?.('a[href^="#home-"]') as HTMLAnchorElement | null;
+      if (!a || !onlySaved || document.getElementById(a.getAttribute("href")!.slice(1))) return;
+      e.preventDefault();
+      jumpTo.current = a.getAttribute("href")!.slice(1);
+      setOnlySaved(false);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, [onlySaved]);
+  useEffect(() => {
+    const id = jumpTo.current; if (!id || onlySaved) return;
+    jumpTo.current = null;
+    requestAnimationFrame(() => {
+      const el = document.getElementById(id); if (!el) return;
+      history.replaceState(history.state, "", location.pathname + location.search + "#" + id);
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.querySelector<HTMLElement>("a[href]")?.focus({ preventScroll: true });
+    });
+  }, [onlySaved]);
   const selArea = selected?.name;
   const mapRef = useRef<HTMLDivElement>(null);
   const pickArea = (name: string) => {
