@@ -1,7 +1,7 @@
 /**
- * Launch switch for page content (Oscar, Nov 19 launch check). NEXT_PUBLIC_LAUNCHED=on in Vercel (then redeploy) turns
- * the legal pages from "draft" into the final versions (no draft banner or label; attorney approved A1-A14) and replaces
- * the footer's "(coming soon)" Terms/Privacy with real links. Until then, everything stays as it is today.
+ * Launch switch for page content. Since Oscar, Nov 20 ("publish all legal pages"; attorney approved, Twilio toll-free
+ * review), the legal pages are final (no draft banner or label) and the footer's Terms/Privacy are real links.
+ * NEXT_PUBLIC_LAUNCHED=off in Vercel (then redeploy) would put the draft labels back.
  * Read at build time (NEXT_PUBLIC_), so it applies to server and browser code alike.
  */
-export const LAUNCHED = process.env.NEXT_PUBLIC_LAUNCHED === "on";
+export const LAUNCHED = process.env.NEXT_PUBLIC_LAUNCHED !== "off";

@@ -69,7 +69,7 @@ await browser.close();
   ok((await ph.locator('.V-footer .V-social a[href="https://www.instagram.com/pearlheightshomes"]').count()) === 1, "footer: Instagram icon links to instagram.com/pearlheightshomes");
   const ig = await ph.locator(".V-social").boundingBox(), lg = await ph.locator(".V-footBrand .V-brand").boundingBox();
   ok(ig.x > lg.x + lg.width - 1 && Math.abs((ig.y + ig.height / 2) - (lg.y + lg.height / 2)) < 20, "footer: social icons sit to the right of the logo");
-  ok(/coming soon/.test(foot), "footer: Terms/Privacy marked coming soon (not linked)");
+  ok(!/coming soon/.test(foot) && await ph.locator('.V-footer a[href="/terms"]').count() === 1 && await ph.locator('.V-footer a[href="/privacy"]').count() === 1, "footer: Terms of service and Privacy policy are real links (published Nov 20)");
   ok(!(await ph.locator('meta[name="robots"]').count()) || !(await ph.locator('meta[name="robots"]').getAttribute("content")).includes("noindex"), "main listing page is indexable (V2 is now the page)");
   const red = await ph.goto(`${BASE}/homes/736-myrtle/v2`);
   ok(new URL(ph.url()).pathname === "/homes/736-myrtle" && red.ok(), "old /v2 link redirects to /homes/736-myrtle");

@@ -1,4 +1,4 @@
-// Draft legal pages: /legal hub + one page per document. Each loads, is noindex, is labeled DRAFT, contents links
+// Legal pages (final since Nov 20): /legal hub + one page per document. Each loads, is noindex, has no draft label, contents links
 // work, no sideways scroll on a phone, and the search box suggests sections as you type.
 // Run: BASE_URL=http://localhost:3401 node e2e/legal.mjs
 import { createRequire } from "node:module";
@@ -23,8 +23,8 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1280, height: 900 
     ok((await page.textContent("h1"))?.trim() === title, `${w} ${path}: title`);
     ok(/noindex/.test(await page.getAttribute('meta[name="robots"]', "content")), `${w} ${path}: noindex`);
     const text = await page.evaluate(() => document.body.innerText);
-    if (path !== "/privacy") ok(text.includes("Draft — not for real bookings"), `${w} ${path}: DRAFT label`);
-    if (path !== "/legal") ok(path === "/privacy" ? text.includes("1.2") && !text.includes("(draft)") && !/Draft — not for real bookings/.test(text) : text.includes("1.2 (draft)"), `${w} ${path}: version 1.2${path === "/privacy" ? " (final, no draft label)" : " (draft)"}`);
+    ok(!text.includes("Draft — not for real bookings"), `${w} ${path}: no draft banner (published Nov 20)`);
+    if (path !== "/legal") ok(text.includes("1.2") && !text.includes("1.2 (draft)"), `${w} ${path}: version 1.2, final`);
     ok(!/cheaper|less than airbnb|best rate|no fees/i.test(text), `${w} ${path}: no price comparison`);
     const broken = await page.$$eval('a[href^="#"]', (as) => as.map((a) => a.getAttribute("href").slice(1)).filter((id) => id && !document.getElementById(id)));
     ok(broken.length === 0, `${w} ${path}: contents links have targets ${broken.join(",")}`);

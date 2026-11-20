@@ -1,6 +1,6 @@
 import { DocPage, draftMeta } from "../legal/parts";
 
-/** Draft legal document page (V1.2). Text: src/content/legal/rental-agreement.md. noindex + DRAFT banner via the shared shell. */
+/** Legal document page (V1.2). Text: src/content/legal/rental-agreement.md. Final since Nov 20 (Oscar: attorney approved). */
 export const metadata = draftMeta("Rental Agreement");
 export const dynamic = "force-static";
 
