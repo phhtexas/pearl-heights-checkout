@@ -426,3 +426,6 @@ button.V-room { display: flex; flex-direction: column; justify-content: flex-sta
 .AH-stepper span { min-width: 18px; text-align: center; font-variant-numeric: tabular-nums; }
 .AH-popNote { font-size: 13px; color: #5f6367; margin: 10px 0; }
 .AH-popDone { border: 0; background: #1d1a17; color: #fff; border-radius: 10px; padding: 10px 18px; font: inherit; font-weight: 600; cursor: pointer; float: right; }
+.AH-sumTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.AH-sumTop b { font-size: 15px; }
+.AH-edit { flex: none; padding: 0 2px; min-height: 24px; font-size: 14px; font-weight: 600; }

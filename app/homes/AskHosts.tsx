@@ -65,7 +65,8 @@ export function AskHosts(p: Props) {
   function close() { p.onClose(); (opener.current as HTMLElement | null)?.focus?.(); }
 
   const datesOk = (!ci && !co) || (!!ci && !!co && co > ci);
-  const samePageStay = picked;
+  // The page's total goes with the message only while the stay is still exactly what the page priced.
+  const samePageStay = !!ci && ci === p.ci && co === p.co && adults === p.adults && children === p.children && infants === p.infants;
   const send = async () => {
     if (state === "sending") return;
     if (!datesOk) { setErr(ci && !co ? "Add a check-out date, or clear the dates." : !ci && co ? "Add a check-in date, or clear the dates." : "Check-out must be after check-in."); return; }
@@ -114,7 +115,8 @@ export function AskHosts(p: Props) {
           <form onSubmit={(e) => { e.preventDefault(); void send(); }} noValidate>
             {picked ? (
               <div className="AH-stay AH-sum">
-                <b>{p.home.title}</b>
+                <div className="AH-sumTop"><b>{p.home.title}</b>
+                  <button type="button" className="AH-link AH-edit" aria-label="Edit dates and guests" onClick={() => { setPicked(false); setTimeout(() => dateBtn.current?.focus(), 0); }}>Edit</button></div>
                 <span>{shortRange(ci, co)} · {guests} {guests === 1 ? "guest" : "guests"}{infants ? ` + ${infants} ${infants === 1 ? "infant" : "infants"}` : ""}</span>
                 {p.total ? <span>{money(p.total)} total</span> : null}
               </div>
