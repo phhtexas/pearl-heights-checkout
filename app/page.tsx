@@ -8,7 +8,7 @@ import type { StayPolicy } from "@/domain/policy";
 import { CONSENT_ID, POLICY_LINKS, marketingEmailText, marketingSmsBody } from "@/domain/consent";
 import { track } from "@/client/track";
 import { dayTip, tipSide } from "@/client/dayTip";
-import { Countdown } from "@/client/Countdown";
+import { OfferLockText } from "@/client/Countdown";
 import { attribution, consent as cookieConsent, metaBrowserIds } from "@/client/consent";
 
 /**
@@ -422,7 +422,6 @@ export default function Checkout() {
     <div className="muted small inclNote">Includes cleaning and damage waiver</div>
     <div className="ln"><span>Taxes</span><span>{money(quote.tax)}</span></div>
     {quote.specialOffer && <div className="ln offerLn"><span>Special offer from Oscar &amp; Fernanda</span><span>You save {money(quote.specialOffer.savings)}</span></div>}
-    {quote.specialOffer?.expiresAt && step !== "done" && <Countdown until={quote.specialOffer.expiresAt} />}
     {offerNote && <div className="muted small" role="status">{offerNote}</div>}
     <div className="ln total"><span>Total <u>USD</u></span><span>{money(quote.total)}</span></div>
     <button className="link tight" onClick={() => openSheet("breakdown")}>Price breakdown</button>
@@ -487,9 +486,10 @@ export default function Checkout() {
       </header>
 
       {quote && step !== "done" && (
-        <div className="lock">
+        <div className={quote.specialOffer?.expiresAt ? "lock lockOffer" : "lock"}>
           <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.4" /><path d="M8 4.5V8l2.2 1.4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>
-          {left > 0 ? <><span>Your price is locked for</span><b aria-hidden="true">{lockText}</b><span className="sr">{Math.ceil(left / 60000)} minutes</span></> : <span>Price lock ended · we'll recheck the price</span>}
+          {quote.specialOffer?.expiresAt ? <OfferLockText until={quote.specialOffer.expiresAt} />
+            : left > 0 ? <><span>Your price is locked for</span><b aria-hidden="true">{lockText}</b><span className="sr">{Math.ceil(left / 60000)} minutes</span></> : <span>Price lock ended · we'll recheck the price</span>}
         </div>
       )}
 

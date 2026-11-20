@@ -36,6 +36,7 @@ h2 { margin: 0; font-size: 21px; font-weight: 600; }
 
 .lock { display: flex; justify-content: center; align-items: center; gap: 7px; padding: 10px 19px; background: var(--sand); color: var(--sand-ink); font-size: 14px; white-space: nowrap; }
 .lock b { font-variant-numeric: tabular-nums; }
+.lock.lockOffer { background: #fdf1e3; color: #8a4b08; font-weight: 500; } /* special offer countdown (Oscar, Nov 20) */
 
 .layout { padding: 21px 19px 190px; }
 .layout.single { padding-bottom: 48px; }
