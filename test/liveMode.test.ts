@@ -56,7 +56,7 @@ describe("launch switch on the real domain (middleware)", () => {
     try {
       expect(middleware(req("/?home=edgewood&checkIn=2026-12-23&checkOut=2026-12-26")).headers.get("x-middleware-next")).toBe("1");
       for (const p of ["/api/checkout", "/stay/abc", "/api/stay/abc/messages", "/host", "/api/host/threads"]) expect(middleware(req(p)).status).toBe(200);
-      for (const p of ["/api/mock/reset", "/preview/confirmation", "/api/internal/test-email", "/stay/demo", "/api/stay/demo/messages", "/host/card-test"]) expect(middleware(req(p)).status).toBe(404);
+      for (const p of ["/api/mock/reset", "/preview/confirmation", "/api/internal/test-email", "/stay/demo", "/api/stay/demo/messages", "/host/card-test", "/api/host/id-test"]) expect(middleware(req(p)).status).toBe(404);
       expect(middleware(req("/")).headers.get("x-middleware-rewrite")).toContain("/all-homes/f");
     } finally { if (prev === undefined) delete process.env.LIVE_CHECKOUT; else process.env.LIVE_CHECKOUT = prev; }
   });

@@ -36,7 +36,7 @@ export function airbnbUrl(q: URLSearchParams): string | null {
 
 const CLOSED = [/^\/api\/checkout/, /^\/api\/host\//, /^\/host(\/|$)/, /^\/api\/stay-link/, /^\/api\/stay\//, /^\/stay\//, /^\/api\/mock/, /^\/preview\//];
 
-const ALWAYS_CLOSED = [/^\/api\/mock/, /^\/preview\//, /^\/api\/internal\/test-email/, /^\/stay\/demo(\/|$|\?)/, /^\/api\/stay\/demo\//, /^\/host\/card-test/, /^\/api\/host\/card-test/];
+const ALWAYS_CLOSED = [/^\/api\/mock/, /^\/preview\//, /^\/api\/internal\/test-email/, /^\/stay\/demo(\/|$|\?)/, /^\/api\/stay\/demo\//, /^\/host\/card-test/, /^\/api\/host\/card-test/, /^\/api\/host\/id-test/];
 
 export function middleware(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").toLowerCase().split(":")[0]!;
