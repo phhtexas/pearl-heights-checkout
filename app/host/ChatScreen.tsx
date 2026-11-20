@@ -80,6 +80,12 @@ export function ChatScreen(p: {
     ));
   });
 
+  // "Sent · 10:46 AM" / "Seen · 10:52 AM" under your latest message when it's the last one (Oscar, Nov 20: so the
+  // sender knows it went through).
+  const last = list[list.length - 1];
+  if (last && last.sender === p.me) rows.push(
+    <p key="status" className="CH-status" role="status">{last.readAt ? `Seen · ${time(last.readAt)}` : `Sent · ${time(last.at)}`}</p>);
+
   return (
     <div className="CH" role="dialog" aria-label={`Chat with ${p.title}`}>
       <header className="CH-top">

@@ -429,3 +429,4 @@ button.V-room { display: flex; flex-direction: column; justify-content: flex-sta
 .AH-sumTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
 .AH-sumTop b { font-size: 15px; }
 .AH-edit { flex: none; padding: 0 2px; min-height: 24px; font-size: 14px; font-weight: 600; }
+.AH-done .AH-sentAt { margin: -2px 0 8px; font-size: 13px; color: #5f6367; }

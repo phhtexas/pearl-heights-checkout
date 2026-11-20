@@ -8,6 +8,7 @@ import type { StayPolicy } from "@/domain/policy";
 import { CONSENT_ID, POLICY_LINKS, marketingEmailText, marketingSmsBody } from "@/domain/consent";
 import { track } from "@/client/track";
 import { dayTip, tipSide } from "@/client/dayTip";
+import { Countdown } from "@/client/Countdown";
 import { attribution, consent as cookieConsent, metaBrowserIds } from "@/client/consent";
 
 /**
@@ -421,6 +422,7 @@ export default function Checkout() {
     <div className="muted small inclNote">Includes cleaning and damage waiver</div>
     <div className="ln"><span>Taxes</span><span>{money(quote.tax)}</span></div>
     {quote.specialOffer && <div className="ln offerLn"><span>Special offer from Oscar &amp; Fernanda</span><span>You save {money(quote.specialOffer.savings)}</span></div>}
+    {quote.specialOffer?.expiresAt && step !== "done" && <Countdown until={quote.specialOffer.expiresAt} />}
     {offerNote && <div className="muted small" role="status">{offerNote}</div>}
     <div className="ln total"><span>Total <u>USD</u></span><span>{money(quote.total)}</span></div>
     <button className="link tight" onClick={() => openSheet("breakdown")}>Price breakdown</button>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Countdown } from "@/client/Countdown";
 import { ChatScreen, fullRange, guestLine, initials, type ChatMsg } from "../../host/ChatScreen";
 
 /** The guest's side of a question before booking: our replies, their answers, and any 24-hour special offer. */
@@ -40,6 +41,7 @@ export function Conversation({ token }: { token: string }) {
       <p className="CH-offerTag">Special offer</p>
       <p className="CH-offerPrice"><b>{money(offer.total)}</b> total <s>{money(offer.regular)}</s></p>
       <p className="CH-offerLine">{fullRange(offer.checkIn, offer.checkOut)} · {guestLine(offer.adults + offer.children)}{offer.infants ? ` + ${offer.infants} ${offer.infants === 1 ? "infant" : "infants"}` : ""}</p>
+      <Countdown until={offer.expiresAt} onEnd={() => void load()} />
       <p className="CH-offerLine">Good until {until(offer.expiresAt)}</p>
       <a className="CH-offerBtn" href={offer.url}>Book with this offer</a>
     </div>
@@ -70,3 +72,4 @@ export function Conversation({ token }: { token: string }) {
     </>
   );
 }
+

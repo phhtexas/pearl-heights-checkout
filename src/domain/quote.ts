@@ -44,7 +44,7 @@ export interface Quote {
   /** Base for the 5% cancellation processing fee: nights + extra guests + cleaning, before taxes. */
   processingFeeBase: Cents;
   /** A host's special offer applied to this quote (Oscar, Nov 19): the regular total and the offer it came from. */
-  specialOffer?: { id: string; regularTotal: Cents; savings: Cents };
+  specialOffer?: { id: string; regularTotal: Cents; savings: Cents; expiresAt?: string };
 }
 
 export class QuoteError extends Error {}

@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       if (o) {
         const regularTotal = quote.total;
         quote = buildQuote({ ...input, nightlyDiscount: discountForTotal(input, o.total) });
-        if (quote.total < regularTotal) quote.specialOffer = { id: o.id, regularTotal, savings: regularTotal - quote.total };
+        if (quote.total < regularTotal) quote.specialOffer = { id: o.id, regularTotal, savings: regularTotal - quote.total, expiresAt: o.expiresAt };
       } else offerNote = "The special offer has ended or doesn't match these dates and guests, so this is the regular price.";
     }
     const saved = await getLedger(process.env, session.id).ledger.saveQuote({ ...s, property: property.key }, quote, session.id, now, livemode);

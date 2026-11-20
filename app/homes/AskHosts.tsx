@@ -25,6 +25,7 @@ export function AskHosts(p: Props) {
   const [ci, setCi] = useState(""), [co, setCo] = useState("");
   const [adults, setAdults] = useState(2), [children, setChildren] = useState(0), [infants, setInfants] = useState(0);
   const [name, setName] = useState(""), [email, setEmail] = useState(""), [msg, setMsg] = useState(""), [hp, setHp] = useState("");
+  const [sentAt, setSentAt] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle"), [err, setErr] = useState(""), [link, setLink] = useState(""), [emailed, setEmailed] = useState(false);
   const [picked, setPicked] = useState(false), [cal, setCal] = useState(false), [gOpen, setGOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null), opener = useRef<Element | null>(null), dateBtn = useRef<HTMLButtonElement>(null);
@@ -83,6 +84,7 @@ export function AskHosts(p: Props) {
     } catch { /* storage off */ }
     track("inquiry_sent", { property: p.home.key, has_dates: !!ci }, "inq" + Date.now());
     setLink(j.url ?? ""); setEmailed(!!j.emailed); setState("sent");
+    setSentAt(new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date()));
   };
 
   const guests = adults + children;
@@ -106,6 +108,7 @@ export function AskHosts(p: Props) {
         {state === "sent" ? (
           <div className="AH-done" role="status">
             <h3>Message sent</h3>
+            {sentAt && <p className="AH-sentAt">Sent at {sentAt}</p>}
             <p>We usually reply within an hour. Nothing is booked or charged.</p>
             {link && <a className="V-cta AH-cta" href={link}>Open your conversation</a>}
             <p className="AH-fine">{emailed ? "We also emailed you this link." : "Keep this link: it's where you'll see our reply."}</p>

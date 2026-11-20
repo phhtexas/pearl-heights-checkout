@@ -419,3 +419,8 @@ input.f.bad { border-color: var(--bad); }
 /* Launch check (Nov 19): map credit links meet the 24px minimum target size (WCAG 2.5.8). */
 .TV-credit a, .C-credit a { display: inline-block; min-height: 24px; line-height: 24px; }
 .inclNote { margin: -4px 0 6px; }
+
+/* Special offer countdown at checkout (same look as the conversation card). */
+.CH-offerTimer { display: inline-block; margin: 2px 0 6px; padding: 4px 10px; border-radius: 999px; background: #fdf1e3; color: #8a4b08; font-size: 13.5px; font-weight: 600; }
+.CH-offerTimer.is-soon { background: #fde8e6; color: #a1251a; }
+.CH-offerTimer.is-ended { background: #efefed; color: #4a4e52; }
