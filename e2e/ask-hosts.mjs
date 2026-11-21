@@ -18,9 +18,9 @@ const dayPlus = (n) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chi
 await page.goto(`${base}/homes/752-myrtle`);
 const icon = page.locator(".V-host .V-msgIcon");
 ok(await icon.count() === 1, "chat icon on the 'Hosted by' row");
-ok((await icon.getAttribute("aria-label")) === "Message Oscar & Fernanda", "icon has a name for screen readers");
+ok((await icon.getAttribute("aria-label")) === "Message us", "icon has a name for screen readers");
 const btn = page.locator("#hosts .V-msgBtn");
-ok(await btn.count() === 1 && /Message Oscar & Fernanda/.test(await btn.innerText()), "'Message Oscar & Fernanda' button in Meet your hosts");
+ok(await btn.count() === 1 && /Message us/.test(await btn.innerText()), "'Message us' button in Meet your hosts");
 ok(await page.locator('#hosts a[href^="mailto:"]').count() === 0, "the old email link is gone from Meet your hosts");
 ok(/usually reply within an hour/i.test(await page.locator("#hosts .V-msgNote").innerText()), "note under the button");
 

@@ -194,7 +194,7 @@ export default function Page() {
           <h2 id="host-h">Have questions before you book?</h2>
           <p>{HOST.bio}</p>
           <ul className="F-chips">{["Local San Antonio hosts", ...HOST.facts].map((f) => <li key={f}>{f}</li>)}</ul>
-          <a className="F-dark" data-cta="faq_ask_hosts" href="mailto:bookings@pearlheightshomes.com">Ask Oscar &amp; Fernanda</a>
+          <a className="F-dark" data-cta="faq_ask_hosts" href="mailto:bookings@pearlheightshomes.com">Message us</a>
         </section>
       </main>
       {/* Oscar, Nov 16: our logo + Instagram in F's footer (C and E keep the shared footer). Instagram link as on pearlheightshomes.com. */}
