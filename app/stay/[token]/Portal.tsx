@@ -13,7 +13,7 @@ import { checkInInstant, todayChicago } from "@/domain/time";
  *  ->  4 Enjoy your stay (house rules, messages).
  * In this test version the state lives in this browser only (localStorage), and nothing is sent or charged.
  */
-type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; idSession?: string; allSetSeen?: boolean; simDay?: "morning" | "checkin"; messages: { from: "guest" | "note"; text: string; at: string; iso?: string; reaction?: Reaction | null }[] };
+type State = { signedAt?: string; signedOn?: string; signedName?: string; signDoc?: string; pendingDoc?: { id: string }; pendingName?: string; nameEdited?: boolean; verifiedAt?: string; idSession?: string; allSetSeen?: boolean; simDay?: "morning" | "checkin"; simBalance?: "approve" | "paid"; messages: { from: "guest" | "note"; text: string; at: string; iso?: string; reaction?: Reaction | null }[] };
 const fresh = (): State => ({ messages: [] });
 const KEY = (t: string) => `ph-stay-${t}`;
 /**
@@ -481,7 +481,9 @@ export function Portal({ stay }: { stay: StayData }) {
         {/* Step 4: during the stay */}
         {/* Payments (Perplexity PX-F8, Nov 19): what was paid and, for split bookings, the second payment and its status. */}
         {stay.payments && (() => {
-          const pm = stay.payments, b = pm.balance;
+          const pm = stay.payments, b0 = pm.balance;
+          // Test site: "Show bank approval" previews the approve flow on the sample stay (Oscar, Nov 21).
+          const b = b0 && stay.mode === "demo" && s.simBalance ? { ...b0, state: s.simBalance } : b0;
           const tag = b && { scheduled: "Scheduled", paid: "Paid", attention: "Needs attention", approve: "Needs your approval", cancelled: "Cancelled" }[b.state];
           return (
             <section className="ST-card" aria-labelledby="pay-h">
@@ -492,7 +494,9 @@ export function Portal({ stay }: { stay: StayData }) {
                 <div className="ST-payTotal"><dt>Total</dt><dd>{pm.totalText}</dd></div>
               </dl>
               {b?.state === "approve" && stay.mode === "booking" && <ApproveBalance token={stay.token} />}
-              {b?.state === "approve" ? null : b?.state === "attention"
+              {b?.state === "approve" && stay.mode === "demo" && <ApproveBalance token={stay.token} demo onPaid={() => save({ ...sRef.current, simBalance: "paid" })} />}
+              {stay.mode === "demo" && s.simBalance === "paid" && <p className="ST-dim" role="status">Thank you! Your second payment is approved and paid.</p>}
+              {b?.state === "approve" || (stay.mode === "demo" && s.simBalance === "paid") ? null : b?.state === "attention"
                 ? <p className="ST-dim ST-small" role="status">Your bank declined the second payment. <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a> and we&apos;ll send a secure link to update your card. Please never send card details in a message.</p>
                 : <p className="ST-dim ST-small">Charged to the card you booked with. Questions about a payment? <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a>.</p>}
             </section>
@@ -549,6 +553,7 @@ export function Portal({ stay }: { stay: StayData }) {
               <button className="ST-link" type="button" disabled={verified} onClick={() => save({ ...sRef.current, verifiedAt: nowText() })}>Mark ID verified</button>
               <button className="ST-link" type="button" disabled={!!s.simDay} onClick={() => save({ ...sRef.current, simDay: "morning" })}>Jump to check-in morning</button>
               <button className="ST-link" type="button" disabled={s.simDay === "checkin"} onClick={() => save({ ...sRef.current, simDay: "checkin" })}>Jump to check-in time (4 PM)</button>
+              <button className="ST-link" type="button" disabled={s.simBalance === "approve"} onClick={() => { save({ ...sRef.current, simBalance: "approve" }); setTimeout(() => document.getElementById("pay-h")?.scrollIntoView({ behavior: "smooth", block: "center" }), 50); }}>Show bank approval (2nd payment)</button>
               <button className="ST-link" type="button" onClick={() => { save(fresh()); setAgree(false); setName(stay.holder); setEsign("idle"); setIdState("idle"); setIdMsg(""); setAllSetNow(false); scrollTo({ top: 0 }); }}>Reset sandbox</button>
             </div>
           </section>
@@ -565,10 +570,12 @@ function linkify(text: string) {
 }
 
 /** F17: the guest approves a second payment their bank flagged, through Stripe's bank check. */
-function ApproveBalance({ token }: { token: string }) {
+function ApproveBalance({ token, demo, onPaid }: { token: string; demo?: boolean; onPaid?: () => void }) {
   const [st, setSt] = useState<"idle" | "working" | "paid" | "error">("idle"), [msg, setMsg] = useState("");
   const run = async () => {
     setSt("working"); setMsg("");
+    // Sample stay: no real bank check; pause like one would, then show the approved state.
+    if (demo) { setTimeout(() => { setSt("paid"); onPaid?.(); }, 2500); return; }
     try {
       const g = await fetch(`/api/stay/${token}/balance`, { cache: "no-store" }).then((r) => r.json());
       if (g.state === "succeeded") { setSt("paid"); return; }
@@ -583,7 +590,7 @@ function ApproveBalance({ token }: { token: string }) {
       setSt("paid");
     } catch (e) { setSt("error"); setMsg((e as Error).message); }
   };
-  if (st === "paid") return <p className="ST-dim" role="status">Thank you! Your second payment is approved and paid.</p>;
+  if (st === "paid") return demo ? null : <p className="ST-dim" role="status">Thank you! Your second payment is approved and paid.</p>;
   return (
     <div className="ST-approve">
       <p className="ST-dim">Your bank asked you to approve this payment. Nothing has been charged yet.</p>
