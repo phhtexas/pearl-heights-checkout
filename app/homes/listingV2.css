@@ -258,6 +258,8 @@ button.V-room { display: flex; flex-direction: column; justify-content: flex-sta
 .V-footer a { color: var(--V-link); text-decoration: none; min-height: 24px; display: inline-flex; align-items: center; }
 .V-footer a:hover { text-decoration: underline; }
 .V-footLinks em { font-style: normal; color: #5c6064; }
+/* Footer links in two columns (Oscar, Nov 21): fills down the left column first, then the right. */
+.V-footer .V-footLinks { display: grid; grid-template-columns: repeat(2, max-content); grid-auto-flow: column; grid-template-rows: repeat(3, auto); column-gap: 40px; row-gap: 10px; }
 .V-footSmall { margin: 0; font-size: 12.5px; color: #6a6e72; }
 
 /* Photo arrows: desktop only (phones swipe; the counter opens the full tour). */

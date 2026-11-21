@@ -321,7 +321,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
         <section className="V-host">
           <HostPhoto home={home} size={44} />
           <div><b>Hosted by {home.host.names}</b><span>{home.host.facts[0]} · {home.host.facts.find((f) => /reply/i.test(f)) ?? ""}</span></div>
-          <button type="button" className="V-msgIcon" aria-label={`Message ${home.host.names}`} data-cta="message_hosts_icon" onClick={() => setAsk(true)}><ChatIcon /></button>
+          <button type="button" className="V-msgIcon" aria-label="Message us" data-cta="message_hosts_icon" onClick={() => setAsk(true)}><ChatIcon /></button>
         </section>
 
         <ul id="overview" className="V-high">{home.highlights.map((h) => <li key={h.title}><Icon name={iconFor(h.title)} size={28} /><div><b>{h.title}</b><span>{h.text}</span></div></li>)}</ul>
@@ -391,7 +391,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
             <div><b>{home.host.names}</b><ul>{home.host.facts.map((f) => <li key={f}>{f}</li>)}</ul></div>
           </div>
           <p className="V-p">{home.host.bio}</p>
-          <button type="button" className="V-outline V-msgBtn" data-cta="message_hosts" onClick={() => setAsk(true)}><ChatIcon size={20} />Message {home.host.names}</button>
+          <button type="button" className="V-outline V-msgBtn" data-cta="message_hosts" onClick={() => setAsk(true)}><ChatIcon size={20} />Message us</button>
           <p className="V-msgNote">Ask about these dates, the home or the area. We usually reply within an hour.</p>
         </section>
 
@@ -453,7 +453,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
           <ul className="V-footLinks">
             <li><a href="/about">About us</a></li>
             <li><a href="/policies/cancellation">Cancellation policy</a></li>
-            {GUIDES.filter((g) => g.approved && g.homes.some((h) => h.key === home.key)).map((g) => <li key={g.slug}><a href={`/guides/${g.slug}`}>Local guide: {g.title}</a></li>)}
+            {GUIDES.filter((g) => g.approved && g.homes.some((h) => h.key === home.key)).map((g) => <li key={g.slug}><a href={`/guides/${g.slug}`} title={g.title}>Local guide</a></li>)}
             {LAUNCHED
               ? <><li><a href="/terms">Terms of service</a></li><li><a href="/privacy">Privacy policy</a></li></>
               : <><li><span>Terms of service <em>(coming soon)</em></span></li><li><span>Privacy policy <em>(coming soon)</em></span></li></>}
