@@ -89,6 +89,8 @@ export async function POST(req: Request) {
           bookingRef: ref, dates: shortRange(input.checkIn, input.checkOut), guests: input.adults + input.children, deadline,
           paidToday: usd(qq.plan.dueNow), balanceLine: qq.plan.scheduled ? `${usd(qq.plan.scheduled.amount)} on ${day(qq.plan.scheduled.chargeAt)}` : undefined,
           nonRefundable: qq.nonRefundable, origin: new URL(req.url).origin,
+          propertyKey: input.property, checkIn: input.checkIn, checkOut: input.checkOut,
+          adults: input.adults, children: input.children, infants: input.infants, quote: qq, bookedAt: new Date(),
         }).catch(() => "failed" as const);
         console.info("[email] booking", ref, outcome);
       }

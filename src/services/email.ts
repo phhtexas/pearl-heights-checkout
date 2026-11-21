@@ -1,5 +1,7 @@
 import type { Db } from "../db/client";
 import { issueStayLink } from "./stayLinks";
+import type { Quote } from "../domain/quote";
+import { buildReceipt, buildStayCard, shortDay } from "./emailBlocks";
 
 /**
  * Booking confirmation email through Resend (Oscar, Nov 18). Sent to every direct booking (transactional: no opt-in
@@ -32,76 +34,39 @@ export interface ConfirmationEmailData {
   paidToday: string;        // "$1,234.56"
   balanceLine?: string;     // "$600.00 on Tue, Jan 26"
   nonRefundable: boolean;
+  /** Oscar, Nov 20 redesign: listing card (name, never the address; full dates) and itemized payment summary. */
+  propertyKey?: string; checkIn?: string; checkOut?: string; adults?: number; children?: number; infants?: number;
+  quote?: Quote; bookedAt?: Date;
 }
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
+/**
+ * Booking confirmation (#3), redesigned with Oscar on Nov 20: headline + logo, the required steps as the main action,
+ * the listing card with full check-in/out, an itemized payment summary, and the full footer.
+ */
 export function confirmationEmail(d: ConfirmationEmailData): { subject: string; html: string; text: string } {
-  const subject = `You're booked at ${d.homeName}, ${d.dates} (${d.bookingRef})`;
-  const guests = `${d.guests} ${d.guests === 1 ? "guest" : "guests"}`;
-  const cancel = d.nonRefundable
-    ? "This reservation is non-refundable."
-    : "Free cancellation: cancel within 24 hours of booking for a full refund.";
-  const paid = `Paid today: ${d.paidToday}${d.balanceLine ? ` · ${d.balanceLine}` : ""}`;
-
-  const text = [
-    `You're booked, ${d.firstName}!`,
-    "Payment received. Your dates are reserved.",
-    "",
-    "COMPLETE YOUR REQUIRED STEPS",
-    `Sign the rental agreement and verify your ID by ${d.deadline}. It takes about 2 minutes.`,
-    `Complete required steps: ${d.link}`,
-    "Once both are complete, you'll get your check-in details on your stay page.",
-    "",
-    `${d.homeName}`,
-    `Booking ${d.bookingRef}`,
-    `${d.dates} · ${guests}`,
-    "Check-in after 4:00 PM · Check-out by 10:00 AM",
-    "",
-    paid,
-    cancel,
-    "",
-    `Questions? Reply to this email or write to ${REPLY_TO}.`,
-    "",
-    "Pearl Heights Homes · San Antonio, Texas",
-    "Keep this email. The link above opens your private stay page.",
-  ].join("\n");
-
-  const C = { ink: "#1D1D1F", dim: "#5E5E63", line: "#E3E3E6", green: "#0F6B52", soft: "#F3F7F5", bg: "#F6F6F4" };
-  const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
-<body style="margin:0;padding:0;background:${C.bg};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${C.ink}">
-<div style="display:none;max-height:0;overflow:hidden">Sign the rental agreement and verify your ID by ${esc(d.deadline)}.</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg}"><tr><td align="center" style="padding:24px 12px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px;overflow:hidden">
-<tr><td style="padding:24px 28px 20px">${headRow(`<h1 style="margin:0 0 6px;font-size:26px;line-height:1.25">You're booked, ${esc(d.firstName)}!</h1>
-  <p style="margin:0;font-size:16px;color:${C.dim}">Payment received. Your dates are reserved.</p>`)}</td></tr>
-<tr><td style="padding:0 28px">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.soft};border:1px solid #CFE3DA;border-radius:12px"><tr><td style="padding:20px">
-    <h2 style="margin:0 0 8px;font-size:19px">Complete your required steps</h2>
-    <p style="margin:0 0 16px;font-size:15px;line-height:1.5">Sign the rental agreement and verify your ID by <b>${esc(d.deadline)}</b>.</p>
-    <a href="${esc(d.link)}" style="display:inline-block;background:${C.green};color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:14px 22px;border-radius:10px">Complete required steps &rarr;</a>
-    <p style="margin:12px 0 0;font-size:14px;color:${C.dim}">Takes about 2 minutes. Once both are complete, you'll get your check-in details on your stay page.</p>
-  </td></tr></table>
-</td></tr>
-<tr><td style="padding:20px 28px 0">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${C.line};border-radius:12px"><tr>
-    ${d.photoUrl ? `<td width="112" style="padding:12px 0 12px 12px;vertical-align:top"><img src="${esc(d.photoUrl)}" width="100" height="100" alt="" style="display:block;width:100px;height:100px;object-fit:cover;border-radius:8px"></td>` : ""}
-    <td style="padding:12px 14px;vertical-align:top;font-size:14px;line-height:1.5">
-      <div style="font-size:16px;font-weight:600">${esc(d.homeName)}</div>
-      <div style="color:${C.dim}">Booking ${esc(d.bookingRef)}</div>
-      <div>${esc(d.dates)} · ${guests}</div>
-      <div style="color:${C.dim}">Check-in after 4:00 PM · Check-out by 10:00 AM</div>
-    </td>
-  </tr></table>
-</td></tr>
-<tr><td style="padding:16px 28px 0;font-size:14px;line-height:1.6;color:${C.dim}">
-  <div>${esc(paid)}</div>
-  <div>${esc(cancel)}</div>
-  <div>Questions? Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:${C.green}">${REPLY_TO}</a>.</div>
-</td></tr>
-<tr><td style="padding:24px 28px 28px;font-size:12px;color:${C.dim}">Pearl Heights Homes · San Antonio, Texas<br>Keep this email. The button above opens your private stay page.</td></tr>
-</table></td></tr></table></body></html>`;
-  return { subject, html, text };
+  const cancel = d.nonRefundable ? "This reservation is non-refundable." : "Free cancellation: cancel within 24 hours of booking for a full refund.";
+  const stay = d.propertyKey && d.checkIn && d.checkOut
+    ? buildStayCard({ propertyKey: d.propertyKey, checkIn: d.checkIn, checkOut: d.checkOut, ref: d.bookingRef, adults: d.adults, children: d.children, infants: d.infants })
+    : { home: d.homeName, area: "San Antonio, Texas", rows: [["Dates", d.dates], ["Check-in", "After 4:00 PM"], ["Check-out", "By 10:00 AM"], ["Guests", `${d.guests} ${d.guests === 1 ? "guest" : "guests"}`], ["Booking", d.bookingRef]] as [string, string][] };
+  const q = d.quote;
+  const receipt = q
+    ? buildReceipt(q, [{ label: `Paid ${shortDay(d.bookedAt ?? new Date())}`, cents: q.plan.dueNow, paid: true },
+        ...(q.plan.scheduled ? [{ label: `Second payment, due ${shortDay(new Date(q.plan.scheduled.chargeAt))}`, cents: q.plan.scheduled.amount, paid: false }] : [])], 0, cancel)
+    : { lines: [], total: d.paidToday, payments: [["Paid today", d.paidToday] as [string, string], ...(d.balanceLine ? [["Second payment", d.balanceLine] as [string, string]] : [])], note: cancel };
+  return noticeEmail({
+    subject: `You're booked, ${d.firstName}! ${d.dates} (${d.bookingRef})`,
+    preheader: `Sign the rental agreement and verify your ID by ${d.deadline}.`,
+    heading: `You're booked, ${d.firstName}!`,
+    subheading: "Your stay is confirmed. Here's everything you need before you arrive.",
+    paragraphs: [],
+    cta: { title: "Complete your required steps", text: "Sign the rental agreement and verify your ID by ", bold: d.deadline,
+      button: { label: "Complete required steps", url: d.link },
+      note: "Takes about 2 minutes. Once both are complete, you'll get your check-in details on your stay page. Keep this email: the button opens your private stay page." },
+    stay, receipt,
+    footer: { bookingRef: d.bookingRef },
+  });
 }
 
 /**
@@ -112,12 +77,14 @@ export interface NoticeContent {
   subject: string;
   preheader: string;
   heading: string;
+  /** Short line under the headline, beside the logo. */
+  subheading?: string;
   paragraphs: string[];
   list?: string[];
   button?: { label: string; url: string };
   afterButton?: string[];
   /** Primary call to action in a highlighted box under the headline (Oscar, Nov 20), like the confirmation email's. */
-  cta?: { title: string; text: string; button: { label: string; url: string }; note?: string };
+  cta?: { title: string; text: string; bold?: string; button: { label: string; url: string }; note?: string };
   /** Stay card (Oscar, Nov 20): listing name (never the street address), area, and labeled rows (Check-in, Check-out...). */
   stay?: { home: string; area: string; rows: [label: string, value: string][] };
   /** Payment summary (Oscar, Nov 20, like an itemized receipt): price lines, total, then what was paid and what's due. */
@@ -132,7 +99,7 @@ const FOOTER_LINKS: [string, string][] = [["Our homes", "/"], ["About us", "/abo
 function ctaBox(c: NonNullable<NoticeContent["cta"]>) {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 20px;background:#F3F7F5;border:1px solid #D7E6DF;border-radius:12px"><tr><td style="padding:20px">
 <div style="font-size:19px;font-weight:700;margin:0 0 6px">${esc(c.title)}</div>
-<p style="margin:0 0 16px;font-size:15px;line-height:1.55">${esc(c.text)}</p>
+<p style="margin:0 0 16px;font-size:15px;line-height:1.55">${esc(c.text)}${c.bold ? `<b>${esc(c.bold)}</b>.` : ""}</p>
 <a href="${esc(c.button.url)}" style="display:inline-block;background:#0F6B52;color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:14px 22px;border-radius:10px">${esc(c.button.label)} &rarr;</a>
 ${c.note ? `<p style="margin:14px 0 0;font-size:14px;line-height:1.5;color:#5E5E63">${esc(c.note)}</p>` : ""}
 </td></tr></table>`;
@@ -156,18 +123,24 @@ ${r.note ? `<p style="margin:10px 0 0;font-size:13px;line-height:1.5;color:#5E5E
 </td></tr></table>`;
 }
 
-function fullFooter(f: NonNullable<NoticeContent["footer"]>, year: number) {
-  const small = (t: string, b: string) => `<p style="margin:0 0 12px;font-size:12px;line-height:1.55;color:#6B6B70"><b style="color:#3A3A3E">${esc(t)}</b><br>${esc(b)}</p>`;
-  return `<tr><td style="padding:24px 28px 8px;border-top:1px solid #ECEBE8">
+/** Bottom of the white card: logo, questions, site links, Instagram (Oscar, Nov 20). */
+function cardFooter() {
+  return `<tr><td style="padding:24px 28px 26px;border-top:1px solid #ECEBE8">
+<a href="${SITE_URL}/" style="text-decoration:none"><img src="${LOGO_URL}" width="64" height="56" alt="Pearl Heights Homes" style="display:block;border:0;width:64px;height:56px;margin:0 0 16px"></a>
 <div style="font-size:16px;font-weight:700;margin:0 0 4px">Questions about your stay?</div>
 <p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:#5E5E63">Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:#0F6B52">${REPLY_TO}</a>. Oscar &amp; Fernanda usually reply within an hour.</p>
 <p style="margin:0 0 6px;font-size:14px;line-height:2">${FOOTER_LINKS.map(([t, u]) => `<a href="${SITE_URL}${u}" style="display:inline-block;margin-right:18px;color:#1D1D1F;font-weight:600;text-decoration:none;white-space:nowrap">${t}</a>`).join("")}</p>
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 20px"><tr>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 0"><tr>
 <td valign="middle" style="padding-right:8px"><a href="https://www.instagram.com/pearlheightshomes" style="text-decoration:none"><img src="${IG_ICON}" width="24" height="24" alt="Instagram" style="display:block;border:0;width:24px;height:24px"></a></td>
 <td valign="middle" style="font-size:14px"><a href="https://www.instagram.com/pearlheightshomes" style="color:#0F6B52;text-decoration:none">Follow us on Instagram @pearlheightshomes</a></td></tr></table>
-<a href="${SITE_URL}/" style="text-decoration:none"><img src="${LOGO_URL}" width="64" height="56" alt="Pearl Heights Homes" style="display:block;border:0;width:64px;height:56px"></a>
-</td></tr>
-<tr><td style="padding:16px 12px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EEEBE5;border-radius:12px"><tr><td style="padding:18px 16px 20px">
+</td></tr>`;
+}
+
+/** Full-width grey band under the card, rounded top corners: about this email, booking record, legal line. */
+function legalBand(f: NonNullable<NoticeContent["footer"]>, year: number) {
+  const small = (t: string, b: string) => `<p style="margin:0 0 12px;font-size:12px;line-height:1.55;color:#6B6B70"><b style="color:#3A3A3E">${esc(t)}</b><br>${esc(b)}</p>`;
+  return `<tr><td align="center" style="background:#EEEBE5;border-radius:18px 18px 0 0;padding:26px 12px 36px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px"><tr><td style="padding:0 28px">
 ${small("About this email", `This is a service message about your booking${f.bookingRef ? ` ${f.bookingRef}` : ""}. You'll receive booking emails like this one even if you've unsubscribed from our promotional emails.`)}
 ${small("Your booking record", "Pearl Heights Homes keeps the official record of your booking and payments. If anything in this email doesn't match what you expected, reply and we'll sort it out.")}
 <p style="margin:0;font-size:11px;line-height:1.55;color:#8A8A8F;text-transform:uppercase;letter-spacing:.03em">© ${year} PR Portfolio Properties LLC, doing business as Pearl Heights Homes · San Antonio, Texas</p>
@@ -180,9 +153,11 @@ export function noticeEmail(n: NoticeContent): { subject: string; html: string; 
   const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(n.subject)}</title></head>
 <body style="margin:0;padding:0;background:${C.bg};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${C.ink}">
 <div style="display:none;max-height:0;overflow:hidden">${esc(n.preheader)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg}"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg}"><tr><td align="center" style="padding:24px 12px ${n.footer ? "28px" : "24px"}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px"><tr><td style="padding:28px">
-<div style="margin:0 0 14px">${headRow(`<h1 style="margin:0;font-size:23px;line-height:1.3">${esc(n.heading)}</h1>`)}</div>
+<div style="margin:0 0 18px">${headRow(n.subheading
+  ? `<h1 style="margin:0 0 6px;font-size:26px;line-height:1.25">${esc(n.heading)}</h1><p style="margin:0;font-size:16px;line-height:1.45;color:${C.dim}">${esc(n.subheading)}</p>`
+  : `<h1 style="margin:0;font-size:23px;line-height:1.3">${esc(n.heading)}</h1>`)}</div>
 ${n.paragraphs.map(p).join("\n")}
 ${n.cta ? ctaBox(n.cta) : ""}
 ${n.stay ? stayCard(n.stay) : ""}
@@ -192,9 +167,9 @@ ${(n.afterButton ?? []).map((s) => `<p style="margin:0 0 12px;font-size:14px;lin
 ${n.receipt ? receiptBlock(n.receipt) : ""}
 ${n.footer ? "" : `<p style="margin:18px 0 0;font-size:14px;color:${C.dim}">Questions? Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:${C.green}">${REPLY_TO}</a>.</p>
 <p style="margin:22px 0 0;font-size:12px;color:${C.dim}">Pearl Heights Homes · San Antonio, Texas</p>`}
-</td></tr>${n.footer ? fullFooter(n.footer, new Date().getFullYear()) : ""}</table></td></tr></table></body></html>`;
-  const text = [n.heading, "", ...n.paragraphs,
-    ...(n.cta ? ["", n.cta.title, n.cta.text, `${n.cta.button.label}: ${n.cta.button.url}`, ...(n.cta.note ? [n.cta.note] : [])] : []),
+</td></tr>${n.footer ? cardFooter() : ""}</table></td></tr>${n.footer ? legalBand(n.footer, new Date().getFullYear()) : ""}</table></body></html>`;
+  const text = [n.heading, ...(n.subheading ? [n.subheading] : []), "", ...n.paragraphs,
+    ...(n.cta ? ["", n.cta.title.toUpperCase(), `${n.cta.text}${n.cta.bold ? `${n.cta.bold}.` : ""}`, `${n.cta.button.label}: ${n.cta.button.url}`, ...(n.cta.note ? [n.cta.note] : [])] : []),
     ...(n.stay ? ["", n.stay.home, n.stay.area, ...n.stay.rows.map(([k, v]) => `${k}: ${v}`)] : []),
     ...(n.list ?? []).map((l) => `- ${l}`),
     ...(n.button ? ["", `${n.button.label}: ${n.button.url}`] : []), ...(n.afterButton?.length ? ["", ...n.afterButton] : []),

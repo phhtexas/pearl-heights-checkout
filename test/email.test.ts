@@ -51,7 +51,7 @@ describe("booking confirmation email", () => {
   });
   it("has the booking, the deadline, the button and cancellation terms, and nothing private; HTML is escaped", () => {
     const m = confirmationEmail({ ...o, firstName: "<b>Ana</b>", link: "https://x/stay/abc" });
-    expect(m.subject).toBe("You're booked at 752 Myrtle, Apr 12–14 (PH-EML001)");
+    expect(m.subject).toBe("You're booked, <b>Ana</b>! Apr 12–14 (PH-EML001)");
     for (const s of [m.html, m.text]) {
       expect(s).toContain("https://x/stay/abc");
       expect(s).toContain("Friday, April 9, 2027 at 4:00 PM CT");
@@ -62,6 +62,26 @@ describe("booking confirmation email", () => {
     }
     expect(m.html).not.toContain("<b>Ana</b>");
     expect(confirmationEmail({ ...o, nonRefundable: true, link: "x" }).text).toContain("non-refundable");
+  });
+  it("Nov 20 redesign: listing name (no street address), full dates, itemized payment summary, footer", () => {
+    const quote = { nights: 2, lodging: 80000, extraGuestFee: 0, cleaning: 22500, protection: 7900, taxableBase: 102500, tax: 17150, taxRate: 0.1673, total: 127550,
+      plan: { split: true, dueNow: 63775, scheduled: { amount: 63775, chargeAt: new Date("2027-03-13T22:00:00Z") } }, fullPlan: { split: false, dueNow: 127550 },
+      nonRefundable: false, processingFeeBase: 102500 } as any;
+    const m = confirmationEmail({ ...o, link: "https://x/stay/abc", propertyKey: "752", checkIn: "2027-04-12", checkOut: "2027-04-14", adults: 2, children: 1, infants: 0,
+      quote, bookedAt: new Date("2026-11-20T18:00:00Z") });
+    for (const s of [m.html, m.text]) {
+      expect(s).not.toContain("752 Myrtle");
+      expect(s).toContain("Walk to Pearl Riverwalk");
+      expect(s).toContain("Monday, April 12, 2027 @ 4:00 PM");
+      expect(s).toContain("Wednesday, April 14, 2027 @ 10:00 AM");
+      expect(s).toContain("Payment summary".toUpperCase() === "PAYMENT SUMMARY" && s === m.text ? "PAYMENT SUMMARY" : "Payment summary");
+      expect(s).toContain("$1,275.50");
+      expect(s).toContain("Second payment, due Mar 13, 2027");
+      expect(s).toContain("Balance due");
+      expect(s).toContain("Complete required steps");
+    }
+    expect(m.html).toContain("About this email");
+    expect(m.html).toContain("instagram.com/pearlheightshomes");
   });
   it("sends once per booking through Resend with a fresh stay link; a retry doesn't email again", async () => {
     await book("PH-EML001");
