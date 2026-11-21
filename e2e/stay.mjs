@@ -12,8 +12,8 @@ for (const [tag, ctx] of [["phone", devices["iPhone 13"]], ["desktop", { viewpor
   ok(/Sandbox mode/.test(await page.locator(".ST-test").innerText()), `${tag}: labeled as sandbox`);
   ok(/Due by/.test(await page.locator(".ST-due").innerText()), `${tag}: shows the sign-and-verify deadline`);
   ok(/^Hi Test! We're excited to host you\.$/.test(await page.locator("h1").innerText()), `${tag}: personal greeting with the guest's first name`);
-  ok((await page.locator(".ST-steps .is-now").innerText()).includes("Complete paperwork"), `${tag}: current step is Complete paperwork`);
-  ok(/You’re booked!|You're booked!/.test(await page.locator(".ST-booked").innerText()) && /completing ID verification/.test(await page.locator(".ST-booked").innerText()), `${tag}: "You're booked!" box`);
+  ok((await page.locator(".ST-steps .is-now").innerText()).includes("Complete required steps"), `${tag}: current step is Complete required steps`);
+  ok(/You’re booked!|You're booked!/.test(await page.locator(".ST-booked").innerText()) && /verify your ID/.test(await page.locator(".ST-booked").innerText()), `${tag}: "You're booked!" box`);
   const body = () => page.evaluate(() => document.body.innerText);
   ok(!/Test address/.test(await body()) && (await page.locator(".ST-lockNote").count()) === 1, `${tag}: arrival details locked before signing and verifying`);
   // sign: one tap; the name is edited inside the agreement, so no name field or "Fix it" link on the page

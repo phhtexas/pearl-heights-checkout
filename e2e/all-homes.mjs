@@ -18,7 +18,7 @@ for (const v of ["c"]) for (const dev of [devices["iPhone 13"], { viewport: { wi
   ok((await page.textContent("h1")).includes("Find your San Antonio stay"), `${tag}: headline`);
   ok((await page.locator('[id^="home-"]').count()) >= 5, `${tag}: five homes`);
   const text = await page.evaluate(() => document.body.innerText);
-  ok(text.includes("4.98 average across 463 Airbnb guest reviews"), `${tag}: trust proof before the homes`);
+  ok(text.includes("4.98/5 from 463 Airbnb guest reviews"), `${tag}: trust proof before the homes`);
   ok(text.indexOf("Book directly with local hosts") < text.indexOf("Large Family House Next to the Pearl"), `${tag}: trust appears before the homes`);
   ok((text.match(/Add dates for the total/g) ?? []).length === 5, `${tag}: no dates -> "Add dates for the total" on every card`);
   ok(!/best rate|no fees|cheaper|less than airbnb|#1|facebook/i.test(text), `${tag}: no banned claims`);
@@ -166,7 +166,7 @@ for (const dev of [devices["iPhone 13"], { viewport: { width: 1366, height: 900 
   for (const id of ["homes", "locations", "reviews", "faq"]) ok((await page.locator(`#${id}`).count()) === 1, `${tag}: nav target #${id}`);
   ok((await page.locator(".E-chip, .chip, select[aria-label='Sort homes']").count()) === 0, `${tag}: no filters or sort`);
   const t = await page.evaluate(() => document.body.innerText);
-  ok(t.includes("Hosted directly by Oscar & Fernanda") && t.includes("4.98 average across 463 Airbnb guest reviews") && t.includes("Secure payment through Stripe") && t.includes("Usually reply within an hour"), `${tag}: host strip`);
+  ok(t.includes("Hosted directly by Oscar & Fernanda") && t.includes("4.98/5 from 463 Airbnb guest reviews") && t.includes("Secure payment through Stripe") && t.includes("Usually reply within an hour"), `${tag}: host strip`);
   ok(t.indexOf("Hosted directly by Oscar") < t.indexOf("Choose your home") && t.indexOf("Choose your home") < t.indexOf("Large Family House Next to the Pearl"), `${tag}: search -> host strip -> homes`);
   ok(await page.evaluate(() => getComputedStyle(document.querySelector(".S-go")).backgroundColor === "rgb(18, 122, 94)"), `${tag}: C's accent kept`);
   ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${tag}: no sideways scroll`);

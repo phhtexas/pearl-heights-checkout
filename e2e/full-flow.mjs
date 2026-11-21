@@ -32,11 +32,11 @@ ok((await page.locator('[data-optin="email"] input').isChecked()) && !(await pag
 ok((await page.locator('[data-optin="sms"]').innerText()).includes("Pearl Heights Homes at 2105550100"), "text-message box names the mobile number");
 ok(/Reply STOP to opt out and HELP for help/.test(await page.locator('[data-optin="sms"]').innerText()), "text-message box shows STOP/HELP");
 // Nov 20 (Oscar): tapping Pay before the box is ticked sends nothing; it jumps to the box and says why.
-ok(/Tick the authorization box above/.test(await page.locator("footer .agreeHint").innerText()), "hint under Pay while the required box is unticked");
+ok(/Check the authorization box above/.test(await page.locator("footer .agreeHint").innerText()), "hint under Pay while the required box is unticked");
 await page.locator("footer .btn").click();
 await page.waitForTimeout(400);
 ok(checkouts.length === 0, "Pay before the box: no checkout request (marketing boxes don't count)");
-ok(/Please tick the authorization box/.test(await page.locator("footer .agreeHint").innerText()), "Pay before the box: the hint turns into an alert");
+ok(/Please check the authorization box/.test(await page.locator("footer .agreeHint").innerText()), "Pay before the box: the hint turns into an alert");
 ok(await page.evaluate(() => document.activeElement?.id === "agree-box"), "Pay before the box: focus moves to the box");
 await page.locator('label.chk:has([data-consent]) input[type="checkbox"]').check();
 await page.waitForFunction(() => /Confirm and pay/.test(document.querySelector("footer .btn")?.textContent ?? ""));

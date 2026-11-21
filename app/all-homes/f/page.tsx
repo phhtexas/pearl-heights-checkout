@@ -24,11 +24,11 @@ export const dynamic = "force-static";
 const AV = ["#d9ebe3", "#efe3d3", "#e4e2f0", "#f3dcd6", "#dde8ef"];
 
 const INCLUDES: [string, string][] = [
-  ["Damage waiver — $5,000 coverage", "Covers accidental damage during your stay, up to $5,000, subject to the provider's terms and exclusions. It isn't a security deposit."],
+  ["Damage waiver with up to $5,000 in coverage", "Covers accidental damage during your stay, up to $5,000, subject to the provider's terms and exclusions. It isn't a security deposit."],
   ["Your full total, taxes included, before you pay", "You see the exact total, with taxes and the damage waiver, before you pay. Pay in full, or half now when check-in is 37 or more days away."],
   ["Secure payment through Stripe", "You enter your card in Stripe's secure payment form, and the card details go straight to Stripe. We never see your full card number."],
-  ["A private stay page with your check-in steps", "After verification, your personal guest portal has the address and entry instructions, and you can message us there. Your door code and Wi-Fi arrive on check-in morning."],
-  ["Hosts who usually reply within an hour", "Questions go straight to Oscar and Fernanda, not a call center. We usually reply within an hour."],
+  ["A private stay page with your check-in steps", "Once your rental agreement and ID check are complete, your private stay page shows your arrival instructions. You can also message us there. Final access details arrive on check-in morning."],
+  ["Message your hosts directly", "Your questions go straight to Oscar & Fernanda. We usually reply within an hour."],
 ];
 
 function Ico({ name }: { name: string }) {
@@ -69,7 +69,7 @@ export default function Page() {
         <div><b>Hosted directly by Oscar &amp; Fernanda</b><span>Airbnb Superhosts · Local San Antonio hosts</span></div>
       </div>
       <ul>
-        <li><span className="F-stripIc" aria-hidden="true">★</span>4.98 average across 463 Airbnb guest reviews</li>
+        <li><span className="F-stripIc" aria-hidden="true">★</span>4.98/5 from 463 Airbnb guest reviews</li>
         <li><span className="F-stripIc" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /></svg></span>Secure payment through Stripe</li>
         <li><span className="F-stripIc" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 12a7.5 7.5 0 0 1-11 6.6L4 20l1.4-4.6A7.5 7.5 0 1 1 20 12z" /></svg></span>Usually reply within an hour</li>
       </ul>
@@ -79,9 +79,9 @@ export default function Page() {
   // "Booking directly is simple" as a timeline (Oscar: RevWhisper's Day 0 -> Every day after line), with our real steps.
   // Oscar's own wording, Nov 17 (replaces the 5-step version). Guest portal messaging per Oscar.
   const TIMELINE = [
-    { when: "Step 1", title: "Book your home", text: "See your full price before you book. Pay in full or split your payment when check-in is 37 or more days away." },
-    { when: "Step 2", title: "Confirm your reservation", text: "Within 24 hours, sign the rental agreement and verify your ID online. It takes about 2 minutes." },
-    { when: "Step 3", title: "Get ready for arrival", text: "After verification, your personal guest portal has the address and entry instructions, and you can message us there. Your door code and Wi-Fi arrive on check-in morning." },
+    { when: "Step 1", title: "Book your home", text: "See your full total before you pay. Pay in full, or choose two payments if check-in is at least 37 days away." },
+    { when: "Step 2", title: "Complete your check-in steps", text: "Sign the rental agreement and verify your ID online. It takes about 2 minutes. Check your confirmation for the exact deadline, which can be up to 24 hours after booking." },
+    { when: "Step 3", title: "Get ready for arrival", text: "Once your rental agreement and ID check are complete, your private stay page shows your arrival instructions. You can also message us there. Final access details arrive on check-in morning." },
     { when: "Step 4", title: "Enjoy your stay", text: "Check in after 4:00 p.m. and check out by 10:00 a.m. Questions? Message Oscar and Fernanda\u2014we usually reply within an hour." },
   ];
 
@@ -159,7 +159,7 @@ export default function Page() {
         <section className="F-sec F-band" aria-labelledby="every-h">
           <div className="F-head" data-reveal>
             <h2 id="every-h">Every home has</h2>
-            <p>Checked against each home&apos;s amenity list.</p>
+            <p>Available at all five homes.</p>
           </div>
           <ul className="F-amen">{EVERY_HOME.map((a, i) => <li key={a.label} data-reveal style={{ ["--d" as string]: `${(i % 4) * 70}ms` }}><Ico name={a.icon} /><span>{a.label}</span></li>)}</ul>
         </section>

@@ -8,3 +8,5 @@
 .P-lead { color: #3a3f44; }
 .P-list { padding-left: 20px; display: flex; flex-direction: column; gap: 12px; }
 .P-note { margin-top: 32px; font-size: 14px; color: #6a6e72; }
+
+.P-sub { margin: 8px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }

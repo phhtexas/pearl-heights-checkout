@@ -326,7 +326,7 @@ export function Portal({ stay }: { stay: StayData }) {
 
         {/* Progress, same 4 steps as All Homes F */}
         <ol className="ST-steps" aria-label="Your booking steps">
-          {["Your home is booked", "Complete paperwork", "Receive check-in details", "Enjoy your stay"].map((t, i) => {
+          {["Your home is booked", "Complete required steps", "Receive check-in details", "Enjoy your stay"].map((t, i) => {
             const n = i + 1, done = n < step || (n === 1), now = n === step && !done;
             const sub = n === 2 && !unlocked && (signed || verified) ? "1 of 2 done" : "";
             return <li key={t} className={`${done ? "is-done" : now ? "is-now" : ""}${sub ? " is-half" : ""}`} aria-current={now ? "step" : undefined}><span className="ST-dot">{done ? <Ico d={I.check} size={14} /> : n}</span><span>{t}{sub && <small className="ST-sub">{sub}</small>}</span></li>;
@@ -347,8 +347,8 @@ export function Portal({ stay }: { stay: StayData }) {
                 <p className="ST-bookedB">Paperwork complete. Your check-in details are below.</p>
               </>) : (<>
                 <p className="ST-bookedH">You&apos;re booked!</p>
-                <p className="ST-bookedB">Payment received. Your dates are reserved. The only items left are signing the rental agreement and completing ID verification.</p>
-                <p className="ST-bookedS">Complete both by the deadline shown below to receive your check-in details.</p>
+                <p className="ST-bookedB">Payment received. Your dates are reserved. Next, sign the rental agreement and verify your ID.</p>
+                <p className="ST-bookedS">Complete both steps by the deadline below to get your check-in details.</p>
               </>)}
             </div>
           </div>
@@ -357,7 +357,7 @@ export function Portal({ stay }: { stay: StayData }) {
             <button className="ST-btn ST-goArrive" type="button" onClick={() => document.getElementById("arrive-h")?.scrollIntoView({ behavior: "smooth", block: "start" })}>See your check-in details</button>
           ) : (<>
           <div className="ST-cardHead ST-paperHead">
-            <h2 id="confirm-h">Complete paperwork</h2>
+            <h2 id="confirm-h">Complete required steps</h2>
             <p className={`ST-due${unlocked ? " is-ok" : ""}`}>{unlocked ? "All done" : <>Due by <b>{stay.deadlineText}</b></>}</p>
           </div>
 
@@ -440,7 +440,7 @@ export function Portal({ stay }: { stay: StayData }) {
         <section className={`ST-card${unlocked ? "" : " is-locked"}`} aria-labelledby="arrive-h">
           <div className="ST-cardHead">
             <h2 id="arrive-h">Get ready for arrival</h2>
-            {!unlocked && <p className="ST-lockNote"><Ico d={I.lock} size={16} /> Unlocks after you sign and verify</p>}
+            {!unlocked && <p className="ST-lockNote"><Ico d={I.lock} size={16} /> Available after you sign the rental agreement and verify your ID.</p>}
           </div>
           {unlocked && realArrival ? (
             <ul className="ST-info">
@@ -501,7 +501,7 @@ export function Portal({ stay }: { stay: StayData }) {
 
         <section className="ST-card" aria-labelledby="know-h">
           <h2 id="know-h">House guide</h2>
-          <p className="ST-dim">Everything you need during your stay: house rules, the washer, appliances, parking, trash and our favorite places nearby.</p>
+          <p className="ST-dim">House rules, appliance instructions, parking, trash and our favorite places nearby—all in one guide.</p>
           {/* Search (Oscar, Nov 17): filters topics and lines as you type; matching topics open, matches highlighted. */}
           <div className="ST-gSearch" role="search">
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM20 20l-4.8-4.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
@@ -512,7 +512,7 @@ export function Portal({ stay }: { stay: StayData }) {
           {(gq.trim() ? guideHits : stay.thingsToKnow).map((g) => (
             <details key={g.title + (gq.trim() ? ":q" : "")} className="ST-know" open={gq.trim() ? true : g.title === "Check-in and check-out"}>
               <summary><span className="ST-kIc" aria-hidden="true"><Ico d={GUIDE_IC[g.title] ?? I.doc} size={20} /></span><span className="ST-kT">{hl(g.title)}</span></summary>
-              <ul>{g.items.map((x) => <li key={x}>{hl(x)}</li>)}</ul>
+              <ul>{g.items.map((x) => <li key={x} style={x.includes("\n") ? { whiteSpace: "pre-line" } : undefined}>{hl(x)}</li>)}</ul>
             </details>
           ))}
           <p className="ST-dim ST-small">Cancellation terms: <a href="/policies/cancellation">cancellation policy</a> · <a href="/rental-agreement">rental agreement</a></p>

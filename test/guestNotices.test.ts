@@ -76,7 +76,7 @@ describe("which notice is due", () => {
     expect(r1.text).not.toContain("Sign the rental agreement");
     expect(r1.text).toContain("https://x/stay/abc");
     const ci = noticeEmail(noticeContent("checkin_day", { ...base, agreementDone: true, idDone: true }, "https://x/stay/abc"));
-    expect(ci.text).toContain("Open my guest portal");
+    expect(ci.text).toContain("Open my stay page");
     const cx = noticeEmail(noticeContent("cancellation", { ...base, state: "cancelled", refundedCents: 123456 }, null));
     expect(cx.text).toContain("$1,234.56");
     for (const k of ["paperwork_reminder_1", "paperwork_reminder_2", "checkin_day", "cancellation"] as const)
@@ -102,7 +102,7 @@ describe("notice sweep (database)", () => {
     const f = okFetch();
     expect(await sweepGuestNotices(db, "https://pearlheightshomes.com", later, ENV, f as any)).toMatchObject({ sent: 1, failed: 0 });
     expect((f.mock.calls[0] as any)[0]).toBe("https://api.resend.com/emails");
-    expect(JSON.parse((f.mock.calls[0] as any)[1].body).subject).toMatch(/^Reminder: your booking steps for 752 Myrtle/);
+    expect(JSON.parse((f.mock.calls[0] as any)[1].body).subject).toMatch(/^Reminder: your required check-in steps for 752 Myrtle/);
     expect(await sweepGuestNotices(db, "https://pearlheightshomes.com", later, ENV, f as any)).toMatchObject({ sent: 0 });
     // Opted-in guest (confirmation text sent): the final reminder also goes by text.
     await db.query(`INSERT INTO guest_messages (booking_id, kind, channel, status) VALUES ($1, 'confirmation', 'sms', 'sent')`, [b.id]);

@@ -23,7 +23,7 @@ const own = (home: string, alt: string, caption: string): GuidePhoto => {
 /** Photos used in the Pearl guide (Commons metadata read Nov 18, 2026). */
 const PH = {
   pearl: commons("File:PearlBreweryCurrent15.JPG", "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/PearlBreweryCurrent15.JPG/1280px-PearlBreweryCurrent15.JPG",
-    "Brownings", "CC BY-SA 3.0", "https://creativecommons.org/licenses/by-sa/3.0/", "The historic Pearl brewhouse and lawn", "The Pearl, about a 3-minute walk from both homes"),
+    "Brownings", "CC BY-SA 3.0", "https://creativecommons.org/licenses/by-sa/3.0/", "The historic Pearl brewhouse and lawn", "The Pearl, a short drive from both homes"),
   tanks: commons("File:Storage_tanks_at_Pearl_Brewery,_San_Antonio,_Texas,_US.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Storage_tanks_at_Pearl_Brewery%2C_San_Antonio%2C_Texas%2C_US.jpg/1280px-Storage_tanks_at_Pearl_Brewery%2C_San_Antonio%2C_Texas%2C_US.jpg",
     "Clyde Charles Brown", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/", "Old brewery storage tanks covered in vines at the Pearl", "The old brewery tanks at the Pearl"),
   aerial: own("736", "Aerial view of the neighborhood near the Pearl", "Our neighborhood, Tobin Hill, next to the Pearl"),
@@ -78,7 +78,7 @@ export const GUIDES: Guide[] = [
     gallery: [PH.aerial, PH.tanks, PH.reachFalls, PH.reachNight, PH.brackenridge, PH.teaGarden, PH.witte],
     intro: [
       "The Pearl and the Museum Reach of the River Walk are a short walk from our two homes in Tobin Hill: about 3 minutes on foot from each one.", // 736 + 752 highlights "Walk to the Pearl"
-      "We're Oscar & Fernanda, parents of two young kids, and we set up both homes for families with babies and little ones: a play area, a crib, a high chair and child-safe touches, all on one level with no stairs inside.",
+      "We're Oscar & Fernanda, parents of two young kids. Both homes have a play area and thoughtful touches for little ones, all on one level with no stairs inside. Cribs and high chairs are available on request.",
     ],
     homes: [
       {
@@ -129,7 +129,7 @@ export const GUIDES: Guide[] = [
         heading: "A morning at Brackenridge Park",
         photo: PH.brackenridge,
         paragraphs: [
-          "The San Antonio Zoo, the DoSeum (San Antonio's children's museum) and the Witte Museum are all about a 5 to 7 minute drive from either home. They sit in and around Brackenridge Park, which also has the Japanese Tea Garden, playgrounds and the San Antonio River running through it. From 752 Myrtle, the McNay Art Museum is in the same drive range.",
+          "From either home, it's about a 5 to 7 minute drive to the San Antonio Zoo, the DoSeum children's museum and the Witte Museum. Brackenridge Park also has playgrounds, the Japanese Tea Garden and the San Antonio River. From our 3-bedroom home, the McNay Art Museum is about a 5 to 7 minute drive too.",
         ],
       },
       {
@@ -164,7 +164,7 @@ export const GUIDES: Guide[] = [
     eat: {
       heading: "Where to eat at the Pearl",
       map: { lat: 29.44228, lon: -98.47995, label: "Pearl", directions: "https://www.google.com/maps/search/?api=1&query=Pearl%2C%20San%20Antonio%2C%20TX" }, // OpenStreetMap (Nominatim) "Pearl Brewery"
-      intro: "The Pearl has more than 30 places to eat and drink, all a few minutes' walk from both homes. A few by type of meal, with each place's own description:",
+      intro: "The Pearl has more than 30 places to eat and drink, a few minutes' walk from both homes. Here are some options by type of meal.",
       groups: [
         { name: "Breakfast, coffee and bakeries", places: [
           { name: "Bakery Lorraine", what: "Classic French pastries", web: "https://bakerylorraine.com/", map: "https://maps.app.goo.gl/P2RCxY5vN7EeNbRL7", pearl: "https://atpearl.com/dine-and-drink/bakery-lorraine/", pick: true },
@@ -205,7 +205,7 @@ export const GUIDES: Guide[] = [
           { name: "Nicosi", what: "Dessert bar", web: "https://nicosisatx.com/", map: "https://maps.app.goo.gl/ZviAo4N3ahBsTYmx6", pearl: "https://atpearl.com/dine-and-drink/nicosi/" },
         ] },
       ],
-      note: "Places marked Our pick are from our own guest book. Descriptions, websites and map links for places at the Pearl come from Pearl's website; the others link to a map search. Hours and menus change, so check before you go.",
+      note: "Our pick marks a favorite from our guest book. Descriptions and links for places at the Pearl come from Pearl's website; other places link to a map search. Hours and menus change, so check before you go.",
     },
     todo: {
       heading: "Things to do nearby",
@@ -217,7 +217,7 @@ export const GUIDES: Guide[] = [
         { name: "The DoSeum", what: "San Antonio's children's museum.", distance: "About a 5–7 minute drive" },
         { name: "Witte Museum", what: "Museum next to Brackenridge Park, with a dinosaur exhibit.", distance: "About a 5–7 minute drive", photo: PH.witte },
         { name: "Japanese Tea Garden", what: "Gardens and ponds inside Brackenridge Park.", distance: "In Brackenridge Park", photo: PH.teaGarden },
-        { name: "McNay Art Museum", what: "Art museum.", distance: "About a 5–7 minute drive from 752 Myrtle" },
+        { name: "McNay Art Museum", what: "Art museum.", distance: "About a 5–7 minute drive from our 3-bedroom home" },
       ],
     },
     quotes: [
@@ -227,8 +227,8 @@ export const GUIDES: Guide[] = [
     faq: [
       { q: "How far are the homes from the Pearl?", a: "Both are about a 3-minute walk to the Pearl and the River Walk." },
       { q: "Do you have a crib and a high chair?", a: "Yes. Both homes have a crib, a pack 'n play, a high chair and a baby bath. Tell us what you'd like set up before you arrive." },
-      { q: "Which home is bigger?", a: "736 Myrtle sleeps 10 in 5 bedrooms with 3.5 baths. 752 Myrtle sleeps 8 in 3 bedrooms plus a sofa bed, with 2 full baths." },
-      { q: "Is there parking?", a: "Yes, free parking at both: up to 3 cars behind the gate at 736 Myrtle and 4 cars at 752 Myrtle, plus free street parking." },
+      { q: "Which home is bigger?", a: "Our larger home sleeps 10, with 5 bedrooms and 3.5 baths. Our 3-bedroom home sleeps 8, with a sofa bed and 2 full baths." },
+      { q: "Is there parking?", a: "Both homes have free parking. There's room for up to 3 cars behind the gate at our 5-bedroom home and 4 cars on the property at our 3-bedroom home. Free street parking is also available." },
       { q: "Do we need to pay for parking at the Pearl?", a: "Not if you walk: the Pearl is about 3 minutes from both homes. If you drive, Pearl's surface lots are free on weekdays before 3 PM and charge after that and on weekends." },
       { q: "When is the Pearl farmers market?", a: "Saturdays, with an artisan market on Sundays. Check Pearl's events calendar for that weekend's hours." },
     ],
@@ -320,11 +320,11 @@ export const GUIDES: Guide[] = [
     ],
     eat: {
       heading: "Where to eat near our Alamo Heights homes",
-      intro: "Our own favorites from our Edgewood guest book, in our words. Each links to a map search.",
+      intro: "Favorites from our Edgewood guest book, described in our own words. Each place links to a map search.",
       groups: [ // Oscar & Fernanda's guest book for 147 Edgewood (Canva p.13-14, read Nov 18, 2026)
         { name: "Our favorite restaurants nearby", places: [
           { name: "Cappy's", what: "Amazing food and service, great for brunch and dinner. Try to reserve ahead of time.", map: mapq("Cappy's Restaurant Alamo Heights San Antonio"), pick: true },
-          { name: "Soluna", what: "Mexican food, great margaritas and food", map: mapq("Soluna Alamo Heights San Antonio"), pick: true },
+          { name: "Soluna", what: "Mexican food and margaritas", map: mapq("Soluna Alamo Heights San Antonio"), pick: true },
           { name: "Paloma Blanca", what: "Mexican food and a great drinks spot", map: mapq("Paloma Blanca San Antonio"), pick: true },
           { name: "Hanzo", what: "Small bar-like place for great food and drinks", map: mapq("Hanzo Alamo Heights San Antonio"), pick: true },
           { name: "Bar Mon-Amie", what: "Nice little neighborhood bar", map: mapq("Bar Mon-Amie San Antonio"), pick: true },
@@ -394,8 +394,8 @@ export const GUIDES: Guide[] = [
       own("indianola", "Aerial view of downtown at dusk with nearby attractions labeled", "Downtown at dusk"),
     ],
     intro: [
-      "Our home at 613 Indianola is in historic Lavaca, right next to downtown San Antonio and Hemisfair Park. You can walk to the Tower of the Americas in about 2 minutes, the Alamodome in 4, Hemisfair and the Convention Center in 5, the River Walk in 8 and the Alamo in about 10.", // indianola location + highlights
-      "That means you can park once and walk everywhere: Hemisfair's playgrounds, a concert or game at the Alamodome, La Villita, the River Walk and the Alamo.",
+      "Our home is in historic Lavaca, next to downtown San Antonio and Hemisfair Park. From the house, it's about a 2-minute walk to the Tower of the Americas, 4 minutes to the Alamodome, 5 to Hemisfair and the Convention Center, 8 to the River Walk and about 10 to the Alamo.", // indianola location + highlights
+      "Park at the house and walk to nearby outings: Hemisfair's playgrounds, a concert or game at the Alamodome, La Villita, the River Walk and the Alamo.",
       "We're Oscar & Fernanda, parents of two young kids. We set the house up for families and groups: a king bed in every bedroom, a game room, and a deck with views of the Tower.",
     ],
     homes: [
@@ -427,7 +427,7 @@ export const GUIDES: Guide[] = [
       {
         heading: "Concerts, games and conventions",
         paragraphs: [
-          "The Alamodome, home to big concerts, UTSA football and the Valero Alamo Bowl, is about a 4-minute walk, and the Convention Center about 5. Park once at the house and walk to the show, with no event parking or traffic.", // alamodome.com news "Fans encouraged to plan ahead for fall events" (read Nov 18, 2026)
+          "The Alamodome hosts big concerts, UTSA football and the Valero Alamo Bowl, about a 4-minute walk from the house. The Convention Center is about 5 minutes away on foot. Leave your car at the house and walk to your event.", // alamodome.com news "Fans encouraged to plan ahead for fall events" (read Nov 18, 2026)
         ],
       },
       {
@@ -485,7 +485,7 @@ export const GUIDES: Guide[] = [
           { name: "Aleteo", what: "Rooftop dining at The Monarch", web: "https://themonarchsa.com/aleteo", map: mapq("Aleteo The Monarch San Antonio") },
         ] },
       ],
-      note: "These are the places Hemisfair lists on its own website; descriptions are shortened from those listings. Hours and menus change, so check before you go. For more of our own favorites, see our Pearl guide: the Pearl is a short drive away.",
+      note: "These places are listed on Hemisfair's website, with descriptions shortened from those listings. Hours and menus change, so check before you go. For more of our favorites, see our Pearl guide; the Pearl is a short drive away.",
     },
     todo: {
       heading: "Things to do nearby",

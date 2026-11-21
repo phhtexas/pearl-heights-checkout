@@ -70,7 +70,7 @@ ok(checkouts.length === 1, `exactly one checkout request (${checkouts.length})`)
 // 5) Broken stay link: generic, token-free, with a way back.
 const res = await page.goto(`${base}/stay/not-a-real-stay-link-qa-0000000000000000000`);
 ok(res?.status() === 404, "unknown stay link is a 404");
-ok(await page.locator("text=This link isn't working").count() === 1, "broken link page explains what happened");
+ok(await page.locator("text=This stay link isn't working").count() === 1, "broken link page explains what happened");
 ok(await page.locator('a[href="/contact"]').count() >= 1, "broken link page links to Contact");
 ok(!(await page.locator("body").innerText()).includes("not-a-real-stay-link-qa"), "the link itself is not shown on the page");
 

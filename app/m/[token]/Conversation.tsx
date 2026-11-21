@@ -33,7 +33,7 @@ export function Conversation({ token }: { token: string }) {
     const r = await fetch(`/api/inquiries/${token}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ body }) }).catch(() => null);
     const j = await r?.json().catch(() => null);
     setBusy(false);
-    if (!r?.ok) { setErr(r?.status === 429 ? "You've sent several messages. Please wait a few minutes." : j?.error ?? "Not sent. Please try again."); return; }
+    if (!r?.ok) { setErr(r?.status === 429 ? "You've sent several messages. Wait a few minutes and try again." : j?.error ?? "Your message didn't send. Please try again."); return; }
     setDraft(""); void load();
   };
   const n = inq ? inq.adults + inq.children : 0;

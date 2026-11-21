@@ -78,7 +78,7 @@ export const EVERY_HOME: { icon: string; label: string; match: RegExp }[] = [
   { icon: "ac", label: "Central air", match: /^central air conditioning$/ },
   { icon: "washer", label: "Washer and dryer", match: /^(free )?washer and (free )?dryer/ },
   { icon: "yard", label: "Fenced backyard", match: /^private, fully fenced backyard$/ },
-  { icon: "crib", label: "Crib and high chair", match: /crib/ },
+  { icon: "crib", label: "Crib and high chair on request", match: /crib/ },
   { icon: "key", label: "Self check-in", match: /^self check-in/ },
 ];
 
@@ -89,7 +89,7 @@ export function sharedFaq(cancellation: string[]): { q: string; a: string }[] {
     { q: "Why book direct?", a: f("Why book direct?") },
     { q: "What happens after I book?", a: f("What happens after I book?") },
     { q: "What are check-in and check-out times?", a: "Check-in is after 4:00 PM and check-out is before 10:00 AM at every home, with self check-in." },
-    { q: "Can I cancel?", a: cancellation.join(" ") },
+    { q: "Can I cancel?", a: cancellation.join("\n") },
     { q: "Is there a damage waiver?", a: f("Is there a damage waiver?") },
     { q: "Can I pay in two parts?", a: f("Can I pay in two parts?") },
     { q: "Are pets allowed?", a: "No pets at any of our homes." },

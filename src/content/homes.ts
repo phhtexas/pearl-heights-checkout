@@ -39,8 +39,8 @@ const HOSTS: HomeContent["host"] = {
   names: "Oscar & Fernanda",
   photo: "/homes/hosts/oscar-fernanda.jpg",
   since: "Hosting for 4 years",
-  facts: ["Airbnb Superhosts", "4.98 average across 463 Airbnb reviews of our homes", "Speak English and Spanish", "Usually reply within an hour"],
-  bio: "Hello! We’re a family of four who love to travel and experience new places and cultures. With a 5-year-old girl and a 2-year-old boy, we know the importance of comfort and hospitality. As both guests and hosts, we value cleanliness, thoughtful touches, and creating a welcoming space. We set up our homes to feel like places we’d want our own family to stay in—cozy, well-equipped, and inviting. Our goal is to ensure every stay feels like home!",
+  facts: ["Airbnb Superhosts", "4.98/5 from 463 Airbnb guest reviews", "We speak English and Spanish", "Usually reply within an hour"],
+  bio: "We're Oscar & Fernanda, San Antonio hosts and parents of two young kids. We love traveling as a family, so we set up our homes with the things we value on our own trips: clean, comfortable spaces, thoughtful touches and room to feel at home.",
   };
 
 export const HOMES: Record<string, HomeContent> = {
@@ -136,7 +136,7 @@ export const HOMES: Record<string, HomeContent> = {
     highlights: [
       { title: "Walk to the Pearl", text: "About a 3-minute walk to the Pearl, the River Walk and restaurants.", source: "A listing; confirmed by Oscar (chat, Nov 15)" },
       { title: "One level, no stairs", text: "A single-level home: no stairs inside.", source: "H/A listing" },
-      { title: "Ready for little ones", text: "A playroom with toys and books, plus a crib, pack-n-play, high chair and baby bath kept at the home and set up on request.", source: "A amenities; Oscar (chat, Nov 15): kept at the house, set up on request" },
+      { title: "Ready for little ones", text: "Playroom with toys and books. Crib, pack 'n play, high chair and baby bath kept at the home and set up on request.", source: "A amenities; Oscar (chat, Nov 15): kept at the house, set up on request" },
       { title: "Backyard and bonus room", text: "Fenced backyard with lounge seating and string lights, plus a bonus room with TV, workspace and kids' area.", source: "H/A listing" },
     ],
     summary: "A redesigned 5-bedroom, 3.5-bath home for families and groups of up to 10, close to the Pearl and the Museum Reach of the River Walk. Open kitchen with an island, living room with a smart TV, a dedicated workspace, a playroom, and a large backyard with lounge seating.",
@@ -149,7 +149,7 @@ export const HOMES: Record<string, HomeContent> = {
       { room: "Bedroom 5", beds: "1 queen bed" },
       { room: "Bathrooms", beds: "2 private (bedrooms 1 and 2) · 1 shared hall bath · 1 half bath" },
     ],
-    topAmenities: ["Full kitchen", "Fast WiFi", "Dedicated workspace", "Free parking", "Washer and dryer", "Fenced backyard", "Crib and high chair", "Playroom"],
+    topAmenities: ["Full kitchen", "Fast WiFi", "Dedicated workspace", "Free parking", "Washer and dryer", "Fenced backyard", "Crib and high chair on request", "Playroom"],
     amenityGroups: [
       { group: "Kitchen and dining", items: ["Full kitchen: electric stove, slide-in electric oven, dishwasher", "4-door French-door refrigerator and freezer", "Microwave, toaster, blender, kettle", "Drip coffee maker, French press and Keurig; coffee", "Pots and pans, oil, salt and pepper", "Dishes, silverware, wine glasses, baking sheet", "Trash compactor", "Dining table"] },
       { group: "Family", items: ["Children's playroom with toys, books and games", "Children's books and toys (ages 0–2 and 2–5)", "Crib, on request (sheets provided)", "Pack-n-play travel crib, on request", "High chair with straps and tray, on request", "Baby bath, on request", "Children's dinnerware", "Outlet covers and table corner guards", "Board games"] },
@@ -161,7 +161,7 @@ export const HOMES: Record<string, HomeContent> = {
       { group: "Safety", items: ["Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher", "First aid kit", "Two exterior security cameras (see Things to know)", "No cameras inside the home"] },
     ],
     goodFit: ["Families with babies and young kids", "Groups of up to 10 who want separate bedrooms", "Guests who want to walk to the Pearl and the River Walk", "Remote workers (dedicated workspace)"],
-    notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking or vaping anywhere on the property", "Late-night noise: quiet hours are 10 PM to 8 AM", "Guests who don't want exterior security cameras (two outside, recording audio)"],
+    notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking, vaping or illegal substances in or within 25 feet of the home", "Late-night noise: quiet hours are 10 PM to 8 AM", "Guests who don't want exterior security cameras (two outside, recording audio)"],
     location: {
       text: "Tobin Hill, near the Pearl and the Museum Reach of the River Walk.",
       facts: ["About a 3-minute walk to the Pearl, the River Walk and restaurants", "About a 5-minute drive to the San Antonio Zoo, the DoSeum and the Witte Museum"],
@@ -179,15 +179,15 @@ export const HOMES: Record<string, HomeContent> = {
     host: HOSTS, // same hosts on every home (Airbnb host profile)
     thingsToKnow: [
       { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a door keypad"] },
-      { title: "House rules", items: ["Up to 10 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, close all doors, windows and the car gate, and send us a quick message"] },
+      { title: "House rules", items: ["Up to 10 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave:\n• Put dishes in the dishwasher.\n• Close all doors, windows and the car gate.\n• Send us a quick message."] },
       { title: "Safety and property", items: ["Two exterior security cameras: one faces the car entry gate and one is the front-door doorbell. They are motion-activated, record audio, and are checked occasionally, not monitored live.", "No cameras inside the home", "Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher and first aid kit"] },
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
-      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes in total). After verification, your personal guest portal has the address and entry instructions, and you can message us there. Your door code and Wi-Fi arrive on check-in morning." },
-      { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
-      { q: "Can I pay in two parts?", a: "Paying in full is the default. When check-in is 37 or more days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost." },
-      { q: "Is the home good for babies and toddlers?", a: "Yes: there's a playroom with toys and books, children's dinnerware, outlet covers and corner guards, and a crib, pack-n-play, high chair and baby bath kept at the home. Tell us what you'd like set up." },
+      { q: "What happens after I book?", a: "You'll get a confirmation email with a link to your private stay page. Sign the rental agreement and verify your ID online by the deadline shown there; both steps take about 2 minutes. Once both are complete, your arrival instructions become available on your stay page. Final access details arrive on check-in morning. You can message us on your stay page, too." },
+      { q: "Is there a damage waiver?", a: "Yes. Your total includes a damage waiver that covers up to $5,000 in accidental damage, subject to the terms and exclusions in the rental agreement." },
+      { q: "Can I pay in two parts?", a: "Yes, if check-in is at least 37 days away. You can choose to pay half now and the rest automatically at 4:00 PM CT, 30 days before check-in, at no extra cost. Paying in full is the default." },
+      { q: "Is the home good for babies and toddlers?", a: "Yes. The playroom has toys and books, and the home has children’s dinnerware, outlet covers and corner guards. A crib, pack ’n play, high chair and baby bath are kept at the home. Tell us what you’d like set up." },
       { q: "Is there an outdoor grill?", a: "No, there's no outdoor grill. The kitchen is fully equipped." },
       { q: "Is there parking?", a: "Yes: free parking behind the car gate for up to 3 cars, plus free street parking. There's an accessible parking spot at least 11 feet wide and a lit path to the entrance." },
     ],
@@ -267,7 +267,7 @@ export const HOMES: Record<string, HomeContent> = {
     highlights: [
       { title: "In Alamo Heights", text: "A quiet Alamo Heights street, a short drive to the Pearl, the River Walk and the McNay Art Museum.", source: "A listing highlights" },
       { title: "Parking for 4 cars", text: "Free driveway parking for four cars, plus a Level 2 EV charger (Tesla only).", source: "A amenities" },
-      { title: "Ready for little ones", text: "A playroom with toys, books and games and a baby bath at the home; crib, pack 'n play and high chair on request.", source: "A amenities" },
+      { title: "Ready for little ones", text: "Playroom with toys, books and games; baby bath at the home. Crib, pack 'n play and high chair on request.", source: "A amenities" },
       { title: "Fenced backyard and patio", text: "A private, fully fenced backyard with a basketball hoop, a patio and outdoor furniture.", source: "A amenities" },
     ],
     summary: "A newly remodeled 2-bedroom home for up to 8 guests on a quiet street in Alamo Heights. Living room with a 65-inch TV and an electric fireplace, a children's playroom, a dedicated workspace with fast WiFi, and a fully fenced backyard with a patio.",
@@ -290,10 +290,10 @@ export const HOMES: Record<string, HomeContent> = {
       { group: "Safety", items: ["Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher", "First aid kit", "Two exterior security cameras (see Things to know)", "No cameras inside the home"] },
     ],
     goodFit: ["Families with babies and young kids", "Guests who want a quiet residential street in Alamo Heights", "Remote workers (dedicated workspace, fast WiFi)", "Tesla drivers (Level 2 charger on site)"],
-    notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking or vaping anywhere on the property", "Late-night noise: quiet hours are 10 PM to 8 AM", "Groups who need more than one bathroom", "Guests who don't want exterior security cameras (two outside, recording audio)"],
+    notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking, vaping or illegal substances in or within 25 feet of the home", "Late-night noise: quiet hours are 10 PM to 8 AM", "Groups who need more than one bathroom", "Guests who don't want exterior security cameras (two outside, recording audio)"],
     location: {
       text: "Alamo Heights, a quiet neighborhood near Broadway.",
-      facts: ["A few blocks from The Quarry and Lincoln Heights shopping centers: restaurants, coffee shops and shops", "A short drive to the DoSeum, the San Antonio Zoo, the Witte Museum and the McNay Art Museum", "A short drive to the Pearl and the River Walk"],
+      facts: ["A few blocks from The Quarry and Lincoln Heights shopping centers, with restaurants, coffee shops and stores", "A short drive to the DoSeum, the San Antonio Zoo, the Witte Museum and the McNay Art Museum", "A short drive to the Pearl and the River Walk"],
       mapBbox: "-98.4790,29.4845,-98.4560,29.5005", // area center set apart from the home so the circle never pinpoints the house
       note: "The exact address is shared after your booking is confirmed and your rental agreement and ID check are complete.",
     },
@@ -308,14 +308,14 @@ export const HOMES: Record<string, HomeContent> = {
     host: HOSTS,
     thingsToKnow: [
       { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a smart lock"] },
-      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, used towels on the woven basket in the main bedroom, trash out, lights off, close all doors, windows and the car gate, and send us a quick message"] },
+      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave:\n• Put dishes in the dishwasher.\n• Leave used towels on the woven basket in the main bedroom.\n• Take out the trash.\n• Turn off the lights.\n• Close all doors, windows and the car gate.\n• Send us a quick message."] },
       { title: "Safety and property", items: ["Two exterior security cameras: one faces the car entry gate and one is the front-door doorbell. They are motion-activated, record audio, and are checked occasionally, not monitored live.", "No cameras inside the home", "Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher and first aid kit"] },
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
-      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes in total). After verification, your personal guest portal has the address and entry instructions, and you can message us there. Your door code and Wi-Fi arrive on check-in morning." },
-      { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
-      { q: "Can I pay in two parts?", a: "Paying in full is the default. When check-in is 37 or more days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost." },
+      { q: "What happens after I book?", a: "You'll get a confirmation email with a link to your private stay page. Sign the rental agreement and verify your ID online by the deadline shown there; both steps take about 2 minutes. Once both are complete, your arrival instructions become available on your stay page. Final access details arrive on check-in morning. You can message us on your stay page, too." },
+      { q: "Is there a damage waiver?", a: "Yes. Your total includes a damage waiver that covers up to $5,000 in accidental damage, subject to the terms and exclusions in the rental agreement." },
+      { q: "Can I pay in two parts?", a: "Yes, if check-in is at least 37 days away. You can choose to pay half now and the rest automatically at 4:00 PM CT, 30 days before check-in, at no extra cost. Paying in full is the default." },
       { q: "Is the home good for babies and toddlers?", a: "Yes: there's a playroom with toys, books and games, children's dinnerware, outlet covers and a baby bath. A mini crib, pack 'n play and high chair are available on request." },
       { q: "Is there parking?", a: "Yes: free driveway parking for 4 cars, plus free street parking. There's also a Level 2 EV charger for Teslas." },
       { q: "How many bathrooms are there?", a: "One full bathroom." },
@@ -389,7 +389,7 @@ export const HOMES: Record<string, HomeContent> = {
     highlights: [
       { title: "Walk to the Pearl", text: "About a 3-minute walk to the Pearl, the River Walk and St. Mary's Street.", source: "H/A summary" },
       { title: "One level, no stairs", text: "A single-level home: no stairs inside.", source: "A amenities" },
-      { title: "Ready for little ones", text: "A bonus room that works as a kids' play area, children's books and toys, and a crib, pack 'n play, high chair and baby bath on request.", source: "A description + amenities" },
+      { title: "Ready for little ones", text: "Bonus room with a kids' play area, books and toys. Crib, pack 'n play, high chair and baby bath on request.", source: "A description + amenities" },
       { title: "Fenced backyard and patio", text: "A private, fully fenced backyard with patio seating.", source: "A amenities + highlights" },
     ],
     summary: "An updated 3-bedroom, 2-bath home for up to 8 guests in Tobin Hill, about a 3-minute walk to the Pearl and the River Walk. Remodeled kitchen, living room with a 65-inch smart TV, a dedicated workspace, a bonus room by the entrance that works as a reading nook or kids' play area, and a fenced backyard with patio seating.",
@@ -401,7 +401,7 @@ export const HOMES: Record<string, HomeContent> = {
       { room: "Living room", beds: "1 sofa bed (sleeps 2)" },
       { room: "Bathrooms", beds: "2 full bathrooms" },
     ],
-    topAmenities: ["Full kitchen", "WiFi", "Dedicated workspace", "Free parking (4 cars)", "Washer and dryer", "Fenced backyard", "Crib and high chair", "Playroom"],
+    topAmenities: ["Full kitchen", "WiFi", "Dedicated workspace", "Free parking (4 cars)", "Washer and dryer", "Fenced backyard", "Crib and high chair on request", "Playroom"],
     amenityGroups: [
       { group: "Kitchen and dining", items: ["Full kitchen: Samsung stainless steel electric stove, LG slide-in electric oven, dishwasher", "Samsung Bespoke 4-door French-door refrigerator and freezer", "Microwave, toaster, blender, kettle", "Drip coffee maker, French press and Keurig; coffee", "Pots and pans, oil, salt and pepper", "Dishes, silverware, wine glasses, baking sheet", "Dining table"] },
       { group: "Family", items: ["Children's playroom with toys, books and games", "Children's books and toys (ages 0–2 and 2–5)", "Standard crib, on request (sheets provided)", "Pack 'n play travel crib, on request", "High chair with straps and tray, on request", "Baby bath, on request", "Children's dinnerware", "Outlet covers and table corner guards", "Board games"] },
@@ -413,7 +413,7 @@ export const HOMES: Record<string, HomeContent> = {
       { group: "Safety", items: ["Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher", "First aid kit", "Two exterior security cameras (see Things to know)", "No cameras inside the home"] },
     ],
     goodFit: ["Families with babies and young kids", "Groups of up to 8 who want three bedrooms and two bathrooms", "Guests who want to walk to the Pearl and the River Walk", "Remote workers (dedicated workspace)"],
-    notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking or vaping anywhere on the property", "Late-night noise: quiet hours are 10 PM to 8 AM", "Guests who don't want exterior security cameras (two outside, recording audio)"],
+    notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking, vaping or illegal substances in or within 25 feet of the home", "Late-night noise: quiet hours are 10 PM to 8 AM", "Guests who don't want exterior security cameras (two outside, recording audio)"],
     location: {
       text: "Tobin Hill, steps from the Pearl, the Museum Reach of the River Walk and St. Mary's Street.",
       facts: ["About a 3-minute walk to the Pearl, the River Walk and St. Mary's Street", "About a 5–7 minute drive to the DoSeum, the San Antonio Zoo, the Witte Museum and the McNay Art Museum"],
@@ -431,15 +431,15 @@ export const HOMES: Record<string, HomeContent> = {
     host: HOSTS,
     thingsToKnow: [
       { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a door keypad"] },
-      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, used towels on the bathroom floor, trash out, lights off, close all doors, windows and the car gate, and send us a quick message"] },
+      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave:\n• Put dishes in the dishwasher.\n• Leave used towels on the bathroom floor.\n• Take out the trash.\n• Turn off the lights.\n• Close all doors, windows and the car gate.\n• Send us a quick message."] },
       { title: "Safety and property", items: ["Two exterior security cameras: one faces the car entry gate and one is the front-door doorbell. They are motion-activated, record audio, and are checked occasionally, not monitored live.", "No cameras inside the home", "Smoke and carbon monoxide alarms in each main area and bedroom", "Fire extinguisher and first aid kit"] },
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
-      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes in total). After verification, your personal guest portal has the address and entry instructions, and you can message us there. Your door code and Wi-Fi arrive on check-in morning." },
-      { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
-      { q: "Can I pay in two parts?", a: "Paying in full is the default. When check-in is 37 or more days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost." },
-      { q: "Is the home good for babies and toddlers?", a: "Yes: there's a bonus room that works as a play area, children's books and toys, children's dinnerware, outlet covers and corner guards. A crib, pack 'n play, high chair and baby bath are available on request." },
+      { q: "What happens after I book?", a: "You'll get a confirmation email with a link to your private stay page. Sign the rental agreement and verify your ID online by the deadline shown there; both steps take about 2 minutes. Once both are complete, your arrival instructions become available on your stay page. Final access details arrive on check-in morning. You can message us on your stay page, too." },
+      { q: "Is there a damage waiver?", a: "Yes. Your total includes a damage waiver that covers up to $5,000 in accidental damage, subject to the terms and exclusions in the rental agreement." },
+      { q: "Can I pay in two parts?", a: "Yes, if check-in is at least 37 days away. You can choose to pay half now and the rest automatically at 4:00 PM CT, 30 days before check-in, at no extra cost. Paying in full is the default." },
+      { q: "Is the home good for babies and toddlers?", a: "Yes. There’s a kids’ play area with books and toys, plus children’s dinnerware, outlet covers and corner guards. Ask us for a crib, pack ’n play, high chair or baby bath." },
       { q: "Is there parking?", a: "Yes: free parking for 4 cars on the property (3 behind the car gate and 1 outside the gate), plus free street parking. There's an accessible parking spot at least 11 feet wide and a lit path to the entrance." },
       { q: "How many bathrooms are there?", a: "Two full bathrooms." },
     ],
@@ -543,7 +543,7 @@ export const HOMES: Record<string, HomeContent> = {
       { room: "Bedroom 2", beds: "1 king bed" },
       { room: "Bedroom 3", beds: "1 king bed" },
       { room: "Upstairs", beds: "1 sleeper sofa · queen air mattress available" },
-      { room: "Bathrooms", beds: "Primary en-suite with shower · second full bathroom with bathtub" },
+      { room: "Bathrooms", beds: "Private bathroom with a shower in the primary suite. Second full bathroom with a bathtub." },
     ],
     topAmenities: ["Full kitchen", "WiFi", "Dedicated workspace", "Free gated parking", "Washer and dryer", "Fenced backyard", "BBQ grill", "Arcade games"],
     amenityGroups: [
@@ -557,7 +557,7 @@ export const HOMES: Record<string, HomeContent> = {
       { group: "Safety", items: ["Smoke and carbon monoxide alarms", "Fire extinguisher", "First aid kit", "Four exterior security cameras (see Things to know)", "No cameras inside the home"] },
     ],
     goodFit: ["Alamodome events and Convention Center trips", "Groups who want a king bed in every bedroom", "Families with babies and young kids (crib, high chair and safety gates)", "Remote workers (dedicated workspace)"],
-    notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking or vaping anywhere on the property", "Late-night noise: quiet hours are 10 PM to 8 AM", "Guests who can't use stairs (the game room and deck are upstairs)"],
+    notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking, vaping or illegal substances in or within 25 feet of the home", "Late-night noise: quiet hours are 10 PM to 8 AM", "Guests who can't use stairs (the game room and deck are upstairs)"],
     location: {
       text: "Historic Lavaca, next to downtown San Antonio.",
       facts: ["About a 2-minute walk to the Tower of the Americas and 4 minutes to the Alamodome", "About a 5-minute walk to Hemisfair and the Convention Center, 8 to the River Walk and 10 to the Alamo", "About a 10-minute drive to the airport and 8 minutes to the Pearl"],
@@ -574,14 +574,14 @@ export const HOMES: Record<string, HomeContent> = {
     host: HOSTS,
     thingsToKnow: [
       { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a door keypad"] },
-      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, used towels on the bathroom floor, trash in the driveway bins, lights off, close all doors, windows and the car gate, and send us a quick message"] },
+      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave:\n• Put dishes in the dishwasher.\n• Leave used towels on the bathroom floor.\n• Put the trash in the driveway bins.\n• Turn off the lights.\n• Close all doors, windows and the car gate.\n• Send us a quick message."] },
       { title: "Safety and property", items: ["Four exterior security cameras: the front doorbell, one at the driveway and two along the sides of the home facing the street. They cover exterior areas only and record audio.", "No cameras inside the home", "Smoke and carbon monoxide alarms", "Fire extinguisher and first aid kit"] },
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
-      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes in total). After verification, your personal guest portal has the address and entry instructions, and you can message us there. Your door code and Wi-Fi arrive on check-in morning." },
-      { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
-      { q: "Can I pay in two parts?", a: "Paying in full is the default. When check-in is 37 or more days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost." },
+      { q: "What happens after I book?", a: "You'll get a confirmation email with a link to your private stay page. Sign the rental agreement and verify your ID online by the deadline shown there; both steps take about 2 minutes. Once both are complete, your arrival instructions become available on your stay page. Final access details arrive on check-in morning. You can message us on your stay page, too." },
+      { q: "Is there a damage waiver?", a: "Yes. Your total includes a damage waiver that covers up to $5,000 in accidental damage, subject to the terms and exclusions in the rental agreement." },
+      { q: "Can I pay in two parts?", a: "Yes, if check-in is at least 37 days away. You can choose to pay half now and the rest automatically at 4:00 PM CT, 30 days before check-in, at no extra cost. Paying in full is the default." },
       { q: "Is the home good for babies and toddlers?", a: "Yes: there are children's books and toys, children's dinnerware, baby safety gates, window guards, outlet covers and corner guards. A crib, pack 'n play, high chair and baby bath are available on request." },
       { q: "Is there parking?", a: "Yes: free gated parking for 2 cars on the property, space for 1 more outside the property, and free street parking nearby. There's an accessible parking spot at least 11 feet wide." },
       { q: "Is there an outdoor grill?", a: "Yes, a BBQ grill with grilling utensils." },
@@ -648,7 +648,7 @@ export const HOMES: Record<string, HomeContent> = {
     highlights: [
       { title: "In Alamo Heights", text: "Tree-lined streets and local restaurants, a short drive to the Pearl and downtown San Antonio.", source: "A listing highlights" },
       { title: "Fenced backyard with fire pit", text: "A private, fully fenced backyard with a fire pit, patio seating and outdoor dining.", source: "A listing highlights + amenities" },
-      { title: "Ready for little ones", text: "A children's playroom, an outdoor playground, and a toddler bed and crib in the primary bedroom; high chair and baby bath on request.", source: "A sleeping + amenities" },
+      { title: "Ready for little ones", text: "Playroom and outdoor playground. Toddler bed and crib in the primary bedroom; high chair and baby bath on request.", source: "A sleeping + amenities" },
       { title: "Full kitchen, laundry and arcade", text: "A full kitchen with a dishwasher, an in-unit washer and dryer, and an arcade machine.", source: "A listing highlights" },
     ],
     summary: "A spacious family home for up to 8 guests in Alamo Heights, known for its tree-lined streets, charming homes and local restaurants. Plenty of room to gather, a large private backyard, and minutes from the Pearl, downtown, the airport, the San Antonio Zoo, shopping and dining.",
@@ -660,7 +660,7 @@ export const HOMES: Record<string, HomeContent> = {
       { room: "Living room", beds: "1 sofa bed, 1 air mattress" },
       { room: "Bathrooms", beds: "2 full bathrooms" },
     ],
-    topAmenities: ["Full kitchen", "WiFi", "Dedicated workspace", "Free parking (3+ cars)", "Washer and dryer", "Fenced backyard", "Fire pit", "Playroom"],
+    topAmenities: ["Full kitchen", "WiFi", "Dedicated workspace", "Free driveway parking for 4 cars", "Washer and dryer", "Fenced backyard", "Fire pit", "Playroom"],
     amenityGroups: [
       { group: "Kitchen and dining", items: ["Full kitchen: stove, oven, dishwasher", "Refrigerator and freezer", "Microwave, toaster, blender", "Drip coffee maker, espresso machine, French press and Keurig; coffee", "Pots and pans, oil, salt and pepper", "Dishes, silverware, baking sheet", "Dining table"] },
       { group: "Family", items: ["Children's playroom with toys, books and games", "Outdoor playground", "Children's books and toys (ages 0–2, 2–5 and 5–10)", "Toddler bed and crib in the primary bedroom", "Standard crib, on request (sheets provided)", "Pack 'n play travel crib", "High chair with food tray, on request", "Baby bath, on request", "Children's dinnerware", "Outlet covers and table corner guards", "Board games"] },
@@ -672,7 +672,7 @@ export const HOMES: Record<string, HomeContent> = {
       { group: "Safety", items: ["Smoke and carbon monoxide alarms", "Fire extinguisher", "First aid kit", "One exterior camera: the front-door doorbell (records audio)", "No cameras inside the home"] },
     ],
     goodFit: ["Families with babies and young kids (playroom, playground, toddler bed and crib)", "Groups of up to 8 who want three bedrooms", "Guests who want a quiet residential street in Alamo Heights", "Remote workers (dedicated workspace)"],
-    notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking or vaping anywhere on the property", "Late-night noise: quiet hours are 10 PM to 8 AM"],
+    notFit: ["Parties or events (not allowed)", "Pets (not allowed)", "Smoking, vaping or illegal substances in or within 25 feet of the home", "Late-night noise: quiet hours are 10 PM to 8 AM"],
     location: {
       text: "Alamo Heights, known for its tree-lined streets, charming homes and local restaurants.",
       facts: ["A short drive to the Pearl and downtown San Antonio", "Minutes from the airport, the San Antonio Zoo, shopping and dining"],
@@ -683,14 +683,14 @@ export const HOMES: Record<string, HomeContent> = {
     host: HOSTS,
     thingsToKnow: [
       { title: "Check-in and check-out", items: ["Check-in after 4:00 PM", "Check-out before 10:00 AM", "Self check-in with a door keypad"] },
-      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave: dishes in the dishwasher, used towels on the bathroom floor, trash out, lights off, close all doors, windows and the car gate, and send us a quick message"] },
+      { title: "House rules", items: ["Up to 8 overnight guests; only the guests on your reservation may use the home", "The reservation holder must be 25 or older and stay at the home", "No parties or events", "No pets", "No smoking, vaping or illegal substances in or within 25 feet of the home", "Quiet hours 10 PM to 8 AM", "No commercial photography or filming", "Before you leave:\n• Put dishes in the dishwasher.\n• Leave used towels on the bathroom floor.\n• Take out the trash.\n• Turn off the lights.\n• Close all doors, windows and the car gate.\n• Send us a quick message."] },
       { title: "Safety and property", items: ["One exterior security camera: the front-door doorbell. It records audio.", "No cameras inside the home", "Smoke and carbon monoxide alarms", "Fire extinguisher and first aid kit"] },
     ],
     faq: [
       { q: "Why book direct?", a: "You book with us, the hosts, see your full total before you pay, and pay securely through Stripe. Questions go straight to Oscar and Fernanda." },
-      { q: "What happens after I book?", a: "You'll get a confirmation email. Then you sign the rental agreement and verify your ID online (about 2 minutes in total). After verification, your personal guest portal has the address and entry instructions, and you can message us there. Your door code and Wi-Fi arrive on check-in morning." },
-      { q: "Is there a damage waiver?", a: "Yes. Every direct stay includes a damage waiver with $5,000 coverage for accidental damage, as described in the rental agreement. It's included in your total." },
-      { q: "Can I pay in two parts?", a: "Paying in full is the default. When check-in is 37 or more days away, you can choose to pay half now and have the rest charged automatically at 4:00 PM CT, 30 days before check-in, at no extra cost." },
+      { q: "What happens after I book?", a: "You'll get a confirmation email with a link to your private stay page. Sign the rental agreement and verify your ID online by the deadline shown there; both steps take about 2 minutes. Once both are complete, your arrival instructions become available on your stay page. Final access details arrive on check-in morning. You can message us on your stay page, too." },
+      { q: "Is there a damage waiver?", a: "Yes. Your total includes a damage waiver that covers up to $5,000 in accidental damage, subject to the terms and exclusions in the rental agreement." },
+      { q: "Can I pay in two parts?", a: "Yes, if check-in is at least 37 days away. You can choose to pay half now and the rest automatically at 4:00 PM CT, 30 days before check-in, at no extra cost. Paying in full is the default." },
       { q: "Is the home good for babies and toddlers?", a: "Yes: there's a children's playroom, an outdoor playground, a toddler bed and crib in the primary bedroom, children's dinnerware, outlet covers and corner guards. A high chair and baby bath are available on request." },
       { q: "Is there parking?", a: "Yes: the circular front driveway fits 4 cars, and we ask that cars park there. Street parking is fine during the day, but Alamo Heights doesn't allow cars on the street overnight." },
       { q: "Does the home have reviews yet?", a: "This home is new on Airbnb and has no reviews yet. Our other homes average 4.98 across 463 Airbnb reviews." },

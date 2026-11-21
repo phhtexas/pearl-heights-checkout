@@ -11,7 +11,7 @@ import "./contact.css";
  * profile, homeSources). The urgent phone number is server-only by design (shown to verified guests in their stay
  * page), so it is NOT on this public page. noindex while the site is in test.
  */
-export const metadata: Metadata = { title: "Contact us | Pearl Heights Homes", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Contact us | Pearl Heights Homes", description: "Contact Oscar & Fernanda, your Pearl Heights Homes hosts, with questions about our San Antonio homes or an upcoming stay.", robots: { index: false, follow: false } };
 export const dynamic = "force-static";
 
 const EMAIL = "bookings@pearlheightshomes.com";

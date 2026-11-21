@@ -225,6 +225,8 @@ export default function Checkout() {
     if (payPlan === "split" && !j.quote.splitPlan) setPlan("full");
   }, [ci, co, home, adults, children, infants, plan, offer]);
   useEffect(() => { if (ci && co && step !== "done") void getQuote(); }, [ci, co, home, adults, children, infants, offer]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Copy review (Nov 20): the browser tab says "Booking confirmation" once the guest has paid.
+  useEffect(() => { if (step === "done") document.title = "Booking confirmation | Pearl Heights Homes"; }, [step]);
   // The page address follows the trip as it's changed here (home, dates, guests), so a refresh or Back keeps the latest
   // saved trip and its fresh quote, not the one the guest arrived with (Perplexity PX2-F2, Nov 20). Runs before the draft
   // save below, so the saved details stay matched to the new address.
@@ -452,7 +454,7 @@ export default function Checkout() {
       <span className={quote.nonRefundable ? "dot gray" : "dot"} aria-hidden="true">{quote.nonRefundable ? "i" : "✓"}</span>
       {quote.nonRefundable
         ? <div><b>Non-refundable</b><div className="sub">This reservation is non-refundable. <button className="link inline" onClick={() => openSheet("policy")}>Full policy</button></div></div>
-        : <div><b className="green">Free cancellation</b><div className="sub">Cancel within 24 hours for a full refund. <button className="link inline" onClick={() => openSheet("policy")}>View policy</button></div></div>}
+        : <div><b className="green">Free cancellation</b><div className="sub">Cancel within 24 hours for a full refund. <button className="link inline" onClick={() => openSheet("policy")}>View cancellation policy</button></div></div>}
     </section>
   );
 
@@ -636,11 +638,11 @@ export default function Checkout() {
               <div><h1>You're booked, {guest.firstName}!</h1><p>Payment received. Your dates are reserved.</p></div>
             </section>
             <section className="nextStep" aria-labelledby="nextStepTitle">
-              <h2 id="nextStepTitle">Complete your paperwork</h2>
+              <h2 id="nextStepTitle">Next: complete your required steps</h2>
               <p>Sign the rental agreement and verify your ID by <b>{result.verification.deadlineText}</b>.</p>
               {stayUrl && <a ref={nextBtn} className="btn stayBtn" href={stayUrl} data-cta="confirmation_sign">Complete required steps →</a>}
               <p className="nsTime">Takes about 2 minutes.</p>
-              <p className="nsAfter">Once both are complete, you'll get your check-in details in your guest portal.</p>
+              <p className="nsAfter">Once you've signed the rental agreement and verified your ID, use your stay page for check-in details.</p>
             </section>
             <section className="miniHome">
               <div className="miniPhoto">{photoEl(96)}</div>
@@ -662,7 +664,7 @@ export default function Checkout() {
 
           {err && !preview && <div className="err" role="alert">{err}</div>}
           {step === "pay" && payErr && <div className="desktopOnly">{payBar}</div>}
-          {primary && primary.needsAgree && <p className={"agreeHint desktopOnly" + (agreeHint ? " isOn" : "")} role={agreeHint ? "alert" : undefined}>{agreeHint ? "Please tick the authorization box above to continue." : "Tick the authorization box above to continue."}</p>}
+          {primary && primary.needsAgree && <p className={"agreeHint desktopOnly" + (agreeHint ? " isOn" : "")} role={agreeHint ? "alert" : undefined}>{agreeHint ? "Please check the authorization box above to continue." : "Check the authorization box above to continue."}</p>}
           {primary && <button className={"btn desktopOnly" + (primary.busy ? " isBusy" : "") + (primary.needsAgree ? " needsAgree" : "")} disabled={primary.disabled} onClick={primary.run} aria-busy={primary.busy || undefined}>{btnLabel}</button>}
         </main>
         {step !== "done" && <div className="side desktopOnly">{aside}</div>}
@@ -674,7 +676,7 @@ export default function Checkout() {
             {STEPS.map(([k, , short], i) => <li key={k} className={i < stepIdx ? "done" : i === stepIdx ? "on" : ""} aria-current={i === stepIdx ? "step" : undefined}><i aria-hidden="true" /><span>{i < stepIdx ? <><svg className="stepChk" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>{short}<span className="sr"> (completed)</span></> : <>{i + 1} {short}</>}</span></li>)}
           </ol>
           {step === "pay" && payErr && payBar}
-          {primary.needsAgree && <p className={"agreeHint" + (agreeHint ? " isOn" : "")} role={agreeHint ? "alert" : undefined}>{agreeHint ? "Please tick the authorization box above to continue." : "Tick the authorization box above to continue."}</p>}
+          {primary.needsAgree && <p className={"agreeHint" + (agreeHint ? " isOn" : "")} role={agreeHint ? "alert" : undefined}>{agreeHint ? "Please check the authorization box above to continue." : "Check the authorization box above to continue."}</p>}
           <button className={"btn" + (primary.busy ? " isBusy" : "") + (primary.needsAgree ? " needsAgree" : "")} disabled={primary.disabled} onClick={primary.run} aria-busy={primary.busy || undefined}>{btnLabel}</button>
         </footer>
       )}

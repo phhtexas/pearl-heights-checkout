@@ -17,7 +17,7 @@ const GUIDES: Record<string, GuideTopic[]> = {
     { title: "Washer and dryer", items: [ // Canva p.6
       "The washer and dryer are in the hallway next to the guest bathroom.",
       "Please don't overload them, and use only detergent made for this type of washer.",
-      "Please don't wash the home's towels or sheets together with personal clothes. Mixing fabrics can damage or stain the linens.",
+      "Please wash the home's towels and sheets separately from your clothes to help prevent stains and fabric damage.",
     ] },
     { title: "Appliances", items: [ // Canva p.6–7
       "Air conditioning: the thermostat is on the dining-area wall. Please keep it between 70°F and 78°F, and don't leave it running when you're out.",
@@ -35,7 +35,7 @@ const GUIDES: Record<string, GuideTopic[]> = {
     { title: "Parking", items: [ // Canva p.7 (gate code deliberately left out)
       "There's room for about 4 cars on the property, plus some street parking.",
       "You can park on the driveway outside the gate, or open the gate and drive in toward the backyard. The gate details come with your check-in instructions.",
-      "The storage unit isn't for parking.",
+      "Please don't park in the storage unit.",
     ] },
     { title: "Trash", items: [ // Canva p.7
       "Stays of 1–4 nights: when you leave, set your trash outside the kitchen door and we'll take it to the bins.",
@@ -58,7 +58,7 @@ const GUIDES: Record<string, GuideTopic[]> = {
       "With kids: The DoSeum, the San Antonio Zoo, Brackenridge Park, the Witte Museum.",
       "Sights: the McNay Art Museum, the San Antonio Botanical Garden, the Japanese Tea Garden, Southtown, Jazz TX.",
       "Coffee and bakeries: Merritt Coffee, Bakery Lorraine, Larder (inside Hotel Emma), Bird Bakery, Extra Fine Coffee.",
-      "Our restaurant picks: Southerleigh, Mon Chou Chou, Best Quality Daughter, La Gloria, Landino, Full Goods Diner, Velvet Taco, Down on Grayson, Carriqui, Burger Boy.",
+      "Our restaurant picks: Southerleigh Fine Food & Brewery, Brasserie Mon Chou Chou, Best Quality Daughter, La Gloria, Ladino, Full Goods Diner, Velvet Taco, Down on Grayson, Carriqui and Burger Boy.",
       "A little farther: Six Flags Fiesta Texas, SeaWorld, Natural Bridge Wildlife Ranch, Legoland Discovery Center.",
       "A Spurs game, in season.",
       "Outdoors and fitness: Brackenridge Park trails, Quarry Golf Club.",

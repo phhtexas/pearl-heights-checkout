@@ -15,6 +15,7 @@ import { Icon, iconFor } from "./icons";
 import { ALL_HOMES, ListingNav } from "../SiteNav";
 import { TileMapV2 as TileMap } from "./TileMapV2";
 import { AskHosts, ChatIcon } from "./AskHosts";
+import { groupPolicy } from "@/domain/policy";
 import "./listing.css";
 import "./listingV2.css";
 
@@ -402,7 +403,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
         <section className="V-sec">
           <h2>Cancellation policy</h2>
           <div className="V-cancel"><Icon name="check" size={18} /><b>{policy[0]}</b></div>
-          {policy.slice(1).map((p) => <p key={p} className="V-cancelSub">{p}</p>)}
+          {groupPolicy(policy.slice(1)).map((g) => <div key={g.text} className="V-cancelSub"><p>{g.text}</p>{g.sub.length > 0 && <ul>{g.sub.map((x) => <li key={x}>{x}</li>)}</ul>}</div>)}
         </section>
 
         <section id="faq" className="V-sec">
@@ -414,7 +415,7 @@ export function ListingV2({ home, prop, policy }: { home: HomeContent; prop: Pro
         <ul className="V-badges" aria-label="Booking direct">
           <li><Icon name="home" size={28} /><b>Book direct</b><span>with the hosts</span></li>
           <li><Icon name="lock" size={28} /><b>Secure payment</b><span>by Stripe</span></li>
-          <li><Icon name="chat" size={28} /><b>Local hosts</b><span>reply within an hour</span></li>
+          <li><Icon name="chat" size={28} /><b>Local hosts</b><span>usually reply within an hour</span></li>
           <li><Icon name="shield" size={28} /><b>Damage waiver</b><span>included</span></li>
         </ul>
       </main>

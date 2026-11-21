@@ -11,7 +11,7 @@ import "../stay.css";
  *    Unknown, expired or revoked links are a 404 that says nothing about whether a booking exists.
  * Never indexed; no caching; the referrer is never sent, so the token can't leak to other sites.
  */
-export const metadata: Metadata = { title: "Your stay | Pearl Heights Homes", robots: { index: false, follow: false }, referrer: "no-referrer" };
+export const metadata: Metadata = { title: "Your stay | Pearl Heights Homes", description: "Your booking details, required steps, arrival information and messages with Oscar & Fernanda.", robots: { index: false, follow: false }, referrer: "no-referrer" };
 export const dynamic = "force-dynamic";
 
 export default async function StayPage({ params }: { params: Promise<{ token: string }> }) {

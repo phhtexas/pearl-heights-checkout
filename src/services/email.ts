@@ -42,10 +42,10 @@ export function confirmationEmail(d: ConfirmationEmailData): { subject: string; 
     `You're booked, ${d.firstName}!`,
     "Payment received. Your dates are reserved.",
     "",
-    "COMPLETE YOUR PAPERWORK",
+    "COMPLETE YOUR REQUIRED STEPS",
     `Sign the rental agreement and verify your ID by ${d.deadline}. It takes about 2 minutes.`,
     `Complete required steps: ${d.link}`,
-    "Once both are complete, you'll get your check-in details in your guest portal.",
+    "Once both are complete, you'll get your check-in details on your stay page.",
     "",
     `${d.homeName}`,
     `Booking ${d.bookingRef}`,
@@ -58,7 +58,7 @@ export function confirmationEmail(d: ConfirmationEmailData): { subject: string; 
     `Questions? Reply to this email or write to ${REPLY_TO}.`,
     "",
     "Pearl Heights Homes · San Antonio, Texas",
-    "Keep this email: the link above is private to your booking.",
+    "Keep this email. The link above opens your private stay page.",
   ].join("\n");
 
   const C = { ink: "#1D1D1F", dim: "#5E5E63", line: "#E3E3E6", green: "#0F6B52", soft: "#F3F7F5", bg: "#F6F6F4" };
@@ -74,10 +74,10 @@ export function confirmationEmail(d: ConfirmationEmailData): { subject: string; 
 </td></tr>
 <tr><td style="padding:0 28px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.soft};border:1px solid #CFE3DA;border-radius:12px"><tr><td style="padding:20px">
-    <h2 style="margin:0 0 8px;font-size:19px">Complete your paperwork</h2>
+    <h2 style="margin:0 0 8px;font-size:19px">Complete your required steps</h2>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.5">Sign the rental agreement and verify your ID by <b>${esc(d.deadline)}</b>.</p>
     <a href="${esc(d.link)}" style="display:inline-block;background:${C.green};color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:14px 22px;border-radius:10px">Complete required steps &rarr;</a>
-    <p style="margin:12px 0 0;font-size:14px;color:${C.dim}">Takes about 2 minutes. Once both are complete, you'll get your check-in details in your guest portal.</p>
+    <p style="margin:12px 0 0;font-size:14px;color:${C.dim}">Takes about 2 minutes. Once both are complete, you'll get your check-in details on your stay page.</p>
   </td></tr></table>
 </td></tr>
 <tr><td style="padding:20px 28px 0">
@@ -96,7 +96,7 @@ export function confirmationEmail(d: ConfirmationEmailData): { subject: string; 
   <div>${esc(cancel)}</div>
   <div>Questions? Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:${C.green}">${REPLY_TO}</a>.</div>
 </td></tr>
-<tr><td style="padding:24px 28px 28px;font-size:12px;color:${C.dim}">Pearl Heights Homes · San Antonio, Texas<br>Keep this email: the button above is private to your booking.</td></tr>
+<tr><td style="padding:24px 28px 28px;font-size:12px;color:${C.dim}">Pearl Heights Homes · San Antonio, Texas<br>Keep this email. The button above opens your private stay page.</td></tr>
 </table></td></tr></table></body></html>`;
   return { subject, html, text };
 }

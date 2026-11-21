@@ -111,7 +111,7 @@ export function AskHosts(p: Props) {
             {sentAt && <p className="AH-sentAt">Sent at {sentAt}</p>}
             <p>We usually reply within an hour. Nothing is booked or charged.</p>
             {link && <a className="V-cta AH-cta" href={link}>Open your conversation</a>}
-            <p className="AH-fine">{emailed ? "We also emailed you this link." : "Keep this link: it's where you'll see our reply."}</p>
+            <p className="AH-fine">{emailed ? "Save this private link to see our reply and continue the conversation. We've also emailed you the link." : "Save this private link to see our reply and continue the conversation."}</p>
             <button type="button" className="AH-link" onClick={close}>Back to the home</button>
           </div>
         ) : (
@@ -147,7 +147,7 @@ export function AskHosts(p: Props) {
                         {stepper("Adults", "Ages 13 or above", adults, setAdults, 1, guests >= p.home.maxGuests)}
                         {stepper("Children", "Ages 2–12", children, setChildren, 0, guests >= p.home.maxGuests)}
                         {stepper("Infants", "Under 2", infants, setInfants, 0, infants >= 6)}
-                        <p className="AH-popNote">Sleeps {p.home.maxGuests}. Infants don&apos;t count toward the limit.</p>
+                        <p className="AH-popNote">Up to {p.home.maxGuests} guests, not counting infants under 2.</p>
                         <button type="button" className="AH-popDone" onClick={() => setGOpen(false)}>Done</button>
                       </div>
                     )}

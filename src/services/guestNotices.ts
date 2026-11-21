@@ -81,12 +81,14 @@ export function noticeContent(kind: NoticeKind, r: NoticeRow, link: string | nul
     case "paperwork_reminder_2": {
       const final = kind === "paperwork_reminder_2";
       return {
-        subject: final ? `Final reminder: finish your booking steps by ${deadline}` : `Reminder: your booking steps for ${home} are due ${deadline}`,
+        subject: final ? `Final reminder: finish your required check-in steps by ${deadline}` : `Reminder: your required check-in steps for ${home} are due ${deadline}`,
         preheader: `About 2 minutes: ${missing.join(" and ").toLowerCase()}.`,
         heading: final ? `Almost there, ${r.firstName}` : `A quick reminder, ${r.firstName}`,
-        paragraphs: [`Your stay at ${home} (${dates}, booking ${r.ref}) still needs ${missing.length === 1 ? "one step" : "two steps"}, due by ${deadline}:`],
+        paragraphs: [final ? `To get ready for your stay at ${home} (${dates}, booking ${r.ref}), complete the steps below by ${deadline}:` : `For your stay at ${home} (${dates}, booking ${r.ref}), complete the steps below by ${deadline}:`],
         list: missing, button: steps,
-        afterButton: ["It takes about 2 minutes. Once both are complete, your check-in details will be in your guest portal."],
+        afterButton: ["It takes about 2 minutes. Once both are complete, your check-in details will be on your stay page.",
+          // Oscar, Nov 20: only the final reminder mentions what the Booking Terms allow if the steps aren't done.
+          ...(final ? ["If both aren't done by the deadline, we may cancel your booking with a full refund."] : [])],
       };
     }
     case "balance_upcoming":
@@ -110,8 +112,8 @@ export function noticeContent(kind: NoticeKind, r: NoticeRow, link: string | nul
         subject: `Action needed: approve your second payment for ${home}`,
         preheader: `Please approve it by ${formatChicagoDateTime(r.balance!.cureDeadline!)}.`,
         heading: "Your bank asked you to approve a payment",
-        paragraphs: [`Hi ${r.firstName}, your bank wants you to confirm the ${usd(r.balance!.cents)} second payment for your stay at ${home} (${dates}, booking ${r.ref}). Nothing has been charged yet.`,
-          `To keep your reservation, please open your guest portal and tap Approve payment by ${formatChicagoDateTime(r.balance!.cureDeadline!)}. It takes a minute and goes through your bank's usual check.`],
+        paragraphs: [`Hi ${r.firstName}, your bank wants you to confirm the ${usd(r.balance!.cents)} second payment for your stay at ${home} (${dates}, booking ${r.ref}). Your second payment hasn't been charged yet.`,
+          `To keep your reservation, open your stay page and tap Approve payment by ${formatChicagoDateTime(r.balance!.cureDeadline!)}. It takes a minute and goes through your bank's usual check.`],
         button: { label: "Approve payment", url: link ?? "" },
       };
     case "balance_paid":
@@ -131,13 +133,13 @@ export function noticeContent(kind: NoticeKind, r: NoticeRow, link: string | nul
         preheader: "Check-in is after 4:00 PM today.",
         heading: `Today's the day, ${r.firstName}!`,
         paragraphs: [`Your stay at ${home} starts today. Check-in is after 4:00 PM and check-out is by 10:00 AM on your last day.`,
-          "Your address, entry instructions and Wi-Fi are in your guest portal."],
-        button: { label: "Open my guest portal", url: link ?? "" },
+          "Your address, entry instructions and Wi-Fi are on your private stay page."],
+        button: { label: "Open my stay page", url: link ?? "" },
       } : {
         subject: `Check-in today: finish your booking steps to get your details`,
         preheader: "Your check-in details unlock once both steps are done.",
         heading: `Check-in is today, ${r.firstName}`,
-        paragraphs: [`Your stay at ${home} starts today (check-in after 4:00 PM). Your address and entry instructions unlock in your guest portal once these are done:`],
+        paragraphs: [`Your stay at ${home} starts today (check-in after 4:00 PM). Your address and entry instructions unlock on your private stay page once these are done:`],
         list: missing, button: steps, afterButton: ["It takes about 2 minutes."],
       };
     }
@@ -158,7 +160,7 @@ export function noticeContent(kind: NoticeKind, r: NoticeRow, link: string | nul
 export function checkinText(r: NoticeRow, link: string) {
   const home = getProperty(r.propertyKey).name;
   return r.agreementDone && r.idDone
-    ? `Pearl Heights Homes: Welcome! Check-in at ${home} is after 4:00 PM today. Your address and entry details are in your guest portal: ${link} Reply STOP to opt out.`
+    ? `Pearl Heights Homes: Welcome! Check-in at ${home} is after 4:00 PM today. Your address and entry details are on your private stay page: ${link} Reply STOP to opt out.`
     : `Pearl Heights Homes: Check-in at ${home} is today. Sign your agreement and verify your ID to unlock your check-in details (about 2 min): ${link} Reply STOP to opt out.`;
 }
 

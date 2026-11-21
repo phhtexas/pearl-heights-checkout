@@ -56,7 +56,7 @@ export default async function Page() {
 
         <h2>Our story</h2>
         {/* In Oscar & Fernanda's own words: "Meet your hosts" pages of the 752 Myrtle and Edgewood Canva guest books (read Nov 18–19, 2026) */}
-        <p>Being hosts of a short-term rental was a long-time dream of ours, and that dream has finally come true. We fully remodeled each of our homes with our guests&apos; needs in mind, and we poured our hearts into every little detail.</p>
+        <p>Hosting was a longtime dream for us. We fully remodeled each home with our guests&apos; needs in mind and put care into every detail.</p>
         <p>Our Alamo Heights home on Edgewood is extra special to us: we first bought it to live in, until our family started to grow and we had to move. And on Myrtle, next to the Pearl, we&apos;re completely in love with the location, right in the center of everything.</p>
         <p>We love to travel with our own kids, so we know what makes a stay easy. We set up every home to feel like a place we&apos;d want our own family to stay: clean, cozy, well-equipped and welcoming.</p>
         <p className="AB-sign">We really hope you enjoy your stay and that you come back and visit us over and over again!<br /><span>Fernanda y Oscar</span></p>
@@ -64,7 +64,7 @@ export default async function Page() {
         <h2>How we host</h2>
         <ul className="G-list">
           <li><strong>Spotless and ready.</strong> Fresh linens, toiletries, a stocked coffee and tea station, and a kitchen you can actually cook in.</li>
-          <li><strong>Ready for little ones.</strong> Playrooms, and cribs, pack-n-plays and high chairs at our homes, set up on request.</li>
+          <li><strong>Ready for little ones.</strong> Our homes have gear for babies and young kids, including cribs and high chairs. Tell us what you&apos;d like set up; each home page lists what&apos;s available.</li>
           <li><strong>Real people, fast answers.</strong> You talk to us directly, in English or Spanish, before and during your stay.</li>
           <li><strong>Local tips.</strong> Our own favorite restaurants, coffee shops and things to do with kids, in our <a href="/guides">neighborhood guides</a>.</li>
         </ul>
