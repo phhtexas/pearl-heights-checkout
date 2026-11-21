@@ -18,18 +18,25 @@ export default {
       { source: "/all-homes/c", destination: "/all-homes/archive/c", permanent: false },
       { source: "/all-homes/e", destination: "/all-homes/archive/e", permanent: false },
       // Old WordPress site (pages listed from its REST API on WP Engine, Nov 18) -> the matching new page, so old links
-      // and bookmarks still land somewhere useful. Temporary (307) until the site is opened to Google at launch.
+      // and bookmarks still land somewhere useful. Permanent (308) since launch (Nov 20), so Google moves the old pages'
+      // standing to the new ones. /house/... addresses are the ones Search Console still showed on Nov 20.
       ...[
         ["/guest/steps-away-from-pearl-riverwalk", "/homes/752-myrtle"],
         ["/guest/large-family-house-next-to-the-pearl", "/homes/736-myrtle"],
         ["/guest/alamo-heights-home", "/homes/edgewood-alamo-heights"],
         ["/guest", "/"],
+        ["/house/steps-away-from-pearl-riverwalk", "/homes/752-myrtle"],
+        ["/house/large-family-house-next-to-the-pearl", "/homes/736-myrtle"],
+        ["/house/new-large-family-house-next-to-the-pearl", "/homes/736-myrtle"],
+        ["/house/alamo-heights-home", "/homes/edgewood-alamo-heights"],
+        ["/house/the-claywell-alamo-heights-house", "/homes/claywell-alamo-heights"],
+        ["/house", "/"],
         ["/privacy-policy", "/privacy"],
         ["/terms-and-conditions", "/terms"],
         ["/website-terms-promotions-policy", "/website-terms"],
         ["/house-rules", "/rental-agreement"],
         ["/frequently-asked-questions", "/#faq"],
-        ["/meet-your-hosts", "/"],
+        ["/meet-your-hosts", "/about"],
         ["/san-antonio-vaction-homes", "/"],
         ["/our-blog", "/"],
         ["/thank-you-email", "/"],
@@ -40,7 +47,10 @@ export default {
         ["/checkout", "/"], ["/checkout-2", "/"],
         ["/cart", "/"], ["/cart-2", "/"],
         ["/shop", "/"],
-      ].flatMap(([from, to]) => [{ source: from, destination: to, permanent: false }, { source: from + "/", destination: to, permanent: false }]),
+      ].flatMap(([from, to]) => [{ source: from, destination: to, permanent: true }, { source: from + "/", destination: to, permanent: true }]),
+      // Any other old /house/ or /guest/ page goes to the home page.
+      { source: "/house/:path*", destination: "/", permanent: true },
+      { source: "/guest/:path*", destination: "/", permanent: true },
     ];
   },
   images: {

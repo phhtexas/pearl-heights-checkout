@@ -16,6 +16,9 @@ import { ConsentBanner } from "./ConsentBanner";
 export const metadata = {
   title: "Book direct | Pearl Heights Homes",
   description: "Book direct with Oscar & Fernanda. Your total, upfront.",
+  // Google Search Console ownership (property https://pearlheightshomes.com/, Nov 20). Public token, not a secret.
+  // The old site's verification file is gone, so this tag keeps the property verified. Don't remove it.
+  verification: { google: "mf-qkcfhsXE-zlaszUvbTG3g6NBm_i6O-A_gZ05GS9E" },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
