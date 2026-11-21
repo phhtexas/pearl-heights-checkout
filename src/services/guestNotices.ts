@@ -1,7 +1,7 @@
 import type { Db } from "../db/client";
 import { getProperty } from "../domain/properties";
 import type { Quote } from "../domain/quote";
-import { HOMES } from "../content/homes";
+import { buildReceipt, buildStayCard, listingTitle, shortDay } from "./emailBlocks";
 import { chicagoInstant, formatChicagoDateTime, todayChicago } from "../domain/time";
 import { issueStayLink } from "./stayLinks";
 import { emailEnabled, noticeEmail, sendEmail, type NoticeContent } from "./email";
@@ -75,47 +75,20 @@ export function dueNotices(r: NoticeRow, now: Date): NoticeKind[] {
   return out;
 }
 
-/** "Tuesday, January 26, 2027 @ 4:00 PM" (Oscar, Nov 20: spell the day out so it's clear). */
-export function longDayAt(iso: string, time: string) {
-  return `${new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", weekday: "long", month: "long", day: "numeric", year: "numeric" })} @ ${time}`;
-}
-const shortDay = (d: Date) => d.toLocaleDateString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric" });
-
-/** Stay card: the listing's name (never the street address), its area, full check-in/out, guests, booking code. */
-export function stayCardFor(r: NoticeRow): NonNullable<NoticeContent["stay"]> {
-  const h = HOMES[r.propertyKey];
-  const s = r.stay;
-  const guests = s ? s.adults + s.children : 0;
-  const who = s ? `${guests} ${guests === 1 ? "guest" : "guests"}${s.infants ? ` + ${s.infants} ${s.infants === 1 ? "infant" : "infants"}` : ""}` : "";
-  return {
-    home: h?.title ?? getProperty(r.propertyKey).name,
-    area: `${h?.neighborhood ?? "San Antonio"}${h ? ", San Antonio" : ""}, Texas`,
-    rows: [["Check-in", longDayAt(r.checkIn, "4:00 PM")], ["Check-out", longDayAt(r.checkOut, "10:00 AM")], ...(who ? [["Guests", who] as [string, string]] : []), ["Booking", r.ref]],
-  };
+/** Stay card for a booking: listing name (never the street address), full check-in/out, guests, booking code. */
+export function stayCardFor(r: NoticeRow) {
+  return buildStayCard({ propertyKey: r.propertyKey, checkIn: r.checkIn, checkOut: r.checkOut, ref: r.ref, adults: r.stay?.adults, children: r.stay?.children, infants: r.stay?.infants });
 }
 
 /** Itemized payment summary from the booked quote, plus what was paid and what's still due. */
-export function receiptFor(r: NoticeRow): NoticeContent["receipt"] | undefined {
+export function receiptFor(r: NoticeRow) {
   const q = r.stay?.quote;
   if (!q) return undefined;
-  const lines: [string, string][] = [[`${q.nights} ${q.nights === 1 ? "night" : "nights"}`, usd(q.lodging)]];
-  if (q.extraGuestFee > 0) lines.push(["Extra guests", usd(q.extraGuestFee)]);
-  lines.push(["Cleaning", usd(q.cleaning)], ["Damage waiver ($5,000 coverage)", usd(q.protection)], ["Taxes", usd(q.tax)]);
-  const first = r.stay!.firstPaidCents || q.plan.dueNow || q.total;
-  const payments: [string, string][] = [[`Paid ${shortDay(r.confirmedAt)}`, usd(first)]];
-  let paid = first;
+  const pays = [{ label: `Paid ${shortDay(r.confirmedAt)}`, cents: r.stay!.firstPaidCents || q.plan.dueNow || q.total, paid: true }];
   const b = r.balance;
-  if (b) {
-    if (b.status === "paid") { payments.push([`Paid ${shortDay(r.stay!.balancePaidAt ?? b.scheduledFor ?? r.confirmedAt)}`, usd(b.cents)]); paid += b.cents; }
-    else if (b.scheduledFor) payments.push([`Second payment, due ${shortDay(b.scheduledFor)}`, usd(b.cents)]);
-  }
-  if (r.refundedCents > 0) payments.push(["Refunded", `−${usd(r.refundedCents)}`]);
-  const due = Math.max(0, q.total - paid);
-  return {
-    lines, total: usd(q.total), payments,
-    due: ["Balance due", usd(due)],
-    note: q.specialOffer ? `Includes your special offer: ${usd(q.specialOffer.savings)} off the regular total of ${usd(q.specialOffer.regularTotal)}.` : undefined,
-  };
+  if (b?.status === "paid") pays.push({ label: `Paid ${shortDay(r.stay!.balancePaidAt ?? b.scheduledFor ?? r.confirmedAt)}`, cents: b.cents, paid: true });
+  else if (b?.scheduledFor) pays.push({ label: `Second payment, due ${shortDay(b.scheduledFor)}`, cents: b.cents, paid: false });
+  return buildReceipt(q, pays, r.refundedCents);
 }
 
 export function noticeContent(kind: NoticeKind, r: NoticeRow, link: string | null): NoticeContent {
@@ -176,7 +149,7 @@ export function noticeContent(kind: NoticeKind, r: NoticeRow, link: string | nul
     case "checkin_day": {
       const done = r.agreementDone && r.idDone;
       // Oscar, Nov 20: listing name (never the address), full check-in/out dates, a payment summary and the full footer.
-      const title = HOMES[r.propertyKey]?.title ?? home;
+      const title = listingTitle(r.propertyKey);
       const extras = { stay: stayCardFor(r), receipt: receiptFor(r), footer: { bookingRef: r.ref } };
       return done ? {
         subject: `Welcome! Your check-in details for ${title} are ready`,
