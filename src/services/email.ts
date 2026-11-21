@@ -115,6 +115,49 @@ export interface NoticeContent {
   list?: string[];
   button?: { label: string; url: string };
   afterButton?: string[];
+  /** Stay card (Oscar, Nov 20): listing name (never the street address), area, and labeled rows (Check-in, Check-out...). */
+  stay?: { home: string; area: string; rows: [label: string, value: string][] };
+  /** Payment summary (Oscar, Nov 20, like an itemized receipt): price lines, total, then what was paid and what's due. */
+  receipt?: { lines: [label: string, amount: string][]; total: string; note?: string; payments: [label: string, amount: string][]; due?: [label: string, amount: string] };
+  /** Full footer (Oscar, Nov 20): contact, site links, Instagram, about-this-email and the legal line. */
+  footer?: { bookingRef?: string };
+}
+
+const SITE_URL = "https://pearlheightshomes.com";
+const FOOTER_LINKS: [string, string][] = [["Our homes", "/"], ["About us", "/about"], ["Cancellation policy", "/policies/cancellation"], ["Terms", "/terms"], ["Privacy", "/privacy"]];
+
+function stayCard(st: NonNullable<NoticeContent["stay"]>) {
+  const rows = st.rows.map(([k, v], i) => `<tr><td style="padding:10px 0;${i ? "border-top:1px solid #ECEBE8;" : ""}font-size:13px;color:#5E5E63;width:96px;vertical-align:top">${esc(k)}</td><td style="padding:10px 0;${i ? "border-top:1px solid #ECEBE8;" : ""}font-size:15px;font-weight:600;line-height:1.4">${esc(v)}</td></tr>`).join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 20px;border:1px solid #E3E3E6;border-radius:12px"><tr><td style="padding:16px 18px">
+<div style="font-size:17px;font-weight:700;line-height:1.35">${esc(st.home)}</div><div style="font-size:14px;color:#5E5E63;margin:2px 0 8px">${esc(st.area)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table></td></tr></table>`;
+}
+
+function receiptBlock(r: NonNullable<NoticeContent["receipt"]>) {
+  const row = (k: string, v: string, strong = false) => `<tr><td style="padding:7px 0;font-size:15px;${strong ? "font-weight:700;" : ""}">${esc(k)}</td><td align="right" style="padding:7px 0;font-size:15px;white-space:nowrap;${strong ? "font-weight:700;" : ""}">${esc(v)}</td></tr>`;
+  const rule = `<tr><td colspan="2" style="padding:6px 0"><div style="border-top:1px solid #E3E3E6;height:1px;line-height:1px">&nbsp;</div></td></tr>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;background:#F7F6F3;border-radius:12px"><tr><td style="padding:20px 18px">
+<div style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#5E5E63;text-align:center">Payment summary</div>
+<div style="font-size:34px;font-weight:700;text-align:center;margin:6px 0 14px">${esc(r.total)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${r.lines.map(([k, v]) => row(k, v)).join("")}${rule}${row("Total (USD)", r.total, true)}
+${r.payments.length ? `${rule}${r.payments.map(([k, v]) => row(k, v)).join("")}` : ""}${r.due ? row(r.due[0], r.due[1], true) : ""}</table>
+${r.note ? `<p style="margin:10px 0 0;font-size:13px;line-height:1.5;color:#5E5E63">${esc(r.note)}</p>` : ""}
+</td></tr></table>`;
+}
+
+function fullFooter(f: NonNullable<NoticeContent["footer"]>, year: number) {
+  const small = (t: string, b: string) => `<p style="margin:0 0 12px;font-size:12px;line-height:1.55;color:#6B6B70"><b style="color:#3A3A3E">${esc(t)}</b><br>${esc(b)}</p>`;
+  return `<tr><td style="padding:24px 28px 8px;border-top:1px solid #ECEBE8">
+<div style="font-size:16px;font-weight:700;margin:0 0 4px">Questions about your stay?</div>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:#5E5E63">Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:#0F6B52">${REPLY_TO}</a>. Oscar &amp; Fernanda usually reply within an hour.</p>
+<p style="margin:0 0 6px;font-size:14px;line-height:2">${FOOTER_LINKS.map(([t, u]) => `<a href="${SITE_URL}${u}" style="display:inline-block;margin-right:18px;color:#1D1D1F;font-weight:600;text-decoration:none;white-space:nowrap">${t}</a>`).join("")}</p>
+<p style="margin:0 0 4px;font-size:14px"><a href="https://www.instagram.com/pearlheightshomes" style="color:#0F6B52;text-decoration:none">Follow us on Instagram @pearlheightshomes</a></p>
+</td></tr>
+<tr><td style="padding:18px 28px 24px;background:#EEEBE5;border-radius:0 0 14px 14px">
+${small("About this email", `This is a service message about your booking${f.bookingRef ? ` ${f.bookingRef}` : ""}. You'll receive booking emails like this one even if you've unsubscribed from our promotional emails.`)}
+${small("Your booking record", "Pearl Heights Homes keeps the official record of your booking and payments. If anything in this email doesn't match what you expected, reply and we'll sort it out.")}
+<p style="margin:0;font-size:11px;line-height:1.55;color:#8A8A8F;text-transform:uppercase;letter-spacing:.03em">© ${year} PR Portfolio Properties LLC, doing business as Pearl Heights Homes · San Antonio, Texas</p>
+</td></tr>`;
 }
 
 export function noticeEmail(n: NoticeContent): { subject: string; html: string; text: string } {
@@ -127,15 +170,24 @@ export function noticeEmail(n: NoticeContent): { subject: string; html: string; 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px"><tr><td style="padding:28px">
 <div style="margin:0 0 14px">${headRow(`<h1 style="margin:0;font-size:23px;line-height:1.3">${esc(n.heading)}</h1>`)}</div>
 ${n.paragraphs.map(p).join("\n")}
+${n.stay ? stayCard(n.stay) : ""}
 ${n.list?.length ? `<ul style="margin:0 0 16px;padding-left:20px;font-size:15px;line-height:1.6">${n.list.map((li) => `<li>${esc(li)}</li>`).join("")}</ul>` : ""}
 ${n.button ? `<p style="margin:6px 0 18px"><a href="${esc(n.button.url)}" style="display:inline-block;background:${C.green};color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:14px 22px;border-radius:10px">${esc(n.button.label)} &rarr;</a></p>` : ""}
 ${(n.afterButton ?? []).map((s) => `<p style="margin:0 0 12px;font-size:14px;line-height:1.55;color:${C.dim}">${esc(s)}</p>`).join("\n")}
-<p style="margin:18px 0 0;font-size:14px;color:${C.dim}">Questions? Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:${C.green}">${REPLY_TO}</a>.</p>
-<p style="margin:22px 0 0;font-size:12px;color:${C.dim}">Pearl Heights Homes · San Antonio, Texas</p>
-</td></tr></table></td></tr></table></body></html>`;
-  const text = [n.heading, "", ...n.paragraphs, ...(n.list ?? []).map((l) => `- ${l}`),
+${n.receipt ? receiptBlock(n.receipt) : ""}
+${n.footer ? "" : `<p style="margin:18px 0 0;font-size:14px;color:${C.dim}">Questions? Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:${C.green}">${REPLY_TO}</a>.</p>
+<p style="margin:22px 0 0;font-size:12px;color:${C.dim}">Pearl Heights Homes · San Antonio, Texas</p>`}
+</td></tr>${n.footer ? fullFooter(n.footer, new Date().getFullYear()) : ""}</table></td></tr></table></body></html>`;
+  const text = [n.heading, "", ...n.paragraphs,
+    ...(n.stay ? ["", n.stay.home, n.stay.area, ...n.stay.rows.map(([k, v]) => `${k}: ${v}`)] : []),
+    ...(n.list ?? []).map((l) => `- ${l}`),
     ...(n.button ? ["", `${n.button.label}: ${n.button.url}`] : []), ...(n.afterButton?.length ? ["", ...n.afterButton] : []),
-    "", `Questions? Reply to this email or write to ${REPLY_TO}.`, "", "Pearl Heights Homes · San Antonio, Texas"].join("\n");
+    ...(n.receipt ? ["", "PAYMENT SUMMARY", ...n.receipt.lines.map(([k, v]) => `${k}: ${v}`), `Total (USD): ${n.receipt.total}`,
+      ...n.receipt.payments.map(([k, v]) => `${k}: ${v}`), ...(n.receipt.due ? [`${n.receipt.due[0]}: ${n.receipt.due[1]}`] : []), ...(n.receipt.note ? [n.receipt.note] : [])] : []),
+    "", `Questions? Reply to this email or write to ${REPLY_TO}.`,
+    ...(n.footer ? ["", `Our homes: ${SITE_URL}`, `Cancellation policy: ${SITE_URL}/policies/cancellation`, "",
+      `This is a service message about your booking${n.footer.bookingRef ? ` ${n.footer.bookingRef}` : ""}.`,
+      `© ${new Date().getFullYear()} PR Portfolio Properties LLC, doing business as Pearl Heights Homes · San Antonio, Texas`] : ["", "Pearl Heights Homes · San Antonio, Texas"])].join("\n");
   return { subject: n.subject, html, text };
 }
 

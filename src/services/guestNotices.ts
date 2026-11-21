@@ -1,5 +1,7 @@
 import type { Db } from "../db/client";
 import { getProperty } from "../domain/properties";
+import type { Quote } from "../domain/quote";
+import { HOMES } from "../content/homes";
 import { chicagoInstant, formatChicagoDateTime, todayChicago } from "../domain/time";
 import { issueStayLink } from "./stayLinks";
 import { emailEnabled, noticeEmail, sendEmail, type NoticeContent } from "./email";
@@ -35,6 +37,8 @@ export interface NoticeRow {
   agreementDone: boolean; idDone: boolean; textedConfirmation: boolean;
   balance: { cents: number; status: string; scheduledFor: Date | null; cureDeadline: Date | null; declined: boolean } | null;
   refundedCents: number;
+  /** For the payment summary (Oscar, Nov 20). Optional: older callers and tests may leave it out. */
+  stay?: { adults: number; children: number; infants: number; quote: Quote | null; firstPaidCents: number; balancePaidAt: Date | null };
 }
 
 const usd = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -69,6 +73,49 @@ export function dueNotices(r: NoticeRow, now: Date): NoticeKind[] {
   }
   if (CANCELLED.has(r.state)) out.push("cancellation");
   return out;
+}
+
+/** "Tuesday, January 26, 2027 @ 4:00 PM" (Oscar, Nov 20: spell the day out so it's clear). */
+export function longDayAt(iso: string, time: string) {
+  return `${new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", weekday: "long", month: "long", day: "numeric", year: "numeric" })} @ ${time}`;
+}
+const shortDay = (d: Date) => d.toLocaleDateString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric" });
+
+/** Stay card: the listing's name (never the street address), its area, full check-in/out, guests, booking code. */
+export function stayCardFor(r: NoticeRow): NonNullable<NoticeContent["stay"]> {
+  const h = HOMES[r.propertyKey];
+  const s = r.stay;
+  const guests = s ? s.adults + s.children : 0;
+  const who = s ? `${guests} ${guests === 1 ? "guest" : "guests"}${s.infants ? ` + ${s.infants} ${s.infants === 1 ? "infant" : "infants"}` : ""}` : "";
+  return {
+    home: h?.title ?? getProperty(r.propertyKey).name,
+    area: `${h?.neighborhood ?? "San Antonio"}${h ? ", San Antonio" : ""}, Texas`,
+    rows: [["Check-in", longDayAt(r.checkIn, "4:00 PM")], ["Check-out", longDayAt(r.checkOut, "10:00 AM")], ...(who ? [["Guests", who] as [string, string]] : []), ["Booking", r.ref]],
+  };
+}
+
+/** Itemized payment summary from the booked quote, plus what was paid and what's still due. */
+export function receiptFor(r: NoticeRow): NoticeContent["receipt"] | undefined {
+  const q = r.stay?.quote;
+  if (!q) return undefined;
+  const lines: [string, string][] = [[`${q.nights} ${q.nights === 1 ? "night" : "nights"}`, usd(q.lodging)]];
+  if (q.extraGuestFee > 0) lines.push(["Extra guests", usd(q.extraGuestFee)]);
+  lines.push(["Cleaning", usd(q.cleaning)], ["Damage waiver ($5,000 coverage)", usd(q.protection)], ["Taxes", usd(q.tax)]);
+  const first = r.stay!.firstPaidCents || q.plan.dueNow || q.total;
+  const payments: [string, string][] = [[`Paid ${shortDay(r.confirmedAt)}`, usd(first)]];
+  let paid = first;
+  const b = r.balance;
+  if (b) {
+    if (b.status === "paid") { payments.push([`Paid ${shortDay(r.stay!.balancePaidAt ?? b.scheduledFor ?? r.confirmedAt)}`, usd(b.cents)]); paid += b.cents; }
+    else if (b.scheduledFor) payments.push([`Second payment, due ${shortDay(b.scheduledFor)}`, usd(b.cents)]);
+  }
+  if (r.refundedCents > 0) payments.push(["Refunded", `−${usd(r.refundedCents)}`]);
+  const due = Math.max(0, q.total - paid);
+  return {
+    lines, total: usd(q.total), payments,
+    due: ["Balance due", usd(due)],
+    note: q.specialOffer ? `Includes your special offer: ${usd(q.specialOffer.savings)} off the regular total of ${usd(q.specialOffer.regularTotal)}.` : undefined,
+  };
 }
 
 export function noticeContent(kind: NoticeKind, r: NoticeRow, link: string | null): NoticeContent {
@@ -128,19 +175,24 @@ export function noticeContent(kind: NoticeKind, r: NoticeRow, link: string | nul
       };
     case "checkin_day": {
       const done = r.agreementDone && r.idDone;
+      // Oscar, Nov 20: listing name (never the address), full check-in/out dates, a payment summary and the full footer.
+      const title = HOMES[r.propertyKey]?.title ?? home;
+      const extras = { stay: stayCardFor(r), receipt: receiptFor(r), footer: { bookingRef: r.ref } };
       return done ? {
-        subject: `Welcome! Your check-in details for ${home} are ready`,
+        subject: `Welcome! Your check-in details for ${title} are ready`,
         preheader: "Check-in is after 4:00 PM today.",
         heading: `Today's the day, ${r.firstName}!`,
-        paragraphs: [`Your stay at ${home} starts today. Check-in is after 4:00 PM and check-out is by 10:00 AM on your last day.`,
-          "Your address, entry instructions and Wi-Fi are on your private stay page."],
+        paragraphs: ["Your stay starts today. We can't wait to host you."],
+        afterButton: ["Your entry instructions and Wi-Fi are on your private stay page."],
         button: { label: "Open my stay page", url: link ?? "" },
+        ...extras,
       } : {
         subject: `Check-in today: finish your booking steps to get your details`,
         preheader: "Your check-in details unlock once both steps are done.",
         heading: `Check-in is today, ${r.firstName}`,
-        paragraphs: [`Your stay at ${home} starts today (check-in after 4:00 PM). Your address and entry instructions unlock on your private stay page once these are done:`],
+        paragraphs: ["Your stay starts today. Your entry instructions unlock on your private stay page once these are done:"],
         list: missing, button: steps, afterButton: ["It takes about 2 minutes."],
+        ...extras,
       };
     }
     case "cancellation":
@@ -174,7 +226,9 @@ export async function loadNoticeRows(db: Db, now: Date): Promise<NoticeRow[]> {
             q.property_key, q.check_in, q.check_out, g.first_name, g.email, g.phone,
             v.agreement_status, v.id_status,
             (SELECT m.status FROM guest_messages m WHERE m.booking_id = b.id AND m.kind = 'confirmation' AND m.channel = 'sms') AS sms_status,
-            sp.amount_cents AS bal_cents, sp.status AS bal_status, sp.scheduled_for, sp.cure_deadline_at, sp.first_decline_at,
+            sp.amount_cents AS bal_cents, sp.status AS bal_status, sp.scheduled_for, sp.cure_deadline_at, sp.first_decline_at, sp.status_event_at AS bal_event_at,
+            q.adults, q.children, q.infants, q.line_items,
+            (SELECT ip.amount_cents FROM payments ip WHERE ip.booking_id = b.id AND ip.kind = 'initial' ORDER BY ip.created_at LIMIT 1) AS first_cents,
             (SELECT COALESCE(SUM(p.refunded_cents), 0) FROM payments p WHERE p.booking_id = b.id) AS refunded
        FROM bookings b
        JOIN quotes q ON q.id = b.quote_id AND q.version = b.quote_version
@@ -192,6 +246,9 @@ export async function loadNoticeRows(db: Db, now: Date): Promise<NoticeRow[]> {
     agreementDone: x.agreement_status === "signed", idDone: x.id_status === "verified", textedConfirmation: x.sms_status === "sent",
     balance: x.bal_status == null ? null : { cents: Number(x.bal_cents), status: x.bal_status, scheduledFor: d(x.scheduled_for), cureDeadline: d(x.cure_deadline_at), declined: x.first_decline_at != null },
     refundedCents: Number(x.refunded),
+    stay: { adults: Number(x.adults), children: Number(x.children), infants: Number(x.infants),
+      quote: x.line_items == null ? null : (typeof x.line_items === "string" ? JSON.parse(x.line_items) : x.line_items) as Quote,
+      firstPaidCents: Number(x.first_cents ?? 0), balancePaidAt: x.bal_status === "paid" ? d(x.bal_event_at) : null },
   }));
 }
 
