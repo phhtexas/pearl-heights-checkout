@@ -183,15 +183,16 @@ export function noticeContent(kind: NoticeKind, r: NoticeRow, link: string | nul
         preheader: "Check-in is after 4:00 PM today.",
         heading: `Today's the day, ${r.firstName}!`,
         paragraphs: ["Your stay starts today. We can't wait to host you."],
-        afterButton: ["Your entry instructions and Wi-Fi are on your private stay page."],
-        button: { label: "Open my stay page", url: link ?? "" },
+        cta: { title: "Your check-in details are ready", text: "Your entry instructions and Wi-Fi are on your private stay page.",
+          button: { label: "Get check-in details", url: link ?? "" }, note: "Check-in is after 4:00 PM. You can message us from your stay page anytime." },
         ...extras,
       } : {
         subject: `Check-in today: finish your booking steps to get your details`,
         preheader: "Your check-in details unlock once both steps are done.",
         heading: `Check-in is today, ${r.firstName}`,
-        paragraphs: ["Your stay starts today. Your entry instructions unlock on your private stay page once these are done:"],
-        list: missing, button: steps, afterButton: ["It takes about 2 minutes."],
+        paragraphs: ["Your stay starts today."],
+        cta: { title: "Complete your required steps", text: `${missing.join(" and ")} to unlock your check-in details.`.replace("Verify your ID", r.agreementDone ? "Verify your ID" : "verify your ID"),
+          button: steps, note: "Takes about 2 minutes. Your entry instructions appear on your stay page as soon as both are done." },
         ...extras,
       };
     }
