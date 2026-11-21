@@ -132,6 +132,17 @@ export class StripePayments implements PaymentsAdapter {
     return r.data.map((p) => p.id);
   }
 
+  async cardSummary(o: { paymentMethodId?: string; paymentIntentId?: string }) {
+    let pmId = o.paymentMethodId;
+    if (!pmId && o.paymentIntentId) {
+      const pi = await this.stripe.paymentIntents.retrieve(o.paymentIntentId);
+      pmId = typeof pi.payment_method === "string" ? pi.payment_method : pi.payment_method?.id;
+    }
+    if (!pmId) return null;
+    const c = (await this.stripe.paymentMethods.retrieve(pmId)).card;
+    return c?.brand && c.last4 ? { brand: c.brand, last4: c.last4 } : null;
+  }
+
   async savedMethod(id: string) {
     const pi = await this.stripe.paymentIntents.retrieve(id);
     const customerId = typeof pi.customer === "string" ? pi.customer : pi.customer?.id;

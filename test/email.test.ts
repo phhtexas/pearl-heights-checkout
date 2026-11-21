@@ -56,19 +56,20 @@ describe("booking confirmation email", () => {
       expect(s).toContain("https://x/stay/abc");
       expect(s).toContain("Friday, April 9, 2027 at 4:00 PM CT");
       expect(s).toContain("Complete required steps");
-      expect(s).toContain("Free cancellation");
       expect(s).toContain("$600.00 on Mon, Mar 29");
       expect(s).not.toMatch(/door code|wi-?fi|password/i);
     }
     expect(m.html).not.toContain("<b>Ana</b>");
-    expect(confirmationEmail({ ...o, nonRefundable: true, link: "x" }).text).toContain("non-refundable");
+    // Oscar, Nov 20: no cancellation line in the confirmation; the policy is linked in the footer.
+    expect(m.text).not.toContain("Free cancellation");
+    expect(m.html).toContain("/policies/cancellation");
   });
   it("Nov 20 redesign: listing name (no street address), full dates, itemized payment summary, footer", () => {
     const quote = { nights: 2, lodging: 80000, extraGuestFee: 0, cleaning: 22500, protection: 7900, taxableBase: 102500, tax: 17150, taxRate: 0.1673, total: 127550,
       plan: { split: true, dueNow: 63775, scheduled: { amount: 63775, chargeAt: new Date("2027-03-13T22:00:00Z") } }, fullPlan: { split: false, dueNow: 127550 },
       nonRefundable: false, processingFeeBase: 102500 } as any;
     const m = confirmationEmail({ ...o, link: "https://x/stay/abc", propertyKey: "752", checkIn: "2027-04-12", checkOut: "2027-04-14", adults: 2, children: 1, infants: 0,
-      quote, bookedAt: new Date("2026-11-20T18:00:00Z") });
+      quote, bookedAt: new Date("2026-11-20T18:00:00Z"), card: "Amex •••• 3425" });
     for (const s of [m.html, m.text]) {
       expect(s).not.toContain("752 Myrtle");
       expect(s).toContain("Walk to Pearl Riverwalk");
@@ -78,6 +79,8 @@ describe("booking confirmation email", () => {
       expect(s).toContain("$1,275.50");
       expect(s).toContain("Second payment, due Mar 13, 2027");
       expect(s).toContain("Balance due");
+      expect(s).toContain("Paid with Amex •••• 3425");
+      expect(s).toContain("Will be charged to Amex •••• 3425");
       expect(s).toContain("Complete required steps");
     }
     expect(m.html).toContain("About this email");
@@ -108,5 +111,15 @@ describe("booking confirmation email", () => {
     const f = resendOk();
     expect(await emailConfirmation(db, o, {} as any, f as any)).toBe("off");
     expect(f).not.toHaveBeenCalled();
+  });
+});
+
+describe("card label (Oscar, Nov 20)", async () => {
+  const { cardLabel } = await import("../src/services/emailBlocks");
+  it("brand and last 4 only", () => {
+    expect(cardLabel({ brand: "amex", last4: "3425" })).toBe("Amex\u00A0••••\u00A03425");
+    expect(cardLabel({ brand: "visa", last4: "4242" })).toBe("Visa\u00A0••••\u00A04242");
+    expect(cardLabel({ brand: "link", last4: "0001" })).toBe("Link\u00A0••••\u00A00001");
+    expect(cardLabel(null)).toBeUndefined();
   });
 });

@@ -58,6 +58,8 @@ export interface PaymentsAdapter {
    * Definite outcomes: resolves { status: "succeeded" } or throws card_declined / authentication_required.
    * Any other error is ambiguous: retry later with the SAME key (Stripe returns the original result).
    */
+  /** Card brand + last 4 for the confirmation email (Oscar, Nov 20): never the full number. Null if unknown. */
+  cardSummary?(o: { paymentMethodId?: string; paymentIntentId?: string }): Promise<{ brand: string; last4: string } | null>;
   /** F17: status of a PaymentIntent and, if it waits for the guest's bank approval, its client secret. */
   intentAction?(paymentIntentId: string): Promise<{ status: string; clientSecret: string | null }>;
   /** Refund part or all of a captured PaymentIntent. Idempotent on `idempotencyKey`. Host cancel tool (F3). */

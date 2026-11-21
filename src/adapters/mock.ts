@@ -148,6 +148,7 @@ export class MockPayments implements PaymentsAdapter {
   /** Test switches for the second charge. */
   offSession: "ok" | "decline" | "auth_required" | "timeout_after_charge" | "timeout_always" = "ok";
   saved = new Map<string, { customerId: string; paymentMethodId: string }>();
+  async cardSummary() { return { brand: "visa", last4: "4242" }; }
   async savedMethod(pi: string) {
     return this.saved.get(pi) ?? (this.intents.has(pi) ? { customerId: "cus_mock", paymentMethodId: "pm_mock_saved" } : null);
   }

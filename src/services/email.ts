@@ -37,6 +37,8 @@ export interface ConfirmationEmailData {
   /** Oscar, Nov 20 redesign: listing card (name, never the address; full dates) and itemized payment summary. */
   propertyKey?: string; checkIn?: string; checkOut?: string; adults?: number; children?: number; infants?: number;
   quote?: Quote; bookedAt?: Date;
+  /** "Amex •••• 3425" (brand + last 4 only). */
+  card?: string;
 }
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -46,15 +48,16 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
  * the listing card with full check-in/out, an itemized payment summary, and the full footer.
  */
 export function confirmationEmail(d: ConfirmationEmailData): { subject: string; html: string; text: string } {
-  const cancel = d.nonRefundable ? "This reservation is non-refundable." : "Free cancellation: cancel within 24 hours of booking for a full refund.";
+  // Oscar, Nov 20: the cancellation policy is linked in the footer, so no cancellation line here.
   const stay = d.propertyKey && d.checkIn && d.checkOut
     ? buildStayCard({ propertyKey: d.propertyKey, checkIn: d.checkIn, checkOut: d.checkOut, ref: d.bookingRef, adults: d.adults, children: d.children, infants: d.infants })
     : { home: d.homeName, area: "San Antonio, Texas", rows: [["Dates", d.dates], ["Check-in", "After 4:00 PM"], ["Check-out", "By 10:00 AM"], ["Guests", `${d.guests} ${d.guests === 1 ? "guest" : "guests"}`], ["Booking", d.bookingRef]] as [string, string][] };
   const q = d.quote;
   const receipt = q
-    ? buildReceipt(q, [{ label: `Paid ${shortDay(d.bookedAt ?? new Date())}`, cents: q.plan.dueNow, paid: true },
-        ...(q.plan.scheduled ? [{ label: `Second payment, due ${shortDay(new Date(q.plan.scheduled.chargeAt))}`, cents: q.plan.scheduled.amount, paid: false }] : [])], 0, cancel)
-    : { lines: [], total: d.paidToday, payments: [["Paid today", d.paidToday] as [string, string], ...(d.balanceLine ? [["Second payment", d.balanceLine] as [string, string]] : [])], note: cancel };
+    ? buildReceipt(q, [{ label: `Paid ${shortDay(d.bookedAt ?? new Date())}`, cents: q.plan.dueNow, paid: true, sub: d.card ? `Paid with ${d.card}` : undefined },
+        ...(q.plan.scheduled ? [{ label: `Second payment, due ${shortDay(new Date(q.plan.scheduled.chargeAt))}`, cents: q.plan.scheduled.amount, paid: false,
+          sub: d.card ? `Will be charged to ${d.card}` : undefined }] : [])])
+    : { lines: [], total: d.paidToday, payments: [["Paid today", d.paidToday] as [string, string], ...(d.balanceLine ? [["Second payment", d.balanceLine] as [string, string]] : [])] };
   return noticeEmail({
     subject: `You're booked, ${d.firstName}! ${d.dates} (${d.bookingRef})`,
     preheader: `Sign the rental agreement and verify your ID by ${d.deadline}.`,
@@ -89,7 +92,7 @@ export interface NoticeContent {
   /** Stay card (Oscar, Nov 20): listing name (never the street address), area, and labeled rows (Check-in, Check-out...). */
   stay?: { home: string; area: string; rows: [label: string, value: string][] };
   /** Payment summary (Oscar, Nov 20, like an itemized receipt): price lines, total, then what was paid and what's due. */
-  receipt?: { lines: [label: string, amount: string][]; total: string; note?: string; payments: [label: string, amount: string][]; due?: [label: string, amount: string] };
+  receipt?: { lines: [label: string, amount: string][]; total: string; note?: string; payments: [label: string, amount: string, sub?: string][]; due?: [label: string, amount: string] };
   /** Full footer (Oscar, Nov 20): contact, site links, Instagram, about-this-email and the legal line. */
   footer?: { bookingRef?: string };
 }
@@ -117,12 +120,12 @@ function stayCard(st: NonNullable<NoticeContent["stay"]>) {
 }
 
 function receiptBlock(r: NonNullable<NoticeContent["receipt"]>) {
-  const row = (k: string, v: string, strong = false) => `<tr><td style="padding:7px 0;font-size:15px;${strong ? "font-weight:700;" : ""}">${esc(k)}</td><td align="right" style="padding:7px 0;font-size:15px;white-space:nowrap;${strong ? "font-weight:700;" : ""}">${esc(v)}</td></tr>`;
+  const row = (k: string, v: string, strong = false, sub?: string) => `<tr><td style="padding:7px 0;font-size:15px;${strong ? "font-weight:700;" : ""}">${esc(k)}${sub ? `<div style="font-size:13px;color:#5E5E63;margin-top:2px">${esc(sub)}</div>` : ""}</td><td align="right" style="padding:7px 0;font-size:15px;white-space:nowrap;${strong ? "font-weight:700;" : ""}">${esc(v)}</td></tr>`;
   const rule = `<tr><td colspan="2" style="padding:6px 0"><div style="border-top:1px solid #E3E3E6;height:1px;line-height:1px">&nbsp;</div></td></tr>`;
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;background:#F7F6F3;border-radius:12px"><tr><td style="padding:20px 18px">
 <div style="font-size:17px;font-weight:700;margin:0 0 8px">Payment summary</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${r.lines.map(([k, v]) => row(k, v)).join("")}${rule}${row("Total (USD)", r.total, true)}
-${r.payments.length ? `${rule}${r.payments.map(([k, v]) => row(k, v)).join("")}` : ""}${r.due ? row(r.due[0], r.due[1], true) : ""}</table>
+${r.payments.length ? `${rule}${r.payments.map(([k, v, sub]) => row(k, v, false, sub)).join("")}` : ""}${r.due ? row(r.due[0], r.due[1], true) : ""}</table>
 ${r.note ? `<p style="margin:10px 0 0;font-size:13px;line-height:1.5;color:#5E5E63">${esc(r.note)}</p>` : ""}
 </td></tr></table>`;
 }
@@ -132,7 +135,7 @@ function cardFooter() {
   return `<tr><td style="padding:24px 28px 26px;border-top:1px solid #ECEBE8">
 <a href="${SITE_URL}/" style="text-decoration:none"><img src="${LOGO_URL}" width="64" height="56" alt="Pearl Heights Homes" style="display:block;border:0;width:64px;height:56px;margin:0 0 16px"></a>
 <div style="font-size:16px;font-weight:700;margin:0 0 4px">Questions about your stay?</div>
-<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:#5E5E63">Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:#0F6B52">${REPLY_TO}</a>. Oscar &amp; Fernanda usually reply within an hour.</p>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:#5E5E63">Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:#0F6B52">${REPLY_TO}</a>.</p>
 <p style="margin:0 0 6px;font-size:14px;line-height:2">${FOOTER_LINKS.map(([t, u]) => `<a href="${SITE_URL}${u}" style="display:inline-block;margin-right:18px;color:#1D1D1F;font-weight:600;text-decoration:none;white-space:nowrap">${t}</a>`).join("")}</p>
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 0"><tr>
 <td valign="middle" style="padding-right:8px"><a href="https://www.instagram.com/pearlheightshomes" style="text-decoration:none"><img src="${IG_ICON}" width="24" height="24" alt="Instagram" style="display:block;border:0;width:24px;height:24px"></a></td>
@@ -178,7 +181,7 @@ ${n.footer ? "" : `<p style="margin:18px 0 0;font-size:14px;color:${C.dim}">Ques
     ...(n.list ?? []).map((l) => `- ${l}`),
     ...(n.button ? ["", `${n.button.label}: ${n.button.url}`] : []), ...(n.afterButton?.length ? ["", ...n.afterButton] : []),
     ...(n.receipt ? ["", "PAYMENT SUMMARY", ...n.receipt.lines.map(([k, v]) => `${k}: ${v}`), `Total (USD): ${n.receipt.total}`,
-      ...n.receipt.payments.map(([k, v]) => `${k}: ${v}`), ...(n.receipt.due ? [`${n.receipt.due[0]}: ${n.receipt.due[1]}`] : []), ...(n.receipt.note ? [n.receipt.note] : [])] : []),
+      ...n.receipt.payments.map(([k, v, sub]) => `${k}${sub ? ` (${sub})` : ""}: ${v}`), ...(n.receipt.due ? [`${n.receipt.due[0]}: ${n.receipt.due[1]}`] : []), ...(n.receipt.note ? [n.receipt.note] : [])] : []),
     "", `Questions? Reply to this email or write to ${REPLY_TO}.`,
     ...(n.footer ? ["", `Our homes: ${SITE_URL}`, `Cancellation policy: ${SITE_URL}/policies/cancellation`, "",
       `This is a service message about your booking${n.footer.bookingRef ? ` ${n.footer.bookingRef}` : ""}.`,

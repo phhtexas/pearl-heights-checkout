@@ -7,7 +7,12 @@ import type { Quote } from "../domain/quote";
  * full check-in/out dates) and the itemized payment summary. Used by the confirmation and the follow-up notices.
  */
 export type StayCard = { home: string; area: string; photo?: string; rows: [label: string, value: string][] };
-export type Receipt = { lines: [label: string, amount: string][]; total: string; note?: string; payments: [label: string, amount: string][]; due?: [label: string, amount: string] };
+export type Receipt = { lines: [label: string, amount: string][]; total: string; note?: string; payments: [label: string, amount: string, sub?: string][]; due?: [label: string, amount: string] };
+
+const BRANDS: Record<string, string> = { amex: "Amex", visa: "Visa", mastercard: "Mastercard", discover: "Discover", jcb: "JCB", diners: "Diners Club", unionpay: "UnionPay" };
+/** "Amex •••• 3425" from Stripe's card brand and last 4. */
+export const cardLabel = (c: { brand: string; last4: string } | null | undefined) =>
+  c ? `${BRANDS[c.brand] ?? c.brand.charAt(0).toUpperCase() + c.brand.slice(1)}\u00A0••••\u00A0${c.last4}` : undefined; // non-breaking: never split on phones
 
 export const usd = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 export const shortDay = (d: Date) => d.toLocaleDateString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric" });
@@ -32,11 +37,11 @@ export function buildStayCard(o: { propertyKey: string; checkIn: string; checkOu
 }
 
 /** Itemized summary from the booked quote, then each payment (paid or due), refunds, and the balance still due. */
-export function buildReceipt(q: Quote, payments: { label: string; cents: number; paid: boolean }[], refundedCents = 0, extraNote?: string): Receipt {
+export function buildReceipt(q: Quote, payments: { label: string; cents: number; paid: boolean; sub?: string }[], refundedCents = 0, extraNote?: string): Receipt {
   const lines: [string, string][] = [[`${q.nights} ${q.nights === 1 ? "night" : "nights"}`, usd(q.lodging)]];
   if (q.extraGuestFee > 0) lines.push(["Extra guests", usd(q.extraGuestFee)]);
   lines.push(["Cleaning", usd(q.cleaning)], ["Damage waiver ($5,000 coverage)", usd(q.protection)], ["Taxes", usd(q.tax)]);
-  const rows: [string, string][] = payments.map((p) => [p.label, usd(p.cents)]);
+  const rows: [string, string, string?][] = payments.map((p) => [p.label, usd(p.cents), p.sub]);
   if (refundedCents > 0) rows.push(["Refunded", `−${usd(refundedCents)}`]);
   const paid = payments.filter((p) => p.paid).reduce((a, p) => a + p.cents, 0);
   const notes = [q.specialOffer ? `Includes your special offer: ${usd(q.specialOffer.savings)} off the regular total of ${usd(q.specialOffer.regularTotal)}.` : "", extraNote ?? ""].filter(Boolean);

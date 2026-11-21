@@ -1,3 +1,4 @@
+import { cardLabel } from "@/services/emailBlocks";
 import { NextResponse } from "next/server";
 import { checkLimit, LIMITS, tooMany } from "@/server/rateLimit";
 import { getDb } from "@/db/client";
@@ -91,6 +92,7 @@ export async function POST(req: Request) {
           nonRefundable: qq.nonRefundable, origin: new URL(req.url).origin,
           propertyKey: input.property, checkIn: input.checkIn, checkOut: input.checkOut,
           adults: input.adults, children: input.children, infants: input.infants, quote: qq, bookedAt: new Date(),
+          card: cardLabel(await pay.cardSummary?.({ paymentMethodId: input.paymentMethodId, paymentIntentId: authorizedPaymentIntentId }).catch(() => null)),
         }).catch(() => "failed" as const);
         console.info("[email] booking", ref, outcome);
       }
