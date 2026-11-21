@@ -491,7 +491,7 @@ export function Portal({ stay }: { stay: StayData }) {
               <h2 id="pay-h">Payments</h2>
               <dl className="ST-pay">
                 <div><dt>{b ? "First payment" : "Paid in full"}<span>{pm.paidOnText}</span>{pm.card && <span>Paid with {pm.card}</span>}</dt><dd>{pm.paidText}<span className="ST-payTag is-paid">Paid</span></dd></div>
-                {b && <div><dt>Second payment<span>{b.state === "paid" ? "Charged" : "Charged automatically"} {b.dueText}</span>{pm.card && b.state !== "cancelled" && <span>{b.state === "paid" ? "Paid with" : "Will be charged to"} {pm.card}</span>}</dt><dd>{b.amountText}<span className={`ST-payTag is-${b.state}`}>{tag}</span></dd></div>}
+                {b && <div><dt>Second payment<span>{b.state === "paid" ? "Charged" : b.state === "approve" ? "Due" : "Charged automatically"} {b.dueText}</span>{pm.card && b.state !== "cancelled" && <span>{b.state === "paid" ? "Paid with" : "Will be charged to"} {pm.card}</span>}</dt><dd>{b.amountText}<span className={`ST-payTag is-${b.state}`}>{tag}</span></dd></div>}
                 <div className="ST-payTotal"><dt>Total</dt><dd>{pm.totalText}</dd></div>
               </dl>
               {(b?.state === "approve" || approvedNow) && stay.mode === "booking" && <ApproveBalance token={stay.token} amount={b!.amountText} card={pm.card} onPaid={() => setApprovedNow(true)} />}
