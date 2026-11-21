@@ -18,6 +18,9 @@ export const dynamic = "force-dynamic";
 const base = publicMeta("/about", {
   title: "About us | Pearl Heights Homes",
   description: "Meet Oscar & Fernanda, the San Antonio family behind Pearl Heights Homes: Airbnb Superhosts with five family-friendly vacation homes.",
+  // Share preview (Oscar, Nov 20): 1200x630 card, host photo + logo + "Meet Oscar & Fernanda".
+  openGraph: { images: [{ url: "/homes/hosts/about-share.jpg", width: 1200, height: 630, alt: "Oscar and Fernanda, hosts of Pearl Heights Homes" }] },
+  twitter: { card: "summary_large_image", images: ["/homes/hosts/about-share.jpg"] },
 });
 export const metadata: Metadata = ABOUT_APPROVED ? base : { ...base, robots: { index: false, follow: false } };
 
