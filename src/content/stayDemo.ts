@@ -31,21 +31,23 @@ export interface StayData {
 }
 export interface StayPayments {
   totalText: string; paidText: string; paidOnText: string;
+  /** "Amex\u00A0••••\u00A03425" (Oscar, Nov 21: show the card like the confirmation email). Second payments go to the same card. */
+  card?: string;
   balance?: { amountText: string; dueText: string; state: "scheduled" | "paid" | "attention" | "approve" | "cancelled" };
 }
 
 const usd = (c: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(c / 100);
 /** Payments card data from stored amounts (cents) and the second payment's status. */
-export function stayPayments(o: { totalCents: number; paidNowCents: number; paidAt: Date; balance?: { cents: number; dueAt: Date; status: string } | null }): StayPayments {
+export function stayPayments(o: { totalCents: number; paidNowCents: number; paidAt: Date; balance?: { cents: number; dueAt: Date; status: string } | null; card?: string }): StayPayments {
   const state = (st: string): NonNullable<StayPayments["balance"]>["state"] =>
     st === "paid" ? "paid" : st === "scheduled" ? "scheduled" : st === "requires_action" ? "approve" : /refund|cancel/.test(st) ? "cancelled" : "attention";
   return {
-    totalText: usd(o.totalCents), paidText: usd(o.paidNowCents), paidOnText: fmtCT(o.paidAt),
+    totalText: usd(o.totalCents), paidText: usd(o.paidNowCents), paidOnText: fmtCT(o.paidAt), ...(o.card ? { card: o.card } : {}),
     ...(o.balance ? { balance: { amountText: usd(o.balance.cents), dueText: formatChicagoDateTime(o.balance.dueAt), state: state(o.balance.status) } } : {}),
   };
 }
 
-const fmtCT = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(d);
+const fmtCT = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }).format(d); // with the year (Oscar, Nov 21)
 
 /** Portal data for a home + dates + party (shared by the demo and real bookings). */
 export function buildStay(o: { token: string; code: string; homeKey: string; checkIn: string; checkOut: string; adults: number; children: number;
@@ -82,6 +84,6 @@ export function demoStay(now = new Date()): StayData {
   const paidAt = new Date(now.getTime() - 60 * 60 * 1000); // "booked an hour ago"
   // Sample split booking: half paid now, half 30 days before check-in (the sample check-in is 24 days out, so the
   // sample balance shows as already paid).
-  const payments = stayPayments({ totalCents: 184_250, paidNowCents: 92_125, paidAt, balance: { cents: 92_125, dueAt: new Date(paidAt.getTime() + 864e5), status: "paid" } });
+  const payments = stayPayments({ totalCents: 184_250, paidNowCents: 92_125, paidAt, balance: { cents: 92_125, dueAt: new Date(paidAt.getTime() + 864e5), status: "paid" }, card: "Visa\u00A0••••\u00A04242" });
   return buildStay({ token: "demo", code: "PH-TEST-0001", homeKey: "752", checkIn, checkOut, adults: 2, children: 2, holder: "Test Guest", paidAt, mode: "demo", payments });
 }

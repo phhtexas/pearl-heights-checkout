@@ -2,6 +2,19 @@ import { buildStay, demoStay, stayPayments, type StayData } from "@/content/stay
 import { HOMES } from "@/content/homes";
 import { getDb } from "@/db/client";
 import { loadStay, type StayRow } from "@/services/stayLinks";
+import { cardLabel } from "@/services/emailBlocks";
+import { getAdapters } from "@/server/adapters";
+import { envForLivemode } from "@/server/mode";
+
+/** "Visa •••• 4242" for the booking's first payment, from Stripe. Never holds up the page: gives up after 2.5 s. */
+async function cardFor(r: StayRow): Promise<string | undefined> {
+  if (!r.firstPi) return undefined;
+  try {
+    const pay = getAdapters("none", envForLivemode(r.livemode)).pay;
+    const c = await Promise.race([pay.cardSummary?.({ paymentIntentId: r.firstPi }) ?? null, new Promise<null>((ok) => setTimeout(() => ok(null), 2500))]);
+    return cardLabel(c);
+  } catch { return undefined; }
+}
 
 /** Server-only: the portal data behind a stay link ("demo" in sandbox builds, else a real booking). */
 export async function stayForToken(token: string): Promise<StayData | null> {
@@ -19,7 +32,7 @@ export async function stayForToken(token: string): Promise<StayData | null> {
     },
     babyGear: r.babyGear,
     payments: stayPayments({ totalCents: r.totalCents, paidNowCents: r.paidNowCents ?? r.totalCents, paidAt: new Date(r.confirmedAt),
-      balance: r.balance ? { cents: r.balance.cents, dueAt: new Date(r.balance.dueAt), status: r.balance.status } : null }),
+      balance: r.balance ? { cents: r.balance.cents, dueAt: new Date(r.balance.dueAt), status: r.balance.status } : null, card: await cardFor(r) }),
   });
 }
 

@@ -26,6 +26,8 @@ export interface StayRow {
   balance: { cents: number; dueAt: string; status: string } | null;
   /** Paid in Stripe LIVE mode (pearlheightshomes.com); false = test. */
   livemode: boolean;
+  /** Stripe payment of the first charge (for the card brand and last 4 on the stay page). */
+  firstPi: string | null;
 }
 
 const iso = (d: unknown) => (d instanceof Date ? d.toISOString() : d == null ? null : String(d));
@@ -54,6 +56,7 @@ export async function loadStay(db: Db, token: string, now = new Date()): Promise
             q.property_key, q.check_in, q.check_out, q.adults, q.children, q.infants,
             q.total_cents, q.livemode, g.first_name, g.last_name, g.email, g.phone,
             (SELECT p.amount_cents FROM payments p WHERE p.booking_id = b.id AND p.kind = 'initial' LIMIT 1) AS paid_now,
+            (SELECT p.stripe_payment_intent_id FROM payments p WHERE p.booking_id = b.id AND p.kind = 'initial' ORDER BY p.created_at LIMIT 1) AS first_pi,
             s.amount_cents AS balance_cents, s.scheduled_for AS balance_at, s.status AS balance_status,
             v.agreement_signed_at, v.agreement_signed_name, v.signwell_document_id, v.id_checked_at, v.id_status, v.stripe_verification_session
        FROM stay_links l
@@ -74,6 +77,7 @@ export async function loadStay(db: Db, token: string, now = new Date()): Promise
     totalCents: Number(r.total_cents), paidNowCents: r.paid_now == null ? null : Number(r.paid_now), guestEmail: r.email, guestPhone: r.phone ?? "", babyGear: !!r.baby_gear,
     balance: r.balance_cents == null ? null : { cents: Number(r.balance_cents), dueAt: iso(r.balance_at)!, status: String(r.balance_status) },
     livemode: !!r.livemode,
+    firstPi: r.first_pi ?? null,
   };
 }
 

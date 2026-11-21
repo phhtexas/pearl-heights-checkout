@@ -207,3 +207,5 @@
 @media (prefers-reduced-motion: reduce) { .ST-spin { animation-duration: 2.4s; } }
 .ST-err { color: #A1291F; margin: 0; }
 .ST-payTag.is-approve { color: #A1291F; }
+/* Fine print under the Pay second payment button (Oscar, Nov 21: smaller, disclaimer-style). */
+.ST-fine { margin: 2px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); max-width: 34em; }
