@@ -198,6 +198,8 @@ export function hostInquiryEmail(i: Inquiry, body: string, url: string, first: b
   });
 }
 
+const INQ_FOOTER = { question: "Questions about our homes?", about: "This is a service message about the question you sent Pearl Heights Homes. You'll receive messages like this one even if you've unsubscribed from our promotional emails." };
+
 export function guestInquiryEmail(i: Inquiry, body: string, url: string, kind: "received" | "reply") {
   const first = i.guestName.split(" ")[0] || "there";
   return noticeEmail(kind === "received" ? {
@@ -207,6 +209,7 @@ export function guestInquiryEmail(i: Inquiry, body: string, url: string, kind: "
     paragraphs: ["We got your message and usually reply within an hour. Nothing is booked or charged.", body],
     button: { label: "Open your conversation", url },
     afterButton: ["Keep this email: the button opens your private conversation with us."],
+    footer: INQ_FOOTER,
   } : {
     subject: `Oscar & Fernanda replied about ${homeName(i.propertyKey)}`,
     preheader: preview(body),
@@ -214,6 +217,7 @@ export function guestInquiryEmail(i: Inquiry, body: string, url: string, kind: "
     paragraphs: [`Oscar & Fernanda replied about ${homeName(i.propertyKey)} (${datesText(i)}):`, body],
     button: { label: "Open your conversation", url },
     afterButton: ["You can reply in the conversation."],
+    footer: INQ_FOOTER,
   });
 }
 

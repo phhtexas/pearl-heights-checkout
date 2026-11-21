@@ -132,6 +132,7 @@ export function guestReplyEmail(t: ThreadInfo, body: string, url: string) {
     paragraphs: [`Oscar & Fernanda replied about your stay (${shortRange(t.checkIn, t.checkOut)}, ${t.bookingRef}):`, body],
     button: { label: "Open your stay page", url },
     afterButton: ["You can reply on your stay page."],
+    footer: { bookingRef: t.bookingRef },
   });
 }
 

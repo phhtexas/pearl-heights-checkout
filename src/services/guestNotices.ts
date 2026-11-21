@@ -71,7 +71,12 @@ export function dueNotices(r: NoticeRow, now: Date): NoticeKind[] {
   return out;
 }
 
+/** Every guest notice carries the standard footer (Oscar, Nov 20). */
 export function noticeContent(kind: NoticeKind, r: NoticeRow, link: string | null): NoticeContent {
+  return { ...noticeBody(kind, r, link), footer: { bookingRef: r.ref } };
+}
+
+function noticeBody(kind: NoticeKind, r: NoticeRow, link: string | null): NoticeContent {
   const home = getProperty(r.propertyKey).name, dates = shortRange(r.checkIn, r.checkOut);
   const deadline = r.deadlineAt ? formatChicagoDateTime(r.deadlineAt) : "";
   const missing = [...(r.agreementDone ? [] : ["Sign the rental agreement"]), ...(r.idDone ? [] : ["Verify your ID"])];

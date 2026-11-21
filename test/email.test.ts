@@ -123,3 +123,26 @@ describe("card label (Oscar, Nov 20)", async () => {
     expect(cardLabel(null)).toBeUndefined();
   });
 });
+
+describe("standard footer (Oscar, Nov 20)", async () => {
+  const { noticeContent } = await import("../src/services/guestNotices");
+  const { noticeEmail } = await import("../src/services/email");
+  const { guestInquiryEmail, hostInquiryEmail } = await import("../src/services/inquiries");
+  const { guestReplyEmail, hostAlertEmail, loginEmail } = await import("../src/services/stayChat");
+  const row = { id: "b", ref: "PH-FOOT01", state: "confirmed", confirmedAt: new Date("2027-01-01T12:00:00Z"), deadlineAt: new Date("2027-01-02T12:00:00Z"), rule: "24h",
+    propertyKey: "752", checkIn: "2027-02-01", checkOut: "2027-02-03", firstName: "Ana", email: "a@x.com", phone: "", agreementDone: false, idDone: false, textedConfirmation: false,
+    balance: { cents: 1000, status: "scheduled", scheduledFor: new Date("2027-01-10T12:00:00Z"), cureDeadline: new Date("2027-01-13T12:00:00Z"), declined: false }, refundedCents: 0 } as any;
+  const inq = { id: "i", propertyKey: "752", checkIn: null, checkOut: null, adults: 2, children: 0, infants: 0, quotedTotal: null, guestName: "Ana B", guestEmail: "a@x.com", livemode: true, createdAt: "" };
+  const thread = { bookingId: "b", bookingRef: "PH-FOOT01", propertyKey: "752", checkIn: "2027-02-01", checkOut: "2027-02-03", guestName: "Ana B", guestEmail: "a@x.com" };
+  it("every guest email has it; host-only emails don't", () => {
+    const guest = [
+      ...(["paperwork_reminder_1", "paperwork_reminder_2", "balance_upcoming", "balance_failed", "balance_approval", "balance_paid", "checkin_day", "cancellation"] as const)
+        .map((k) => noticeEmail(noticeContent(k, row, "https://x/stay/abc")).html),
+      guestInquiryEmail(inq, "hi", "https://x/m/a", "received").html, guestInquiryEmail(inq, "hi", "https://x/m/a", "reply").html,
+      guestReplyEmail(thread, "hi", "https://x/stay/abc").html,
+    ];
+    for (const h of guest) { expect(h).toContain("About this email"); expect(h).toContain("/policies/cancellation"); expect(h).toContain("instagram.com/pearlheightshomes"); }
+    for (const h of [hostInquiryEmail(inq, "hi", "https://x/host", true).html, hostAlertEmail(thread, "hi", "https://x/host").html, loginEmail("https://x/login").html])
+      expect(h).not.toContain("About this email");
+  });
+});
