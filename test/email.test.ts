@@ -200,3 +200,25 @@ describe("refund email (Oscar, Nov 21)", async () => {
     expect(noticeEmail(noticeContent("cancellation", row, null)).text).toContain("We'll send you a separate email with the refund details.");
   });
 });
+
+describe("second-payment emails #6–9 (Oscar, Nov 21)", async () => {
+  const { noticeContent } = await import("../src/services/guestNotices");
+  const { noticeEmail } = await import("../src/services/email");
+  const quote = { nights: 3, lodging: 120000, extraGuestFee: 0, cleaning: 22500, protection: 7900, taxableBase: 142500, tax: 23838, taxRate: 0.1673, total: 174238,
+    plan: { split: true, dueNow: 87119, scheduled: { amount: 87119, chargeAt: new Date("2027-01-01T22:00:00Z") } }, fullPlan: { split: false, dueNow: 174238 }, nonRefundable: false, processingFeeBase: 142500 };
+  const row = { id: "b", ref: "PH-PAY001", state: "verified", confirmedAt: new Date("2026-11-20T18:00:00Z"), deadlineAt: null, rule: "24h",
+    propertyKey: "752", checkIn: "2027-01-26", checkOut: "2027-01-29", firstName: "Ana", email: "a@x.com", phone: "", agreementDone: true, idDone: true, textedConfirmation: false,
+    balance: { cents: 87119, status: "scheduled", scheduledFor: new Date("2027-01-01T22:00:00Z"), cureDeadline: new Date("2027-01-04T22:00:00Z"), declined: false }, refundedCents: 0,
+    guests: { adults: 2, children: 0, infants: 0 }, pay: { quote, firstCents: 87119, firstAt: new Date("2026-11-20T18:00:00Z"), balancePaidAt: new Date("2027-01-01T22:05:00Z"), card: "Amex •••• 3425" } } as any;
+  it("each shows the listing card, the summary with the card, and no street name", () => {
+    for (const [k, extra] of [["balance_upcoming", "Will be charged to Amex"], ["balance_paid", "Paid in full"], ["balance_failed", "Second payment, declined"], ["balance_approval", "needs your approval"]] as const) {
+      const m = noticeEmail(noticeContent(k, { ...row, balance: { ...row.balance, status: k === "balance_paid" ? "paid" : row.balance.status } }, "https://x/stay/abc"));
+      expect(m.html).toContain("Payment summary");
+      expect(m.html).toContain(extra);
+      expect(m.html).toContain("Tuesday, January 26, 2027 @ 4:00 PM");
+      expect(m.html).not.toContain("752 Myrtle");
+    }
+    const paid = noticeEmail(noticeContent("balance_paid", { ...row, balance: { ...row.balance, status: "paid" } }, null));
+    expect(paid.text).toMatch(/Balance due: \$0\.00/);
+  });
+});

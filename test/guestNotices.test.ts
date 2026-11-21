@@ -135,8 +135,10 @@ describe("second payment received (Oscar, Nov 20: our own receipt; Stripe receip
     expect(dueNotices({ ...paid, balance: { ...paid.balance, status: "scheduled" } }, at("2027-01-06T16:00:00Z"))).not.toContain("balance_paid");
     expect(dueNotices({ ...paid, state: "cancelled" }, at("2027-01-06T16:00:00Z"))).not.toContain("balance_paid");
     const c = noticeContent("balance_paid", paid, "https://x.test/stay/abc");
-    expect(c.subject).toMatch(/^Payment received: your stay at .+ is paid in full$/);
-    expect(c.paragraphs.join(" ")).toContain("$703.00");
-    expect(c.paragraphs.join(" ")).toContain("Nothing more is due");
+    expect(c.subject).toBe("Payment received: your stay is paid in full");
+    const m = noticeEmail(c);
+    expect(m.text).toContain("PAID IN FULL");
+    expect(m.text).toContain("Amount: $703.00");
+    expect(m.text).toContain("Nothing more is due");
   });
 });

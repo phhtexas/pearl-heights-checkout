@@ -1,9 +1,10 @@
 import type { Db } from "../db/client";
 import { getProperty } from "../domain/properties";
+import type { Quote } from "../domain/quote";
 import { chicagoInstant, formatChicagoDateTime, todayChicago } from "../domain/time";
 import { issueStayLink } from "./stayLinks";
 import { emailEnabled, noticeEmail, sendEmail, type NoticeContent } from "./email";
-import { buildStayCard } from "./emailBlocks";
+import { buildReceipt, buildStayCard, shortDay } from "./emailBlocks";
 import { sendSms, smsEnabled, toE164 } from "./sms";
 
 /**
@@ -39,6 +40,8 @@ export interface NoticeRow {
   /** Party size for the listing card (Oscar, Nov 21). Optional for older callers and tests. */
   guests?: { adults: number; children: number; infants: number };
   /** Refund email (Oscar, Nov 21): what was paid, the planned refund, when it was issued, and the first payment (for the card). */
+  /** Payment summary on the second-payment emails (Oscar, Nov 21): booked quote, first payment, card. */
+  pay?: { quote: Quote | null; firstCents: number; firstAt: Date | null; balancePaidAt: Date | null; card?: string };
   refund?: { paidCents: number; plannedCents: number | null; issuedAt: Date | null; firstPaymentIntent: string | null; livemode: boolean; card?: string };
 }
 
@@ -79,6 +82,21 @@ export function dueNotices(r: NoticeRow, now: Date): NoticeKind[] {
 }
 
 /** Every guest notice carries the standard footer (Oscar, Nov 20). */
+/** Payment summary for the second-payment emails: first payment, the second one in its current state, balance due. */
+function secondPaymentReceipt(r: NoticeRow, second: "due" | "paid" | "declined" | "approval") {
+  const q = r.pay?.quote;
+  if (!q || !r.balance) return undefined;
+  const card = r.pay?.card;
+  const first = r.pay!.firstCents || q.plan.dueNow;
+  const dueDay = r.balance.scheduledFor ? shortDay(r.balance.scheduledFor) : "";
+  const pays = [{ label: `Paid ${shortDay(r.pay!.firstAt ?? r.confirmedAt)}`, cents: first, paid: true, sub: card ? `Paid with ${card}` : undefined }];
+  if (second === "paid") pays.push({ label: `Paid ${shortDay(r.pay!.balancePaidAt ?? r.balance.scheduledFor ?? new Date())}`, cents: r.balance.cents, paid: true, sub: card ? `Paid with ${card}` : undefined });
+  else pays.push({ label: second === "due" ? `Second payment, due ${dueDay}` : second === "declined" ? "Second payment, declined" : "Second payment, needs your approval",
+    cents: r.balance.cents, paid: false, sub: card ? (second === "due" ? `Will be charged to ${card}` : `Card: ${card}`) : undefined });
+  return buildReceipt(q, pays);
+}
+const stayOf = (r: NoticeRow) => buildStayCard({ propertyKey: r.propertyKey, checkIn: r.checkIn, checkOut: r.checkOut, ref: r.ref, ...r.guests });
+
 /** "Sat, Nov 21, 10:15 PM CT" for subject lines. */
 function shortDeadline(d: Date | null) {
   return d ? `${new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(d)} CT` : "the deadline";
@@ -111,41 +129,57 @@ function noticeBody(kind: NoticeKind, r: NoticeRow, link: string | null): Notice
         stay: buildStayCard({ propertyKey: r.propertyKey, checkIn: r.checkIn, checkOut: r.checkOut, ref: r.ref, ...r.guests }),
       };
     }
-    case "balance_upcoming":
+    // Oscar, Nov 21: second-payment emails show the listing card and the full payment summary (with the card).
+    case "balance_upcoming": {
+      const card = r.pay?.card;
       return {
-        subject: `Your second payment for ${home} is scheduled for ${dayOf(r.balance!.scheduledFor!)}`,
-        preheader: `${usd(r.balance!.cents)} will be charged to the card you used at checkout.`,
+        subject: `Your second payment is scheduled for ${dayOf(r.balance!.scheduledFor!)}`,
+        preheader: `${usd(r.balance!.cents)} will be charged to ${card ?? "the card you used at checkout"}.`,
         heading: "Your second payment is coming up",
-        paragraphs: [`Hi ${r.firstName}, the second payment of ${usd(r.balance!.cents)} for your stay at ${home} (${dates}, booking ${r.ref}) will be charged on ${dayOf(r.balance!.scheduledFor!)} to the card you used at checkout.`,
-          "No action is needed. If you'd like to use a different card, reply to this email before then and we'll send you a secure Stripe link. Please never email card details."],
+        subheading: `Hi ${r.firstName}, here's what to expect.`,
+        paragraphs: [`On ${dayOf(r.balance!.scheduledFor!)} we'll charge ${usd(r.balance!.cents)} to ${card ?? "the card you used at checkout"}. No action is needed.`,
+          "If you'd like to use a different card, reply to this email before then and we'll send you a secure Stripe link. Please never email card details."],
+        stay: stayOf(r), receipt: secondPaymentReceipt(r, "due"),
       };
+    }
     case "balance_failed":
       return {
-        subject: `Action needed: your second payment for ${home} didn't go through`,
-        preheader: `Please contact us by ${formatChicagoDateTime(r.balance!.cureDeadline!)}.`,
-        heading: "Your second payment didn't go through",
-        paragraphs: [`Hi ${r.firstName}, your bank declined the ${usd(r.balance!.cents)} payment for your stay at ${home} (${dates}, booking ${r.ref}). We'll try the card again.`,
-          `To keep your reservation, please reply to this email by ${formatChicagoDateTime(r.balance!.cureDeadline!)} and we'll send a secure Stripe link to update your payment method or pay the balance. Please never email card details.`],
+        subject: "Action needed: your second payment didn't go through",
+        preheader: `Please reply by ${formatChicagoDateTime(r.balance!.cureDeadline!)} to keep your reservation.`,
+        heading: `Hi ${r.firstName}, we need your help`,
+        subheading: "Your bank declined your second payment.",
+        paragraphs: [],
+        cta: { title: "Your second payment didn't go through", text: `Your bank declined the ${usd(r.balance!.cents)} payment. We'll try the card again. To keep your reservation, reply to this email by `,
+          bold: formatChicagoDateTime(r.balance!.cureDeadline!), button: { label: "Reply to us", url: `mailto:bookings@pearlheightshomes.com?subject=${encodeURIComponent(`Second payment for ${r.ref}`)}` },
+          note: "We'll send you a secure Stripe link to update your card or pay the balance. Please never email card details.", important: true },
+        stay: stayOf(r), receipt: secondPaymentReceipt(r, "declined"),
       };
     case "balance_approval":
       return {
-        subject: `Action needed: approve your second payment for ${home}`,
+        subject: "Action needed: approve your second payment",
         preheader: `Please approve it by ${formatChicagoDateTime(r.balance!.cureDeadline!)}.`,
-        heading: "Your bank asked you to approve a payment",
-        paragraphs: [`Hi ${r.firstName}, your bank wants you to confirm the ${usd(r.balance!.cents)} second payment for your stay at ${home} (${dates}, booking ${r.ref}). Your second payment hasn't been charged yet.`,
-          `To keep your reservation, open your stay page and tap Approve payment by ${formatChicagoDateTime(r.balance!.cureDeadline!)}. It takes a minute and goes through your bank's usual check.`],
-        button: { label: "Approve payment", url: link ?? "" },
+        heading: `Hi ${r.firstName}, your bank needs a quick OK`,
+        subheading: "Your second payment hasn't been charged yet.",
+        paragraphs: [],
+        cta: { title: "Approve your second payment", text: `Your bank wants you to confirm the ${usd(r.balance!.cents)} payment. To keep your reservation, approve it by `,
+          bold: formatChicagoDateTime(r.balance!.cureDeadline!), button: { label: "Approve payment", url: link ?? "" },
+          note: "It takes about a minute and goes through your bank's usual check.", important: true },
+        stay: stayOf(r), receipt: secondPaymentReceipt(r, "approval"),
       };
-    case "balance_paid":
+    case "balance_paid": {
+      const card = r.pay?.card;
+      const when = (r.pay?.balancePaidAt ?? new Date()).toLocaleDateString("en-US", { timeZone: "America/Chicago", weekday: "long", month: "long", day: "numeric", year: "numeric" });
       return {
-        subject: `Payment received: your stay at ${home} is paid in full`,
+        subject: "Payment received: your stay is paid in full",
         preheader: `We received your second payment of ${usd(r.balance!.cents)}.`,
-        heading: "Your second payment went through",
-        paragraphs: [`Hi ${r.firstName}, we received your second payment of ${usd(r.balance!.cents)} for your stay at ${home} (${dates}, booking ${r.ref}), charged to the card you used at checkout.`,
-          "Your booking is now paid in full. Nothing more is due."],
-        button: { label: "View my stay", url: link ?? "" },
-        afterButton: ["Keep this email as your receipt for the second payment."],
+        heading: "Your stay is paid in full",
+        subheading: `Hi ${r.firstName}, your second payment went through.`,
+        paragraphs: [],
+        refundBox: { title: "Paid in full", rows: [["Payment date", when], ["Amount", usd(r.balance!.cents)], ...(card ? [["Charged to", card] as [string, string]] : [])],
+          note: "Nothing more is due for this booking." },
+        stay: stayOf(r), receipt: secondPaymentReceipt(r, "paid"),
       };
+    }
     case "checkin_day": {
       const done = r.agreementDone && r.idDone;
       return done ? {
@@ -215,6 +249,9 @@ export async function loadNoticeRows(db: Db, now: Date): Promise<NoticeRow[]> {
             (SELECT COALESCE(SUM(p.amount_cents), 0) FROM payments p WHERE p.booking_id = b.id AND p.kind IN ('initial', 'scheduled') AND p.stripe_payment_intent_id IS NOT NULL
                AND p.status IN ('captured', 'paid', 'partially_refunded', 'refunded')) AS paid_cents,
             (SELECT p.stripe_payment_intent_id FROM payments p WHERE p.booking_id = b.id AND p.kind = 'initial' ORDER BY p.created_at LIMIT 1) AS first_pi,
+            (SELECT p.amount_cents FROM payments p WHERE p.booking_id = b.id AND p.kind = 'initial' ORDER BY p.created_at LIMIT 1) AS first_cents,
+            (SELECT p.created_at FROM payments p WHERE p.booking_id = b.id AND p.kind = 'initial' ORDER BY p.created_at LIMIT 1) AS first_at,
+            q.line_items, sp.status_event_at AS bal_event_at,
             (SELECT MAX(a.at) FROM audit_log a WHERE a.booking_id = b.id AND a.action = 'refund_issued') AS refund_at,
             (SELECT a.after->>'refund' FROM audit_log a WHERE a.booking_id = b.id AND a.action = 'host_cancel_planned' ORDER BY a.id DESC LIMIT 1) AS planned_refund,
             v.agreement_status, v.id_status,
@@ -238,6 +275,8 @@ export async function loadNoticeRows(db: Db, now: Date): Promise<NoticeRow[]> {
     balance: x.bal_status == null ? null : { cents: Number(x.bal_cents), status: x.bal_status, scheduledFor: d(x.scheduled_for), cureDeadline: d(x.cure_deadline_at), declined: x.first_decline_at != null },
     refundedCents: Number(x.refunded),
     guests: { adults: Number(x.adults ?? 0), children: Number(x.children ?? 0), infants: Number(x.infants ?? 0) },
+    pay: { quote: x.line_items == null ? null : (typeof x.line_items === "string" ? JSON.parse(x.line_items) : x.line_items) as Quote,
+      firstCents: Number(x.first_cents ?? 0), firstAt: d(x.first_at) ?? new Date(x.confirmed_at), balancePaidAt: x.bal_status === "paid" ? d(x.bal_event_at) : null },
     refund: { paidCents: Number(x.paid_cents ?? 0), plannedCents: x.planned_refund == null ? null : Number(x.planned_refund), issuedAt: d(x.refund_at),
       firstPaymentIntent: x.first_pi ?? null, livemode: !!x.livemode },
   }));
@@ -275,8 +314,10 @@ export async function sweepGuestNotices(db: Db, origin: string, now = new Date()
         if (!token) throw new Error("no stay link");
         return `${origin}/stay/${token}`;
       };
-      if (kind === "refund_issued" && cardFor && r.refund?.firstPaymentIntent && !r.refund.card)
+      if (cardFor && r.refund?.firstPaymentIntent && (kind === "refund_issued" || kind.startsWith("balance_")) && !r.refund.card) {
         r.refund.card = await cardFor(r.refund.livemode, r.refund.firstPaymentIntent).catch(() => undefined);
+        if (r.pay) r.pay.card = r.refund.card;
+      }
       const res = await once(db, r.id, kind, "email", null, async () => {
         const m = noticeEmail(noticeContent(kind, r, needsLink ? await link() : null));
         return sendEmail(r.email, m, `${kind}-${r.ref}`, env, fetchImpl);
