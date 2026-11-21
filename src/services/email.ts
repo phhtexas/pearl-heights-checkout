@@ -66,7 +66,7 @@ export function confirmationEmail(d: ConfirmationEmailData): { subject: string; 
     paragraphs: [],
     cta: { title: "Complete your required steps", text: "Sign the rental agreement and verify your ID by ", bold: d.deadline,
       button: { label: "Complete required steps", url: d.link },
-      note: "Takes about 2 minutes. If both aren't done by the deadline, we may cancel your booking with a full refund. Once both are complete, you'll get your check-in details on your stay page.",
+      note: "Takes about 2 minutes. If both aren't done by the deadline, we may cancel your booking with a full refund.",
       important: true },
     stay, receipt,
     footer: { bookingRef: d.bookingRef },
