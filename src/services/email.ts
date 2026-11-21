@@ -15,8 +15,10 @@ export const REPLY_TO = "bookings@pearlheightshomes.com";
 const LOGO_URL = "https://pearlheightshomes.com/brand/logo-email.png";
 const logoImg = `<a href="https://pearlheightshomes.com/" style="text-decoration:none"><img src="${LOGO_URL}" width="80" height="70" alt="Pearl Heights Homes" style="display:block;border:0;width:80px;height:70px"></a>`;
 const IG_ICON = "https://pearlheightshomes.com/brand/instagram-email.png";
-/** Headline on the left, logo on the right of the same row (Oscar, Nov 20). */
-const headRow = (left: string) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td valign="middle" style="padding-right:12px">${left}</td><td valign="middle" align="right" width="80" style="width:80px">${logoImg}</td></tr></table>`;
+/** Logo on top, then the headline at full width so it fits on one line (Oscar, Nov 21; was logo beside the headline). */
+const headRow = (below: string) => `<div style="margin:0 0 16px">${logoImg}</div>${below}`;
+/** Footer logo: a light version of the header logo (Oscar, Nov 21). */
+const LOGO_LIGHT_URL = "https://pearlheightshomes.com/brand/logo-email-light.png";
 
 export function emailEnabled(env: NodeJS.ProcessEnv = process.env) {
   return env.GUEST_EMAILS === "on" && !!env.RESEND_API_KEY;
@@ -130,13 +132,19 @@ ${r.note ? `<p style="margin:10px 0 0;font-size:13px;line-height:1.5;color:#5E5E
 </td></tr></table>`;
 }
 
+/** Site links in two columns: three on the left, two on the right (Oscar, Nov 21). */
+function footerLinks() {
+  const col = (links: [string, string][]) => links.map(([t, u]) => `<a href="${SITE_URL}${u}" style="display:block;color:#1D1D1F;font-weight:600;text-decoration:none;white-space:nowrap;line-height:2">${t}</a>`).join("");
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 10px;font-size:14px"><tr><td valign="top" style="padding-right:40px">${col(FOOTER_LINKS.slice(0, 3))}</td><td valign="top">${col(FOOTER_LINKS.slice(3))}</td></tr></table>`;
+}
+
 /** Footer contact part: logo, questions, site links, Instagram (Oscar, Nov 20). Sits in the beige footer block. */
 function footerContact(f: NonNullable<NoticeContent["footer"]>) {
   return `
-<a href="${SITE_URL}/" style="text-decoration:none"><img src="${LOGO_URL}" width="64" height="56" alt="Pearl Heights Homes" style="display:block;border:0;width:64px;height:56px;margin:0 0 16px"></a>
+<a href="${SITE_URL}/" style="text-decoration:none"><img src="${LOGO_LIGHT_URL}" width="64" height="56" alt="Pearl Heights Homes" style="display:block;border:0;width:64px;height:56px;margin:0 0 16px"></a>
 <div style="font-size:16px;font-weight:700;margin:0 0 4px">${esc(f.question ?? "Questions about your stay?")}</div>
 <p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:#5E5E63">Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:#0F6B52">${REPLY_TO}</a>.</p>
-<p style="margin:0 0 6px;font-size:14px;line-height:2">${FOOTER_LINKS.map(([t, u]) => `<a href="${SITE_URL}${u}" style="display:inline-block;margin-right:18px;color:#1D1D1F;font-weight:600;text-decoration:none;white-space:nowrap">${t}</a>`).join("")}</p>
+${footerLinks()}
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 0"><tr>
 <td valign="middle" style="padding-right:8px"><a href="https://www.instagram.com/pearlheightshomes" style="text-decoration:none"><img src="${IG_ICON}" width="24" height="24" alt="Instagram" style="display:block;border:0;width:24px;height:24px"></a></td>
 <td valign="middle" style="font-size:14px"><a href="https://www.instagram.com/pearlheightshomes" style="color:#0F6B52;text-decoration:none">Follow us on Instagram @pearlheightshomes</a></td></tr></table>`;
@@ -167,7 +175,7 @@ export function noticeEmail(n: NoticeContent): { subject: string; html: string; 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg}"><tr><td align="center" style="padding:24px 12px ${n.footer ? "28px" : "24px"}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px"><tr><td style="padding:28px">
 <div style="margin:0 0 18px">${headRow(n.subheading
-  ? `<h1 style="margin:0 0 6px;font-size:26px;line-height:1.25">${esc(n.heading)}</h1><p style="margin:0;font-size:16px;line-height:1.45;color:${C.dim}">${esc(n.subheading)}</p>`
+  ? `<h1 style="margin:0 0 6px;font-size:24px;line-height:1.25">${esc(n.heading)}</h1><p style="margin:0;font-size:16px;line-height:1.45;color:${C.dim}">${esc(n.subheading)}</p>`
   : `<h1 style="margin:0;font-size:23px;line-height:1.3">${esc(n.heading)}</h1>`)}</div>
 ${n.paragraphs.map(p).join("\n")}
 ${n.cta ? ctaBox(n.cta) : ""}
