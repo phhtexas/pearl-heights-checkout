@@ -600,7 +600,7 @@ function ApproveBalance({ token, demo, paid, onPaid }: { token: string; demo?: b
   return (
     <div className="ST-approve">
       <p className="ST-dim">Your bank asked you to approve this payment. Nothing has been charged yet.</p>
-      <button type="button" className="ST-ask" disabled={st === "working"} aria-busy={st === "working"} onClick={run}>{st === "working" ? <><span className="ST-spin" aria-hidden="true" />Processing payment…</> : "Approve payment"}</button>
+      <button type="button" className="ST-ask" disabled={st === "working"} aria-busy={st === "working"} onClick={run}>{st === "working" ? <><span className="ST-spin" aria-hidden="true" />Processing payment…</> : "Pay second payment"}</button>
       {msg && <p className="ST-err" role="alert">{msg}</p>}
     </div>
   );
