@@ -162,7 +162,7 @@ function noticeBody(kind: NoticeKind, r: NoticeRow, link: string | null): Notice
         subheading: "Your second payment hasn't been charged yet.",
         paragraphs: [],
         cta: { title: "Approve your second payment", text: `Your bank wants you to confirm the ${usd(r.balance!.cents)} payment. To keep your reservation, approve it by `,
-          bold: formatChicagoDateTime(r.balance!.cureDeadline!), button: { label: "Approve payment", url: link ?? "" },
+          bold: formatChicagoDateTime(r.balance!.cureDeadline!), button: { label: "Pay second payment", url: link ?? "" },
           note: "It takes about a minute and goes through your bank's usual check.", important: true },
         stay: stayOf(r), receipt: secondPaymentReceipt(r, "approval"),
       };
