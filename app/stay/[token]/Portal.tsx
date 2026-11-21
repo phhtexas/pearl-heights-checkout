@@ -485,20 +485,20 @@ export function Portal({ stay }: { stay: StayData }) {
           const pm = stay.payments, b0 = pm.balance;
           // Test site: "Show bank approval" previews the approve flow on the sample stay (Oscar, Nov 21).
           const b = b0 && stay.mode === "demo" && s.simBalance ? { ...b0, state: s.simBalance } : b0 && approvedNow ? { ...b0, state: "paid" as const } : b0;
-          const tag = b && { scheduled: "Scheduled", paid: "Paid", attention: "Needs attention", approve: "Needs your approval", cancelled: "Cancelled" }[b.state];
+          const tag = b && { scheduled: "Scheduled", paid: "Paid", attention: "Needs attention", approve: "Due today", cancelled: "Cancelled" }[b.state];
           return (
             <section className="ST-card" aria-labelledby="pay-h">
               <h2 id="pay-h">Payments</h2>
               <dl className="ST-pay">
-                <div><dt>{b ? "First payment" : "Paid in full"}<span>{pm.paidOnText}</span></dt><dd>{pm.paidText}<span className="ST-payTag is-paid">Paid</span></dd></div>
-                {b && <div><dt>Second payment<span>{b.state === "paid" ? "Charged" : "Charged automatically"} {b.dueText}</span></dt><dd>{b.amountText}<span className={`ST-payTag is-${b.state}`}>{tag}</span></dd></div>}
+                <div><dt>{b ? "First payment" : "Paid in full"}<span>{pm.paidOnText}</span>{pm.card && <span>Paid with {pm.card}</span>}</dt><dd>{pm.paidText}<span className="ST-payTag is-paid">Paid</span></dd></div>
+                {b && <div><dt>Second payment<span>{b.state === "paid" ? "Charged" : "Charged automatically"} {b.dueText}</span>{pm.card && b.state !== "cancelled" && <span>{b.state === "paid" ? "Paid with" : "Will be charged to"} {pm.card}</span>}</dt><dd>{b.amountText}<span className={`ST-payTag is-${b.state}`}>{tag}</span></dd></div>}
                 <div className="ST-payTotal"><dt>Total</dt><dd>{pm.totalText}</dd></div>
               </dl>
-              {(b?.state === "approve" || approvedNow) && stay.mode === "booking" && <ApproveBalance token={stay.token} onPaid={() => setApprovedNow(true)} />}
-              {stay.mode === "demo" && s.simBalance && <ApproveBalance key={s.simBalance === "approve" ? "a" : "p"} token={stay.token} demo paid={s.simBalance === "paid"} onPaid={() => save({ ...sRef.current, simBalance: "paid" })} />}
+              {(b?.state === "approve" || approvedNow) && stay.mode === "booking" && <ApproveBalance token={stay.token} amount={b!.amountText} card={pm.card} onPaid={() => setApprovedNow(true)} />}
+              {stay.mode === "demo" && s.simBalance && <ApproveBalance key={s.simBalance === "approve" ? "a" : "p"} token={stay.token} amount={b!.amountText} card={pm.card} demo paid={s.simBalance === "paid"} onPaid={() => save({ ...sRef.current, simBalance: "paid" })} />}
               {b?.state === "approve" || approvedNow || (stay.mode === "demo" && s.simBalance === "paid") ? null : b?.state === "attention"
                 ? <p className="ST-dim ST-small" role="status">Your bank declined the second payment. <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a> and we&apos;ll send a secure link to update your card. Please never send card details in a message.</p>
-                : <p className="ST-dim ST-small">Charged to the card you booked with. Questions about a payment? <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a>.</p>}
+                : <p className="ST-dim ST-small">{pm.card ? "" : "Charged to the card you booked with. "}Questions about a payment? <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a>.</p>}
             </section>
           );
         })()}
@@ -570,7 +570,7 @@ function linkify(text: string) {
 }
 
 /** F17: the guest approves a second payment their bank flagged, through Stripe's bank check. */
-function ApproveBalance({ token, demo, paid, onPaid }: { token: string; demo?: boolean; paid?: boolean; onPaid?: () => void }) {
+function ApproveBalance({ token, amount, card, demo, paid, onPaid }: { token: string; amount: string; card?: string; demo?: boolean; paid?: boolean; onPaid?: () => void }) {
   const [st, setSt] = useState<"idle" | "working" | "paid" | "error">(paid ? "paid" : "idle"), [msg, setMsg] = useState("");
   const run = async () => {
     setSt("working"); setMsg("");
@@ -599,8 +599,9 @@ function ApproveBalance({ token, demo, paid, onPaid }: { token: string; demo?: b
   );
   return (
     <div className="ST-approve">
-      <p className="ST-dim">Your bank asked you to approve this payment. Nothing has been charged yet.</p>
       <button type="button" className="ST-ask" disabled={st === "working"} aria-busy={st === "working"} onClick={run}>{st === "working" ? <><span className="ST-spin" aria-hidden="true" />Processing payment…</> : "Pay second payment"}</button>
+      {/* Oscar, Nov 21: to the guest this is simply paying with their saved card, so no mention of the bank. */}
+      <p className="ST-fine">By tapping Pay second payment, you authorize Pearl Heights Homes to charge {amount} to {card ?? "the card you booked with"} for the second payment of your booking.</p>
       {msg && <p className="ST-err" role="alert">{msg}</p>}
     </div>
   );
