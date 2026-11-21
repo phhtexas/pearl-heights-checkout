@@ -199,5 +199,11 @@
 /* F17: approve the second payment */
 .ST-approve { display: grid; gap: 8px; justify-items: start; margin-top: 8px; }
 .ST-approve .ST-ask { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
+.ST-approve .ST-ask { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
+.ST-approve .ST-ask:disabled { cursor: default; }
+.ST-approve .ST-ask.is-paid { background: #0F6B52; }
+.ST-spin { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: ST-spin .8s linear infinite; flex: none; }
+@keyframes ST-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ST-spin { animation-duration: 2.4s; } }
 .ST-err { color: #A1291F; margin: 0; }
 .ST-payTag.is-approve { color: #A1291F; }

@@ -163,6 +163,7 @@ export function Portal({ stay }: { stay: StayData }) {
   // Oscar, Nov 17: the door code and Wi-Fi are released on check-in MORNING (Central time); step 4 "Enjoy your stay"
   // starts at check-in TIME (4:00 PM Central on check-in day). Both only once the paperwork is done.
   // Test controls can jump to check-in morning or to check-in time.
+  const [approvedNow, setApprovedNow] = useState(false); // second payment approved on this visit: show it as Paid right away
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => { setNow(Date.now()); const t = setInterval(() => setNow(Date.now()), 60_000); return () => clearInterval(t); }, []);
   const isCheckinDay = s.simDay === "morning" || s.simDay === "checkin" || (now !== null && todayChicago(new Date(now)) >= stay.checkIn);
@@ -483,7 +484,7 @@ export function Portal({ stay }: { stay: StayData }) {
         {stay.payments && (() => {
           const pm = stay.payments, b0 = pm.balance;
           // Test site: "Show bank approval" previews the approve flow on the sample stay (Oscar, Nov 21).
-          const b = b0 && stay.mode === "demo" && s.simBalance ? { ...b0, state: s.simBalance } : b0;
+          const b = b0 && stay.mode === "demo" && s.simBalance ? { ...b0, state: s.simBalance } : b0 && approvedNow ? { ...b0, state: "paid" as const } : b0;
           const tag = b && { scheduled: "Scheduled", paid: "Paid", attention: "Needs attention", approve: "Needs your approval", cancelled: "Cancelled" }[b.state];
           return (
             <section className="ST-card" aria-labelledby="pay-h">
@@ -493,10 +494,9 @@ export function Portal({ stay }: { stay: StayData }) {
                 {b && <div><dt>Second payment<span>{b.state === "paid" ? "Charged" : "Charged automatically"} {b.dueText}</span></dt><dd>{b.amountText}<span className={`ST-payTag is-${b.state}`}>{tag}</span></dd></div>}
                 <div className="ST-payTotal"><dt>Total</dt><dd>{pm.totalText}</dd></div>
               </dl>
-              {b?.state === "approve" && stay.mode === "booking" && <ApproveBalance token={stay.token} />}
-              {b?.state === "approve" && stay.mode === "demo" && <ApproveBalance token={stay.token} demo onPaid={() => save({ ...sRef.current, simBalance: "paid" })} />}
-              {stay.mode === "demo" && s.simBalance === "paid" && <p className="ST-dim" role="status">Thank you! Your second payment is approved and paid.</p>}
-              {b?.state === "approve" || (stay.mode === "demo" && s.simBalance === "paid") ? null : b?.state === "attention"
+              {(b?.state === "approve" || approvedNow) && stay.mode === "booking" && <ApproveBalance token={stay.token} onPaid={() => setApprovedNow(true)} />}
+              {stay.mode === "demo" && s.simBalance && <ApproveBalance key={s.simBalance === "approve" ? "a" : "p"} token={stay.token} demo paid={s.simBalance === "paid"} onPaid={() => save({ ...sRef.current, simBalance: "paid" })} />}
+              {b?.state === "approve" || approvedNow || (stay.mode === "demo" && s.simBalance === "paid") ? null : b?.state === "attention"
                 ? <p className="ST-dim ST-small" role="status">Your bank declined the second payment. <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a> and we&apos;ll send a secure link to update your card. Please never send card details in a message.</p>
                 : <p className="ST-dim ST-small">Charged to the card you booked with. Questions about a payment? <a href="#chat" onClick={(e) => { e.preventDefault(); openChat(); }}>Message us</a>.</p>}
             </section>
@@ -570,15 +570,15 @@ function linkify(text: string) {
 }
 
 /** F17: the guest approves a second payment their bank flagged, through Stripe's bank check. */
-function ApproveBalance({ token, demo, onPaid }: { token: string; demo?: boolean; onPaid?: () => void }) {
-  const [st, setSt] = useState<"idle" | "working" | "paid" | "error">("idle"), [msg, setMsg] = useState("");
+function ApproveBalance({ token, demo, paid, onPaid }: { token: string; demo?: boolean; paid?: boolean; onPaid?: () => void }) {
+  const [st, setSt] = useState<"idle" | "working" | "paid" | "error">(paid ? "paid" : "idle"), [msg, setMsg] = useState("");
   const run = async () => {
     setSt("working"); setMsg("");
     // Sample stay: no real bank check; pause like one would, then show the approved state.
-    if (demo) { setTimeout(() => { setSt("paid"); onPaid?.(); }, 2500); return; }
+    if (demo) { setTimeout(() => onPaid?.(), 2500); return; }
     try {
       const g = await fetch(`/api/stay/${token}/balance`, { cache: "no-store" }).then((r) => r.json());
-      if (g.state === "succeeded") { setSt("paid"); return; }
+      if (g.state === "succeeded") { setSt("paid"); onPaid?.(); return; }
       if (!g.clientSecret || !g.publishableKey) throw new Error("This payment can't be approved right now. Please message us.");
       const { loadStripe } = await import("@stripe/stripe-js");
       const stripe = await loadStripe(g.publishableKey).catch(() => null);
@@ -587,14 +587,20 @@ function ApproveBalance({ token, demo, onPaid }: { token: string; demo?: boolean
       if (res.error) throw new Error(`${res.error.message ?? "Your bank's check wasn't completed."} Nothing was charged.`);
       const p = await fetch(`/api/stay/${token}/balance`, { method: "POST" }).then((r) => r.json());
       if (!p.paid) throw new Error("Your bank's check wasn't completed. Nothing was charged; please try again.");
-      setSt("paid");
+      setSt("paid"); onPaid?.();
     } catch (e) { setSt("error"); setMsg((e as Error).message); }
   };
-  if (st === "paid") return demo ? null : <p className="ST-dim" role="status">Thank you! Your second payment is approved and paid.</p>;
+  // Button states (Oscar, Nov 21): spinner + "Processing payment…" while the bank check runs, then a check mark + "Paid".
+  if (st === "paid") return (
+    <div className="ST-approve">
+      <button type="button" className="ST-ask is-paid" disabled aria-disabled="true"><svg className="ST-btnIc" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>Paid</button>
+      <p className="ST-dim" role="status">Thank you! Your second payment is approved and paid.</p>
+    </div>
+  );
   return (
     <div className="ST-approve">
       <p className="ST-dim">Your bank asked you to approve this payment. Nothing has been charged yet.</p>
-      <button type="button" className="ST-ask" disabled={st === "working"} onClick={run}>{st === "working" ? "Opening your bank's check…" : "Approve payment"}</button>
+      <button type="button" className="ST-ask" disabled={st === "working"} aria-busy={st === "working"} onClick={run}>{st === "working" ? <><span className="ST-spin" aria-hidden="true" />Processing payment…</> : "Approve payment"}</button>
       {msg && <p className="ST-err" role="alert">{msg}</p>}
     </div>
   );
