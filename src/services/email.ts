@@ -130,24 +130,28 @@ ${r.note ? `<p style="margin:10px 0 0;font-size:13px;line-height:1.5;color:#5E5E
 </td></tr></table>`;
 }
 
-/** Bottom of the white card: logo, questions, site links, Instagram (Oscar, Nov 20). */
-function cardFooter(f: NonNullable<NoticeContent["footer"]>) {
-  return `<tr><td style="padding:24px 28px 26px;border-top:1px solid #BFDCCF">
+/** Footer contact part: logo, questions, site links, Instagram (Oscar, Nov 20). Sits in the beige footer block. */
+function footerContact(f: NonNullable<NoticeContent["footer"]>) {
+  return `
 <a href="${SITE_URL}/" style="text-decoration:none"><img src="${LOGO_URL}" width="64" height="56" alt="Pearl Heights Homes" style="display:block;border:0;width:64px;height:56px;margin:0 0 16px"></a>
 <div style="font-size:16px;font-weight:700;margin:0 0 4px">${esc(f.question ?? "Questions about your stay?")}</div>
 <p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:#5E5E63">Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:#0F6B52">${REPLY_TO}</a>.</p>
 <p style="margin:0 0 6px;font-size:14px;line-height:2">${FOOTER_LINKS.map(([t, u]) => `<a href="${SITE_URL}${u}" style="display:inline-block;margin-right:18px;color:#1D1D1F;font-weight:600;text-decoration:none;white-space:nowrap">${t}</a>`).join("")}</p>
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 0"><tr>
 <td valign="middle" style="padding-right:8px"><a href="https://www.instagram.com/pearlheightshomes" style="text-decoration:none"><img src="${IG_ICON}" width="24" height="24" alt="Instagram" style="display:block;border:0;width:24px;height:24px"></a></td>
-<td valign="middle" style="font-size:14px"><a href="https://www.instagram.com/pearlheightshomes" style="color:#0F6B52;text-decoration:none">Follow us on Instagram @pearlheightshomes</a></td></tr></table>
-</td></tr>`;
+<td valign="middle" style="font-size:14px"><a href="https://www.instagram.com/pearlheightshomes" style="color:#0F6B52;text-decoration:none">Follow us on Instagram @pearlheightshomes</a></td></tr></table>`;
 }
 
-/** Full-width grey band under the card, rounded top corners: about this email, booking record, legal line. */
-function legalBand(f: NonNullable<NoticeContent["footer"]>, year: number) {
+/**
+ * Standard footer (Oscar, Nov 20): one full-width beige block under the email, rounded top corners, soft spotlight
+ * behind the logo (top left). Contact part, a light green line, then about this email, booking record, legal line.
+ */
+function footerBlock(f: NonNullable<NoticeContent["footer"]>, year: number) {
   const small = (t: string, b: string) => `<p style="margin:0 0 12px;font-size:12px;line-height:1.55;color:#6B6B70"><b style="color:#3A3A3E">${esc(t)}</b><br>${esc(b)}</p>`;
-  return `<tr><td align="center" style="background-color:#EEEBE5;background-image:radial-gradient(ellipse 70% 120% at 50% 0%,#FBF9F5 0%,#F3F0EA 45%,#EEEBE5 80%);border-radius:18px 18px 0 0;padding:26px 12px 36px">
+  return `<tr><td align="center" style="background-color:#EEEBE5;background-image:radial-gradient(ellipse 60% 55% at 22% 8%,#FCFAF6 0%,#F4F1EB 50%,#EEEBE5 85%);border-radius:18px 18px 0 0;padding:34px 12px 36px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px"><tr><td style="padding:0 28px">
+${footerContact(f)}
+<div style="border-top:1px solid #BFDCCF;height:1px;line-height:1px;margin:24px 0 20px">&nbsp;</div>
 ${small("About this email", f.about ?? `This is a service message about your booking${f.bookingRef ? ` ${f.bookingRef}` : ""}. You'll receive booking emails like this one even if you've unsubscribed from our promotional emails.`)}
 ${f.about ? "" : small("Your booking record", "Pearl Heights Homes keeps the official record of your booking and payments. If anything in this email doesn't match what you expected, reply and we'll sort it out.")}
 <p style="margin:0;font-size:11px;line-height:1.55;color:#8A8A8F;text-transform:uppercase;letter-spacing:.03em">© ${year} PR Portfolio Properties LLC, doing business as Pearl Heights Homes · San Antonio, Texas</p>
@@ -174,7 +178,7 @@ ${(n.afterButton ?? []).map((s) => `<p style="margin:0 0 12px;font-size:14px;lin
 ${n.receipt ? receiptBlock(n.receipt) : ""}
 ${n.footer ? "" : `<p style="margin:18px 0 0;font-size:14px;color:${C.dim}">Questions? Reply to this email or write to <a href="mailto:${REPLY_TO}" style="color:${C.green}">${REPLY_TO}</a>.</p>
 <p style="margin:22px 0 0;font-size:12px;color:${C.dim}">Pearl Heights Homes · San Antonio, Texas</p>`}
-</td></tr>${n.footer ? cardFooter(n.footer) : ""}</table></td></tr>${n.footer ? legalBand(n.footer, new Date().getFullYear()) : ""}</table></body></html>`;
+</td></tr></table></td></tr>${n.footer ? footerBlock(n.footer, new Date().getFullYear()) : ""}</table></body></html>`;
   const text = [n.heading, ...(n.subheading ? [n.subheading] : []), "", ...n.paragraphs,
     ...(n.cta ? ["", `${n.cta.important ? "IMPORTANT: " : ""}${n.cta.title.toUpperCase()}`, `${n.cta.text}${n.cta.bold ? `${n.cta.bold}.` : ""}`, `${n.cta.button.label}: ${n.cta.button.url}`, ...(n.cta.note ? [n.cta.note] : [])] : []),
     ...(n.stay ? ["", n.stay.home, n.stay.area, ...n.stay.rows.map(([k, v]) => `${k}: ${v}`)] : []),
