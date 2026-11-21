@@ -9,6 +9,11 @@ import { issueStayLink } from "./stayLinks";
  */
 export const EMAIL_FROM_DEFAULT = "Pearl Heights Homes <bookings@pearlheightshomes.com>";
 export const REPLY_TO = "bookings@pearlheightshomes.com";
+/** Logo at the top right of every email (Oscar, Nov 20). PNG (some mail apps can't show WebP), 2x for sharp phones. */
+const LOGO_URL = "https://pearlheightshomes.com/brand/logo-email.png";
+const logoImg = `<img src="${LOGO_URL}" width="80" height="70" alt="Pearl Heights Homes" style="display:block;border:0;width:80px;height:70px">`;
+/** Headline on the left, logo on the right of the same row (Oscar, Nov 20). */
+const headRow = (left: string) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td valign="middle" style="padding-right:12px">${left}</td><td valign="middle" align="right" width="80" style="width:80px">${logoImg}</td></tr></table>`;
 
 export function emailEnabled(env: NodeJS.ProcessEnv = process.env) {
   return env.GUEST_EMAILS === "on" && !!env.RESEND_API_KEY;
@@ -67,11 +72,8 @@ export function confirmationEmail(d: ConfirmationEmailData): { subject: string; 
 <div style="display:none;max-height:0;overflow:hidden">Sign the rental agreement and verify your ID by ${esc(d.deadline)}.</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg}"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px;overflow:hidden">
-<tr><td style="padding:28px 28px 8px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:${C.dim}">Pearl Heights Homes</td></tr>
-<tr><td style="padding:0 28px">
-  <h1 style="margin:8px 0 6px;font-size:26px;line-height:1.25">You're booked, ${esc(d.firstName)}!</h1>
-  <p style="margin:0 0 20px;font-size:16px;color:${C.dim}">Payment received. Your dates are reserved.</p>
-</td></tr>
+<tr><td style="padding:24px 28px 20px">${headRow(`<h1 style="margin:0 0 6px;font-size:26px;line-height:1.25">You're booked, ${esc(d.firstName)}!</h1>
+  <p style="margin:0;font-size:16px;color:${C.dim}">Payment received. Your dates are reserved.</p>`)}</td></tr>
 <tr><td style="padding:0 28px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.soft};border:1px solid #CFE3DA;border-radius:12px"><tr><td style="padding:20px">
     <h2 style="margin:0 0 8px;font-size:19px">Complete your required steps</h2>
@@ -123,8 +125,7 @@ export function noticeEmail(n: NoticeContent): { subject: string; html: string; 
 <div style="display:none;max-height:0;overflow:hidden">${esc(n.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg}"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px"><tr><td style="padding:28px">
-<div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:${C.dim};margin-bottom:10px">Pearl Heights Homes</div>
-<h1 style="margin:0 0 14px;font-size:23px;line-height:1.3">${esc(n.heading)}</h1>
+<div style="margin:0 0 14px">${headRow(`<h1 style="margin:0;font-size:23px;line-height:1.3">${esc(n.heading)}</h1>`)}</div>
 ${n.paragraphs.map(p).join("\n")}
 ${n.list?.length ? `<ul style="margin:0 0 16px;padding-left:20px;font-size:15px;line-height:1.6">${n.list.map((li) => `<li>${esc(li)}</li>`).join("")}</ul>` : ""}
 ${n.button ? `<p style="margin:6px 0 18px"><a href="${esc(n.button.url)}" style="display:inline-block;background:${C.green};color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:14px 22px;border-radius:10px">${esc(n.button.label)} &rarr;</a></p>` : ""}
