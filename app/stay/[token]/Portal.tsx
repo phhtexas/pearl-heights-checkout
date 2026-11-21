@@ -594,7 +594,7 @@ function ApproveBalance({ token, amount, card, demo, paid, onPaid }: { token: st
   if (st === "paid") return (
     <div className="ST-approve">
       <button type="button" className="ST-ask is-paid" disabled aria-disabled="true"><svg className="ST-btnIc" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>Paid</button>
-      <p className="ST-dim" role="status">Thank you! Your second payment is approved and paid.</p>
+      <p className="ST-dim" role="status"><strong>Thank you! Your second payment is paid.</strong><br />We&apos;ll email your receipt in the next few minutes.</p>
     </div>
   );
   return (
