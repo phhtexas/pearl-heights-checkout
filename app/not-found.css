@@ -1,0 +1,9 @@
+.NF { padding-top: 40px; }
+.NF .G-btn { padding: 12px 18px; font-size: 15px; min-height: 44px; display: inline-flex; align-items: center; }
+.NF-homes { list-style: none; margin: 28px 0; padding: 0; display: grid; gap: 10px; }
+.NF-homes a { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border: 1px solid #e6dfd5; border-radius: 12px; text-decoration: none; color: inherit; }
+.NF-homes a:hover, .NF-homes a:focus-visible { border-color: #127A5E; }
+.NF-title { font-weight: 600; font-size: 16px; line-height: 1.35; }
+.NF-where { color: #55595d; font-size: 14px; }
+.NF-help { color: #55595d; font-size: 15px; }
+.NF-help a { color: #127A5E; }
