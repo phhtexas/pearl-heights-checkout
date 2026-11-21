@@ -104,7 +104,7 @@ function ctaBox(c: NonNullable<NoticeContent["cta"]>) {
   // `important` (Oscar, Nov 20): warm amber box, small IMPORTANT label, deadline in dark red; button stays brand green.
   // `urgent` (Oscar, Nov 21, final reminder only): red bar "IMPORTANT · ACTION REQUIRED", light red box, red button.
   const box = c.urgent ? "background:#FDF0EE;border:1px solid #F1C4BE" : c.important ? "background:#FFF7E6;border:1px solid #F2D49B" : "background:#F3F7F5;border:1px solid #D7E6DF";
-  const btn = c.urgent ? "#B42318" : "#0F6B52";
+  const btn = "#0F6B52"; // Oscar, Nov 21: brand green even in the urgent box, so it doesn't compete with the red header
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 20px;${box};border-radius:12px">
 ${c.urgent ? `<tr><td style="background:#B42318;padding:9px 20px;color:#ffffff;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:11px 11px 0 0">&#9888;&nbsp; Important · Action required</td></tr>` : ""}
 <tr><td style="padding:20px">

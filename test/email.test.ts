@@ -166,7 +166,8 @@ describe("reminders #4 and #5 (Oscar, Nov 21)", async () => {
     const m = noticeEmail(noticeContent("paperwork_reminder_2", { ...row, idDone: false, agreementDone: false }, "https://x/stay/abc"));
     expect(m.subject).toBe("Final reminder: your booking steps are due in 2 hours");
     expect(m.html).toContain("Action required");
-    expect(m.html).toContain("#B42318");
+    expect(m.html).toContain("#B42318"); // red header
+    expect(m.html).toMatch(/background:#0F6B52;color:#ffffff/); // green button
     expect(m.text).toContain("Sign the rental agreement and verify your ID by");
     expect(m.text).toContain("may cancel your booking with a full refund");
   });
