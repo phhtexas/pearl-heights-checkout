@@ -76,7 +76,8 @@ describe("which notice is due", () => {
     expect(r1.text).not.toContain("Sign the rental agreement");
     expect(r1.text).toContain("https://x/stay/abc");
     const ci = noticeEmail(noticeContent("checkin_day", { ...base, agreementDone: true, idDone: true }, "https://x/stay/abc"));
-    expect(ci.text).toContain("Open my stay page");
+    expect(ci.text).toContain("Get check-in details: https://x/stay/abc");
+    expect(ci.html).not.toContain("752 Myrtle");
     const cx = noticeEmail(noticeContent("cancellation", { ...base, state: "cancelled", refundedCents: 123456 }, null));
     expect(cx.text).toContain("$1,234.56");
     for (const k of ["paperwork_reminder_1", "paperwork_reminder_2", "checkin_day", "cancellation"] as const)
