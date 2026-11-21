@@ -63,7 +63,8 @@ export function confirmationEmail(d: ConfirmationEmailData): { subject: string; 
     paragraphs: [],
     cta: { title: "Complete your required steps", text: "Sign the rental agreement and verify your ID by ", bold: d.deadline,
       button: { label: "Complete required steps", url: d.link },
-      note: "Takes about 2 minutes. Once both are complete, you'll get your check-in details on your stay page. Keep this email: the button opens your private stay page." },
+      note: "Takes about 2 minutes. If both aren't done by the deadline, we may cancel your booking with a full refund. Once both are complete, you'll get your check-in details on your stay page.",
+      important: true },
     stay, receipt,
     footer: { bookingRef: d.bookingRef },
   });
@@ -84,7 +85,7 @@ export interface NoticeContent {
   button?: { label: string; url: string };
   afterButton?: string[];
   /** Primary call to action in a highlighted box under the headline (Oscar, Nov 20), like the confirmation email's. */
-  cta?: { title: string; text: string; bold?: string; button: { label: string; url: string }; note?: string };
+  cta?: { title: string; text: string; bold?: string; button: { label: string; url: string }; note?: string; important?: boolean };
   /** Stay card (Oscar, Nov 20): listing name (never the street address), area, and labeled rows (Check-in, Check-out...). */
   stay?: { home: string; area: string; rows: [label: string, value: string][] };
   /** Payment summary (Oscar, Nov 20, like an itemized receipt): price lines, total, then what was paid and what's due. */
@@ -97,9 +98,12 @@ const SITE_URL = "https://pearlheightshomes.com";
 const FOOTER_LINKS: [string, string][] = [["Our homes", "/"], ["About us", "/about"], ["Cancellation policy", "/policies/cancellation"], ["Terms", "/terms"], ["Privacy", "/privacy"]];
 
 function ctaBox(c: NonNullable<NoticeContent["cta"]>) {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 20px;background:#F3F7F5;border:1px solid #D7E6DF;border-radius:12px"><tr><td style="padding:20px">
+  // `important` (Oscar, Nov 20): warm amber box, small IMPORTANT label, deadline in dark red; button stays brand green.
+  const box = c.important ? "background:#FFF7E6;border:1px solid #F2D49B" : "background:#F3F7F5;border:1px solid #D7E6DF";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 20px;${box};border-radius:12px"><tr><td style="padding:20px">
+${c.important ? `<span style="display:inline-block;background:#F6E2B3;color:#7A4E00;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;margin:0 0 10px">Important</span>` : ""}
 <div style="font-size:19px;font-weight:700;margin:0 0 6px">${esc(c.title)}</div>
-<p style="margin:0 0 16px;font-size:15px;line-height:1.55">${esc(c.text)}${c.bold ? `<b>${esc(c.bold)}</b>.` : ""}</p>
+<p style="margin:0 0 16px;font-size:15px;line-height:1.55">${esc(c.text)}${c.bold ? `<b style="${c.important ? "color:#9A2B1E" : ""}">${esc(c.bold)}</b>.` : ""}</p>
 <a href="${esc(c.button.url)}" style="display:inline-block;background:#0F6B52;color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:14px 22px;border-radius:10px">${esc(c.button.label)} &rarr;</a>
 ${c.note ? `<p style="margin:14px 0 0;font-size:14px;line-height:1.5;color:#5E5E63">${esc(c.note)}</p>` : ""}
 </td></tr></table>`;
@@ -169,7 +173,7 @@ ${n.footer ? "" : `<p style="margin:18px 0 0;font-size:14px;color:${C.dim}">Ques
 <p style="margin:22px 0 0;font-size:12px;color:${C.dim}">Pearl Heights Homes · San Antonio, Texas</p>`}
 </td></tr>${n.footer ? cardFooter() : ""}</table></td></tr>${n.footer ? legalBand(n.footer, new Date().getFullYear()) : ""}</table></body></html>`;
   const text = [n.heading, ...(n.subheading ? [n.subheading] : []), "", ...n.paragraphs,
-    ...(n.cta ? ["", n.cta.title.toUpperCase(), `${n.cta.text}${n.cta.bold ? `${n.cta.bold}.` : ""}`, `${n.cta.button.label}: ${n.cta.button.url}`, ...(n.cta.note ? [n.cta.note] : [])] : []),
+    ...(n.cta ? ["", `${n.cta.important ? "IMPORTANT: " : ""}${n.cta.title.toUpperCase()}`, `${n.cta.text}${n.cta.bold ? `${n.cta.bold}.` : ""}`, `${n.cta.button.label}: ${n.cta.button.url}`, ...(n.cta.note ? [n.cta.note] : [])] : []),
     ...(n.stay ? ["", n.stay.home, n.stay.area, ...n.stay.rows.map(([k, v]) => `${k}: ${v}`)] : []),
     ...(n.list ?? []).map((l) => `- ${l}`),
     ...(n.button ? ["", `${n.button.label}: ${n.button.url}`] : []), ...(n.afterButton?.length ? ["", ...n.afterButton] : []),
