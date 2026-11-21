@@ -24,7 +24,7 @@ import { sendSms, smsEnabled, toE164 } from "./sms";
  *  - checkin_day: 8:00 AM CT on check-in day: portal button (or the paperwork button if still not done). Email + text.
  *  - cancellation: booking cancelled; refund amount when Stripe has recorded it.
  */
-export type NoticeKind = "paperwork_reminder_1" | "paperwork_reminder_2" | "balance_upcoming" | "balance_failed" | "balance_approval" | "balance_paid" | "checkin_day" | "cancellation";
+export type NoticeKind = "paperwork_reminder_1" | "paperwork_reminder_2" | "balance_upcoming" | "balance_failed" | "balance_approval" | "balance_paid" | "checkin_day" | "cancellation" | "refund_issued";
 
 const ACTIVE = new Set(["confirmed", "verified", "access_released"]);
 const CANCELLED = new Set(["cancelled", "cancelled_unverified", "closed"]);
@@ -38,6 +38,8 @@ export interface NoticeRow {
   refundedCents: number;
   /** Party size for the listing card (Oscar, Nov 21). Optional for older callers and tests. */
   guests?: { adults: number; children: number; infants: number };
+  /** Refund email (Oscar, Nov 21): what was paid, the planned refund, when it was issued, and the first payment (for the card). */
+  refund?: { paidCents: number; plannedCents: number | null; issuedAt: Date | null; firstPaymentIntent: string | null; livemode: boolean; card?: string };
 }
 
 const usd = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -71,6 +73,8 @@ export function dueNotices(r: NoticeRow, now: Date): NoticeKind[] {
     if (todayChicago(now) === r.checkIn && t >= eight && r.confirmedAt.getTime() < chicagoInstant(r.checkIn, 0).getTime()) out.push("checkin_day");
   }
   if (CANCELLED.has(r.state)) out.push("cancellation");
+  // Separate refund email once Stripe has the whole planned refund (Oscar, Nov 21).
+  if (CANCELLED.has(r.state) && r.refundedCents > 0 && (r.refund?.plannedCents == null || r.refundedCents >= r.refund.plannedCents)) out.push("refund_issued");
   return out;
 }
 
@@ -162,14 +166,34 @@ function noticeBody(kind: NoticeKind, r: NoticeRow, link: string | null): Notice
     case "cancellation":
       return {
         subject: `Your booking ${r.ref} at ${home} is cancelled`,
-        preheader: r.refundedCents > 0 ? `We've refunded ${usd(r.refundedCents)}.` : "Your cancellation details.",
+        preheader: r.refundedCents > 0 ? `Your refund of ${usd(r.refundedCents)} has been issued.` : "Your cancellation details.",
         heading: "Your booking is cancelled",
         paragraphs: [`Hi ${r.firstName}, your booking ${r.ref} at ${home} (${dates}) has been cancelled.`,
           r.refundedCents > 0
-            ? `We've refunded ${usd(r.refundedCents)} to your original payment method. Refunds usually appear within 5–10 business days, depending on your bank.`
+            ? `Your refund of ${usd(r.refundedCents)} has been issued. We'll send you a separate email with the refund details.`
             : "Any refund due under our cancellation policy goes back to your original payment method. Refunds usually appear within 5–10 business days, depending on your bank.",
           "Any scheduled payment for this booking has been cancelled."],
       };
+    case "refund_issued": {
+      // Oscar, Nov 21 (modelled on a retailer refund email): refund box, the cancelled booking, refund details.
+      const f = r.refund;
+      const paid = f?.paidCents || r.refundedCents;
+      const kept = Math.max(0, paid - r.refundedCents);
+      const when = new Date(f?.issuedAt ?? Date.now()).toLocaleDateString("en-US", { timeZone: "America/Chicago", weekday: "long", month: "long", day: "numeric", year: "numeric" });
+      return {
+        subject: `Your refund for booking ${r.ref} was issued`,
+        preheader: `We refunded ${usd(r.refundedCents)}${f?.card ? ` to your ${f.card.replace(/\u00A0••••\u00A0/, " ending in ")}` : ""}.`,
+        heading: "Your refund was issued",
+        subheading: `Hi ${r.firstName}, we've refunded your booking.`,
+        paragraphs: [],
+        refundBox: { rows: [["Refund date", when], ["Refund total", usd(r.refundedCents)], ...(f?.card ? [["Refunded to", f.card] as [string, string]] : [])],
+          note: "Refunds usually appear within 5–10 business days, depending on your bank. If you don't see it after that, check with your bank first, then reply to this email." },
+        stayTitle: "Your cancelled booking",
+        stay: buildStayCard({ propertyKey: r.propertyKey, checkIn: r.checkIn, checkOut: r.checkOut, ref: r.ref, ...r.guests }),
+        receipt: { title: "Refund details", totalLabel: "Refund total (USD)", lines: [["Total paid", usd(paid)], ...(kept > 0 ? [["Kept under the cancellation policy", `−${usd(kept)}`] as [string, string]] : [])],
+          total: usd(r.refundedCents), payments: [] },
+      };
+    }
   }
 }
 
@@ -187,7 +211,12 @@ export function reminderText(r: NoticeRow, link: string) {
 export async function loadNoticeRows(db: Db, now: Date): Promise<NoticeRow[]> {
   const rows = await db.query<any>(
     `SELECT b.id, b.booking_ref, b.state, b.confirmed_at, b.verification_deadline_at, b.verification_rule,
-            q.property_key, q.check_in, q.check_out, q.adults, q.children, q.infants, g.first_name, g.email, g.phone,
+            q.property_key, q.check_in, q.check_out, q.adults, q.children, q.infants, q.livemode, g.first_name, g.email, g.phone,
+            (SELECT COALESCE(SUM(p.amount_cents), 0) FROM payments p WHERE p.booking_id = b.id AND p.kind IN ('initial', 'scheduled') AND p.stripe_payment_intent_id IS NOT NULL
+               AND p.status IN ('captured', 'paid', 'partially_refunded', 'refunded')) AS paid_cents,
+            (SELECT p.stripe_payment_intent_id FROM payments p WHERE p.booking_id = b.id AND p.kind = 'initial' ORDER BY p.created_at LIMIT 1) AS first_pi,
+            (SELECT MAX(a.at) FROM audit_log a WHERE a.booking_id = b.id AND a.action = 'refund_issued') AS refund_at,
+            (SELECT a.after->>'refund' FROM audit_log a WHERE a.booking_id = b.id AND a.action = 'host_cancel_planned' ORDER BY a.id DESC LIMIT 1) AS planned_refund,
             v.agreement_status, v.id_status,
             (SELECT m.status FROM guest_messages m WHERE m.booking_id = b.id AND m.kind = 'confirmation' AND m.channel = 'sms') AS sms_status,
             sp.amount_cents AS bal_cents, sp.status AS bal_status, sp.scheduled_for, sp.cure_deadline_at, sp.first_decline_at,
@@ -209,6 +238,8 @@ export async function loadNoticeRows(db: Db, now: Date): Promise<NoticeRow[]> {
     balance: x.bal_status == null ? null : { cents: Number(x.bal_cents), status: x.bal_status, scheduledFor: d(x.scheduled_for), cureDeadline: d(x.cure_deadline_at), declined: x.first_decline_at != null },
     refundedCents: Number(x.refunded),
     guests: { adults: Number(x.adults ?? 0), children: Number(x.children ?? 0), infants: Number(x.infants ?? 0) },
+    refund: { paidCents: Number(x.paid_cents ?? 0), plannedCents: x.planned_refund == null ? null : Number(x.planned_refund), issuedAt: d(x.refund_at),
+      firstPaymentIntent: x.first_pi ?? null, livemode: !!x.livemode },
   }));
 }
 
@@ -230,18 +261,22 @@ async function once(db: Db, bookingId: string, kind: string, channel: "email" | 
 
 export interface NoticeCounts { checked: number; sent: number; failed: number }
 
-export async function sweepGuestNotices(db: Db, origin: string, now = new Date(), env: NodeJS.ProcessEnv = process.env, fetchImpl: typeof fetch = fetch): Promise<NoticeCounts> {
+export async function sweepGuestNotices(db: Db, origin: string, now = new Date(), env: NodeJS.ProcessEnv = process.env, fetchImpl: typeof fetch = fetch,
+  /** Card brand + last 4 for the refund email, from Stripe in the booking's mode. Optional: the email works without it. */
+  cardFor?: (livemode: boolean, paymentIntentId: string) => Promise<string | undefined>): Promise<NoticeCounts> {
   const c: NoticeCounts = { checked: 0, sent: 0, failed: 0 };
   if (!emailEnabled(env)) return c;
   for (const r of await loadNoticeRows(db, now)) {
     c.checked++;
     for (const kind of dueNotices(r, now)) {
-      const needsLink = kind !== "cancellation" && kind !== "balance_upcoming" && kind !== "balance_failed";
+      const needsLink = kind !== "cancellation" && kind !== "refund_issued" && kind !== "balance_upcoming" && kind !== "balance_failed";
       const link = async () => {
         const token = await issueStayLink(db, { bookingRef: r.ref, sessionId: "", channel: "email", now });
         if (!token) throw new Error("no stay link");
         return `${origin}/stay/${token}`;
       };
+      if (kind === "refund_issued" && cardFor && r.refund?.firstPaymentIntent && !r.refund.card)
+        r.refund.card = await cardFor(r.refund.livemode, r.refund.firstPaymentIntent).catch(() => undefined);
       const res = await once(db, r.id, kind, "email", null, async () => {
         const m = noticeEmail(noticeContent(kind, r, needsLink ? await link() : null));
         return sendEmail(r.email, m, `${kind}-${r.ref}`, env, fetchImpl);

@@ -1,3 +1,4 @@
+import { cardLabel } from "@/services/emailBlocks";
 import { NextResponse } from "next/server";
 import { authorized, runReconciliation } from "@/server/reconcileRunner";
 import { getAdapters, getLedger } from "@/server/adapters";
@@ -36,11 +37,13 @@ async function handle(req: Request): Promise<Response> {
   // Also runs if the switch is turned off later, while live bookings still have balances due.
   let live: { reconciliation: unknown; secondCharges: unknown } | undefined;
   let liveHosp: typeof hosp | undefined;
+  let livePay: typeof pay | undefined;
   const hasLive = liveSwitchOn() || (await (async () => getDb()!.query(`SELECT 1 FROM quotes WHERE livemode LIMIT 1`))().catch(() => [])).length > 0;
   if (hasLive) {
     try {
       const L = getAdapters("none", envForMode("live"), "reconciler-live");
       liveHosp = L.hosp;
+      livePay = L.pay;
       live = {
         reconciliation: await runReconciliation(ledger, deps(L.hosp, L.pay), { livemode: true }),
         secondCharges: await runDueSecondCharges(getDb()!, L.pay, 10, true),
@@ -54,7 +57,8 @@ async function handle(req: Request): Promise<Response> {
   const checkinMessages = new Date().getUTCMinutes() === 7 ? await sweepCheckinMessages(getDb()!, liveHosp ?? hosp).catch(() => ({ checked: 0, cancelled: 0, failed: 1 })) : undefined;
   // Every 5 minutes: guest reminders and notices (off until GUEST_EMAILS=on). Links use the public site address.
   const guestNotices = new Date().getUTCMinutes() % 5 === 3
-    ? await sweepGuestNotices(getDb()!, process.env.PUBLIC_ORIGIN || "https://pearlheightshomes.com").catch((e) => { console.error("guest notices", String(e?.message ?? e)); return { checked: 0, sent: 0, failed: 1 }; })
+    ? await sweepGuestNotices(getDb()!, process.env.PUBLIC_ORIGIN || "https://pearlheightshomes.com", new Date(), process.env, fetch,
+        async (live, pi) => cardLabel(await (live ? livePay : pay)?.cardSummary?.({ paymentIntentId: pi }))).catch((e) => { console.error("guest notices", String(e?.message ?? e)); return { checked: 0, sent: 0, failed: 1 }; })
     : undefined;
   // Once an hour: ask Stripe to redact ID checks 120 days after check-out (Privacy Notice §4, §10).
   const idRedaction = new Date().getUTCMinutes() === 23 ? await redactDueVerifications(getDb()!).catch(() => ({ due: 0, redacted: 0, failed: 1 })) : undefined;

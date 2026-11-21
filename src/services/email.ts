@@ -92,7 +92,11 @@ export interface NoticeContent {
   /** Stay card (Oscar, Nov 20): listing name (never the street address), area, and labeled rows (Check-in, Check-out...). */
   stay?: { home: string; area: string; rows: [label: string, value: string][] };
   /** Payment summary (Oscar, Nov 20, like an itemized receipt): price lines, total, then what was paid and what's due. */
-  receipt?: { lines: [label: string, amount: string][]; total: string; note?: string; payments: [label: string, amount: string, sub?: string][]; due?: [label: string, amount: string] };
+  receipt?: { title?: string; totalLabel?: string; lines: [label: string, amount: string][]; total: string; note?: string; payments: [label: string, amount: string, sub?: string][]; due?: [label: string, amount: string] };
+  /** Refund email (Oscar, Nov 21): green box with a check mark, refund date, total and card. */
+  refundBox?: { rows: [label: string, value: string][]; note?: string };
+  /** Small heading above the stay card (e.g. "Your cancelled booking"). */
+  stayTitle?: string;
   /** Full footer (Oscar, Nov 20): contact, site links, Instagram, about-this-email and the legal line. */
   footer?: { bookingRef?: string; question?: string; about?: string };
 }
@@ -116,6 +120,15 @@ ${c.note ? `<p style="margin:14px 0 0;font-size:14px;line-height:1.5;color:#5E5E
 </td></tr></table>`;
 }
 
+function refundBoxHtml(b: NonNullable<NoticeContent["refundBox"]>) {
+  const rows = b.rows.map(([k, v], i) => `<tr><td style="padding:8px 0;${i ? "border-top:1px solid #BFDCCF;" : ""}color:#5E5E63;width:110px;vertical-align:top">${esc(k)}</td><td style="padding:8px 0;${i ? "border-top:1px solid #BFDCCF;" : ""}font-weight:600">${esc(v)}</td></tr>`).join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 22px;background:#F3F7F5;border:1px solid #D7E6DF;border-radius:12px"><tr><td style="padding:20px">
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 14px"><tr><td style="width:36px;height:36px;border-radius:50%;background:#0F6B52;color:#ffffff;text-align:center;font-size:20px;font-weight:700;line-height:36px">&#10003;</td><td style="padding-left:12px;font-size:17px;font-weight:700">Refund issued</td></tr></table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:15px">${rows}</table>
+${b.note ? `<p style="margin:12px 0 0;font-size:14px;line-height:1.5;color:#5E5E63">${esc(b.note)}</p>` : ""}
+</td></tr></table>`;
+}
+
 function stayCard(st: NonNullable<NoticeContent["stay"]>) {
   const rows = st.rows.map(([k, v], i) => `<tr><td style="padding:10px 0;${i ? "border-top:1px solid #BFDCCF;" : ""}font-size:13px;color:#5E5E63;width:96px;vertical-align:top">${esc(k)}</td><td style="padding:10px 0;${i ? "border-top:1px solid #BFDCCF;" : ""}font-size:15px;font-weight:600;line-height:1.4">${esc(v)}</td></tr>`).join("");
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 20px;border:1px solid #E3E3E6;border-radius:12px"><tr><td style="padding:16px 18px">
@@ -127,8 +140,8 @@ function receiptBlock(r: NonNullable<NoticeContent["receipt"]>) {
   const row = (k: string, v: string, strong = false, sub?: string) => `<tr><td style="padding:7px 0;font-size:15px;${strong ? "font-weight:700;" : ""}">${esc(k)}${sub ? `<div style="font-size:13px;color:#5E5E63;margin-top:2px">${esc(sub)}</div>` : ""}</td><td align="right" style="padding:7px 0;font-size:15px;white-space:nowrap;${strong ? "font-weight:700;" : ""}">${esc(v)}</td></tr>`;
   const rule = `<tr><td colspan="2" style="padding:6px 0"><div style="border-top:1px solid #BFDCCF;height:1px;line-height:1px">&nbsp;</div></td></tr>`;
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;background:#F7F6F3;border-radius:12px"><tr><td style="padding:20px 18px">
-<div style="font-size:17px;font-weight:700;margin:0 0 8px">Payment summary</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${r.lines.map(([k, v]) => row(k, v)).join("")}${rule}${row("Total (USD)", r.total, true)}
+<div style="font-size:17px;font-weight:700;margin:0 0 8px">${esc(r.title ?? "Payment summary")}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${r.lines.map(([k, v]) => row(k, v)).join("")}${rule}${row(r.totalLabel ?? "Total (USD)", r.total, true)}
 ${r.payments.length ? `${rule}${r.payments.map(([k, v, sub]) => row(k, v, false, sub)).join("")}` : ""}${r.due ? row(r.due[0], r.due[1], true) : ""}</table>
 ${r.note ? `<p style="margin:10px 0 0;font-size:13px;line-height:1.5;color:#5E5E63">${esc(r.note)}</p>` : ""}
 </td></tr></table>`;
@@ -175,6 +188,8 @@ export function noticeEmail(n: NoticeContent): { subject: string; html: string; 
   : `<h1 style="margin:0;font-size:23px;line-height:1.3">${esc(n.heading)}</h1>`)}</div>
 ${n.paragraphs.map(p).join("\n")}
 ${n.cta ? ctaBox(n.cta) : ""}
+${n.refundBox ? refundBoxHtml(n.refundBox) : ""}
+${n.stayTitle && n.stay ? `<div style="font-size:15px;font-weight:700;margin:6px 0 10px">${esc(n.stayTitle)}</div>` : ""}
 ${n.stay ? stayCard(n.stay) : ""}
 ${n.list?.length ? `<ul style="margin:0 0 16px;padding-left:20px;font-size:15px;line-height:1.6">${n.list.map((li) => `<li>${esc(li)}</li>`).join("")}</ul>` : ""}
 ${n.button ? `<p style="margin:6px 0 18px"><a href="${esc(n.button.url)}" style="display:inline-block;background:${C.green};color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:14px 22px;border-radius:10px">${esc(n.button.label)} &rarr;</a></p>` : ""}
@@ -185,10 +200,11 @@ ${n.footer ? "" : `<p style="margin:18px 0 0;font-size:14px;color:${C.dim}">Ques
 </td></tr></table></td></tr>${n.footer ? footerBlock(n.footer, new Date().getFullYear()) : ""}</table></body></html>`;
   const text = [n.heading, ...(n.subheading ? [n.subheading] : []), "", ...n.paragraphs,
     ...(n.cta ? ["", `${n.cta.urgent ? "IMPORTANT · ACTION REQUIRED: " : n.cta.important ? "IMPORTANT: " : ""}${n.cta.title.toUpperCase()}`, `${n.cta.text}${n.cta.bold ? `${n.cta.bold}.` : ""}`, `${n.cta.button.label}: ${n.cta.button.url}`, ...(n.cta.note ? [n.cta.note] : [])] : []),
-    ...(n.stay ? ["", n.stay.home, n.stay.area, ...n.stay.rows.map(([k, v]) => `${k}: ${v}`)] : []),
+    ...(n.refundBox ? ["", "REFUND ISSUED", ...n.refundBox.rows.map(([k, v]) => `${k}: ${v}`), ...(n.refundBox.note ? [n.refundBox.note] : [])] : []),
+    ...(n.stay ? ["", ...(n.stayTitle ? [n.stayTitle.toUpperCase()] : []), n.stay.home, n.stay.area, ...n.stay.rows.map(([k, v]) => `${k}: ${v}`)] : []),
     ...(n.list ?? []).map((l) => `- ${l}`),
     ...(n.button ? ["", `${n.button.label}: ${n.button.url}`] : []), ...(n.afterButton?.length ? ["", ...n.afterButton] : []),
-    ...(n.receipt ? ["", "PAYMENT SUMMARY", ...n.receipt.lines.map(([k, v]) => `${k}: ${v}`), `Total (USD): ${n.receipt.total}`,
+    ...(n.receipt ? ["", (n.receipt.title ?? "Payment summary").toUpperCase(), ...n.receipt.lines.map(([k, v]) => `${k}: ${v}`), `${n.receipt.totalLabel ?? "Total (USD)"}: ${n.receipt.total}`,
       ...n.receipt.payments.map(([k, v, sub]) => `${k}${sub ? ` (${sub})` : ""}: ${v}`), ...(n.receipt.due ? [`${n.receipt.due[0]}: ${n.receipt.due[1]}`] : []), ...(n.receipt.note ? [n.receipt.note] : [])] : []),
     "", `Questions? Reply to this email or write to ${REPLY_TO}.`,
     ...(n.footer ? ["", `Our homes: ${SITE_URL}`, `Cancellation policy: ${SITE_URL}/policies/cancellation`, "",

@@ -172,3 +172,31 @@ describe("reminders #4 and #5 (Oscar, Nov 21)", async () => {
     expect(m.text).toContain("may cancel your booking with a full refund");
   });
 });
+
+describe("refund email (Oscar, Nov 21)", async () => {
+  const { noticeContent, dueNotices } = await import("../src/services/guestNotices");
+  const { noticeEmail } = await import("../src/services/email");
+  const row = { id: "b", ref: "PH-REF001", state: "cancelled", confirmedAt: new Date("2026-11-20T12:00:00Z"), deadlineAt: null, rule: "24h",
+    propertyKey: "752", checkIn: "2027-02-01", checkOut: "2027-02-03", firstName: "Ana", email: "a@x.com", phone: "", agreementDone: true, idDone: true, textedConfirmation: false,
+    balance: null, refundedCents: 167113, guests: { adults: 2, children: 0, infants: 0 },
+    refund: { paidCents: 174238, plannedCents: 167113, issuedAt: new Date("2026-11-21T18:00:00Z"), firstPaymentIntent: "pi_1", livemode: true, card: "Amex •••• 3425" } } as any;
+  it("goes out once the whole planned refund is in, with total, card, kept amount and the cancelled booking", () => {
+    expect(dueNotices(row, new Date())).toEqual(["cancellation", "refund_issued"]);
+    expect(dueNotices({ ...row, refundedCents: 50000 }, new Date())).toEqual(["cancellation"]);
+    const m = noticeEmail(noticeContent("refund_issued", row, null));
+    expect(m.subject).toBe("Your refund for booking PH-REF001 was issued");
+    for (const s of [m.html, m.text]) {
+      expect(s).toContain("$1,671.13");
+      expect(s).toContain("Amex •••• 3425");
+      expect(s).toContain("Kept under the cancellation policy");
+      expect(s).toContain("−$71.25");
+      expect(s).toContain("Saturday, November 21, 2026");
+      expect(s).not.toContain("752 Myrtle");
+    }
+    expect(m.html).toContain("Refund details");
+    expect(m.html).toContain("About this email");
+  });
+  it("the cancellation email points to the refund email", () => {
+    expect(noticeEmail(noticeContent("cancellation", row, null)).text).toContain("We'll send you a separate email with the refund details.");
+  });
+});
