@@ -19,9 +19,14 @@ export async function GET(req: Request) {
   const rl = await checkLimit(getDb(), req, LIMITS.testEmail);
   if (!rl.ok) return tooMany(rl.retryAfterS);
   const h = HOMES["claywell"]!;
+  // Nov 20 redesign sample: listing card, itemized payment summary with the card used, standard footer.
+  const quote = { nights: 3, lodging: 180000, extraGuestFee: 0, cleaning: 25000, protection: 7900, taxableBase: 205000, tax: 34297, taxRate: 0.1673, total: 247197,
+    plan: { split: true, dueNow: 123599, scheduled: { amount: 123598, chargeAt: new Date("2027-01-11T22:00:00Z") } }, fullPlan: { split: false, dueNow: 247197 },
+    nonRefundable: false, processingFeeBase: 205000 } as never;
   const m = confirmationEmail({ firstName: "Alex", homeName: "The Claywell", photoUrl: h.photoBase + h.photos[0]!.id + ".jpg", bookingRef: "PH-SAMPLE",
     dates: "Feb 10–13", guests: 4, deadline: "Monday, February 9, 2027 at 4:00 PM CT", link: "https://pearlheightshomes.com/",
-    paidToday: "$1,184.62", balanceLine: "$1,184.62 on Tue, Jan 26", nonRefundable: false });
+    paidToday: "$1,235.99", balanceLine: "$1,235.98 on Mon, Jan 11", nonRefundable: false,
+    propertyKey: "claywell", checkIn: "2027-02-10", checkOut: "2027-02-13", adults: 2, children: 2, infants: 0, quote, bookedAt: new Date(), card: "Visa\u00A0••••\u00A04242" });
   try {
     const id = await sendEmail(REPLY_TO, { ...m, subject: "[SAMPLE] " + m.subject }, `sample-${Date.now()}`);
     return NextResponse.json({ sent: true, to: REPLY_TO, id }, { headers: noStore });
