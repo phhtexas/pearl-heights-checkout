@@ -102,7 +102,7 @@ describe("notice sweep (database)", () => {
     const f = okFetch();
     expect(await sweepGuestNotices(db, "https://pearlheightshomes.com", later, ENV, f as any)).toMatchObject({ sent: 1, failed: 0 });
     expect((f.mock.calls[0] as any)[0]).toBe("https://api.resend.com/emails");
-    expect(JSON.parse((f.mock.calls[0] as any)[1].body).subject).toMatch(/^Reminder: your required check-in steps for 752 Myrtle/);
+    expect(JSON.parse((f.mock.calls[0] as any)[1].body).subject).toMatch(/^Reminder: finish your booking steps by \w{3}, \w{3} \d+, \d+:\d\d [AP]M CT$/);
     expect(await sweepGuestNotices(db, "https://pearlheightshomes.com", later, ENV, f as any)).toMatchObject({ sent: 0 });
     // Opted-in guest (confirmation text sent): the final reminder also goes by text.
     await db.query(`INSERT INTO guest_messages (booking_id, kind, channel, status) VALUES ($1, 'confirmation', 'sms', 'sent')`, [b.id]);

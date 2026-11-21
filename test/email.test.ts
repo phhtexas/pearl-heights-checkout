@@ -146,3 +146,28 @@ describe("standard footer (Oscar, Nov 20)", async () => {
       expect(h).not.toContain("About this email");
   });
 });
+
+describe("reminders #4 and #5 (Oscar, Nov 21)", async () => {
+  const { noticeContent } = await import("../src/services/guestNotices");
+  const { noticeEmail } = await import("../src/services/email");
+  const row = { id: "b", ref: "PH-REM001", state: "confirmed", confirmedAt: new Date("2027-01-01T12:00:00Z"), deadlineAt: new Date("2027-01-02T12:00:00Z"), rule: "24h",
+    propertyKey: "752", checkIn: "2027-02-01", checkOut: "2027-02-03", firstName: "Ana", email: "a@x.com", phone: "", agreementDone: true, idDone: false, textedConfirmation: false,
+    balance: null, refundedCents: 0, guests: { adults: 2, children: 1, infants: 0 } } as any;
+  it("#4: amber IMPORTANT box, only the missing step, listing card, no street name", () => {
+    const m = noticeEmail(noticeContent("paperwork_reminder_1", row, "https://x/stay/abc"));
+    expect(m.html).toContain("#FFF7E6");
+    expect(m.text).toContain("Verify your ID by");
+    expect(m.text).not.toContain("Sign the rental agreement");
+    expect(m.html).not.toContain("752 Myrtle");
+    expect(m.html).toContain("Monday, February 1, 2027 @ 4:00 PM");
+    expect(m.text).toContain("3 guests");
+  });
+  it("#5: red urgent box and subject", () => {
+    const m = noticeEmail(noticeContent("paperwork_reminder_2", { ...row, idDone: false, agreementDone: false }, "https://x/stay/abc"));
+    expect(m.subject).toBe("Final reminder: your booking steps are due in 2 hours");
+    expect(m.html).toContain("Action required");
+    expect(m.html).toContain("#B42318");
+    expect(m.text).toContain("Sign the rental agreement and verify your ID by");
+    expect(m.text).toContain("may cancel your booking with a full refund");
+  });
+});

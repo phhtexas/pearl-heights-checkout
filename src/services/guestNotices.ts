@@ -3,6 +3,7 @@ import { getProperty } from "../domain/properties";
 import { chicagoInstant, formatChicagoDateTime, todayChicago } from "../domain/time";
 import { issueStayLink } from "./stayLinks";
 import { emailEnabled, noticeEmail, sendEmail, type NoticeContent } from "./email";
+import { buildStayCard } from "./emailBlocks";
 import { sendSms, smsEnabled, toE164 } from "./sms";
 
 /**
@@ -35,6 +36,8 @@ export interface NoticeRow {
   agreementDone: boolean; idDone: boolean; textedConfirmation: boolean;
   balance: { cents: number; status: string; scheduledFor: Date | null; cureDeadline: Date | null; declined: boolean } | null;
   refundedCents: number;
+  /** Party size for the listing card (Oscar, Nov 21). Optional for older callers and tests. */
+  guests?: { adults: number; children: number; infants: number };
 }
 
 const usd = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -72,6 +75,11 @@ export function dueNotices(r: NoticeRow, now: Date): NoticeKind[] {
 }
 
 /** Every guest notice carries the standard footer (Oscar, Nov 20). */
+/** "Sat, Nov 21, 10:15 PM CT" for subject lines. */
+function shortDeadline(d: Date | null) {
+  return d ? `${new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(d)} CT` : "the deadline";
+}
+
 export function noticeContent(kind: NoticeKind, r: NoticeRow, link: string | null): NoticeContent {
   return { ...noticeBody(kind, r, link), footer: { bookingRef: r.ref } };
 }
@@ -84,16 +92,19 @@ function noticeBody(kind: NoticeKind, r: NoticeRow, link: string | null): Notice
   switch (kind) {
     case "paperwork_reminder_1":
     case "paperwork_reminder_2": {
+      // Oscar, Nov 21: #4 looks like the confirmation (amber IMPORTANT box); #5, the final one, uses the red urgent box.
       const final = kind === "paperwork_reminder_2";
+      const todo = missing.length === 2 ? "Sign the rental agreement and verify your ID" : missing[0] ?? "Complete your steps";
       return {
-        subject: final ? `Final reminder: finish your required check-in steps by ${deadline}` : `Reminder: your required check-in steps for ${home} are due ${deadline}`,
+        subject: final ? "Final reminder: your booking steps are due in 2 hours" : `Reminder: finish your booking steps by ${shortDeadline(r.deadlineAt)}`,
         preheader: `About 2 minutes: ${missing.join(" and ").toLowerCase()}.`,
         heading: final ? `Almost there, ${r.firstName}` : `A quick reminder, ${r.firstName}`,
-        paragraphs: [final ? `To get ready for your stay at ${home} (${dates}, booking ${r.ref}), complete the steps below by ${deadline}:` : `For your stay at ${home} (${dates}, booking ${r.ref}), complete the steps below by ${deadline}:`],
-        list: missing, button: steps,
-        afterButton: ["It takes about 2 minutes. Once both are complete, your check-in details will be on your stay page.",
-          // Oscar, Nov 20: only the final reminder mentions what the Booking Terms allow if the steps aren't done.
-          ...(final ? ["If both aren't done by the deadline, we may cancel your booking with a full refund."] : [])],
+        subheading: final ? "Your booking steps are due in about 2 hours." : "Your booking steps aren't finished yet.",
+        paragraphs: [],
+        cta: { title: "Complete your required steps", text: `${todo} by `, bold: deadline, button: steps,
+          note: "Takes about 2 minutes. If both aren't done by the deadline, we may cancel your booking with a full refund.",
+          important: !final, urgent: final },
+        stay: buildStayCard({ propertyKey: r.propertyKey, checkIn: r.checkIn, checkOut: r.checkOut, ref: r.ref, ...r.guests }),
       };
     }
     case "balance_upcoming":
@@ -176,7 +187,7 @@ export function reminderText(r: NoticeRow, link: string) {
 export async function loadNoticeRows(db: Db, now: Date): Promise<NoticeRow[]> {
   const rows = await db.query<any>(
     `SELECT b.id, b.booking_ref, b.state, b.confirmed_at, b.verification_deadline_at, b.verification_rule,
-            q.property_key, q.check_in, q.check_out, g.first_name, g.email, g.phone,
+            q.property_key, q.check_in, q.check_out, q.adults, q.children, q.infants, g.first_name, g.email, g.phone,
             v.agreement_status, v.id_status,
             (SELECT m.status FROM guest_messages m WHERE m.booking_id = b.id AND m.kind = 'confirmation' AND m.channel = 'sms') AS sms_status,
             sp.amount_cents AS bal_cents, sp.status AS bal_status, sp.scheduled_for, sp.cure_deadline_at, sp.first_decline_at,
@@ -197,6 +208,7 @@ export async function loadNoticeRows(db: Db, now: Date): Promise<NoticeRow[]> {
     agreementDone: x.agreement_status === "signed", idDone: x.id_status === "verified", textedConfirmation: x.sms_status === "sent",
     balance: x.bal_status == null ? null : { cents: Number(x.bal_cents), status: x.bal_status, scheduledFor: d(x.scheduled_for), cureDeadline: d(x.cure_deadline_at), declined: x.first_decline_at != null },
     refundedCents: Number(x.refunded),
+    guests: { adults: Number(x.adults ?? 0), children: Number(x.children ?? 0), infants: Number(x.infants ?? 0) },
   }));
 }
 

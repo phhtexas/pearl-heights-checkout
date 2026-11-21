@@ -88,7 +88,7 @@ export interface NoticeContent {
   button?: { label: string; url: string };
   afterButton?: string[];
   /** Primary call to action in a highlighted box under the headline (Oscar, Nov 20), like the confirmation email's. */
-  cta?: { title: string; text: string; bold?: string; button: { label: string; url: string }; note?: string; important?: boolean };
+  cta?: { title: string; text: string; bold?: string; button: { label: string; url: string }; note?: string; important?: boolean; urgent?: boolean };
   /** Stay card (Oscar, Nov 20): listing name (never the street address), area, and labeled rows (Check-in, Check-out...). */
   stay?: { home: string; area: string; rows: [label: string, value: string][] };
   /** Payment summary (Oscar, Nov 20, like an itemized receipt): price lines, total, then what was paid and what's due. */
@@ -102,12 +102,16 @@ const FOOTER_LINKS: [string, string][] = [["Our homes", "/"], ["About us", "/abo
 
 function ctaBox(c: NonNullable<NoticeContent["cta"]>) {
   // `important` (Oscar, Nov 20): warm amber box, small IMPORTANT label, deadline in dark red; button stays brand green.
-  const box = c.important ? "background:#FFF7E6;border:1px solid #F2D49B" : "background:#F3F7F5;border:1px solid #D7E6DF";
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 20px;${box};border-radius:12px"><tr><td style="padding:20px">
-${c.important ? `<span style="display:inline-block;background:#F6E2B3;color:#7A4E00;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;margin:0 0 10px">Important</span>` : ""}
-<div style="font-size:19px;font-weight:700;margin:0 0 6px">${esc(c.title)}</div>
-<p style="margin:0 0 16px;font-size:15px;line-height:1.55">${esc(c.text)}${c.bold ? `<b style="${c.important ? "color:#9A2B1E" : ""}">${esc(c.bold)}</b>.` : ""}</p>
-<a href="${esc(c.button.url)}" style="display:inline-block;background:#0F6B52;color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:14px 22px;border-radius:10px">${esc(c.button.label)} &rarr;</a>
+  // `urgent` (Oscar, Nov 21, final reminder only): red bar "IMPORTANT · ACTION REQUIRED", light red box, red button.
+  const box = c.urgent ? "background:#FDF0EE;border:1px solid #F1C4BE" : c.important ? "background:#FFF7E6;border:1px solid #F2D49B" : "background:#F3F7F5;border:1px solid #D7E6DF";
+  const btn = c.urgent ? "#B42318" : "#0F6B52";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 20px;${box};border-radius:12px">
+${c.urgent ? `<tr><td style="background:#B42318;padding:9px 20px;color:#ffffff;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:11px 11px 0 0">&#9888;&nbsp; Important · Action required</td></tr>` : ""}
+<tr><td style="padding:20px">
+${c.important && !c.urgent ? `<span style="display:inline-block;background:#F6E2B3;color:#7A4E00;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;margin:0 0 10px">Important</span>` : ""}
+<div style="font-size:19px;font-weight:700;margin:0 0 6px;${c.urgent ? "color:#7A1A12" : ""}">${esc(c.title)}</div>
+<p style="margin:0 0 16px;font-size:15px;line-height:1.55">${esc(c.text)}${c.bold ? `<b style="${c.important && !c.urgent ? "color:#9A2B1E" : ""}">${esc(c.bold)}</b>.` : ""}</p>
+<a href="${esc(c.button.url)}" style="display:inline-block;background:${btn};color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:14px 22px;border-radius:10px">${esc(c.button.label)} &rarr;</a>
 ${c.note ? `<p style="margin:14px 0 0;font-size:14px;line-height:1.5;color:#5E5E63">${esc(c.note)}</p>` : ""}
 </td></tr></table>`;
 }
@@ -180,7 +184,7 @@ ${n.footer ? "" : `<p style="margin:18px 0 0;font-size:14px;color:${C.dim}">Ques
 <p style="margin:22px 0 0;font-size:12px;color:${C.dim}">Pearl Heights Homes · San Antonio, Texas</p>`}
 </td></tr></table></td></tr>${n.footer ? footerBlock(n.footer, new Date().getFullYear()) : ""}</table></body></html>`;
   const text = [n.heading, ...(n.subheading ? [n.subheading] : []), "", ...n.paragraphs,
-    ...(n.cta ? ["", `${n.cta.important ? "IMPORTANT: " : ""}${n.cta.title.toUpperCase()}`, `${n.cta.text}${n.cta.bold ? `${n.cta.bold}.` : ""}`, `${n.cta.button.label}: ${n.cta.button.url}`, ...(n.cta.note ? [n.cta.note] : [])] : []),
+    ...(n.cta ? ["", `${n.cta.urgent ? "IMPORTANT · ACTION REQUIRED: " : n.cta.important ? "IMPORTANT: " : ""}${n.cta.title.toUpperCase()}`, `${n.cta.text}${n.cta.bold ? `${n.cta.bold}.` : ""}`, `${n.cta.button.label}: ${n.cta.button.url}`, ...(n.cta.note ? [n.cta.note] : [])] : []),
     ...(n.stay ? ["", n.stay.home, n.stay.area, ...n.stay.rows.map(([k, v]) => `${k}: ${v}`)] : []),
     ...(n.list ?? []).map((l) => `- ${l}`),
     ...(n.button ? ["", `${n.button.label}: ${n.button.url}`] : []), ...(n.afterButton?.length ? ["", ...n.afterButton] : []),
